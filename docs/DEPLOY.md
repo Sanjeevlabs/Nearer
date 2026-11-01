@@ -36,6 +36,7 @@ For local `cf:preview`, put runtime values in `.dev.vars` (gitignored, same `KEY
 | `MODAL_MUSE_URL`, `MODAL_API_KEY`, `MODAL_MUSE_MODEL` | runtime (key is secret) | optional | Own Muse Spark Open endpoint on Modal; needs URL and key. |
 | `MUSE_PROVIDER` | runtime var | optional | `meta` (default), `baseten` or `modal`. |
 | `SAM_URL`, `SAM_API_KEY` | runtime (key is secret) | optional | Sticker cut-outs with Meta SAM (`modal/sam_server.py`, see below). Without both, and always with `MOCK=true`, stickers use a clean circle/rounded crop. Each cut-out counts ~USD 0.002 against the spend cap. |
+| `JAAS_APP_ID`, `JAAS_KID`, `JAAS_PRIVATE_KEY` | runtime (key is secret) | optional | Video rooms on 8x8 Jitsi as a Service, so grandparents never meet a moderator sign-in. All three or none; without them "Sit together" uses public meet.jit.si. See the JaaS section below. |
 | `RESEND_API_KEY`, `MAIL_FROM` | runtime (key is secret) | optional | The morning email: one digest a day per person (the weekly letter on Sunday, plus up to 3 small nudges a week), sent through Resend. `MAIL_FROM` like `Aangan <hello@yourdomain>` on a verified domain. Without the key, or with `MOCK=true`, nothing is mailed and nudges show only in the app. Delivery happens when the daily scan runs after each person's 8 AM; with one daily cron (09:00 UTC) a nudge waits for the next run, so an hourly trigger gives true 8 AM local. |
 | `SUPABASE_SECRET_KEY` | runtime secret | live mode | Service-role key. Never prefix with `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_SUPABASE_URL` | **build time** | live mode | Also read server-side, so set it as a runtime var too. |
@@ -116,3 +117,13 @@ Link previews use static images (`app/opengraph-image.png`, `app/r/[token]/openg
 - **No ISR.** `open-next.config.ts` serves prerendered pages from static assets; Aangan uses no revalidation, so no R2/KV cache bucket is needed. If revalidation is ever added, switch to the R2 incremental cache.
 - `node:crypto` (HMAC, SHA-256, AES-256-GCM, `randomBytes`, `randomInt`) and `Buffer` work under `nodejs_compat`.
 - Request bodies: Workers accepts request bodies of at least 100 MB, above the app's own 25 MB video limit.
+
+## Sit together on JaaS (optional)
+
+Public meet.jit.si makes the first person sign in as moderator. 8x8 Jitsi as a Service (free tier) does not.
+
+1. Sign in at jaas.8x8.vc. The App ID looks like `vpaas-magic-cookie-...` (`JAAS_APP_ID`).
+2. API keys, then Add API key: generate a key pair and download the private key (PKCS#8 PEM). The key id shown is `vpaas-magic-cookie-.../abc123` (`JAAS_KID`).
+3. `npx wrangler secret put JAAS_APP_ID`, then `JAAS_KID`, then `JAAS_PRIVATE_KEY` (paste the whole PEM; literal `\n` is accepted).
+
+Tokens are minted per person by `GET /api/sit/token`; the private key never reaches the browser.
