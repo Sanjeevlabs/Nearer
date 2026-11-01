@@ -17,12 +17,21 @@ courtyard are checked for CLS only.
 
     python3 scripts/perf-vitals.py --base http://127.0.0.1:3100
 
+Optional --live-base URL (e.g. the production origin) skips the browser checks
+and prints the wall time of GET /api/window and GET /api/courtyard from here,
+signed in as the demo (a fresh copy per run of this script). No budget, exit 0:
+it is for reading production after a deploy, where the database is a real
+round trip away and mock mode hides it.
+
+    python3 scripts/perf-vitals.py --live-base https://example.invalid --live-runs 5
+
 CI runs it after the walk against the same mock build (.github/workflows/ci.yml).
 """
 import argparse
 import json
 import statistics
 import sys
+import time
 
 from playwright.sync_api import sync_playwright
 
@@ -70,8 +79,39 @@ def measure(browser, base: str, route: str, state: dict, door_open: bool = True)
     return out
 
 
+LIVE_PATHS = ["/api/window", "/api/courtyard", "/api/festival-week"]
+
+
+def live_timing(base: str, runs: int) -> int:
+    """Wall time per API call against a deployed origin. The first call of each path is the cold one; nothing is asserted."""
+    with sync_playwright() as p:
+        anon = p.request.new_context(base_url=base)
+        res = anon.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
+        if not res.ok:
+            print(f"perf-vitals: demo sign-in failed {res.status} {res.text()[:200]}", file=sys.stderr)
+            return 1
+        # The cookie is Secure; sent by hand so it also works against a plain-http mock build.
+        cookie = res.headers.get("set-cookie", "").split(";")[0]
+        anon.dispose()
+        api = p.request.new_context(base_url=base, extra_http_headers={"cookie": cookie})
+        print(f"{'path':20} {'first ms':>9} {'median ms':>10} {'min ms':>8} {'max ms':>8}  status")
+        for path in LIVE_PATHS:
+            times, status = [], 0
+            for _ in range(runs):
+                t0 = time.perf_counter()
+                r = api.get(path)
+                r.body()
+                times.append((time.perf_counter() - t0) * 1000)
+                status = r.status
+            print(f"{path:20} {times[0]:9.0f} {statistics.median(times):10.0f} {min(times):8.0f} {max(times):8.0f}  {status}")
+        api.dispose()
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--live-base", default=None, help="a deployed origin: print /api/window and /api/courtyard wall times and exit (no budget)")
+    ap.add_argument("--live-runs", type=int, default=5)
     ap.add_argument("--base", default="http://127.0.0.1:3100")
     ap.add_argument("--max-lcp", type=float, default=2500)
     ap.add_argument("--max-cls", type=float, default=0.1)
@@ -80,6 +120,8 @@ def main() -> int:
     ap.add_argument("--max-window-cls", type=float, default=0.05)
     ap.add_argument("--runs", type=int, default=3)
     args = ap.parse_args()
+    if args.live_base:
+        return live_timing(args.live_base, args.live_runs)
 
     problems: list[str] = []
     print(f"{'route':10} {'LCP ms':>7} {'CLS':>6} {'API':>4}")
