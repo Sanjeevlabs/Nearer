@@ -25,7 +25,8 @@ import { sinceLines } from "./since";
 import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
-import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
+import { awakeNow, callTile, nextUp, type Glance } from "./glance";
+import { waitingNow } from "./waiting-server";
 import { listEvents } from "./gather-store";
 import { familyHolidays } from "./occasions-server";
 import { occasionsInRange, addDays } from "./occasion-calendar";
@@ -287,18 +288,16 @@ async function glanceFor(familyId: string, viewerId: string, members: Member[], 
   const names = Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName]));
   const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
   const today = dateIn(myTz, now);
-  const [plays, questions, tasks, needs, events, call, hol] = await Promise.all([
-    safe(dbListPlays(undefined, familyId), []),
-    safe(listDocs(familyId, "question"), []),
-    safe(listDocs(familyId, "today_task"), []),
-    safe(listDocs(familyId, "need"), []),
+  const [waitingList, events, call, hol] = await Promise.all([
+    // The same list the dock dot reads (GET /api/waiting).
+    safe(waitingNow(familyId, viewerId, now, { members, cards }), []),
     safe(listEvents(familyId), []),
     safe(getDoc(familyId, "weekly_call", "weekly-call"), undefined),
     safe(familyHolidays(familyId, members).then((h) => h.visible), []),
   ]);
   return {
     awake: awakeNow(members, viewerId, now, lastSeen),
-    waiting: waitingForYou({ viewerId, now, names, cards: withDemoShelf(cards, familyId), plays, questions, today: tasks.slice(0, 4), needs }),
+    waiting: waitingList[0] ?? null,
     next: nextUp({
       today,
       now,

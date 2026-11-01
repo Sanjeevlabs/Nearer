@@ -7,13 +7,22 @@ import { cleanTitle, type CalOccasion } from "./occasion-calendar";
 import type { Card, Member, Play } from "./schemas";
 import { isAwake, placeFromTz } from "./zones";
 
-export type WaitingKind = "voice" | "question" | "today" | "care";
+export type WaitingKind = "voice" | "question" | "today" | "care" | "nudge";
+
+/** One thing waiting for the viewer. `fromId` = who is waiting (a voice note, a question); `nudgeId` = the stored nudge to mark seen when it is opened. */
+export interface WaitingItem {
+  kind: WaitingKind;
+  text: string;
+  href: string;
+  fromId?: string;
+  nudgeId?: string;
+}
 
 export interface Glance {
   /** Everyone awake now (7 AM to 10 PM their time), grown-ups and teens, not you. */
   awake: { id: string; city: string }[];
   /** The one thing waiting for you; null hides the tile. */
-  waiting: { kind: WaitingKind; text: string; href: string } | null;
+  waiting: WaitingItem | null;
   /** The next kept occasion or planned event; null = nothing coming. */
   next: { text: string; href: string } | null;
   /** The fixed weekly call, in both zones; `set` false = a nudge to set one. */
@@ -63,6 +72,8 @@ export interface WaitingInput {
   /** Today's task(s); only an unfinished one from today or yesterday counts. */
   today: Pick<TodayTask, "id" | "date" | "parents" | "children" | "answers" | "completedAt">[];
   needs: Pick<Need, "id" | "title" | "claimedBy" | "status" | "doneAt" | "createdAt">[];
+  /** The viewer's own nudges with their words already resolved (lib/nudges.ts `unseenFor`). */
+  nudges?: { id: string; kind: string; text: string; href: string; at: string }[];
 }
 
 const THING: Record<string, string> = { audio: "voice note", photo: "photo", video: "video" };
@@ -70,49 +81,66 @@ const THING: Record<string, string> = { audio: "voice note", photo: "photo", vid
 const ASK: Record<string, string> = { story: "for a story", recipe: "for a recipe", wisdom: "for advice", blessing: "for a blessing", song: "for a song", place: "about a place" };
 const ASK_HREF: Record<string, string> = { story: "/stories", recipe: "/kitchen", wisdom: "/advice", blessing: "/advice", song: "/", place: "/" };
 /** Tie-break when two things arrived at the same moment: people before chores. */
-const RANK: Record<WaitingKind, number> = { voice: 0, question: 1, today: 2, care: 3 };
+const RANK: Record<WaitingKind, number> = { voice: 0, question: 1, today: 2, care: 3, nudge: 4 };
 const CARD_DAYS = 30;
 
 /**
- * The single most recent thing addressed to or about the viewer that they
- * haven't acted on: a voice note, photo or video sent to them and not yet
- * played; a question asked of them; a Today answer sealed until theirs; a care
- * need they took on. Newest wins; null when nothing waits.
+ * Everything addressed to or about the viewer that they haven't acted on,
+ * newest first. THE one source for the dock dot, the glance tile and
+ * GET /api/waiting; each entry clears itself when it is acted on:
+ *  - a voice note, photo or video sent to you: until you play it or answer the
+ *    sender (a card of yours to them, sent after theirs);
+ *  - a question asked of you: until a card answers it;
+ *  - a Today answer sealed until yours: until you answer (or it is done);
+ *  - a care need you took on: until it is done;
+ *  - a nudge for you: until you open it (seen), or it ages out.
  */
-export function waitingForYou(i: WaitingInput): Glance["waiting"] {
+export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] {
   const nowMs = i.now.getTime();
   const name = (id: string | null | undefined): string => (id && i.names[id]) || "Someone";
   const past = (iso: string): boolean => Date.parse(iso) <= nowMs + 60_000;
-  const found: { at: string; kind: WaitingKind; text: string; href: string }[] = [];
+  const found: (WaitingItem & { at: string })[] = [];
 
   const played = new Set(i.plays.filter((p) => p.memberId === i.viewerId).map((p) => p.cardId));
+  const mine = i.cards.filter((c) => c.authorId === i.viewerId);
   for (const c of i.cards) {
     if (!c.authorId || c.authorId === i.viewerId || played.has(c.id) || !past(c.takenAt)) continue;
     if (!addressees(c).includes(i.viewerId) || nowMs - Date.parse(c.takenAt) > CARD_DAYS * 86_400_000) continue;
-    found.push({ at: c.takenAt, kind: "voice", text: `${name(c.authorId)}'s ${THING[c.type] ?? "card"}`, href: "/lane" });
+    // Answering the sender is acting on it: something of yours to them (or to everyone) since.
+    const replied = mine.some((r) => r.takenAt > c.takenAt && past(r.takenAt) && (addressees(r).length === 0 || addressees(r).includes(c.authorId as string)));
+    if (replied) continue;
+    found.push({ at: c.takenAt, kind: "voice", text: `${name(c.authorId)}'s ${THING[c.type] ?? "card"}`, href: "/lane", fromId: c.authorId });
   }
   for (const q of i.questions) {
     if (q.toMemberId !== i.viewerId || q.answeredCardId || !past(q.createdAt)) continue;
     const text = q.askedBy ? `${name(q.askedBy)} asked you ${ASK[q.topic] ?? ""}`.trim() : "A question for you";
-    found.push({ at: q.createdAt, kind: "question", text, href: ASK_HREF[q.topic] ?? "/" });
+    found.push({ at: q.createdAt, kind: "question", text, href: ASK_HREF[q.topic] ?? "/", ...(q.askedBy ? { fromId: q.askedBy } : {}) });
   }
   const yesterday = new Date(nowMs - 86_400_000).toISOString().slice(0, 10);
   for (const t of i.today) {
     if (t.completedAt || t.date < yesterday) continue;
-    const mine = t.parents.includes(i.viewerId) ? "parents" : t.children.includes(i.viewerId) ? "children" : null;
-    if (!mine || t.answers.some((a) => a.memberId === i.viewerId)) continue;
-    const others = mine === "parents" ? t.children : t.parents;
+    const side = t.parents.includes(i.viewerId) ? "parents" : t.children.includes(i.viewerId) ? "children" : null;
+    if (!side || t.answers.some((a) => a.memberId === i.viewerId)) continue;
+    const others = side === "parents" ? t.children : t.parents;
     const theirs = t.answers.filter((a) => others.includes(a.memberId) && past(a.at)).sort((a, b) => b.at.localeCompare(a.at))[0];
-    if (theirs) found.push({ at: theirs.at, kind: "today", text: `${name(theirs.memberId)}'s answer is waiting for yours`, href: "/" });
+    if (theirs) found.push({ at: theirs.at, kind: "today", text: `${name(theirs.memberId)}'s answer is waiting for yours`, href: "/", fromId: theirs.memberId });
   }
   for (const n of i.needs) {
     if (n.claimedBy !== i.viewerId || n.doneAt || (n.status !== "claimed" && n.status !== "progress")) continue;
     found.push({ at: n.createdAt, kind: "care", text: n.title, href: "/care" });
   }
+  for (const n of i.nudges ?? []) found.push({ at: n.at, kind: "nudge", text: n.text, href: n.href, nudgeId: n.id });
 
-  found.sort((a, b) => b.at.localeCompare(a.at) || RANK[a.kind] - RANK[b.kind]);
-  const top = found[0];
-  return top ? { kind: top.kind, text: top.text, href: top.href } : null;
+  return found.sort((a, b) => b.at.localeCompare(a.at) || RANK[a.kind] - RANK[b.kind]);
+}
+
+/** The one thing to show on the glance tile (newest); null hides the tile. */
+export function waitingForYou(i: WaitingInput): Glance["waiting"] {
+  const top = waitingItems(i)[0];
+  if (!top) return null;
+  const { at, ...item } = top;
+  void at;
+  return item;
 }
 
 /* ------------------------------------------------------------------ next */
