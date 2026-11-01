@@ -143,7 +143,11 @@ export interface SearchResult {
 }
 
 export async function searchCandidates(input: { familyId: string; memberId: string; country: string; city: string; kind: ContextKind; title: string }): Promise<SearchResult> {
-  const partners = partnersForCountry(input.country).filter((p) => p.sendable);
+  // A partner that needs the member's own account is offered only once that account is connected (live and mock alike).
+  const connected = new Map<string, boolean>();
+  for (const p of partnersForCountry(input.country))
+    if (p.transport === "mcp-oauth" && p.account && !connected.has(p.account)) connected.set(p.account, Boolean(await loadToken(input.familyId, input.memberId, p.account)));
+  const partners = partnersForCountry(input.country).filter((p) => p.sendable && (p.transport !== "mcp-oauth" || (p.account != null && connected.get(p.account) === true)));
   const stores = storesForCountry(input.country);
   const clean = (cs: Candidate[]) => {
     const seen = new Set<string>();
@@ -151,7 +155,7 @@ export async function searchCandidates(input: { familyId: string; memberId: stri
   };
   if (isMockMode()) return { candidates: clean(mockSearch(partners, stores, input.kind, input.title)), connectable: [], sample: true };
 
-  const connectable = new Set<string>();
+  const connectable = new Set<string>(Array.from(connected).filter(([, ok]) => !ok).map(([a]) => a));
   const jobs = partners.flatMap((p): Promise<Candidate[]>[] => {
     if (p.transport === "mcp-public") return stores.map((st) => liveStore(p, st, input.kind, input.title, input.country));
     if (p.transport === "mcp-oauth")

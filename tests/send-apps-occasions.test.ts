@@ -21,6 +21,15 @@ describe("send-apps.json", () => {
     expect(SendAppsSchema.safeParse(bad).success).toBe(false);
   });
 
+  it("keeps exactly one app per category per country, and rejects a second", () => {
+    for (const [code, c] of Object.entries(SEND_APPS.countries)) for (const [cat, apps] of Object.entries(c.apps)) expect(apps, `${code} ${cat}`).toHaveLength(1);
+    const names = Object.values(SEND_APPS.countries).flatMap((c) => Object.values(c.apps).flat().map((a) => a.name));
+    for (const gone of ["Swiggy", "Swiggy Instamart", "BigBasket", "Zepto"]) expect(names).not.toContain(gone);
+    const two = structuredClone(raw) as { countries: Record<string, { apps: Record<string, { name: string; url: string }[]> }> };
+    two.countries.IN.apps.rides.push({ name: "Ola", url: "https://www.olacabs.com" });
+    expect(SendAppsSchema.safeParse(two).success).toBe(false);
+  });
+
   it("picks the recipient's country from their time zone, India first, with a fallback", () => {
     expect(countryForTz("Asia/Kolkata")).toBe("IN");
     expect(countryForTz("Europe/London")).toBe("GB");
@@ -28,7 +37,7 @@ describe("send-apps.json", () => {
     expect(countryForTz("Asia/Tokyo")).toBeNull();
     const india = appsFor("IN");
     expect(india.categories.map((c) => c.label)).toEqual(["Groceries", "Sweets & cakes", "Medicines", "House help", "Flowers & gifts", "Rides"]);
-    expect(india.categories[0].apps.map((a) => a.name)).toEqual(["Blinkit", "Zepto", "Swiggy Instamart", "BigBasket"]);
+    expect(india.categories.map((c) => c.apps.map((a) => a.name))).toEqual([["Blinkit"], ["Zomato"], ["Tata 1mg"], ["Urban Company"], ["Ferns N Petals"], ["Uber"]]);
     expect(india.categories.find((c) => c.id === "house-help")?.apps[0].url).toBe("https://www.urbancompany.com");
     const elsewhere = appsFor("JP");
     expect(elsewhere.country).toBe("*");
