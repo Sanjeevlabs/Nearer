@@ -32,7 +32,7 @@ def main() -> int:
     with sync_playwright() as p:
         browser = p.chromium.launch()
         ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=a.base)
-        ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open') } catch (e) {}")
+        ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
         page = ctx.new_page()
         writes: list[str] = []
         # The app's own visit heartbeat (POST /api/presence) is not a setting.

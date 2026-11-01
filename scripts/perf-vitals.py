@@ -66,7 +66,7 @@ def measure(browser, base: str, route: str, state: dict, door_open: bool = True)
     """One cold load: a fresh context (empty cache), signed in, door open (or closed: the window)."""
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base, storage_state=state)
     if door_open:
-        ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open') } catch (e) {}")
+        ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
     page = ctx.new_page()
     cdp = ctx.new_cdp_session(page)
     cdp.send("Network.enable")

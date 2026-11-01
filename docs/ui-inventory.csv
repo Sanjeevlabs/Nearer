@@ -54,73 +54,91 @@ Entry,courtyard,33,image,Arjun,,~Together habit,arjun dadi,,review,icon-only con
 Entry,courtyard,34,toggle,Done today,,~Together habit,arjun,,keep,
 Entry,courtyard,35,section,A letter from the courtyard,,courtyard-letter,arjun dadi,,keep,
 Entry,courtyard,36,button,Do it,,courtyard-letter,arjun dadi,,keep,
-Entry,courtyard,36,section,Tonight's story for Vihaan,,courtyard-bedtime,dadi,,keep,
+Entry,courtyard,36,section,Asked by the kids,,courtyard-kid-asks,dadi,,keep,
 Entry,courtyard,37,button,Not now,,courtyard-letter,arjun dadi,dup,review,icon-only control: its name is only an aria-label
+Entry,courtyard,37,button,Play Vihaan's question,,courtyard-kid-asks,dadi,,keep,
+Entry,courtyard,38,button,Answer by voice,,courtyard-kid-asks,dadi,,keep,
 Entry,courtyard,38,section,Tonight's story for Anika,,courtyard-bedtime,arjun,,keep,
-Entry,courtyard,39,button,Record a story,,courtyard-bedtime,arjun dadi,,keep,
-Entry,courtyard,39,section,Asked by the kids,,courtyard-kid-asks,dadi,,keep,
-Entry,courtyard,40,button,Not now,,courtyard-bedtime,arjun dadi,dup,review,icon-only control: its name is only an aria-label
-Entry,courtyard,40,button,Play Vihaan's question,,courtyard-kid-asks,dadi,,keep,
-Entry,courtyard,41,button,Answer by voice,,courtyard-kid-asks,dadi,,keep,
+Entry,courtyard,39,button,Record a story,,courtyard-bedtime,arjun,,keep,
+Entry,courtyard,40,button,Not now,,courtyard-bedtime,arjun,dup,review,icon-only control: its name is only an aria-label
 Entry,courtyard,41,section,From the kids,,courtyard-kid-grew,arjun dadi,,keep,
 Entry,courtyard,42,link,Vihaan grew N cm since <date>,/people/leo,courtyard-kid-grew,arjun dadi,,keep,
 Entry,courtyard,43,section,Fridge,,courtyard-fridge,arjun dadi,,keep,
 Entry,courtyard,44,link,All →,/bond/kids,courtyard-fridge,arjun dadi,,keep,
 Entry,courtyard,45,button,"Vihaan's picture, this morning",,courtyard-fridge,arjun dadi,,keep,
 Entry,courtyard,46,button,"Anika's voice note, this morning",,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,47,button,"Vihaan's picture, yesterday morning",,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,47,button,"Vihaan's picture, yesterday afternoon",,courtyard-fridge,arjun dadi,,keep,
 Entry,courtyard,48,button,"Anika's voice note, <date>",,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,49,button,Play Arjun's voice note,,~Now in the family,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,49,button,Reply to Vihaan by voice,,courtyard-fridge,arjun dadi,,keep,
 Entry,courtyard,50,section,Now in the family,,,arjun dadi,,keep,
 Entry,courtyard,51,button,Play Maa's voice note,,~Now in the family,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
-Entry,courtyard,52,button,Play Arjun's voice note,,~Now in the family,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,52,image,Maa,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
 Entry,courtyard,53,image,Arjun,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,53,link,N days until Arjun arrives Arjun comes home for Diwali week · N thing on your l…,/together/together-visit,~Now in the family,dadi,,keep,
 Entry,courtyard,54,button,Join the call,,~Now in the family,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,55,link,N days to your visit to Amritsar Arjun comes home for Diwali week · staying wit…,/together/together-visit,~Now in the family,arjun,,keep,
 Entry,courtyard,56,link,Dancing in the baraat till the band gave up. <ago> Dancing in the baraat till t…,/lane,~Now in the family,arjun dadi,,keep,
-Entry,courtyard,56,link,N days until Arjun arrives Arjun comes home for Diwali week · N thing on your l…,/together/together-visit,~Now in the family,dadi,,keep,
 Entry,courtyard,57,image,Dancing in the baraat till the band gave up.,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
 Entry,courtyard,58,button,Show N of N,,~Now in the family,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,courtyard,60,section,"This week, your gifts",,,dadi,,keep,
+Entry,courtyard,61,heading,"This week, your gifts",,"~This week, your gifts",dadi,,keep,
 Entry,courtyard,62,button,Voice note,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Entry,courtyard,62,link,Priya heard your voice note · <day>,/lane,"~This week, your gifts",dadi,,keep,
 Entry,courtyard,63,badge,Waiting for you: Maa's answer is waiting for yours,,dock,arjun,,keep,
-Entry,courtyard,63,section,"This week, your gifts",,,dadi,,keep,
+Entry,courtyard,63,link,Arjun Arjun cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
 Entry,courtyard,64,button,Share a photo or video,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Entry,courtyard,64,heading,"This week, your gifts",,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,64,image,Arjun,,"~This week, your gifts",dadi,,review,icon-only control: its name is only an aria-label
 Entry,courtyard,65,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Entry,courtyard,65,link,Priya heard your voice note · <day>,/lane,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,66,link,Arjun Arjun cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,67,image,Arjun,,"~This week, your gifts",dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,68,link,"Priya listened to your story, “The elephant and the tailor” · <day>",/stories,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,69,link,Priya cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,70,section,A question for you,,,dadi,,keep,
-Entry,courtyard,71,button,Teach it,,~A question for you,dadi,,keep,
-Entry,courtyard,72,section,Help,,,dadi,,keep,
-Entry,courtyard,73,link,हफ़्ते भर की सब्ज़ी और दूध Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
-Entry,courtyard,74,link,गैस सिलेंडर लगभग खत्म है अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार को सिलेंड…,/care,~Help,dadi,,keep,
-Entry,courtyard,75,button,Ask the family for help,,~Help,dadi,,keep,
-Entry,courtyard,77,badge,Waiting for you: Vihaan asked you something,,dock,dadi,,keep,
+Entry,courtyard,65,link,"Priya listened to your story, “The elephant and the tailor” · <day>",/stories,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,66,link,Priya cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,67,section,A question for you,,,dadi,,keep,
+Entry,courtyard,68,button,Teach it,,~A question for you,dadi,,keep,
+Entry,courtyard,69,section,Help,,,dadi,,keep,
+Entry,courtyard,70,link,हफ़्ते भर की सब्ज़ी और दूध Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
+Entry,courtyard,71,link,गैस सिलेंडर लगभग खत्म है अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार को सिलेंड…,/care,~Help,dadi,,keep,
+Entry,courtyard,72,button,Ask the family for help,,~Help,dadi,,keep,
+Entry,courtyard,74,badge,Waiting for you: Vihaan asked you something,,dock,dadi,,keep,
 Entry,home-laptop,0,button,Open Aangan,,,arjun,,keep,
 Entry,home-laptop,1,h1,Far from home. Never far from them.,,,arjun,,keep,
-Entry,home-laptop,2,badge,QR code: open the Aangan demo on your phone,,,arjun,,keep,
-Entry,home-laptop,3,button,Or try the demo here,,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,home-laptop,4,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun,,keep,
-Entry,home-laptop,5,heading,A window into their day,,,arjun,,keep,
-Entry,home-laptop,6,heading,"The whole family, one place",,,arjun,,keep,
-Entry,home-laptop,7,heading,"Everyone wishes, together",,,arjun,,keep,
-Entry,home-laptop,8,heading,"Care, sent in a tap",,,arjun,,keep,
-Entry,home-laptop,9,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,home-laptop,10,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,landing,0,h1,Far from home. Never far from them.,,,anon,,keep,
-Entry,landing,1,link,Create,/create,,anon,,keep,
-Entry,landing,2,link,Join with code,/join,,anon,,keep,
-Entry,landing,3,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing,4,button,Try the demo,,,anon,,keep,
+Entry,home-laptop,2,button,Open Aangan,,home-actions,arjun,,keep,
+Entry,home-laptop,3,badge,QR code: open the Aangan demo on your phone,,,arjun,,keep,
+Entry,home-laptop,4,button,Or try the demo here,,,arjun,,review,on more than 2 screens: one path per job?
+Entry,home-laptop,5,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun,,keep,
+Entry,home-laptop,6,heading,A window into their day,,,arjun,,keep,
+Entry,home-laptop,7,heading,"The whole family, one place",,,arjun,,keep,
+Entry,home-laptop,8,heading,"Everyone wishes, together",,,arjun,,keep,
+Entry,home-laptop,9,heading,"Care, sent in a tap",,,arjun,,keep,
+Entry,home-laptop,10,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-laptop,11,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-phone,0,button,Open Aangan,,,arjun,,keep,
+Entry,home-phone,1,h1,Far from home. Never far from them.,,,arjun,,keep,
+Entry,home-phone,2,button,Open Aangan,,home-actions,arjun,,keep,
+Entry,home-phone,3,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun,,keep,
+Entry,home-phone,4,heading,A window into their day,,,arjun,,keep,
+Entry,home-phone,5,heading,"The whole family, one place",,,arjun,,keep,
+Entry,home-phone,6,heading,"Everyone wishes, together",,,arjun,,keep,
+Entry,home-phone,7,heading,"Care, sent in a tap",,,arjun,,keep,
+Entry,home-phone,8,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-phone,9,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,landing,0,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,1,link,Start your family,/create,,anon,dup,review,
+Entry,landing,2,h1,Far from home. Never far from them.,,,anon,,keep,
+Entry,landing,3,button,Try the demo family,,home-actions,anon,,keep,
+Entry,landing,4,link,Start your family,/create,home-actions,anon,dup,review,
+Entry,landing,5,link,Sign in,/signin,home-actions,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,6,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,anon,,keep,
+Entry,landing,7,heading,A window into their day,,,anon,,keep,
+Entry,landing,8,heading,"The whole family, one place",,,anon,,keep,
+Entry,landing,9,heading,"Everyone wishes, together",,,anon,,keep,
+Entry,landing,10,heading,"Care, sent in a tap",,,anon,,keep,
+Entry,landing,11,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,12,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,0,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing-laptop,1,link,Start your family,/create,,anon,,keep,
+Entry,landing-laptop,1,link,Start your family,/create,,anon,dup,review,
 Entry,landing-laptop,2,h1,Far from home. Never far from them.,,,anon,,keep,
 Entry,landing-laptop,3,badge,QR code: open the Aangan demo on your phone,,,anon,,keep,
-Entry,landing-laptop,4,button,Or try the demo here,,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing-laptop,4,button,Or try the demo here,,,anon,,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,5,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,anon,,keep,
 Entry,landing-laptop,6,heading,A window into their day,,,anon,,keep,
 Entry,landing-laptop,7,heading,"The whole family, one place",,,anon,,keep,
@@ -140,42 +158,43 @@ Entry,window,3,h1,Maa & Papa,,window-header,arjun,,keep,
 Entry,window,3,image,Maa,,kid-grandparents,aria,,review,icon-only control: its name is only an aria-label
 Entry,window,4,button,Show A photo or a drawing,,kid-home,aria,,keep,
 Entry,window,4,section,The lamp and their latest voice,,window-lamp,arjun dadi,,keep,
-Entry,window,5,button,Light the lamp. Hold to send a heartbeat,,window-lamp,arjun dadi,,keep,
+Entry,window,5,button,See the lamp,,window-lamp,arjun dadi,icon-only,review,
 Entry,window,5,button,Tell Say something with your voice,,kid-home,aria,,keep,
 Entry,window,6,button,"Ask A question, or a story",,kid-home,aria,,keep,
-Entry,window,6,button,Play Maa's voice note,,window-lamp,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
-Entry,window,6,button,Play Vihaan's voice note,,window-lamp,dadi,icon-only,review,
-Entry,window,7,section,Safe and sound,,window-safe,arjun dadi,,keep,
+Entry,window,6,button,Light the lamp. Hold to send a heartbeat,,window-lamp,arjun dadi,,keep,
+Entry,window,7,button,Play Maa's voice note,,window-lamp,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
+Entry,window,7,button,Play Vihaan's voice note,,window-lamp,dadi,icon-only,review,
 Entry,window,7,section,Tonight's story,,kid-tonight,aria,,keep,
 Entry,window,8,heading,Maa’s story for tonight,,kid-tonight,aria,,keep,
-Entry,window,8,heading,Safe & sound,,window-safe,arjun dadi,,keep,
+Entry,window,8,section,Safe and sound,,window-safe,arjun dadi,,keep,
 Entry,window,9,button,Play the story,,kid-tonight,aria,icon-only,review,
-Entry,window,9,link,See check-ins,/safe,window-safe,arjun dadi,,keep,
+Entry,window,9,heading,Safe & sound,,window-safe,arjun dadi,,keep,
 Entry,window,10,button,Another one?,,kid-tonight,aria,,keep,
-Entry,window,10,button,Arjun: Up since <time> · active <ago>. Open their day,,window-safe,dadi,,keep,
-Entry,window,10,button,Maa: Up since <time> · active <ago>. Open their day,,window-safe,arjun,,keep,
-Entry,window,11,image,Arjun,,window-safe,dadi,,review,icon-only control: its name is only an aria-label
-Entry,window,11,image,Maa,,window-safe,arjun,,review,icon-only control: its name is only an aria-label
+Entry,window,10,link,See check-ins,/safe,window-safe,arjun dadi,,keep,
+Entry,window,11,button,Arjun: Up since <time> · active <ago>. Open their day,,window-safe,dadi,,keep,
+Entry,window,11,button,Maa: Up since <time> · active <ago>. Open their day,,window-safe,arjun,,keep,
 Entry,window,11,section,Your wall,,kid-wall,aria,,keep,
-Entry,window,12,button,Papa: Up since <time> · active <ago>. Open their day,,window-safe,arjun,,keep,
-Entry,window,12,button,Priya: Quiet since <time> Open their day,,window-safe,dadi,,keep,
 Entry,window,12,heading,Your wall,,kid-wall,aria,,keep,
-Entry,window,13,nav,Across the family,,window-glance,arjun dadi,,keep,
-Entry,window,14,link,"Awake now: Maa, Papa, Priya, Kavya, Rahul, in Amritsar · Bengaluru · Pune",/,window-glance,arjun,,keep,
-Entry,window,14,link,"Awake now: Papa, Arjun, Priya, Kavya, Rahul, in Amritsar · Bengaluru · Pune",/,window-glance,dadi,,keep,
-Entry,window,15,link,Waiting for you: Maa's answer is waiting for yours,/,window-glance,arjun,,keep,
-Entry,window,15,link,Waiting for you: Vihaan asked you something,/,window-glance,dadi,,keep,
-Entry,window,16,link,From the kids: New from Vihaan & Anika,/bond/kids,window-glance,arjun dadi,,keep,
-Entry,window,17,link,Next: Diwali · <day> <date>,/gather,window-glance,arjun dadi,,keep,
-Entry,window,18,link,Our call: <day> <time> · yours and theirs,/gather,window-glance,arjun dadi,,keep,
-Entry,window,19,section,Since you were here,,window-since,arjun dadi,,keep,
-Entry,window,20,section,Call,,window-call,arjun dadi,,keep,
-Entry,window,21,button,Send Arjun & Priya something,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,21,button,Send Maa & Papa something,,window-call,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,22,button,Voice note,,window-call,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,23,button,Join the video call,,window-call,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,23,button,Video call,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,24,button,Slide the key home to open your family,,,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,12,image,Arjun,,window-safe,dadi,,review,icon-only control: its name is only an aria-label
+Entry,window,12,image,Maa,,window-safe,arjun,,review,icon-only control: its name is only an aria-label
+Entry,window,13,button,Papa: Up since <time> · active <ago>. Open their day,,window-safe,arjun,,keep,
+Entry,window,13,button,Priya: Quiet since <time> Open their day,,window-safe,dadi,,keep,
+Entry,window,14,nav,Across the family,,window-glance,arjun dadi,,keep,
+Entry,window,15,link,"Awake now: Maa, Papa, Priya, Kavya, Rahul, in Amritsar · Bengaluru · Pune",/,window-glance,arjun,,keep,
+Entry,window,15,link,"Awake now: Papa, Arjun, Priya, Kavya, Rahul, in Amritsar · Bengaluru · Pune",/,window-glance,dadi,,keep,
+Entry,window,16,link,Waiting for you: Maa's answer is waiting for yours,/,window-glance,arjun,,keep,
+Entry,window,16,link,Waiting for you: Vihaan asked you something,/,window-glance,dadi,,keep,
+Entry,window,17,link,From the kids: New from Vihaan & Anika,/bond/kids,window-glance,arjun dadi,,keep,
+Entry,window,18,link,Next: Diwali · <day> <date>,/gather,window-glance,arjun dadi,,keep,
+Entry,window,19,link,Our call: <day> <time> · yours and theirs,/gather,window-glance,arjun dadi,,keep,
+Entry,window,20,section,Since you were here,,window-since,arjun dadi,,keep,
+Entry,window,21,section,Call,,window-call,arjun dadi,,keep,
+Entry,window,22,button,Send Arjun & Priya something,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,22,button,Send Maa & Papa something,,window-call,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,23,button,Voice note,,window-call,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,24,button,Join the video call,,window-call,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,24,button,Video call,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,25,button,Slide the key home to open your family,,,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,1,h1,Arjun,,room-header,dadi,,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,1,h1,Maa,,room-header,arjun aria,,review,icon-only control: its name is only an aria-label
@@ -297,17 +316,18 @@ Public,/create,6,select,Birthday month,,,anon,,keep,
 Public,/create,7,select,Birthday day,,,anon,,keep,
 Public,/create,8,button,Continue,,,anon,,keep,
 Public,/home,0,link,Sign in,/signin,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
-Public,/home,1,link,Start your family,/create,,arjun dadi aria anon,,keep,
+Public,/home,1,link,Start your family,/create,,arjun dadi aria anon,dup,review,
 Public,/home,2,h1,Far from home. Never far from them.,,,arjun dadi aria anon,,keep,
-Public,/home,3,badge,QR code: open the Aangan demo on your phone,,,arjun dadi aria anon,,keep,
-Public,/home,4,button,Or try the demo here,,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
-Public,/home,5,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun dadi aria anon,,keep,
-Public,/home,6,heading,A window into their day,,,arjun dadi aria anon,,keep,
-Public,/home,7,heading,"The whole family, one place",,,arjun dadi aria anon,,keep,
-Public,/home,8,heading,"Everyone wishes, together",,,arjun dadi aria anon,,keep,
-Public,/home,9,heading,"Care, sent in a tap",,,arjun dadi aria anon,,keep,
-Public,/home,10,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
-Public,/home,11,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,3,button,Try the demo family,,home-actions,arjun dadi aria anon,,keep,
+Public,/home,4,link,Start your family,/create,home-actions,arjun dadi aria anon,dup,review,
+Public,/home,5,link,Sign in,/signin,home-actions,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,6,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun dadi aria anon,,keep,
+Public,/home,7,heading,A window into their day,,,arjun dadi aria anon,,keep,
+Public,/home,8,heading,"The whole family, one place",,,arjun dadi aria anon,,keep,
+Public,/home,9,heading,"Everyone wishes, together",,,arjun dadi aria anon,,keep,
+Public,/home,10,heading,"Care, sent in a tap",,,arjun dadi aria anon,,keep,
+Public,/home,11,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,12,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
 Public,/join,0,button,Back,,,anon,icon-only dup,review,icon-only control: its name is only an aria-label
 Public,/join,1,h1,Join your family,,,anon,,keep,
 Public,/join,2,input:text,Invite code,,,anon,,keep,
@@ -490,7 +510,7 @@ Rooms,/bond/kids,15,link,Kabir Birthday <date> Nothing from Kabir yet,/people/ka
 Rooms,/bond/kids,16,section,Fridge,,kids-fridge,arjun dadi,,keep,
 Rooms,/bond/kids,17,button,"Vihaan's picture, this morning",,kids-fridge,arjun dadi,,keep,
 Rooms,/bond/kids,18,button,"Anika's voice note, this morning",,kids-fridge,arjun dadi,,keep,
-Rooms,/bond/kids,19,button,"Vihaan's picture, yesterday morning",,kids-fridge,arjun dadi,,keep,
+Rooms,/bond/kids,19,button,"Vihaan's picture, yesterday afternoon",,kids-fridge,arjun dadi,,keep,
 Rooms,/bond/kids,20,button,"Anika's voice note, <date>",,kids-fridge,arjun dadi,,keep,
 Rooms,/bond/kids,21,button,Reply to Vihaan by voice,,kids-fridge,arjun dadi,,keep,
 Rooms,/bond/kids,22,button,Reply to Anika by voice,,kids-fridge,arjun dadi,,keep,
