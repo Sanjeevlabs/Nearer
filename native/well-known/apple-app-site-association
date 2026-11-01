@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["REPLACE_TEAM_ID.com.sanjeevlabs.nearer"],
+        "appIDs": ["REPLACE_TEAM_ID.site.nearer.app"],
         "components": [{ "/": "/auth/callback*", "comment": "Sign-in returns into the app" }]
       }
     ]

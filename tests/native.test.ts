@@ -72,8 +72,8 @@ afterEach(() => {
 
 describe("urlToRoute", () => {
   it("maps the custom scheme to an in-app route", () => {
-    expect(native.urlToRoute("com.sanjeevlabs.nearer://auth/callback?code=abc")).toBe("/auth/callback?code=abc");
-    expect(native.urlToRoute("com.sanjeevlabs.nearer://auth/callback#access_token=t")).toBe("/auth/callback#access_token=t");
+    expect(native.urlToRoute("site.nearer.app://auth/callback?code=abc")).toBe("/auth/callback?code=abc");
+    expect(native.urlToRoute("site.nearer.app://auth/callback#access_token=t")).toBe("/auth/callback#access_token=t");
   });
   it("maps App Links on our origin and rejects other hosts", () => {
     expect(native.urlToRoute("https://nearer.example/auth/callback?code=1", "https://nearer.example")).toBe("/auth/callback?code=1");
@@ -114,7 +114,7 @@ describe("in the native app", () => {
     fakeWindow(true, "ios");
     expect(native.isNative()).toBe(true);
     expect(native.platform()).toBe("ios");
-    expect(native.authRedirectUrl("oauth")).toBe("com.sanjeevlabs.nearer://auth/callback");
+    expect(native.authRedirectUrl("oauth")).toBe("site.nearer.app://auth/callback");
     expect(native.authRedirectUrl("email")).toBe("https://nearer.example/auth/callback");
   });
   it("calls the plugins", async () => {
@@ -132,7 +132,7 @@ describe("in the native app", () => {
     const routes: string[] = [];
     const off = native.onAppUrlOpen((r) => routes.push(r));
     await tick();
-    appUrlListener?.({ url: "com.sanjeevlabs.nearer://auth/callback?code=z" });
+    appUrlListener?.({ url: "site.nearer.app://auth/callback?code=z" });
     appUrlListener?.({ url: "https://elsewhere.example/" });
     await until(() => calls.includes("close"));
     expect(routes).toEqual(["/auth/callback?code=z"]);

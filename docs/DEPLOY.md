@@ -78,7 +78,7 @@ Dashboard → Workers & Pages → aangan → Settings → Domains & Routes → A
 Supabase → Authentication → URL Configuration:
 
 - **Site URL**: `https://<your-domain>` (same as `APP_ORIGIN`).
-- **Redirect URLs**: add `https://<your-domain>/auth/callback`, the `https://aangan.<subdomain>.workers.dev/auth/callback` URL if you use it, and the native app's `com.sanjeevlabs.nearer://auth/callback`.
+- **Redirect URLs**: add `https://<your-domain>/auth/callback`, the `https://aangan.<subdomain>.workers.dev/auth/callback` URL if you use it, and the native app's `site.nearer.app://auth/callback`.
 - Google provider: enable under Authentication → Providers (its own redirect URI stays Supabase's).
 
 Native builds: `CAP_SERVER_URL=https://<your-domain> npm run cap:sync` (see docs/NATIVE.md).

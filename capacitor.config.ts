@@ -16,7 +16,7 @@ const serverUrl = (process.env.CAP_SERVER_URL || PLACEHOLDER).replace(/\/+$/, ""
 const host = new URL(serverUrl).host;
 
 const config: CapacitorConfig = {
-  appId: "com.sanjeevlabs.nearer",
+  appId: "site.nearer.app",
   appName: "Nearer",
   webDir: "public",
   server: {

@@ -8,7 +8,7 @@
  */
 
 /** The custom URL scheme registered in AndroidManifest.xml and Info.plist. */
-export const APP_SCHEME = "com.sanjeevlabs.nearer";
+export const APP_SCHEME = "site.nearer.app";
 
 interface CapacitorGlobal {
   isNativePlatform?: () => boolean;
@@ -54,7 +54,7 @@ export function authRedirectUrl(kind: "oauth" | "email" = "oauth"): string {
 /**
  * Turn a URL the OS opened the app with into an in-app route:
  *   https://<origin>/auth/callback?code=x      -> /auth/callback?code=x
- *   com.sanjeevlabs.nearer://auth/callback?code=x   -> /auth/callback?code=x
+ *   site.nearer.app://auth/callback?code=x   -> /auth/callback?code=x
  * Returns null for anything that is not ours or not parseable.
  */
 export function urlToRoute(raw: string, origin?: string): string | null {
@@ -65,7 +65,7 @@ export function urlToRoute(raw: string, origin?: string): string | null {
     return null;
   }
   if (u.protocol === `${APP_SCHEME}:`) {
-    // The host is the first path segment: com.sanjeevlabs.nearer://auth/callback.
+    // The host is the first path segment: site.nearer.app://auth/callback.
     const path = `/${u.host}${u.pathname === "/" ? "" : u.pathname}`.replace(/\/{2,}/g, "/");
     return `${path}${u.search}${u.hash}`;
   }

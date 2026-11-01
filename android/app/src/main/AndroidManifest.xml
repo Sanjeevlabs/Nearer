@@ -30,12 +30,12 @@
                 <data android:scheme="https" android:host="${appLinkHost}" android:pathPrefix="/auth/callback" />
             </intent-filter>
 
-            <!-- Custom scheme fallback: com.sanjeevlabs.nearer://auth/callback -->
+            <!-- Custom scheme fallback: site.nearer.app://auth/callback -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="com.sanjeevlabs.nearer" android:host="auth" android:pathPrefix="/callback" />
+                <data android:scheme="site.nearer.app" android:host="auth" android:pathPrefix="/callback" />
             </intent-filter>
         </activity>
 
