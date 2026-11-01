@@ -40,7 +40,7 @@ export function prefetchDocs(req: Request, familyId: string, kinds: readonly Doc
 
 
 /** The documents every courtyard slice reads, whoever is looking. */
-export const COURTYARD_KINDS = ["safety_settings", "safety_checkin", "presence", "care_settings", "sitting", "knock", "project", "chitthi", "today_task"] as const;
+export const COURTYARD_KINDS = ["safety_settings", "safety_checkin", "presence", "care_settings", "sitting", "knock", "project", "chitthi", "today_task", "habit", "habit_tick"] as const;
 /** The extra ones an elder's slices (gifts, keeper, care) and a child's (stories) read. */
 export const ELDER_KINDS = ["recipe", "attempt", "story", "question", "need", "helper"] as const;
 export const CHILD_KINDS = ["story", "question"] as const;

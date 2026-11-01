@@ -25,6 +25,7 @@ import { SideSwitch, useSides } from "./sides";
 import { GiftsShelf } from "./gifts-shelf";
 import { EventPrompts } from "./event-prompts";
 import { TodayCard, useToday } from "./today";
+import { TogetherHabit } from "./together-habit";
 import { CourtyardLetter } from "./courtyard-letter";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Icon, Monogram, Photo } from "./ui/kit";
@@ -273,7 +274,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   return (
     <div>
       <style>{LAMP_CSS}</style>
-      <header className="pt-4">
+      <header data-ui="courtyard-header" className="pt-4">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
           <Photo src="/demo/courtyard.jpg" alt="" sizes={HERO_SIZES} priority position="center 55%" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/65" aria-hidden="true" />
@@ -297,7 +298,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
       {ready && <FestivalHeader />}
 
       {ready && people.length > 0 && (
-        <section aria-label="Everyone" className="mt-5">
+        <section data-ui="courtyard-everyone" aria-label="Everyone" className="mt-5">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="m-0 text-[17px] font-semibold">Everyone</h2>
             <Link href="/bond" aria-label="Family tree" className="grid h-9 w-9 place-items-center rounded-full text-ink-soft no-underline">
@@ -321,6 +322,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
         <>
           <EventPrompts className="mt-4" />
           <TodayCard />
+          <TogetherHabit />
           <CourtyardLetter />
 
           <Carousel label="Now in the family" className="mt-5">

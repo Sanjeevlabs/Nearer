@@ -19,6 +19,7 @@ Read docs/PRD.md before any task; it overrides earlier instructions; build only 
 - `npm run lint` — secret scan + no hard-coded festivals in app logic.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run test:mock` — mock-mode unit + smoke tests.
+- `npm run ui:inventory` — regenerate docs/ui-inventory.csv/.xlsx (every visible UI item per screen) against a mock build on :4600 (`BASE=...` to override). Run it and commit docs/ui-inventory.* whenever UI is added or removed; CI fails if the CSV is stale. Verdicts are hand-edited in docs/ui-inventory.verdicts.json.
 - `npm run eval:golden` — manual live golden eval. Needs `META_API_KEY`. Never in CI.
 - Deploy: Cloudflare Workers via OpenNext, `npm run cf:deploy` (see docs/DEPLOY.md).
 

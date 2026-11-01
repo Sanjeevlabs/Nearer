@@ -5,6 +5,7 @@ import { guardWrites } from "@/lib/api-guard";
 import { GET as getCare } from "../care/route";
 import { GET as getEvents } from "../gather/events/route";
 import { GET as getGifts } from "../gifts/route";
+import { GET as getHabits } from "../habits/route";
 import { GET as getKeeper } from "../keeper/route";
 import { GET as getLetters } from "../letters/route";
 import { GET as getPresence } from "../presence/route";
@@ -24,7 +25,7 @@ import { GET as getTogether } from "../together/route";
 // that fails is left out, and its hook falls back to its own fetch.
 //
 // GET → { sides, safety, events, today, suggestions, letters, presence,
-//         together, sit, [gifts, keeper, care] for elders, [stories] for children }
+//         together, sit, festivalWeek, habits, [gifts, keeper, care] for elders, [stories] for children }
 
 type Handler = (req: Request) => Promise<Response>;
 
@@ -63,6 +64,7 @@ async function getHandler(req: Request): Promise<Response> {
     ["together", "/api/together", getTogether],
     ["sit", "/api/sit", getSit],
     ["festivalWeek", "/api/festival-week", getFestivalWeek],
+    ["habits", "/api/habits", getHabits],
   ];
   if (me?.role === "elder") parts.push(["gifts", "/api/gifts", getGifts], ["keeper", "/api/keeper", getKeeper], ["care", "/api/care", getCare]);
   if (me?.role === "child") parts.push(["stories", "/api/stories", getStories]);

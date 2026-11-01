@@ -1,0 +1,618 @@
+{
+  "Add someone related to Anaya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Anika": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Arjun": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Kabir": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Kavya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Maa": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Papa": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Priya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Rahul": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Rohan": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Sneha": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Add someone related to Vihaan": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Aloo paratha options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Anaya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Anika": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Anika (you)": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Anika's first mehendi, drying in the sun.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Arjun": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Arjun (you)": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Arjun Arjun": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Arjun at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Back": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Banana walnut bread options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Bruno options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Cake at midnight, as promised.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Gas agency": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Imran bhai": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Mrs. Kapoor, number N": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Neha, number N": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Rakesh, number N": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Ramesh": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Sharma Clinic, number N": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Society security desk, number N": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Call Sunita didi": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Close": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Close the door, back to the window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Coming up": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Dal tadka options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Dancing in the baraat till the band gave up.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Diyas lit together, miles apart.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Every balcony lit, a year earlier.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Everyone at the mandap, nobody looking at the camera.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Family tree": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Gas agency options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Gobi ke pakode options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "How Papa learned to swim options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Imran bhai options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Join the call": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Join the video call": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Join with a code": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Kabir": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Kavya": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Kavya at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Larger text Bigger words and buttons, easier on the eyes": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Maa": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Maa (you)": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Maa Maa": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Maa at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Maa in the silk she wore at her own wedding.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Mail me a weekly letter Add an email to sign in first, then this can reach you.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Mark done: The gas cylinder is almost empty": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Mark done: Vegetables and milk for the week": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Mochi options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Mrs. Kapoor options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Neha options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "New task with details": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Not now": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Not now (hides this for two weeks)": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Office-day masala chai options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Open Urban Company": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Open the house": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Open the plan": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Or try the demo here": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Palak paneer options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Papa": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Papa at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Pick up: The gas cylinder is almost empty": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Pick up: Vegetables and milk for the week": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Plan a celebration": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Plan an event": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Play Arjun's voice note": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Play Maa's voice note": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Play Papa's voice note": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Privacy": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Priya": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Priya at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Rahul": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Rahul at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Rakesh options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Ramesh options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Rangoli at the door before the first lamp.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Rava upma options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Record a voice blessing for Diwali": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Record a voice wish for Diwali": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Anaya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Anika": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Kabir": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Kavya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Maa": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Papa": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Priya": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Rahul": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Rohan": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Sneha": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove Vihaan": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Arjun is Anika's father": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Arjun is Vihaan's father": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Kavya is Arjun's sister": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Maa is Arjun's mother": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Papa is Arjun's father": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Papa is Maa's husband": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Priya is Arjun's wife": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Remove: Rohan is Arjun's brother": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Rohan": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Rohan at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Say a task": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Seek": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Send Arjun & Priya something": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Send Maa & Papa something": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Send a photo wish for Diwali": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Send something for: The gas cylinder is almost empty": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Send something for: Vegetables and milk for the week": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Share a photo or video": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Share these words": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Sharma Clinic options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Show N of N": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Show my lamp and activity to family When it’s off, nobody sees when you were la…": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Sign in": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Slide the key home to open your family": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Sneha": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Sneha at your window": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Society security desk options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Sort older photos into albums": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Sunita didi options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "The elephant and the tailor options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Video call": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Vihaan": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Vihaan's first sparkler, held very far away.": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Voice note": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Voice note options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Voice note to Arjun": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "Voice note to Maa": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Gas agency": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Imran bhai": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Mrs. Kapoor": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Neha": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Rakesh": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Ramesh": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Sharma Clinic": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Society security desk": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "WhatsApp Sunita didi": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "When I got lost at the fair options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  },
+  "You": {
+    "verdict": "review",
+    "note": "on more than 2 screens: one path per job?"
+  },
+  "Your papa and the mango tree options": {
+    "verdict": "review",
+    "note": "icon-only control: its name is only an aria-label"
+  }
+}

@@ -291,7 +291,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
   const videoSrc = card?.type === "video" ? resolveMediaUrl(card.mediaRef) : null;
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={own ? "Your day" : `${name}'s day`} className="fixed inset-0 z-[60] flex justify-center bg-[#0d0b0a] text-white">
+    <div data-ui="person-day" role="dialog" aria-modal="true" aria-label={own ? "Your day" : `${name}'s day`} className="fixed inset-0 z-[60] flex justify-center bg-[#0d0b0a] text-white">
       <div className="relative flex h-full w-full max-w-[480px] flex-col overflow-hidden">
         {/* the photo is the colour: a soft, dim wash of it behind everything */}
         {card && (

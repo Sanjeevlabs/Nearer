@@ -6,6 +6,7 @@
 import { dbListSuggestions, dbSetSuggestionStatus } from "./db";
 import { purgeDismissals } from "./gather-store";
 import { deleteDoc, listAllDocs, putDoc } from "./family-docs";
+import { HABIT_TICK_KEEP_DAYS } from "./habits";
 import { BEAT_TTL_MS } from "./lamp";
 import { OPEN_TTL_MS, expireCheckin } from "./safety";
 
@@ -29,6 +30,8 @@ export const TTL = {
   chitthiMs: 7 * DAY,
   /** A used one-time order preview id is remembered this long (a preview lives 10 minutes). */
   previewMs: DAY,
+  /** A habit tick is kept 60 days (the habit card only ever reads today and the week's letter). */
+  habitTickMs: HABIT_TICK_KEEP_DAYS * DAY,
 } as const;
 
 export interface PurgeCounts {
@@ -45,11 +48,12 @@ export interface PurgeCounts {
   suggestionsWithdrawn: number;
   previews: number;
   chitthi: number;
+  habitTicks: number;
 }
 
 export async function purgeExpired(familyId: string, now: Date = new Date()): Promise<PurgeCounts> {
   const t = now.getTime();
-  const out: PurgeCounts = { knocks: 0, nudges: 0, eventDismissals: 0, dayLines: 0, sittings: 0, checkinsClosed: 0, checkinsDeleted: 0, museCalls: 0, presence: 0, lampBeats: 0, suggestionsWithdrawn: 0, previews: 0, chitthi: 0 };
+  const out: PurgeCounts = { knocks: 0, nudges: 0, eventDismissals: 0, dayLines: 0, sittings: 0, checkinsClosed: 0, checkinsDeleted: 0, museCalls: 0, presence: 0, lampBeats: 0, suggestionsWithdrawn: 0, previews: 0, chitthi: 0, habitTicks: 0 };
   // One kind failing never stops the rest.
   const step = async (name: string, f: () => Promise<void>) => {
     try {
@@ -109,6 +113,9 @@ export async function purgeExpired(familyId: string, now: Date = new Date()): Pr
   });
   await step("preview_used", async () => {
     for (const u of await listAllDocs(familyId, "preview_used")) if (t - Date.parse(u.at) > TTL.previewMs) (await deleteDoc(familyId, "preview_used", u.id), out.previews++);
+  });
+  await step("habit_tick", async () => {
+    for (const k of await listAllDocs(familyId, "habit_tick")) if (t - Date.parse(k.at) > TTL.habitTickMs) (await deleteDoc(familyId, "habit_tick", k.id), out.habitTicks++);
   });
   await step("suggestions", async () => {
     for (const s of await dbListSuggestions("pending", familyId)) {

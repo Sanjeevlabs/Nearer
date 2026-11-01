@@ -302,3 +302,10 @@
 - Settings never auto-save: every section has Save/Discard with status; actions stay immediate with confirms.
 - Lint now fails if runtime code or dependencies reach any non-Meta model vendor.
 - Tests: 701.
+
+## 1 Nov 2026 · Stage 25–26: speed live, state that clears, Together habits
+- Live: window and courtyard read in two database waves (was six and eight); weather, geocoding and the holiday feed cached across isolates with deadlines; Muse's catch-up sentence bounded so a model call never holds the first screen.
+- Every badge and status has one source, clears when acted on, and expires (docs/STATE.md); a daily purge removes expired rows.
+- Together habits: one family habit ("Morning walk · 7 AM"), anyone joins, "Maa and Priya walked today", the lamp glows when everyone has; words, never scores.
+- UI inventory: docs/ui-inventory.csv/.xlsx generated from the running app (987 rows, 36 screens); CI fails when the UI changes without regenerating it.
+- Tests: 784.

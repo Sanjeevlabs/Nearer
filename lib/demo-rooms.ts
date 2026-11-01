@@ -7,6 +7,8 @@ import { hourIn } from "./zones";
 import { eventTitle, fallbackPlan } from "./events";
 import { seedEvent } from "./gather-store";
 import { dateIn } from "./today";
+import { DEMO_MEMBERS } from "./family";
+import { dayIn, tickId } from "./habits";
 
 const FAM = "demo-family";
 
@@ -54,6 +56,17 @@ export function seedDemoRooms(now = Date.now()): void {
   past.forEach(([promptId, who, a, b], i) =>
     seedDoc(FAM, "today_task", { id: `today-${dayAgo(i + 1)}`, date: dayAgo(i + 1), promptId, forParents: promptId, forChildren: promptId, ...sides, answers: [{ memberId: who, cardId: a, at: ago((i + 1) * 1440, now) }, { memberId: "arjun", cardId: b, at: ago((i + 1) * 1440 - 120, now) }], completedAt: ago((i + 1) * 1440 - 120, now), createdAt: ago((i + 1) * 1440 + 60, now) }),
   );
+  // ---------- Together habit: the family's morning walk, 7 AM wherever each of them is ----------
+  seedDoc(FAM, "habit", { id: "habit-morning-walk", name: "Morning walk", hour: 7, minute: 0, createdBy: "dadi", createdAt: ago(60 * 24 * 9, now), members: ["dadi", "dada", "arjun", "priya"], archivedAt: null });
+  const tick = (memberId: string, daysBack: number, minsAgo: number) => {
+    const tz = DEMO_MEMBERS.find((m) => m.id === memberId)?.tz ?? "Asia/Kolkata";
+    const day = dayIn(tz, new Date(now - daysBack * 86_400_000));
+    seedDoc(FAM, "habit_tick", { id: tickId("habit-morning-walk", memberId, day), habitId: "habit-morning-walk", memberId, day, at: ago(minsAgo, now) });
+  };
+  tick("dadi", 0, 50);
+  tick("priya", 0, 20);
+  tick("dada", 1, 24 * 60 + 30);
+
   // ---------- Albums: Muse sorted the courtyard morning into one ----------
   seedDoc(FAM, "album", { id: "album-courtyard-2019", title: "A Sunday morning in the courtyard", event: "gathering", cardIds: ["demo-years-2", "demo-court-dadi", "demo-court-leo", "demo-court-aria"], startAt: "2019-10-27T08:00:00.000Z", endAt: "2019-10-27T08:38:00.000Z", coverId: "demo-years-2", madeBy: "muse", fixedBy: null, createdAt: "2019-10-27T09:00:00.000Z" });
 
