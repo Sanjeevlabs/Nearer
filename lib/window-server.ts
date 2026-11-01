@@ -171,6 +171,8 @@ const CARD_WINDOW_LIMIT = 200;
 /** A slow sky never holds the window: past this the weather badge just hides. */
 export const WEATHER_DEADLINE_MS = 1500;
 const HOLIDAYS_DEADLINE_MS = 1500;
+/** A model call never holds the first screen. */
+const SINCE_DEADLINE_MS = 700;
 
 type WindowDocs = Awaited<ReturnType<typeof listDocsMany<typeof WINDOW_KINDS>>>;
 
@@ -322,7 +324,9 @@ export async function windowState(familyId: string, viewerId: string, now = new 
       checkins: checkins.filter((c) => sharing.has(c.memberId)),
     });
   }
-  const [sinceLine, [weather, farPlace, herePlace], hol] = await Promise.all([sinceSentence(familyId, viewerId, viewer?.displayLang ?? "en", sinceWords), skyP, holidays]);
+  // Muse's one-sentence catch-up is nice, not necessary: it gets SINCE_DEADLINE_MS, then the plain
+  // lines show and the finished sentence is cached for the next look.
+  const [sinceLine, [weather, farPlace, herePlace], hol] = await Promise.all([withDeadline(sinceSentence(familyId, viewerId, viewer?.displayLang ?? "en", sinceWords), SINCE_DEADLINE_MS, null), skyP, holidays]);
   const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   const own = view ?? defaultView(familyId, viewerId);
   const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
