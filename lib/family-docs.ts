@@ -94,6 +94,26 @@ export async function putDoc<K extends DocKind>(familyId: string, kind: K, input
   return data;
 }
 
+/**
+ * Insert only if no row has this id: true when this call created it, false when
+ * it already existed (another request, possibly on another Worker, got there
+ * first). The one-at-a-time guard for "single use" things. Throws on a write failure.
+ */
+export async function claimDoc<K extends DocKind>(familyId: string, kind: K, input: unknown): Promise<boolean> {
+  const data = DOC_SCHEMAS[kind].parse(input) as DocOf<K>;
+  const row = data as unknown as { id: string } & Record<string, unknown>;
+  const sb = dbFor(familyId);
+  if (!sb) {
+    if (mem.has(memKey(familyId, row.id))) return false;
+    mem.set(memKey(familyId, row.id), { familyId, kind, data: row, createdAt: new Date().toISOString() });
+    return true;
+  }
+  const { error } = await sb.from("family_docs").insert({ id: `${familyId}:${row.id}`, family_id: familyId, kind, data: row, updated_at: new Date().toISOString() });
+  if (!error) return true;
+  if ((error as { code?: string }).code === "23505") return false;
+  throw new DbWriteError("family_docs", error.message);
+}
+
 export async function deleteDoc(familyId: string, kind: DocKind, id: string): Promise<void> {
   mem.delete(memKey(familyId, id));
   const sb = dbFor(familyId);

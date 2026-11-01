@@ -433,6 +433,14 @@ export const ChitthiSchema = z.object({
   lang: z.enum(["en", "hi"]).optional(),
 });
 
+// ---------- A spent one-time order preview (a preview places one order, on any Worker) ----------
+export const PreviewUsedSchema = z.object({
+  /** `preview-<nonce>`: the nonce sealed inside the preview id. */
+  id,
+  memberId: id,
+  at: iso,
+});
+
 // ---------- A line about today: one short line on your own day, gone at your midnight ----------
 export const DayLineSchema = z.object({
   /** The author's member id: one line per person, replaced when they write a new one. */
@@ -559,6 +567,7 @@ export const DOC_SCHEMAS = {
   chitthi: ChitthiSchema,
   partner_token: PartnerTokenSchema,
   day_line: DayLineSchema,
+  preview_used: PreviewUsedSchema,
   weekly_call: WeeklyCallSchema,
   muse_image_run: MuseImageRunSchema,
   nudge: NudgeSchema,

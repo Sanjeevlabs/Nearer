@@ -100,6 +100,9 @@ export async function purgeExpired(familyId: string, now: Date = new Date()): Pr
       }
     }
   });
+  await step("preview_used", async () => {
+    for (const u of await listAllDocs(familyId, "preview_used")) if (t - Date.parse(u.at) > TTL.previewMs) (await deleteDoc(familyId, "preview_used", u.id), out.previews++);
+  });
   await step("suggestions", async () => {
     for (const s of await dbListSuggestions("pending", familyId)) {
       if (t - Date.parse(s.createdAt) > TTL.suggestionMs) {
