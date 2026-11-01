@@ -5,7 +5,7 @@ import { DEFAULT_HABIT, HABIT_NAME_MAX, doneLabel, habitLine, habitTitle, timeLa
 import { callName, memberPhoto } from "@/lib/people";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
-import { BottomSheet } from "./share-panel";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { ActionMenu, Avatar, Button, Icon, type MenuAction } from "./ui/kit";
 import { useViewer } from "./viewer";
 

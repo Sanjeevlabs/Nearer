@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { whatsappInvite } from "@/lib/invite-link";
 import { can } from "@/lib/permissions";
 import { postJson } from "@/lib/use-json";
-import { BottomSheet } from "./share-panel";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { Button, Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
 
