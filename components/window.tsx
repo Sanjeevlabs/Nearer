@@ -266,7 +266,7 @@ function RhythmBar({ rhythm }: { rhythm: DayRhythm }) {
 
 function SheetList({ title, empty, rows }: { title: string; empty: string; rows: { key: string; at: string; main: string; note?: string }[] }) {
   return (
-    <section className="mt-5" aria-label={title}>
+    <section data-ui="window-section" className="mt-5" aria-label={title}>
       <h3 className="m-0 text-[13px] font-medium text-ink-soft">{title}</h3>
       {rows.length === 0 ? (
         <p className="m-0 mt-1.5 text-[14px] text-ink-soft">{empty}</p>
@@ -310,7 +310,7 @@ function PersonSheet({ person, st, onTalk, onCall, onClose }: { person: Member |
               <p className="m-0 text-[14px] leading-snug text-ink-soft">{s?.line ?? ""}</p>
             </div>
           </div>
-          <section className="mt-5" aria-label="Their day">
+          <section data-ui="window-their-day" className="mt-5" aria-label="Their day">
             <h3 className="m-0 mb-1 text-[13px] font-medium text-ink-soft">Their day</h3>
             {s ? <RhythmBar rhythm={s.rhythm} /> : <div className="skeleton h-[60px]" />}
           </section>
@@ -364,7 +364,7 @@ function GlanceStrip({ glance, members }: { glance: Glance | null; members: Memb
   const cities = awakeCities(glance.awake);
   const who = faces.map((f) => callName(f.m)).filter(Boolean).join(", ");
   return (
-    <nav aria-label="Across the family" className="grid grid-cols-2 gap-3">
+    <nav data-ui="window-glance" aria-label="Across the family" className="grid grid-cols-2 gap-3">
       <Tile href="/" label="Awake now" aria={glance.awake.length ? `Awake now: ${who}${cities ? `, in ${cities}` : ""}` : "Everyone's asleep"}>
         {glance.awake.length ? (
           <span className="block min-w-0">
@@ -544,7 +544,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
         <div className="flex flex-1 flex-col gap-3 px-4 pt-4" style={{ paddingBottom: 12 }}>
           {/* Who, where, and one true line */}
-          <header className="min-h-[58px]">
+          <header data-ui="window-header" className="min-h-[58px]">
             {data ? (
               <>
                 <h1 className="m-0 truncate text-[26px] font-light leading-[1.15] tracking-[-0.01em]">{names || "Your window"}</h1>
@@ -596,7 +596,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
           {data && !waiting && (
             <>
               {/* 1. The lamp, and their latest voice */}
-              <section className={cn(CARD, "px-4")} style={EDGE} aria-label="The lamp and their latest voice">
+              <section data-ui="window-lamp" className={cn(CARD, "px-4")} style={EDGE} aria-label="The lamp and their latest voice">
                 <div className="flex min-h-[64px] items-center gap-3 py-2">
                   <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", pair.last && litLine ? "bg-[#ffe9bf] text-[#9a5b00]" : "bg-black/[.06] text-ink-soft")} aria-hidden="true">
                     <Icon name="lamp" size={18} />
@@ -639,7 +639,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               </section>
 
               {/* 2. Safe & sound: tap a person for their day */}
-              <section className={cn(CARD, "px-4 pb-1.5 pt-1")} style={EDGE} aria-label="Safe and sound">
+              <section data-ui="window-safe" className={cn(CARD, "px-4 pb-1.5 pt-1")} style={EDGE} aria-label="Safe and sound">
                 <div className="flex min-h-[44px] items-center justify-between gap-3">
                   <h2 className="m-0 text-[17px] font-semibold leading-tight tracking-[-0.01em]">Safe &amp; sound</h2>
                   <Link href="/safe" className="-mr-2 flex min-h-[44px] shrink-0 items-center gap-0.5 px-2 text-[13px] font-medium text-ink-soft no-underline">
@@ -658,7 +658,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
               {/* 4. Since you were here */}
               {data.since?.at && data.since.lines.length > 0 && (
-                <section className={cn(CARD, "px-4 py-3")} style={EDGE} aria-label="Since you were here">
+                <section data-ui="window-since" className={cn(CARD, "px-4 py-3")} style={EDGE} aria-label="Since you were here">
                   <p className="m-0 text-[13px] font-medium text-ink-soft">{sinceLabel(data.since.at, now, viewer.tz)}</p>
                   {data.since.line ? (
                     <p className="m-0 mt-1 text-[14px] leading-snug">{data.since.line}</p>
@@ -675,7 +675,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               )}
 
               {/* 5. The call row */}
-              <section className={cn(CARD, "flex items-center gap-2.5 px-4 py-3")} style={EDGE} aria-label="Call">
+              <section data-ui="window-call" className={cn(CARD, "flex items-center gap-2.5 px-4 py-3")} style={EDGE} aria-label="Call">
                 <p className="m-0 min-w-0 flex-1 text-[14px] leading-snug">
                   {knock ? (
                     <>
@@ -739,7 +739,7 @@ function WaitingCard({ names }: { names: string }) {
     window.open(whatsappInvite(window.location.origin, code), "_blank", "noopener");
   };
   return (
-    <section className={cn(CARD, "p-4")} style={EDGE} aria-label="Waiting for them to join">
+    <section data-ui="window-waiting" className={cn(CARD, "p-4")} style={EDGE} aria-label="Waiting for them to join">
       <p className="m-0 flex items-center gap-2 text-[12px] uppercase tracking-[0.16em] text-ink-soft">
         <span className="h-2 w-2 animate-pulse rounded-full bg-ink-soft" /> Waiting
       </p>

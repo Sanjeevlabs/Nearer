@@ -745,7 +745,7 @@ export function AddSheet() {
   return (
     <AnimatePresence>
       {addOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={voice ? "Record a voice note" : "Share a photo or video"}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={voice ? "Record a voice note" : "Share a photo or video"} data-ui="add-sheet">
           <m.button
             type="button"
             aria-label="Close"

@@ -77,6 +77,7 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="The house">
           <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <m.nav
+            data-ui="house-sheet"
             aria-label="The house"
             className="frost relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3"
             style={{ maxHeight: "88vh", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}
@@ -149,7 +150,7 @@ function Dock() {
             exit={{ y: 24, opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
           >
-            <div className="frost glass-pill flex items-center gap-1 p-1.5">
+            <div data-ui="dock" className="frost glass-pill flex items-center gap-1 p-1.5">
               {others.length ? (
                 <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice note to ${callName(pagePerson)}` : "Voice note"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-black text-white">
                   <Icon name="mic" size={23} strokeWidth={1.9} />

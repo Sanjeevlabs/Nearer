@@ -180,7 +180,7 @@ export default function SettingsPage() {
     <div>
       <RoomHeader title="Settings" />
 
-      <nav aria-label="Settings sections" className="mt-7 grid grid-cols-4 gap-1 rounded-full bg-surface p-1">
+      <nav data-ui="settings-tabs" aria-label="Settings sections" className="mt-7 grid grid-cols-4 gap-1 rounded-full bg-surface p-1">
         {TABS.map(([id, label]) => (
           <button key={id} type="button" aria-pressed={tab === id} onClick={() => go(id)} className={cn("press h-11 rounded-full text-[15px] font-semibold", tab === id ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
             {label}

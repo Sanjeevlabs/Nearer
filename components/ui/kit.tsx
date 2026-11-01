@@ -287,7 +287,7 @@ export function Monogram({ name, size }: { name: string; size: number }) {
 export function RoomHeader({ title, subtitle, action, room }: { title: string; subtitle?: string; action?: React.ReactNode; /** For a page that is in a room but not one of its tabs (Send something → "Care"). */ room?: string }) {
   const router = useRouter();
   return (
-    <header className="mb-5">
+    <header data-ui="room-header" className="mb-5">
       <div className="mb-1 flex h-11 items-center justify-between">
         <button
           type="button"
@@ -336,7 +336,7 @@ function SpaceTabs() {
   }, [pathname]);
   if (!at) return null;
   return (
-    <nav aria-label={at.space.title} className="no-scrollbar relative -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 py-1">
+    <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar relative -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 py-1">
       {at.space.rooms.map((r) => (
         <Link
           key={r.href}

@@ -53,7 +53,7 @@ export function CourtyardLetter() {
   if (draft && grownUp) {
     const p = draft.payload as Draft;
     return (
-      <section aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-5">
+      <section data-ui="courtyard-letter" aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-5">
         <Label />
         <p className="voice m-0 mt-2 text-[20px] leading-snug text-ink">{p.title ?? "A letter from the courtyard"}</p>
         <p className="m-0 mt-1.5 line-clamp-2 whitespace-pre-line text-[14.5px] leading-snug text-ink-soft">{peek(p.body ?? "")}</p>
@@ -72,7 +72,7 @@ export function CourtyardLetter() {
 
   if (!letter?.body) return null;
   return (
-    <section aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-5">
+    <section data-ui="courtyard-letter" aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-5">
       <Label />
       <p className="voice m-0 mt-2 text-[20px] leading-snug text-ink">{letter.title ?? "A letter from the courtyard"}</p>
       <p className={`m-0 mt-1.5 whitespace-pre-line text-[14.5px] leading-snug text-ink-soft ${open ? "" : "line-clamp-2"}`}>{open ? letter.body : peek(letter.body)}</p>
