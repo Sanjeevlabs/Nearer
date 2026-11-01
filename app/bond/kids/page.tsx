@@ -1,31 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { RoomHeader, Avatar, Icon } from "@/components/ui/kit";
 import { Boundary } from "@/components/ui/boundary";
-import { Doorframe } from "@/components/doorframe";
-import { AddMark } from "@/components/height-marks";
 import { FridgeBoard, Label, pill } from "@/components/kids-courtyard";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
 import { useViewer } from "@/components/viewer";
-import { guardiansOf, isKid } from "@/lib/kids";
+import { dayMonthLabel } from "@/lib/birthday";
+import { fridgeKidId, guardiansOf, isKid } from "@/lib/kids";
 import type { KidsPage } from "@/lib/kids-page";
-import { callName, memberPhoto, relativeDay } from "@/lib/people";
+import { ageOf, callName, memberPhoto, relativeDay } from "@/lib/people";
 import type { Card, Member } from "@/lib/schemas";
 import { useJson } from "@/lib/use-json";
 
-/** Family room, Kids tab: what the children shared, asked and were told, and their doorframes. Grown-ups only. */
+/** Family room, Kids tab: what the children shared, asked and were told. Grown-ups only. */
 
 const card = "mt-5 rounded-[26px] bg-surface p-5";
 const Empty = ({ children }: { children: React.ReactNode }) => <p className="m-0 mt-2 text-[14.5px] leading-snug text-ink-soft">{children}</p>;
 
-/** "3 Mar": the birthday has a day and a month, never a year, so there is no age to work out. */
-function birthdayLine(m: Member): string | null {
-  const [mm, dd] = m.birthday.split("-").map(Number);
-  if (!mm || !dd) return null;
-  return `Birthday ${new Date(Date.UTC(2001, mm - 1, dd)).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}`;
+/** "Age 9 · Birthday 9 Nov": the age only when the birth year is known, the birthday only when it is added. */
+function ageLine(m: Member): string | null {
+  const age = ageOf(m);
+  const day = dayMonthLabel(m.birthday);
+  const parts = [age !== null ? `Age ${age}` : null, day ? `Birthday ${day}` : null].filter((x): x is string => Boolean(x));
+  return parts.length ? parts.join(" · ") : null;
 }
 
 function PlayPill({ voice, label }: { voice: Card | undefined; label: string }) {
@@ -40,10 +40,9 @@ function PlayPill({ voice, label }: { voice: Card | undefined; label: string }) 
   );
 }
 
-function KidsBody({ data, reload }: { data: KidsPage; reload: () => Promise<void> }) {
+function KidsBody({ data }: { data: KidsPage }) {
   const { viewer, members, relationships } = useViewer();
   const { openAdd } = useShell();
-  const [marking, setMarking] = useState<Member | null>(null);
   const kids = useMemo(() => data.kids.map((id) => members.find((m) => m.id === id)).filter((m): m is Member => Boolean(m)), [data.kids, members]);
   const mine = (kid: Member) => !isKid(viewer) && guardiansOf(kid.id, relationships).includes(viewer.id);
   const voice = (id: string | null) => (id ? data.voices.find((c) => c.id === id) : undefined);
@@ -60,8 +59,8 @@ function KidsBody({ data, reload }: { data: KidsPage; reload: () => Promise<void
         ) : (
           <ul className="m-0 mt-3 list-none space-y-3 p-0">
             {kids.map((k) => {
-              const last = data.fridge.find((c) => c.authorId === k.id);
-              const bday = birthdayLine(k);
+              const last = data.fridge.find((c) => fridgeKidId(c) === k.id);
+              const bday = ageLine(k);
               return (
                 <li key={k.id}>
                   <Link href={`/people/${k.id}`} className="flex items-center gap-3 text-ink no-underline">
@@ -80,8 +79,16 @@ function KidsBody({ data, reload }: { data: KidsPage; reload: () => Promise<void
       </section>
 
       <section data-ui="kids-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-5" style={{ background: "var(--well)" }}>
-        <Label>Fridge</Label>
-        {data.fridge.length === 0 ? <Empty>Nothing on the fridge yet. The kids&rsquo; photos and drawings land here.</Empty> : <FridgeBoard cards={data.fridge} replyTo={kids} grid />}
+        <div className="flex items-center justify-between gap-3">
+          <Label>Fridge</Label>
+          {kids.length > 0 && (
+            <button type="button" onClick={() => openAdd("photos", { kind: "fridge", ...(kids.length === 1 ? { forMemberId: kids[0].id } : {}) })} className="press -mr-2 flex h-10 items-center gap-1.5 px-2 text-[14px] font-semibold text-ink">
+              <Icon name="plus" size={15} />
+              Add to the fridge
+            </button>
+          )}
+        </div>
+        {data.fridge.length === 0 ? <Empty>Nothing on the fridge yet. The kids&rsquo; photos and drawings land here, and you can add one for a child who does not have an account.</Empty> : <FridgeBoard cards={data.fridge} replyTo={kids} grid />}
       </section>
 
       <section data-ui="kids-asked" aria-label="Asked" className={card}>
@@ -154,49 +161,6 @@ function KidsBody({ data, reload }: { data: KidsPage; reload: () => Promise<void
           </div>
         )}
       </section>
-
-      <section data-ui="kids-doorframes" aria-label="Doorframes" className={card}>
-        <Label>Doorframes</Label>
-        {kids.length === 0 ? (
-          <Empty>No doorframes yet. Each child gets one, with a mark for every time they are measured.</Empty>
-        ) : (
-          <div className="mt-3 space-y-6">
-            {kids.map((k) => {
-              const marks = data.marks.filter((m) => m.memberId === k.id);
-              return (
-                <div key={k.id} data-ui="kids-doorframe">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="m-0 text-[20px]">{callName(k)}</h2>
-                    {mine(k) && (
-                      <button type="button" onClick={() => setMarking(k)} className="press h-10 rounded-full bg-white px-4 text-[14px] font-semibold">
-                        Add a mark
-                      </button>
-                    )}
-                  </div>
-                  {marks.length > 0 ? (
-                    <div className="mt-3 rounded-[22px] bg-white px-0 py-5">
-                      <Doorframe marks={marks} />
-                    </div>
-                  ) : (
-                    <Empty>No marks yet for {callName(k)}.</Empty>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {marking && (
-        <AddMark
-          child={marking}
-          onClose={() => setMarking(null)}
-          onSaved={() => {
-            setMarking(null);
-            void reload();
-          }}
-        />
-      )}
     </>
   );
 }
@@ -204,16 +168,25 @@ function KidsBody({ data, reload }: { data: KidsPage; reload: () => Promise<void
 export default function KidsPageRoute() {
   const { viewer } = useViewer();
   const q = useJson<KidsPage>(isKid(viewer) ? null : "/api/kids");
+  // A photo added from the sheet bumps the shell's refresh key: read the page again.
+  const { refreshKey } = useShell();
+  const seen = useRef(refreshKey);
+  const { reload } = q;
+  useEffect(() => {
+    if (seen.current === refreshKey) return;
+    seen.current = refreshKey;
+    void reload();
+  }, [refreshKey, reload]);
   return (
     <div>
-      <RoomHeader title="Kids" subtitle="What the children shared, asked and were told, and their doorframes" />
+      <RoomHeader title="Kids" subtitle="What the children shared, asked and were told" />
       {isKid(viewer) ? (
         <p className="m-0 text-[15px] text-ink-soft">This page is for the grown-ups. Your things are on your first screen.</p>
       ) : q.data === null ? (
         <div className="skeleton h-[420px] rounded-card" aria-busy="true" aria-label="Loading the kids" />
       ) : (
         <Boundary label="Kids">
-          <KidsBody data={q.data} reload={q.reload} />
+          <KidsBody data={q.data} />
         </Boundary>
       )}
     </div>

@@ -437,20 +437,9 @@ export function seedDemoRooms(now = Date.now()): void {
 
 /**
  * The children's section: Vihaan's open question for Maa, Maa's bedtime story for Anika (recorded
- * yesterday), and their marks on the doorframe. Their cards are seeded in lib/store.ts (cards live
- * there). Marks are only a number and a date.
+ * yesterday). Their cards are seeded in lib/store.ts (cards live there).
  */
 function seedKids(now: number): void {
-  const MONTH = 60 * 24 * 30.4;
   seedDoc(FAM, "kid_ask", { id: "ask-leo-meet", fromMemberId: "leo", toMemberId: "dadi", cardId: "demo-kid-leo-ask", text: "", askedAt: ago(180, now), answeredCardId: null, answeredAt: null, topic: "question" });
   seedDoc(FAM, "bedtime_story", { id: "bed-dadi-aria", forMemberId: "aria", byMemberId: "dadi", cardId: "demo-bedtime-dadi-aria", at: ago(20 * 60, now), title: "The little elephant and the moon" });
-  // Leo: three marks over fourteen months; the newest landed this week.
-  const marks: [string, string, number, number, string, string][] = [
-    ["hm-leo-1", "leo", 14 * MONTH, 117.5, "arjun", "Door of the old flat"],
-    ["hm-leo-2", "leo", 6.5 * MONTH, 122.5, "arjun", ""],
-    ["hm-leo-3", "leo", 3 * 1440, 124.5, "dadi", "Standing very straight"],
-    ["hm-aria-1", "aria", 9 * MONTH, 101, "arjun", ""],
-    ["hm-aria-2", "aria", 2 * MONTH, 105.5, "arjun", "Shoes off"],
-  ];
-  for (const [id, memberId, minutes, cm, byMemberId, note] of marks) seedDoc(FAM, "height_mark", { id, memberId, cm, at: ago(Math.round(minutes), now), byMemberId, note });
 }

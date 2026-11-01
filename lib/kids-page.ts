@@ -1,7 +1,7 @@
 // What the Kids page (/bond/kids, grown-ups only) shows, from lists already loaded: no
 // queries here. The /api/kids route loads, this decides. Pure and client-safe.
 import { askCardIds, guardianMap, isKid, kidCards, openAsksFor } from "./kids";
-import type { BedtimeStory, HeightMark, KidAsk } from "./kinds";
+import type { BedtimeStory, KidAsk } from "./kinds";
 import type { Card, Member, Relationship } from "./schemas";
 
 /** Answered asks and bedtime stories shown on the page: the newest few, not the whole history. */
@@ -20,7 +20,6 @@ export interface KidsPage {
   /** Answered ask id -> the Story its answer became. */
   askStory: Record<string, string>;
   stories: BedtimeStory[];
-  marks: HeightMark[];
 }
 
 /** `cards` must already leave out anything sealed for the viewer. `tales` are the family's Stories (id and cardId are read). */
@@ -31,7 +30,6 @@ export function kidsPage(i: {
   cards: Card[];
   asks: KidAsk[];
   stories: BedtimeStory[];
-  marks: HeightMark[];
   tales: { id: string; cardId: string }[];
 }): KidsPage {
   const kids = i.members.filter((m) => isKid(m) && m.status !== "pending");
@@ -62,6 +60,5 @@ export function kidsPage(i: {
     asks,
     askStory,
     stories,
-    marks: i.marks.filter((m) => kidIds.has(m.memberId)),
   };
 }

@@ -7,10 +7,10 @@ import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 
 // The Kids page for grown-ups (/bond/kids) in one round trip: the kids' fridge, what they
-// asked, the bedtime stories and the doorframe marks. It reads the same lists the three kid
-// routes (/api/kid-ask, /api/bedtime, /api/height) read, once; lib/kids-page.ts decides what
+// asked, and the bedtime stories. It reads the same lists the kid
+// routes (/api/kid-ask, /api/bedtime) read, once; lib/kids-page.ts decides what
 // is shown. A child has kid-home instead: 403.
-// GET -> { kids, fridge, voices, asks, askStory, stories, marks }
+// GET -> { kids, fridge, voices, asks, askStory, stories }
 
 async function getHandler(req: Request): Promise<Response> {
   // Start the shared reads now, in the same wave as the session lookup (lib/request-data.ts).
@@ -18,18 +18,17 @@ async function getHandler(req: Request): Promise<Response> {
   if (claimed) {
     preloadCore(req, claimed.familyId);
     void relationshipsFor(req, claimed.familyId).catch(() => undefined);
-    prefetchDocs(req, claimed.familyId, ["kid_ask", "bedtime_story", "height_mark", "story", "today_task", "chitthi"]);
+    prefetchDocs(req, claimed.familyId, ["kid_ask", "bedtime_story", "story", "today_task", "chitthi"]);
   }
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const f = auth.familyId;
-  const [members, rels, stored, asks, stories, marks, tales, tasks, letters] = await Promise.all([
+  const [members, rels, stored, asks, stories, tales, tasks, letters] = await Promise.all([
     membersFor(req, f),
     relationshipsFor(req, f),
     cardsFor(req, f),
     docsFor(req, f, "kid_ask"),
     docsFor(req, f, "bedtime_story"),
-    docsFor(req, f, "height_mark"),
     docsFor(req, f, "story"),
     docsFor(req, f, "today_task"),
     docsFor(req, f, "chitthi"),
@@ -41,7 +40,7 @@ async function getHandler(req: Request): Promise<Response> {
   for (const l of letters) if (l.authorId !== auth.memberId && Date.parse(l.deliverAt) > now) sealed.add(l.id);
   const all = withDemoShelf(stored, f);
   const cards = sealed.size ? all.filter((c) => !sealed.has(c.id)) : all;
-  return Response.json(kidsPage({ viewerId: auth.memberId, members, rels, cards, asks, stories, marks, tales }), { headers: { "cache-control": "no-store" } });
+  return Response.json(kidsPage({ viewerId: auth.memberId, members, rels, cards, asks, stories, tales }), { headers: { "cache-control": "no-store" } });
 }
 
 export const GET = guardWrites(getHandler);
