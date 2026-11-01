@@ -161,7 +161,7 @@ export async function deleteDoc(familyId: string, kind: DocKind, id: string): Pr
 
 /** Remove everything a member authored or that is about them (Leave family). */
 export async function deleteDocsForMember(familyId: string, memberId: string): Promise<void> {
-  const fields = ["memberId", "cookId", "forMemberId", "askedBy", "toMemberId", "hostId", "addedBy"];
+  const fields = ["memberId", "cookId", "forMemberId", "askedBy", "toMemberId", "hostId", "addedBy", "fromMemberId", "byMemberId"];
   mem.forEach((r, key) => {
     if (r.familyId === familyId && fields.some((f) => r.data[f] === memberId)) mem.delete(key);
   });

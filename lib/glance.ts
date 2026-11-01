@@ -2,12 +2,13 @@
 // family. Pure and client-safe (no fs, no db): the server loads, this decides.
 // Words, never counts: no "3 unread", only names, times and dates.
 import { addressees } from "./households";
-import type { Need, Question, TodayTask, WeeklyCall } from "./kinds";
+import { askLine, openAsksFor, type KidsTile } from "./kids";
+import type { KidAsk, Need, Question, TodayTask, WeeklyCall } from "./kinds";
 import { cleanTitle, type CalOccasion } from "./occasion-calendar";
 import type { Card, Member, Play } from "./schemas";
 import { isAwake, placeFromTz } from "./zones";
 
-export type WaitingKind = "voice" | "question" | "today" | "care" | "nudge";
+export type WaitingKind = "voice" | "question" | "today" | "care" | "nudge" | "kid";
 
 /** One thing waiting for the viewer. `fromId` = who is waiting (a voice note, a question); `nudgeId` = the stored nudge to mark seen when it is opened. */
 export interface WaitingItem {
@@ -25,6 +26,8 @@ export interface Glance {
   waiting: WaitingItem | null;
   /** The next kept occasion or planned event; null = nothing coming. */
   next: { text: string; href: string } | null;
+  /** New things the kids shared since your last visit ("From the kids"); null hides the tile. */
+  kids?: KidsTile | null;
   /** The fixed weekly call, in both zones; `set` false = a nudge to set one. */
   call: { text: string; href: string; set: boolean };
 }
@@ -74,6 +77,9 @@ export interface WaitingInput {
   needs: Pick<Need, "id" | "title" | "claimedBy" | "status" | "doneAt" | "createdAt">[];
   /** The viewer's own nudges with their words already resolved (lib/nudges.ts `unseenFor`). */
   nudges?: { id: string; kind: string; text: string; href: string; at: string }[];
+  /** Children's asks, with each child's parents and grandparents (lib/kids.ts guardianMap). */
+  kidAsks?: Pick<KidAsk, "id" | "fromMemberId" | "toMemberId" | "answeredCardId" | "askedAt" | "topic">[];
+  guardians?: Record<string, string[]>;
 }
 
 const THING: Record<string, string> = { audio: "voice note", photo: "photo", video: "video" };
@@ -81,7 +87,7 @@ const THING: Record<string, string> = { audio: "voice note", photo: "photo", vid
 const ASK: Record<string, string> = { story: "for a story", recipe: "for a recipe", wisdom: "for advice", blessing: "for a blessing", song: "for a song", place: "about a place" };
 const ASK_HREF: Record<string, string> = { story: "/stories", recipe: "/kitchen", wisdom: "/advice", blessing: "/advice", song: "/", place: "/" };
 /** Tie-break when two things arrived at the same moment: people before chores. */
-const RANK: Record<WaitingKind, number> = { voice: 0, question: 1, today: 2, care: 3, nudge: 4 };
+const RANK: Record<WaitingKind, number> = { voice: 0, question: 1, kid: 1, today: 2, care: 3, nudge: 4 };
 const CARD_DAYS = 30;
 const NEED_DAYS = 30;
 
@@ -92,6 +98,7 @@ const NEED_DAYS = 30;
  *  - a voice note, photo or video sent to you: until you play it or answer the
  *    sender (a card of yours to them, sent after theirs);
  *  - a question asked of you: until a card answers it;
+ *  - a child's ask for you (or for any of their grandparents or parents): until someone answers it by voice;
  *  - a Today answer sealed until yours: until you answer (or it is done);
  *  - a care need you took on: until it is done;
  *  - a nudge for you: until you open it (seen), or it ages out.
@@ -116,6 +123,10 @@ export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] 
     if (q.toMemberId !== i.viewerId || q.answeredCardId || !past(q.createdAt)) continue;
     const text = q.askedBy ? `${name(q.askedBy)} asked you ${ASK[q.topic] ?? ""}`.trim() : "A question for you";
     found.push({ at: q.createdAt, kind: "question", text, href: ASK_HREF[q.topic] ?? "/", ...(q.askedBy ? { fromId: q.askedBy } : {}) });
+  }
+  for (const a of openAsksFor(i.kidAsks ?? [], i.viewerId, i.guardians ?? {})) {
+    if (!past(a.askedAt)) continue;
+    found.push({ at: a.askedAt, kind: "kid", text: askLine(name(a.fromMemberId), a.topic), href: "/", fromId: a.fromMemberId });
   }
   const yesterday = new Date(nowMs - 86_400_000).toISOString().slice(0, 10);
   for (const t of i.today) {
