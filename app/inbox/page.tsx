@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
+import { PushAsk } from "@/components/push-ask";
 import { Avatar, EmptyLine, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import type { InboxItem } from "@/lib/inbox";
@@ -107,6 +108,7 @@ export default function InboxPage() {
   return (
     <div>
       <RoomHeader title="For you" subtitle="What people sent you in the last 30 days" />
+      <PushAsk className="mb-6" />
       {failed && !data ? (
         <div className="rounded-card bg-card p-4 text-center shadow-card" role="alert">
           <p className="m-0 text-headline font-semibold">Couldn&rsquo;t load what&rsquo;s for you.</p>

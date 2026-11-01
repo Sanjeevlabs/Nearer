@@ -17,6 +17,8 @@ import { ConnectedApps } from "@/components/connected-apps";
 import { Group, UnsavedBanner } from "@/components/settings/section";
 import { LampSection, LanguageSection, NudgeSettingsSection, ProfileSection, ReadingSection, WhereSection } from "@/components/settings/account-sections";
 import { PeopleAndRoles } from "@/components/settings/roles-section";
+import { NotificationsSection } from "@/components/settings/push-section";
+import { forgetPushDevice } from "@/lib/web-push";
 import { getPendingTabs } from "@/lib/settings-pending";
 
 interface Invite {
@@ -153,6 +155,8 @@ export default function SettingsPage() {
     setBusy("leave");
     const res = await fetch("/api/privacy/membership", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ memberId: viewer.id }) });
     if (res.ok) {
+      // The server already dropped this person's devices; this ends the browser's side of it.
+      await forgetPushDevice().catch(() => undefined);
       await fetch("/api/session", { method: "DELETE" }).catch(() => undefined);
       resetFamilyCards();
       window.dispatchEvent(new Event("aangan:auth"));
@@ -165,6 +169,8 @@ export default function SettingsPage() {
   };
 
   const signOut = async () => {
+    // This phone stops getting this person's notes (needs the session, so before it is cleared).
+    await forgetPushDevice().catch(() => undefined);
     await fetch("/api/session", { method: "DELETE" }).catch(() => undefined);
     try {
       sessionStorage.clear();
@@ -203,6 +209,7 @@ export default function SettingsPage() {
         <LanguageSection onMessage={flash} />
         <ReadingSection onMessage={flash} />
         <NudgeSettingsSection onMessage={flash} />
+        <NotificationsSection onMessage={flash} />
         <WhereSection onMessage={flash} />
       </div>
 

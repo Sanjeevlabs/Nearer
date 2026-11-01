@@ -425,7 +425,7 @@ create table if not exists family_docs (
 -- Kinds are validated by lib/kinds.ts; the check keeps junk out of the table.
 -- height_mark: retired 1 Nov, kept in the list below so old rows parse (the app no longer reads or writes it).
 alter table family_docs drop constraint if exists family_docs_kind_check;
-alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark'));
+alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','push_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark'));
 create index if not exists family_docs_family_kind_idx on family_docs (family_id, kind, created_at desc);
 alter table family_docs enable row level security;
 
@@ -466,6 +466,28 @@ create or replace function add_spend(c numeric) returns numeric language sql sec
 $$;
 revoke execute on function add_spend(numeric) from public, anon, authenticated;
 grant execute on function add_spend(numeric) to service_role;
+
+-- ------------------------------------------------------- push_subscriptions
+-- One row per phone or browser that can be pushed to (lib/push). `token` is the
+-- FCM/APNs device token (kind 'fcm') or the Web Push endpoint URL (kind 'webpush',
+-- with its p256dh + auth keys). Unique, so a device that signs in as someone else
+-- is re-bound, never duplicated. Server only: RLS on, no policies, service role writes.
+create table if not exists push_subscriptions (
+  id text primary key,
+  family_id text not null references families(id) on delete cascade,
+  member_id text not null references members(id) on delete cascade,
+  kind text not null check (kind in ('fcm', 'webpush')),
+  token text not null unique,
+  p256dh text,
+  auth text,
+  platform text not null default 'web',
+  created_at timestamptz not null default now(),
+  last_ok_at timestamptz,
+  failures integer not null default 0
+);
+create index if not exists push_subscriptions_member_idx on push_subscriptions (family_id, member_id);
+alter table push_subscriptions enable row level security;
+drop policy if exists "family scope" on push_subscriptions;
 
 -- -------------------------------------------------------------------- seed
 -- The demo families (demo-family, demo-iyer) are served from the app's

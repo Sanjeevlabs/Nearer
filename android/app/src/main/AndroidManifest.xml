@@ -39,6 +39,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Push (FCM): the small icon, its tint, and the channel the server names ("family",
+             created in lib/native.ts). Harmless without google-services.json. -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_nearer" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_accent" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="family" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

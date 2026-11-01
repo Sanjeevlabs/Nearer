@@ -21,7 +21,8 @@ import { Icon, type IconName } from "./ui/kit";
 import { ForYouGlyph, HouseGlyph } from "./ui/glyphs";
 import { ViewerProvider, useViewer } from "./viewer";
 import { DocumentLangOnly } from "@/lib/use-t";
-import { onAppUrlOpen, setStatusBar } from "@/lib/native";
+import { onAppUrlOpen, setStatusBar, watchPush } from "@/lib/native";
+import { refreshSubscription } from "@/lib/web-push";
 
 // The composer (mic, EXIF, media processing) loads only when first opened.
 // Sheets nobody needs until they tap: fetched when first opened, then kept mounted so they can animate out.
@@ -235,6 +236,13 @@ function ShellInner({ children }: { children: React.ReactNode }) {
     void setStatusBar();
     return onAppUrlOpen((route) => nativeRouter.push(route));
   }, [nativeRouter]);
+  // Push: in the app, keep this phone's token fresh and open the page a tapped notification names;
+  // on the web, re-save the browser's subscription if the person already said yes. Never asks.
+  useEffect(() => {
+    if (!signedIn) return;
+    void refreshSubscription();
+    return watchPush((route) => nativeRouter.push(route));
+  }, [signedIn, nativeRouter]);
   const [large] = useLargeText(viewer.role === "elder");
   const [addOpen, setAddOpen] = useState(false);
   // Mount the composer on first open, then keep it mounted so its exit animation runs.

@@ -11,6 +11,7 @@ import { checkRateLimit, requireSession } from "@/lib/auth";
 import { sealedCardIds } from "@/lib/today";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
+import { pushAddressed } from "@/lib/push/events";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
@@ -197,6 +198,7 @@ async function postMultipart(req: Request, familyId: string, authorId: string): 
     forMemberId: fridge,
   });
   const album = await fileIntoAlbum(familyId, card, event);
+  pushAddressed(familyId, card);
   return Response.json({ card, album }, { status: 201 });
 }
 
@@ -235,6 +237,8 @@ async function postHandler(req: Request): Promise<Response> {
   });
   // No model here: sorted from the words the person wrote.
   const album = card.type === "audio" ? null : await fileIntoAlbum(auth.familyId, card, eventFromText(card.caption));
+  // A note sent to particular people: a gentle push to them (background; never fails the upload).
+  pushAddressed(auth.familyId, card);
   return Response.json({ card, album }, { status: 201 });
 }
 

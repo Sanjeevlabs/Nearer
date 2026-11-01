@@ -7,6 +7,7 @@ import { AdviceCategoryId, adviceCategory } from "@/lib/advice";
 import { can } from "@/lib/permissions";
 import { askWeeklyQuestions } from "@/lib/keeper";
 import { guardWrites } from "@/lib/api-guard";
+import { pushAsk } from "@/lib/push/events";
 
 // Questions for elders: the weekly one Muse asks, and the ones family ask.
 const Body = z.discriminatedUnion("action", [
@@ -84,6 +85,7 @@ async function postHandler(req: Request): Promise<Response> {
     madeBy: "family",
     createdAt: new Date().toISOString(),
   });
+  pushAsk(auth.familyId, { fromId: auth.memberId, toIds: [to.id], topic: question.topic, tagId: `ask-${question.id}` });
   return Response.json({ question }, { status: 201 });
 }
 

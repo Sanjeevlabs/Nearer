@@ -316,3 +316,9 @@
 - Native: appId, Android package and URL scheme `com.sanjeevlabs.nearer`; the deep link is `com.sanjeevlabs.nearer://auth/callback` (update the Supabase redirect list). Domain: `nearer.sanjeevlabs.com` only; the old host is retired, not redirected.
 - Demo code is `NEARER-DEMO`; the server still accepts the old demo code for old links.
 - Kept on purpose so sessions and deploys survive: the Worker name, `aangan:*` storage keys, the `aangan_session` cookie, IndexedDB, bucket and table names, Modal app names.
+
+## 1 Nov 2026 · Push notifications
+
+- Real push: the Android app (FCM HTTP v1), the installed web app (Web Push with VAPID, written on WebCrypto so it runs on Workers) and, once the owner adds an Apple key to Firebase, the iOS app.
+- Calm by design: a voice note to you, a lit lamp, a question or a child's ask arrive now (not from 22:00 to 07:00, at most 6 a day); blessings, "heard", occasions, calls and letters wait for the 8 AM summary; "I need help" and an overdue check-in reach her chosen people at any hour. Never counts of inactivity.
+- Settings, You, Notifications: a switch per kind and "Send me a test". The soft ask ("Get a gentle note when family sends you something") never appears on load and stays away 30 days after "Not now".

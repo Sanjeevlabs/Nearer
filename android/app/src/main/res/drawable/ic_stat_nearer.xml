@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon for push notifications: the Nearer mark (five overlapping circles) as one
+     flat shape. Android draws small icons from the alpha channel only, so it is a single colour. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="784"
+    android:viewportHeight="784">
+    <group
+        android:translateX="-108"
+        android:translateY="-108">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M328,288 a172,172 0 1,0 344,0 a172,172 0 1,0 -344,0 z
+                              M529.6,434.5 a172,172 0 1,0 344,0 a172,172 0 1,0 -344,0 z
+                              M452.6,671.5 a172,172 0 1,0 344,0 a172,172 0 1,0 -344,0 z
+                              M203.4,671.5 a172,172 0 1,0 344,0 a172,172 0 1,0 -344,0 z
+                              M126.4,434.5 a172,172 0 1,0 344,0 a172,172 0 1,0 -344,0 z" />
+    </group>
+</vector>
