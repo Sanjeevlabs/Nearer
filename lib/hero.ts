@@ -28,6 +28,16 @@ export function rememberedHero(): string | null {
   }
 }
 
+/** Another person or family: the last photo is not theirs. Runs on `aangan:auth` (sign-in, sign-out, switching). */
+export function forgetHero(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* private mode */
+  }
+}
+if (typeof window !== "undefined") window.addEventListener("aangan:auth", forgetHero);
+
 export function rememberHero(ref: string): void {
   try {
     localStorage.setItem(KEY, ref);

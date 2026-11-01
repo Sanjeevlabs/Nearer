@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
+import { docsFor } from "@/lib/request-data";
 import { dbListCards } from "@/lib/db";
-import { listDocs, putDoc } from "@/lib/family-docs";
+import { putDoc } from "@/lib/family-docs";
 import { guardWrites } from "@/lib/api-guard";
 
 // Morning letter (SPEC §30.4): a voice note that arrives at their morning.
@@ -14,7 +15,7 @@ const MAX_AHEAD = 36 * 3_600_000;
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const all = await listDocs(auth.familyId, "chitthi");
+  const all = await docsFor(req, auth.familyId, "chitthi");
   const letters = all.filter((l) => l.kind !== "letter" && l.authorId === auth.memberId && Date.parse(l.deliverAt) > Date.now());
   // Written letters to the whole family (A letter from the courtyard), newest first.
   const written = all.filter((l) => l.kind === "letter" && Date.parse(l.deliverAt) <= Date.now()).slice(0, 5);

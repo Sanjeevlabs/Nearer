@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { can, isAdmin } from "@/lib/permissions";
 import { checkRateLimit, requireSession } from "@/lib/auth";
-import { dbGetMember, dbListMembers } from "@/lib/db";
+import { dbListMembers } from "@/lib/db";
+import { memberFor } from "@/lib/request-memo";
+import { holidaysOf, membersFor } from "@/lib/request-data";
 import { EVENT_TYPES, eventTitle, lockedStart, markNone, occasionEventKey, participants, proposeSlots, slotToLock, templateFor, toggleVote, type FamilyEvent } from "@/lib/events";
 import { deleteDoc, newId, putDoc } from "@/lib/family-docs";
 import { draftPlan } from "@/lib/gather-plan";
@@ -21,8 +23,8 @@ import { guardWrites } from "@/lib/api-guard";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-async function upcoming(familyId: string, members: Member[], within = 60): Promise<UpcomingOccasion[]> {
-  const fam = await familyHolidays(familyId, members).catch(() => null);
+async function upcoming(familyId: string, members: Member[], within = 60, holidays?: ReturnType<typeof familyHolidays>): Promise<UpcomingOccasion[]> {
+  const fam = await (holidays ?? familyHolidays(familyId, members)).catch(() => null);
   const festivals = (fam?.visible ?? []).filter((h) => h.kind === "festival").map((h) => ({ ...h, title: cleanTitle(h.title) }));
   const t = today();
   const nameOf = (id: string) => callName(members.find((m) => m.id === id));
@@ -41,9 +43,11 @@ function visible(events: FamilyEvent[], now = Date.now()): FamilyEvent[] {
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [members, me, all, dismissed] = await Promise.all([dbListMembers(auth.familyId), dbGetMember(auth.memberId), listEvents(auth.familyId), listDismissed(auth.familyId, auth.memberId)]);
+  const holidays = holidaysOf(req, auth.familyId);
+  holidays.catch(() => undefined);
+  const [members, me, all, dismissed] = await Promise.all([membersFor(req, auth.familyId), memberFor(req, auth.memberId), listEvents(auth.familyId), listDismissed(auth.familyId, auth.memberId)]);
   const events = visible(all);
-  const occasions = await upcoming(auth.familyId, members);
+  const occasions = await upcoming(auth.familyId, members, 60, holidays);
   const canPlan = Boolean(me && can(me, "events.plan") && me.role !== "child");
   const prompts = buildPrompts({ viewerId: auth.memberId, canPlan, events, occasions, dismissed });
   return Response.json({ events, occasions, prompts, canPlan, viewerId: auth.memberId });

@@ -64,9 +64,13 @@ export interface FamilyHolidays {
   visible: HolidayItem[];
 }
 
-export async function familyHolidays(familyId: string, members: Pick<Member, "tz">[], deps: HolidayDeps = {}): Promise<FamilyHolidays> {
+/**
+ * `preloaded.settings`: a caller that started the settings read before it knew
+ * the members (so the read ran alongside theirs, not after) hands it in.
+ */
+export async function familyHolidays(familyId: string, members: Pick<Member, "tz">[], deps: HolidayDeps = {}, preloaded: { settings?: Promise<RitualSettings> | RitualSettings } = {}): Promise<FamilyHolidays> {
   const country = countryForZones(members.map((m) => m.tz));
-  const [settings, feed] = await Promise.all([getRitualSettings(familyId), holidaysFor(country, deps)]);
+  const [settings, feed] = await Promise.all([preloaded.settings ?? getRitualSettings(familyId), holidaysFor(country, deps)]);
   const all = withRitualLampHours(feed.items, ritualConfigs());
   return { country, source: feed.source, settings, all, visible: visibleHolidays(all, settings) };
 }
@@ -94,7 +98,7 @@ export function nextOccasion(members: Member[], now = new Date(), within = 30, h
 }
 
 /** nextOccasion with the family's own calendar looked up. */
-export async function nextOccasionFor(familyId: string, members: Member[], now = new Date(), within = 30): Promise<Occasion | null> {
-  const { visible } = await familyHolidays(familyId, members).catch(() => ({ visible: [] as HolidayItem[] }));
+export async function nextOccasionFor(familyId: string, members: Member[], now = new Date(), within = 30, holidays?: Promise<Pick<FamilyHolidays, "visible">>): Promise<Occasion | null> {
+  const { visible } = await (holidays ?? familyHolidays(familyId, members)).catch(() => ({ visible: [] as HolidayItem[] }));
   return nextOccasion(members, now, within, visible);
 }

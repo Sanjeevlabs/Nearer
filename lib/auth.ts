@@ -4,7 +4,7 @@
 // family/member ownership; model routes are rate-limited per session;
 // the cron route requires Bearer CRON_SECRET instead.
 import { createHmac, timingSafeEqual } from "crypto";
-import { dbGetMember } from "./db";
+import { memberFor } from "./request-memo";
 import { DEMO_FAMILY_IDS as DEMO_IDS, isDemoFamily, isSeedFamily } from "./family";
 import { dbLive } from "./family-db";
 
@@ -109,7 +109,7 @@ export async function requireSession(req: Request, familyId?: string): Promise<S
   if (familyId && session.familyId !== familyId) return Response.json({ error: "forbidden-family" }, { status: 403 });
   // A signed cookie isn't enough: the person must still be in that family.
   // Removing someone, or their leaving, ends their session on the next request.
-  const member = await dbGetMember(session.memberId);
+  const member = await memberFor(req, session.memberId);
   if (!member || member.familyId !== session.familyId) return Response.json({ error: "unauthorized" }, { status: 401 });
   // A joiner waiting for an admin has a session, but it only opens
   // GET /api/session (the "waiting" screen). Everything else stays shut.
@@ -186,9 +186,11 @@ import type { Member } from "./schemas";
 export async function requireCan(
   session: { familyId: string; memberId: string },
   action: import("./permissions").Action,
+  /** The request, when the caller has it: the member is then loaded once per request (lib/request-memo.ts). */
+  req?: Request,
 ): Promise<Member | Response> {
   const [{ dbGetMember }, { can }] = await Promise.all([import("./db"), import("./permissions")]);
-  const me = await dbGetMember(session.memberId);
+  const me = await (req ? memberFor(req, session.memberId) : dbGetMember(session.memberId));
   if (!me || me.familyId !== session.familyId) return Response.json({ error: "unknown-member" }, { status: 404 });
   if (!can(me, action)) return Response.json({ error: "not-allowed", action }, { status: 403 });
   return me;

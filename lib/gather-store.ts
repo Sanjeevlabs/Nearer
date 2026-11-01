@@ -32,14 +32,19 @@ async function putLive(familyId: string, kind: string, id: string, data: unknown
   if (error) throw new DbWriteError("family_docs", error.message);
 }
 
+// Memory is the store only where there is no database (mock mode, the seed demo
+// family) or the database could not be read. With the database live it is the
+// source of truth on every read: this process's copy must never bring back a
+// row another Worker has since removed (Workers share no memory).
 export async function listEvents(familyId: string): Promise<FamilyEvent[]> {
-  const local: FamilyEvent[] = [];
-  events.forEach((e, k) => {
-    if (k.startsWith(`${familyId}::`)) local.push(e);
-  });
-  const rows = (await listLive(familyId, "event", EventSchema)) ?? [];
-  const ids = new Set(rows.map((r) => r.id));
-  return [...rows, ...local.filter((e) => !ids.has(e.id))].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+  const rows = await listLive(familyId, "event", EventSchema);
+  const out: FamilyEvent[] = [];
+  if (rows) out.push(...rows);
+  else
+    events.forEach((e, k) => {
+      if (k.startsWith(`${familyId}::`)) out.push(e);
+    });
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function getEvent(familyId: string, id: string): Promise<FamilyEvent | undefined> {
@@ -56,12 +61,15 @@ export async function putEvent(familyId: string, input: unknown): Promise<Family
 }
 
 export async function listDismissed(familyId: string, memberId: string): Promise<string[]> {
-  const local: Dismiss[] = [];
-  dismissals.forEach((d, k) => {
-    if (k.startsWith(`${familyId}::`)) local.push(d);
-  });
-  const rows = (await listLive(familyId, "event_dismiss", DismissSchema)) ?? [];
-  return Array.from(new Set([...rows, ...local].filter((d) => d.memberId === memberId).map((d) => d.key)));
+  let rows = await listLive(familyId, "event_dismiss", DismissSchema);
+  if (!rows) {
+    const local: Dismiss[] = [];
+    dismissals.forEach((d, k) => {
+      if (k.startsWith(`${familyId}::`)) local.push(d);
+    });
+    rows = local;
+  }
+  return Array.from(new Set(rows.filter((d) => d.memberId === memberId).map((d) => d.key)));
 }
 
 export async function dismiss(familyId: string, memberId: string, k: string): Promise<void> {
@@ -79,4 +87,42 @@ export function seedEvent(familyId: string, input: unknown): void {
 export function resetEvents(): void {
   events.clear();
   dismissals.clear();
+}
+
+/** The calendar day a dismissal key is about: the last `YYYY-MM-DD` in it (`suggest:<occasion>:<who>:<date>`). */
+function keyDay(k: string): string | null {
+  return /(\d{4}-\d{2}-\d{2})$/.exec(k)?.[1] ?? null;
+}
+
+/**
+ * Drop dismissals whose event has gone by (`today` is YYYY-MM-DD). A key with no
+ * date in it falls back to 60 days after it was dismissed. Returns how many went.
+ */
+export async function purgeDismissals(familyId: string, today: string, now: Date = new Date()): Promise<number> {
+  const rows: Dismiss[] = [];
+  const sb = dbFor(familyId);
+  if (sb) {
+    for (let from = 0; from < 5000; from += 500) {
+      const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", "event_dismiss").range(from, from + 499);
+      if (error || !data) break;
+      for (const r of data) {
+        const p = DismissSchema.safeParse((r as { data: unknown }).data);
+        if (p.success) rows.push(p.data);
+      }
+      if (data.length < 500) break;
+    }
+  }
+  dismissals.forEach((d, k) => {
+    if (k.startsWith(`${familyId}::`)) rows.push(d);
+  });
+  let gone = 0;
+  for (const d of rows) {
+    const day = keyDay(d.key);
+    const expired = day ? day < today : now.getTime() - Date.parse(d.at) > 60 * 86_400_000;
+    if (!expired) continue;
+    dismissals.delete(key(familyId, d.id));
+    if (sb) await sb.from("family_docs").delete().eq("id", `${familyId}:${d.id}`).eq("kind", "event_dismiss");
+    gone++;
+  }
+  return gone;
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
+import { docsFor } from "@/lib/request-data";
 import { dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { PresenceMomentSchema } from "@/lib/kinds";
@@ -20,7 +21,7 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const since = Date.now() - 8 * 86_400_000; // a week of rhythm, for "usual"
-  const [presence, settings] = await Promise.all([listDocs(auth.familyId, "presence"), listDocs(auth.familyId, "care_settings")]);
+  const [presence, settings] = await Promise.all([listDocs(auth.familyId, "presence", { sinceMs: 9 * 86_400_000 }), listDocs(auth.familyId, "care_settings")]);
   // Someone who turned off "Show my lamp and activity" shares no visits with anyone but themselves.
   const hidden = new Set(settings.filter((c) => c.shareVisits === false && c.memberId !== auth.memberId).map((c) => c.memberId));
   return Response.json({ presence: presence.filter((p) => Date.parse(p.at) >= since && !(p.moment === "here" && hidden.has(p.memberId))), settings });
@@ -36,7 +37,7 @@ async function postHandler(req: Request): Promise<Response> {
     // Visits only count if the person allows it, and at most every 30 minutes.
     const mine = await getDoc(auth.familyId, "care_settings", auth.memberId);
     if (mine && !mine.shareVisits) return Response.json({ skipped: "visits-private" });
-    const recent = (await listDocs(auth.familyId, "presence")).find((p) => p.memberId === auth.memberId && now.getTime() - Date.parse(p.at) < 30 * 60_000);
+    const recent = (await listDocs(auth.familyId, "presence", { sinceMs: 31 * 60_000 })).find((p) => p.memberId === auth.memberId && now.getTime() - Date.parse(p.at) < 30 * 60_000);
     if (recent) return Response.json({ skipped: "recent" });
   }
   const presence = await putDoc(auth.familyId, "presence", { id: newId("presence"), memberId: auth.memberId, moment: parsed.data.moment, note: parsed.data.note, at: now.toISOString() });

@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { dbListCards } from "@/lib/db";
-import { getDoc, listDocs, putDoc } from "@/lib/family-docs";
+import { getDoc, putDoc } from "@/lib/family-docs";
 import { isComplete, sideOf, streak, viewFor } from "@/lib/today";
 import { ensureToday } from "@/lib/today-server";
-import { dbListMembers } from "@/lib/db";
 import { nextOccasionFor } from "@/lib/occasions-server";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
+import { docsFor, holidaysOf, membersFor, relationshipsFor } from "@/lib/request-data";
 
 // Today: one task, both homes. Your answer is a voice note you recorded; the
 // other side's answer is sealed until you add yours.
@@ -16,10 +16,15 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!checkRateLimit(auth, "/api/today")) return Response.json({ error: "rate-limited" }, { status: 429 });
-  const task = await ensureToday(auth.familyId);
-  const occasion = await nextOccasionFor(auth.familyId, await dbListMembers(auth.familyId));
+  // Everything this reads is shared with the other courtyard slices (lib/request-data.ts).
+  const holidays = holidaysOf(req, auth.familyId);
+  holidays.catch(() => undefined);
+  const [members, relationships, tasks] = await Promise.all([membersFor(req, auth.familyId), relationshipsFor(req, auth.familyId), docsFor(req, auth.familyId, "today_task")]);
+  const task = await ensureToday(auth.familyId, new Date(), { members, relationships, tasks, holidays });
+  const occasion = await nextOccasionFor(auth.familyId, members, new Date(), 30, holidays);
   if (!task) return Response.json({ task: null, streak: 0, recent: [], occasion });
-  const all = await listDocs(auth.familyId, "today_task");
+  // A task made just now is not in the list read a moment ago.
+  const all = tasks.some((t) => t.id === task.id) ? tasks : [task, ...tasks];
   const recent = all.filter((t) => t.id !== task.id && t.completedAt).slice(0, 6).map((t) => viewFor(t, auth.memberId));
   return Response.json({ task: viewFor(task, auth.memberId), streak: streak(all, task.date), recent, occasion });
 }

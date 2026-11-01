@@ -125,3 +125,27 @@ export function festivalWeek(input: FestivalWeekInput): FestivalWeek | null {
   }
   return null;
 }
+
+/* ------------------------------------------------- the steps checklist ticks */
+// The ticks live in the browser (localStorage), keyed by family + festival +
+// year, so they neither carry into next year's festival nor into another
+// family's copy (a demo visitor's copy has its own family id).
+export const STEP_TICKS_PREFIX = "aangan:festival-steps:";
+
+export function stepTicksKey(familyId: string, slug: string, date: string): string {
+  return `${STEP_TICKS_PREFIX}${familyId}:${slug}:${date.slice(0, 4)}`;
+}
+
+/** Remove ticks from earlier years and the old un-keyed format (`<slug>:<full date>`). Returns how many went. */
+export function pruneStepTicks(store: Pick<Storage, "length" | "key" | "removeItem">, year: string): number {
+  const stale: string[] = [];
+  for (let i = 0; i < store.length; i++) {
+    const k = store.key(i);
+    if (!k || !k.startsWith(STEP_TICKS_PREFIX)) continue;
+    const parts = k.slice(STEP_TICKS_PREFIX.length).split(":");
+    // Current format: <familyId>:<slug>:<year>. Anything else (old format, other year) goes.
+    if (!(parts.length === 3 && parts[2] === year)) stale.push(k);
+  }
+  for (const k of stale) store.removeItem(k);
+  return stale.length;
+}

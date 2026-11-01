@@ -15,7 +15,7 @@ import type { Card, Member } from "@/lib/schemas";
 import { awakeCities, type Glance } from "@/lib/glance";
 import type { DayRhythm } from "@/lib/rhythm";
 import { ALIVE_LOOK, type Alive } from "@/lib/status";
-import { postJson, useJson } from "@/lib/use-json";
+import { invalidateJson, postJson, useJson } from "@/lib/use-json";
 import { sinceLabel } from "@/lib/since";
 import { useFamilyCards } from "@/lib/use-family";
 import { cn } from "@/lib/utils";
@@ -340,9 +340,9 @@ function PersonSheet({ person, st, onTalk, onCall, onClose }: { person: Member |
 // tile is the same height as its skeleton, so nothing jumps when it loads.
 const TILE = cn("flex h-[80px] min-w-0 flex-col justify-between px-3 py-2", CARD);
 
-function Tile({ href, label, aria, children }: { href: string; label: string; aria: string; children: React.ReactNode }) {
+function Tile({ href, label, aria, children, onOpen }: { href: string; label: string; aria: string; children: React.ReactNode; onOpen?: () => void }) {
   return (
-    <Link href={href} aria-label={aria} className={cn(TILE, "press text-ink no-underline")} style={EDGE}>
+    <Link href={href} aria-label={aria} onClick={onOpen} className={cn(TILE, "press text-ink no-underline")} style={EDGE}>
       <span className="truncate text-[15px] font-medium leading-[1.2] text-ink-soft">{label}</span>
       {children}
     </Link>
@@ -383,7 +383,16 @@ function GlanceStrip({ glance, members }: { glance: Glance | null; members: Memb
         )}
       </Tile>
       {glance.waiting && (
-        <Tile href={glance.waiting.href} label="Waiting for you" aria={`Waiting for you: ${glance.waiting.text}`}>
+        <Tile
+          href={glance.waiting.href}
+          label="Waiting for you"
+          aria={`Waiting for you: ${glance.waiting.text}`}
+          onOpen={() => {
+            // Opening a nudge is seeing it: it stops waiting (the dock dot goes with it).
+            const id = glance.waiting?.nudgeId;
+            if (id) void postJson("/api/nudges/seen", { ids: [id] }).then(() => invalidateJson());
+          }}
+        >
           <span className={detail}>{glance.waiting.text}</span>
         </Tile>
       )}

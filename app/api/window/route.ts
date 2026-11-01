@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { checkRateLimit, requireSession } from "@/lib/auth";
+import { checkRateLimit, requireSession, sessionFromRequest } from "@/lib/auth";
 import { dbListMembers } from "@/lib/db";
 import { getDoc, putDoc } from "@/lib/family-docs";
-import { defaultView, homePhotoOk, photoRefFor, windowState } from "@/lib/window-server";
+import { defaultView, homePhotoOk, photoRefFor, readWindow, windowState } from "@/lib/window-server";
 import { FIRST_SCENES, POTS, WALLS } from "@/lib/kinds";
 import { can } from "@/lib/permissions";
 import { guardWrites } from "@/lib/api-guard";
@@ -13,10 +13,16 @@ import { guardWrites } from "@/lib/api-guard";
 // (so older clients don't break) but change nothing on screen.
 
 async function getHandler(req: Request): Promise<Response> {
+  // The window's reads start with the auth lookup, not after it: the signed
+  // session already names the family, and the reads only read. A refused
+  // request throws them away.
+  const claimed = sessionFromRequest(req);
+  const preread = claimed ? readWindow(claimed.familyId) : undefined;
+  preread?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!checkRateLimit(auth, "/api/window")) return Response.json({ error: "rate-limited" }, { status: 429 });
-  return Response.json(await windowState(auth.familyId, auth.memberId));
+  return Response.json(await windowState(auth.familyId, auth.memberId, new Date(), preread));
 }
 
 const Choose = z.object({

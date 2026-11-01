@@ -6,6 +6,8 @@ import type { Member } from "@/lib/schemas";
 import { isAdmin, isGrownUp } from "@/lib/permissions";
 import { recordTeenConsent } from "@/lib/roles";
 import { guardWrites } from "@/lib/api-guard";
+import { memberFor } from "@/lib/request-memo";
+import { cardsFor, familyNameFor, membersFor } from "@/lib/request-data";
 
 // Two courtyards, one door. Each family keeps its own Aangan; a married couple
 // and their children belong to both. Nothing crosses between Aangans: this
@@ -29,12 +31,19 @@ const WEEK_MS = 7 * 86_400_000;
  * ("added by"), and how many things others shared there this week. Only
  * counts and a call name cross over — never the other family's tree.
  */
-async function sidesOf(me: Member) {
+async function sidesOf(me: Member, req?: Request) {
   const rows = await dbListSides(me);
   const since = Date.now() - WEEK_MS;
   return Promise.all(
     rows.map(async (m) => {
-      const [name, people, cards] = await Promise.all([dbGetFamilyName(m.familyId), dbListMembers(m.familyId), dbListCards(m.familyId)]);
+      // Only this week's cards are counted, so the other Aangans are asked for just those.
+      // The viewer's own Aangan is shared with the other courtyard slices when there is a request to share it on.
+      const own = req && m.familyId === me.familyId;
+      const [name, people, cards] = await Promise.all([
+        own ? familyNameFor(req, m.familyId) : dbGetFamilyName(m.familyId),
+        own ? membersFor(req, m.familyId) : dbListMembers(m.familyId),
+        own ? cardsFor(req, m.familyId) : dbListCards(m.familyId, { since: new Date(since).toISOString() }),
+      ]);
       const host = people.find((p) => p.access === "owner" && p.id !== m.id && p.email) ?? people.find((p) => isAdmin(p) && p.id !== m.id && p.email) ?? null;
       return {
         familyId: m.familyId,
@@ -55,9 +64,9 @@ function newPersonId(): string {
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const me = await dbGetMember(auth.memberId);
+  const me = await memberFor(req, auth.memberId);
   if (!me || me.familyId !== auth.familyId) return Response.json({ error: "unknown-member" }, { status: 404 });
-  return Response.json({ current: auth.familyId, sides: await sidesOf(me) });
+  return Response.json({ current: auth.familyId, sides: await sidesOf(me, req) });
 }
 
 async function postHandler(req: Request): Promise<Response> {

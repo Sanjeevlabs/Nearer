@@ -111,6 +111,21 @@ export async function pendingFor(familyId: string, memberId: string): Promise<Nu
   return (await listDocs(familyId, "nudge")).filter((n) => n.toMemberId === memberId && n.deliveredAt === null).sort((a, b) => b.at.localeCompare(a.at));
 }
 
+/** How long an unopened nudge keeps waiting once it is due: "the call is tomorrow" is stale in two days. */
+export const WAIT_MS: Record<NudgeKind, number> = { heard: 7 * 86_400_000, blessed: 7 * 86_400_000, shared: 7 * 86_400_000, letter: 7 * 86_400_000, occasion: 2 * 86_400_000, call: 2 * 86_400_000 };
+
+/**
+ * What is waiting for this person to open: due (their 8 AM has come), not yet
+ * seen, and not older than its kind's wait. The dock dot and the glance tile
+ * read this (through lib/waiting-server.ts); markSeen clears it.
+ */
+export async function unseenFor(familyId: string, memberId: string, now: Date = new Date()): Promise<Nudge[]> {
+  const t = now.getTime();
+  return (await listDocs(familyId, "nudge"))
+    .filter((n) => n.toMemberId === memberId && n.seenAt === null && Date.parse(n.deliverAfter) <= t && t - Date.parse(n.deliverAfter) <= WAIT_MS[n.kind])
+    .sort((a, b) => b.at.localeCompare(a.at));
+}
+
 /** This person's list: still waiting, or delivered since Monday. */
 export async function listFor(familyId: string, memberId: string, now: Date = new Date()): Promise<Nudge[]> {
   const week = weekStartOf(now);
@@ -142,6 +157,20 @@ export async function markSeen(familyId: string, memberId: string, ids: string[]
   let done = 0;
   for (const n of await listDocs(familyId, "nudge")) {
     if (n.toMemberId !== memberId || n.seenAt !== null || (ids !== "all" && !ids.includes(n.id))) continue;
+    await putDoc(familyId, "nudge", { ...n, seenAt: now.toISOString() });
+    done++;
+  }
+  return done;
+}
+
+/**
+ * The person opened the thing a nudge points at (played the card, answered):
+ * its nudges are seen. `match` is tested against the stored link.
+ */
+export async function markSeenWhere(familyId: string, memberId: string, match: (href: string) => boolean, now: Date = new Date()): Promise<number> {
+  let done = 0;
+  for (const n of await listDocs(familyId, "nudge")) {
+    if (n.toMemberId !== memberId || n.seenAt !== null || !match(n.href)) continue;
     await putDoc(familyId, "nudge", { ...n, seenAt: now.toISOString() });
     done++;
   }

@@ -5,6 +5,7 @@
 // there would vanish on the next request.
 // Server only (returns the service-role client).
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { countDbCall } from "./db-stats";
 import { isSeedFamily } from "./family";
 import { isDbLive, supabaseServer } from "./supabase";
 
@@ -41,5 +42,23 @@ export class DbWriteError extends Error {
 export function dbFor(familyId: string | null | undefined): SupabaseClient | null {
   if (!dbLive()) return null;
   if (familyId && isSeedFamily(familyId)) return null;
-  return supabaseServer();
+  const sb = supabaseServer();
+  return sb ? counted(sb) : null;
+}
+
+// Each from() is one PostgREST round trip; count it (lib/db-stats.ts).
+const wrapped = new WeakMap<object, SupabaseClient>();
+function counted(sb: SupabaseClient): SupabaseClient {
+  let w = wrapped.get(sb);
+  if (!w) {
+    w = new Proxy(sb, {
+      get(target, prop, receiver) {
+        const v = Reflect.get(target, prop, receiver);
+        if (prop === "from" && typeof v === "function") return (table: string) => (countDbCall(table), v.call(target, table));
+        return typeof v === "function" ? v.bind(target) : v;
+      },
+    });
+    wrapped.set(sb, w);
+  }
+  return w;
 }

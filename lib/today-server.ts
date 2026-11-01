@@ -5,7 +5,7 @@ import { getDoc, listDocs, putDoc } from "./family-docs";
 import { households } from "./households";
 import type { TodayTask } from "./kinds";
 import { museJson } from "./muse";
-import type { Member } from "./schemas";
+import type { Member, Relationship } from "./schemas";
 import { nextOccasionFor } from "./occasions-server";
 import { PROMPT_IDS, TODAY_PROMPTS, dateIn, fallbackPrompt, fill, occasionPrompt } from "./today";
 
@@ -27,21 +27,30 @@ export function sidesFor(members: Member[], relationships: Parameters<typeof hou
   return children.length ? { parents, children } : null;
 }
 
+/** What a caller that already has it can hand in, so ensureToday does not read it again. */
+export interface TodayPreloaded {
+  members?: Member[];
+  relationships?: Relationship[];
+  /** The family's today_task documents, newest first. */
+  tasks?: TodayTask[];
+  holidays?: Parameters<typeof nextOccasionFor>[4];
+}
+
 /** Today's task, created on first look of the day (in the parents' zone). */
-export async function ensureToday(familyId: string, now = new Date()): Promise<TodayTask | null> {
-  const [members, relationships] = await Promise.all([dbListMembers(familyId), dbListRelationships(familyId)]);
+export async function ensureToday(familyId: string, now = new Date(), pre: TodayPreloaded = {}): Promise<TodayTask | null> {
+  const [members, relationships] = await Promise.all([pre.members ?? dbListMembers(familyId), pre.relationships ?? dbListRelationships(familyId)]);
   const sides = sidesFor(members, relationships);
   if (!sides) return null;
   const date = dateIn(sides.parents[0].tz, now);
   const id = `today-${date}`;
-  const existing = await getDoc(familyId, "today_task", id);
+  const existing = pre.tasks ? pre.tasks.find((t) => t.id === id) : await getDoc(familyId, "today_task", id);
   if (existing) return existing;
-  const recent = (await listDocs(familyId, "today_task")).slice(0, 7).map((t) => t.promptId);
+  const recent = (pre.tasks ?? (await listDocs(familyId, "today_task"))).slice(0, 7).map((t) => t.promptId);
   const fb = fallbackPrompt(date, recent);
   const childName = join(sides.children.map(call));
   const parentsName = join(sides.parents.map(call));
   // An occasion inside a week, not yet asked about: both homes gather for it.
-  const occ = await nextOccasionFor(familyId, members, now, 7);
+  const occ = await nextOccasionFor(familyId, members, now, 7, pre.holidays);
   if (occ && !recent.includes("occasion")) {
     const p = occasionPrompt(occ.title);
     return putDoc(familyId, "today_task", {

@@ -6,6 +6,7 @@
 // (a country's calendar rarely lists every tradition's festivals).
 // Nothing here names a festival or a culture: names, patterns and URLs are data.
 import fallbackRaw from "../data/holidays-fallback.json";
+import { edgeGet, edgePut } from "./edge-cache";
 import traditionsRaw from "../data/traditions.json";
 import { z } from "zod";
 import { isMockMode } from "./config";
@@ -192,6 +193,14 @@ export async function holidaysFor(country: string, deps: HolidayDeps = {}): Prom
     cache.set(country, { at: now, ttl: TTL_MS, ...fb });
     return fb;
   }
+  // Another isolate in this data centre may have read the feed already (a cold isolate otherwise waits on Google).
+  if (!deps.fetchText) {
+    const shared = await edgeGet<{ items: HolidayItem[]; source: HolidaySource }>(`holidays:${country}`);
+    if (shared?.items?.length) {
+      cache.set(country, { at: now, ttl: TTL_MS, ...shared });
+      return shared;
+    }
+  }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -200,6 +209,7 @@ export async function holidaysFor(country: string, deps: HolidayDeps = {}): Prom
     if (events.length === 0) throw new Error("holidays-empty");
     const items = mergeWithFallback(mapHolidays(events, country), country);
     cache.set(country, { at: now, ttl: TTL_MS, items, source: "google" });
+    if (!deps.fetchText) await edgePut(`holidays:${country}`, { items, source: "google" }, TTL_MS / 1000);
     return { items, source: "google" };
   } catch {
     const fb = fallback();

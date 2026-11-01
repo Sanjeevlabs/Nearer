@@ -34,6 +34,8 @@ async function openSide(familyId: string): Promise<void> {
   const out = await postJson("/api/sides", { action: "switch", familyId });
   if (!out) return;
   resetFamilyCards();
+  // The other family's data must not come back from this tab's caches (sessionStorage survives the reload).
+  window.dispatchEvent(new Event("aangan:auth"));
   // A clean load: every room re-reads the other side's data.
   window.location.assign("/");
 }
@@ -169,7 +171,14 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
               <Icon name="whatsapp" size={20} />
               Send on WhatsApp
             </a>
-            <Button variant="secondary" className="mt-2 w-full" onClick={() => window.location.assign("/")}>
+            <Button
+              variant="secondary"
+              className="mt-2 w-full"
+              onClick={() => {
+                window.dispatchEvent(new Event("aangan:auth"));
+                window.location.assign("/");
+              }}
+            >
               Open the {name.trim()} Aangan
             </Button>
           </>

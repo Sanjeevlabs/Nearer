@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { markEntered } from "@/lib/entered";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { talkTarget } from "@/lib/households";
+import type { WaitingItem } from "@/lib/glance";
+import { useJson } from "@/lib/use-json";
 import { callName, peopleByRecency } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
 import { useLargeText } from "@/lib/use-large-text";
@@ -114,7 +115,7 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 // a photo, and the house for the rooms (Memories, Kitchen, Care, Family, Celebrations).
 function Dock() {
   const { openAdd, openRooms, refreshKey, chromeHidden } = useShell();
-  const { viewer, members, relationships } = useViewer();
+  const { viewer, members } = useViewer();
   const { cards } = useFamilyCards(refreshKey);
   const { current, open: playerOpen } = usePlayer();
   const pathname = usePathname();
@@ -124,11 +125,15 @@ function Dock() {
   const inviteEver = useEver(inviting);
 
   const pagePerson = pathname.startsWith("/people/") ? members.find((mm) => mm.id === pathname.split("/")[2]) : undefined;
-  // Who sent you a voice you haven't answered: shown in the picker, never assumed.
-  const waiting = useMemo(() => {
-    const t = talkTarget(viewer, members, relationships, cards ?? []);
-    return new Set(t?.reason === "reply" ? t.home.members.map((m) => m.id) : []);
-  }, [viewer, members, relationships, cards]);
+  // What waits for you: the same list as the window's "Waiting for you" tile (GET /api/waiting),
+  // so the dot goes when the thing is played, answered or opened. Who is waiting shows in the picker.
+  const { data: wait, reload: reloadWaiting } = useJson<{ items: WaitingItem[] }>("/api/waiting", { every: 60_000 });
+  useEffect(() => {
+    if (refreshKey) void reloadWaiting();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
+  const waitingList = wait?.items ?? [];
+  const waiting = useMemo(() => new Set((wait?.items ?? []).flatMap((i) => (i.fromId ? [i.fromId] : []))), [wait]);
   const others = useMemo(() => peopleByRecency(viewer.id, members, cards ?? []).sort((a, b) => Number(waiting.has(b.id)) - Number(waiting.has(a.id)) || Number(a.role === "child") - Number(b.role === "child")), [viewer.id, members, cards, waiting]);
   const show = (pathname === "/" || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
   const voice = () => {
@@ -153,8 +158,8 @@ function Dock() {
               {others.length ? (
                 <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice note to ${callName(pagePerson)}` : "Voice note"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-black text-white">
                   <Icon name="mic" size={23} strokeWidth={1.9} />
-                  {waiting.size > 0 && !pagePerson && (
-                    <span className="absolute right-0 top-0 h-3 w-3 rounded-full bg-marigold ring-2 ring-white" role="img" aria-label="Someone is waiting to hear from you" />
+                  {waitingList.length > 0 && !pagePerson && (
+                    <span className="absolute right-0 top-0 h-3 w-3 rounded-full bg-marigold ring-2 ring-white" role="img" aria-label={`Waiting for you: ${waitingList[0].text}`} />
                   )}
                 </button>
               ) : (

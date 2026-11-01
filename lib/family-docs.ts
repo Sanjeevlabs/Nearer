@@ -38,14 +38,72 @@ function newest<T>(rows: T[]): T[] {
   return rows.sort((a, b) => at(b).localeCompare(at(a)));
 }
 
-export async function listDocs<K extends DocKind>(familyId: string, kind: K): Promise<DocOf<K>[]> {
+/**
+ * The family's rows of one kind, newest first. Live, that is the newest 500 rows
+ * unless `sinceMs` asks for a time window instead (rows written in the last
+ * `sinceMs`, up to 3000): kinds that pile up fast, like heartbeats, would
+ * otherwise push the days a screen needs out of the 500.
+ */
+export async function listDocs<K extends DocKind>(familyId: string, kind: K, opts: { sinceMs?: number } = {}): Promise<DocOf<K>[]> {
   const local = memList(familyId, kind);
   const sb = dbFor(familyId);
   if (!sb) return newest(local);
-  const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: false }).limit(500);
+  let q = sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind);
+  if (opts.sinceMs) q = q.gte("created_at", new Date(Date.now() - opts.sinceMs).toISOString());
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(opts.sinceMs ? 3000 : 500);
   if (error || !data) return newest(local);
   const rows = data.map((r) => parse(kind, (r as { data: unknown }).data)).filter((d): d is DocOf<K> => d !== null);
   return newest(rows);
+}
+
+/**
+ * Several kinds for one family in ONE round trip (`kind in (...)`), split by
+ * kind and validated per kind exactly as listDocs does. Each kind keeps the
+ * newest-500 rule: the single query asks for 500 per kind, and if it comes back
+ * full (one chatty kind could have crowded another out) it falls back to one
+ * listDocs per kind, so the answer never differs from separate calls.
+ */
+export async function listDocsMany<const Ks extends readonly DocKind[]>(familyId: string, kinds: Ks): Promise<{ [K in Ks[number]]: DocOf<K>[] }> {
+  const out = {} as { [K in Ks[number]]: DocOf<K>[] };
+  const unique = Array.from(new Set(kinds)) as Ks[number][];
+  const sb = dbFor(familyId);
+  const separately = async () => {
+    const lists = await Promise.all(unique.map((k) => listDocs(familyId, k)));
+    unique.forEach((k, i) => ((out as Record<string, unknown>)[k] = lists[i]));
+    return out;
+  };
+  if (!sb) return separately();
+  const limit = 500 * unique.length;
+  const { data, error } = await sb.from("family_docs").select("kind, data").eq("family_id", familyId).in("kind", unique).order("created_at", { ascending: false }).limit(limit);
+  if (error || !data || data.length >= limit) return separately();
+  const by = new Map<string, unknown[]>(unique.map((k) => [k, []]));
+  for (const r of data as { kind: string; data: unknown }[]) by.get(r.kind)?.push(r.data);
+  for (const k of unique) {
+    // Rows that are in the database are the answer; memory only stands in on error (as listDocs).
+    const rows = (by.get(k) ?? []).slice(0, 500).map((d) => parse(k, d)).filter((d): d is DocOf<typeof k> => d !== null);
+    (out as Record<string, unknown>)[k] = newest(rows);
+  }
+  return out;
+}
+
+/**
+ * Every row of one kind, paged past listDocs' newest-500 window. For the daily
+ * purge only: expired rows are the OLD ones, which the newest-500 list never reaches.
+ */
+export async function listAllDocs<K extends DocKind>(familyId: string, kind: K, cap = 5000): Promise<DocOf<K>[]> {
+  const sb = dbFor(familyId);
+  if (!sb) return memList(familyId, kind);
+  const rows: DocOf<K>[] = [];
+  for (let from = 0; from < cap; from += 500) {
+    const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: true }).range(from, from + 499);
+    if (error || !data) break;
+    for (const r of data) {
+      const d = parse(kind, (r as { data: unknown }).data);
+      if (d) rows.push(d);
+    }
+    if (data.length < 500) break;
+  }
+  return rows;
 }
 
 export async function getDoc<K extends DocKind>(familyId: string, kind: K, id: string): Promise<DocOf<K> | undefined> {
@@ -72,6 +130,26 @@ export async function putDoc<K extends DocKind>(familyId: string, kind: K, input
     .upsert({ id: `${familyId}:${row.id}`, family_id: familyId, kind, data: row, updated_at: new Date().toISOString() }, { onConflict: "id" });
   if (error) throw new DbWriteError("family_docs", error.message);
   return data;
+}
+
+/**
+ * Insert only if no row has this id: true when this call created it, false when
+ * it already existed (another request, possibly on another Worker, got there
+ * first). The one-at-a-time guard for "single use" things. Throws on a write failure.
+ */
+export async function claimDoc<K extends DocKind>(familyId: string, kind: K, input: unknown): Promise<boolean> {
+  const data = DOC_SCHEMAS[kind].parse(input) as DocOf<K>;
+  const row = data as unknown as { id: string } & Record<string, unknown>;
+  const sb = dbFor(familyId);
+  if (!sb) {
+    if (mem.has(memKey(familyId, row.id))) return false;
+    mem.set(memKey(familyId, row.id), { familyId, kind, data: row, createdAt: new Date().toISOString() });
+    return true;
+  }
+  const { error } = await sb.from("family_docs").insert({ id: `${familyId}:${row.id}`, family_id: familyId, kind, data: row, updated_at: new Date().toISOString() });
+  if (!error) return true;
+  if ((error as { code?: string }).code === "23505") return false;
+  throw new DbWriteError("family_docs", error.message);
 }
 
 export async function deleteDoc(familyId: string, kind: DocKind, id: string): Promise<void> {
