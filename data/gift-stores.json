@@ -1,6 +1,6 @@
 {
-  "_comment": "Curated Shopify gift stores. Each one was checked on 30 Oct 2026: its storefront reports Shopify.shop, and POST https://{domain}/api/ucp/mcp answered tools/list and search_catalog with no auth. 'samples' are real items and prices from that check, used only in MOCK mode (labelled Sample). Live mode always searches the store.",
-  "checkedAt": "2026-10-30",
+  "_comment": "Curated Shopify gift stores. Each one was checked on 30 Oct and 1 Nov 2026: its storefront reports Shopify.shop, and POST https://{domain}/api/ucp/mcp answered tools/list and search_catalog with no auth. 'samples' are real items and prices from that check, used only in MOCK mode (labelled Sample). Live mode always searches the store.",
+  "checkedAt": "2026-11-01",
   "stores": [
     {
       "id": "bombay-sweet-shop",
@@ -13,13 +13,33 @@
       ]
     },
     {
-      "id": "anand-sweets",
-      "name": "Anand Sweets",
-      "domain": "anandsweets.in",
-      "countries": ["IN"],
-      "queries": { "occasion": ["sweets gift box"], "need": ["sweets"] },
+      "id": "urbanstems",
+      "name": "UrbanStems",
+      "domain": "www.urbanstems.com",
+      "countries": ["US"],
+      "queries": { "occasion": ["flowers bouquet"], "need": ["flowers"] },
       "samples": [
-        { "id": "gid://shopify/ProductVariant/44832728285399", "name": "Royal Delicacies Assorted Sweets Gift Box", "price": 59900, "currency": "INR", "url": "https://www.anandsweets.in/products/anand-royal-delicacies-assorted-sweets-gift-box-pure-ghee-indian-mithai-box-350g", "image": "https://cdn.shopify.com/s/files/1/0569/3456/4001/files/Gift_Box_4.png?v=1752813449", "tags": ["sweets", "mithai", "gift", "box"] }
+        { "id": "gid://shopify/ProductVariant/45510431965432", "name": "The Peace", "price": 7400, "currency": "USD", "url": "https://urbanstems.com/products/the-peace", "image": "https://cdn.shopify.com/s/files/1/0693/4016/8440/files/Peace_MainImage_PDP_v2.jpg?v=1772552415", "tags": ["flowers", "bouquet", "gift"] }
+      ]
+    },
+    {
+      "id": "milk-bar",
+      "name": "Milk Bar",
+      "domain": "milkbarstore.com",
+      "countries": ["US"],
+      "queries": { "occasion": ["cookie tin"], "need": ["cookie tin"] },
+      "samples": [
+        { "id": "gid://shopify/ProductVariant/31411263012937", "name": "Assorted Cookie Tin - 6 Count", "price": 2800, "currency": "USD", "url": "https://milkbarstore.com/products/assorted-cookie-tin", "image": "https://cdn.shopify.com/s/files/1/0034/7550/5225/files/CookieUpdate2025_6ctAssorted_0925.jpg?v=1775067438", "tags": ["cookies", "sweets", "tin", "gift"] }
+      ]
+    },
+    {
+      "id": "biscuiteers",
+      "name": "Biscuiteers",
+      "domain": "biscuiteers.com",
+      "countries": ["GB"],
+      "queries": { "occasion": ["biscuit tin"], "need": ["biscuit tin"] },
+      "samples": [
+        { "id": "gid://shopify/ProductVariant/53072838525259", "name": "Thank You Biscuit Tin", "price": 3995, "currency": "GBP", "url": "https://www.biscuiteers.com/products/thank-you-biscuit-tin", "image": "https://cdn.shopify.com/s/files/1/0946/4610/8491/files/thank-you-biscuit-tin-biscuit-tin-from-biscuiteers-5858988.jpg?v=1780339815", "tags": ["biscuits", "sweets", "tin", "gift"] }
       ]
     },
     {

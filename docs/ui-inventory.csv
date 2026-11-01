@@ -25,6 +25,7 @@ Entry,courtyard,10,button,Another one?,,kid-tonight,aria,,keep,
 Entry,courtyard,10,section,Everyone,,courtyard-everyone,arjun dadi,,keep,
 Entry,courtyard,11,heading,Everyone,,courtyard-everyone,arjun dadi,,keep,
 Entry,courtyard,12,link,Family tree,/bond,courtyard-everyone,arjun dadi,icon-only dup,review,icon-only control: its name is only an aria-label
+Entry,courtyard,12,link,For you,/inbox,dock,aria,icon-only,review,
 Entry,courtyard,13,button,"Your day: add a photo, a voice note or a line about today",,courtyard-everyone,arjun dadi,,keep,
 Entry,courtyard,14,button,Vihaan's day,,courtyard-everyone,arjun dadi,,keep,
 Entry,courtyard,15,button,Anika's day,,courtyard-everyone,arjun dadi,,keep,
@@ -80,9 +81,9 @@ Entry,courtyard,55,link,N days until Arjun arrives Arjun comes home for Diwali w
 Entry,courtyard,56,image,Dancing in the baraat till the band gave up.,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
 Entry,courtyard,57,button,Show N of N,,~Now in the family,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,61,button,Voice note,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Entry,courtyard,62,badge,Waiting for you: Maa's answer is waiting for yours,,dock,arjun,,keep,
+Entry,courtyard,62,link,"For you, N waiting: Maa's answer is waiting for yours",/inbox,dock,arjun,icon-only,review,
 Entry,courtyard,62,section,"This week, your gifts",,,dadi,,keep,
-Entry,courtyard,63,button,Share a photo or video,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Entry,courtyard,63,button,Photo,,dock,arjun dadi aria,icon-only,review,
 Entry,courtyard,63,heading,"This week, your gifts",,"~This week, your gifts",dadi,,keep,
 Entry,courtyard,64,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,64,link,Priya heard your voice note · <day>,/lane,"~This week, your gifts",dadi,,keep,
@@ -96,7 +97,7 @@ Entry,courtyard,71,section,Help,,,dadi,,keep,
 Entry,courtyard,72,link,हफ़्ते भर की सब्ज़ी और दूध Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
 Entry,courtyard,73,link,गैस सिलेंडर लगभग खत्म है अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार को सिलेंड…,/care,~Help,dadi,,keep,
 Entry,courtyard,74,button,Ask the family for help,,~Help,dadi,,keep,
-Entry,courtyard,76,badge,Waiting for you: Vihaan asked you something,,dock,dadi,,keep,
+Entry,courtyard,76,link,"For you, N waiting: Vihaan asked you something",/inbox,dock,dadi,icon-only,review,
 Entry,home-laptop,0,badge,Nearer,,,arjun,,keep,
 Entry,home-laptop,1,button,Open Nearer,,,arjun,,keep,
 Entry,home-laptop,3,h1,The window between two homes.,,,arjun,,keep,
@@ -228,11 +229,13 @@ Other,/people/<id>,26,button,Remove: Rohan is Arjun's brother,,~About Arjun,dadi
 Other,/people/<id>,27,button,Remove: Arjun is Vihaan's father,,~About Arjun,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,28,button,Remove: Arjun is Anika's father,,~About Arjun,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,29,button,Link to someone already here,,~About Arjun,dadi,,keep,
+Other,/people/<id>,29,link,For you,/inbox,dock,aria,icon-only,review,
 Other,/people/<id>,30,button,Remove from the family tree,,~About Arjun,dadi,,keep,
 Other,/people/<id>,30,section,Photos,,,arjun dadi aria,,keep,
 Other,/people/<id>,31,button,Voice note to Arjun,,dock,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,31,heading,Moments,,~Photos,arjun dadi aria,,keep,
 Other,/people/<id>,32,image,Maa's tulsi in the morning sun.,,~Photos,arjun aria,,keep,
+Other,/people/<id>,32,link,"For you, N waiting: Vihaan asked you something",/inbox,dock,dadi,icon-only,review,
 Other,/people/<id>,33,button,Voice note options,,~Photos,arjun,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,34,image,Rangoli at the door before the first lamp.,,~Photos,arjun aria,,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,36,image,"The old doorway, winter light.",,~Photos,arjun aria,,keep,
@@ -245,8 +248,9 @@ Other,/people/<id>,44,button,Remove: Papa is Maa's husband,,~About Maa,arjun,ico
 Other,/people/<id>,45,button,Link to someone already here,,~About Maa,arjun,,keep,
 Other,/people/<id>,46,button,Remove from the family tree,,~About Maa,arjun,,keep,
 Other,/people/<id>,47,button,Voice note to Maa,,dock,arjun aria,icon-only,review,icon-only control: its name is only an aria-label
-Other,/people/<id>,48,button,Share a photo or video,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Other,/people/<id>,49,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Other,/people/<id>,48,link,"For you, N waiting: Maa's answer is waiting for yours",/inbox,dock,arjun,icon-only,review,
+Other,/people/<id>,49,button,Photo,,dock,arjun dadi aria,icon-only,review,
+Other,/people/<id>,50,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/safe,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/safe,1,h1,Safe & sound,,room-header,arjun dadi aria,,keep,
 Other,/safe,2,heading,Sharing with you,,,arjun dadi,,keep,
@@ -294,12 +298,12 @@ Other,/send,18,section,Muse's ideas for Arjun,,,dadi,,keep,
 Other,/send,18,section,Muse's ideas for Maa,,,arjun aria,,keep,
 Other,/send,19,heading,Muse’s ideas for Arjun,,~Muse's ideas for Arjun,dadi,,keep,
 Other,/send,19,heading,Muse’s ideas for Maa,,~Muse's ideas for Maa,arjun aria,,keep,
-Other,/send,20,button,"Royal Delicacies Assorted Sweets Gift Box, ₹N, via Anand Sweets",,~Muse's ideas for Maa,arjun aria,,keep,
-Other,/send,20,button,"Royal Delicacies Assorted Sweets Gift Box, ₹N, via Anand Sweets",,~Muse's ideas for Arjun,dadi,,keep,
-Other,/send,21,button,"Panchmeva Dry Fruits Mix (N g), ₹N, via Farmley",,~Muse's ideas for Maa,arjun aria,,keep,
-Other,/send,21,button,"Panchmeva Dry Fruits Mix (N g), ₹N, via Farmley",,~Muse's ideas for Arjun,dadi,,keep,
-Other,/send,22,button,"Delight Gift Hamper, ₹N, via Bombay Sweet Shop",,~Muse's ideas for Maa,arjun aria,,keep,
-Other,/send,22,button,"Delight Gift Hamper, ₹N, via Bombay Sweet Shop",,~Muse's ideas for Arjun,dadi,,keep,
+Other,/send,20,button,"Panchmeva Dry Fruits Mix (N g), ₹N, via Farmley",,~Muse's ideas for Maa,arjun aria,,keep,
+Other,/send,20,button,"Panchmeva Dry Fruits Mix (N g), ₹N, via Farmley",,~Muse's ideas for Arjun,dadi,,keep,
+Other,/send,21,button,"Delight Gift Hamper, ₹N, via Bombay Sweet Shop",,~Muse's ideas for Maa,arjun aria,,keep,
+Other,/send,21,button,"Delight Gift Hamper, ₹N, via Bombay Sweet Shop",,~Muse's ideas for Arjun,dadi,,keep,
+Other,/send,22,button,"Jaipur Gardens Kulhad Gift Box, set of N, ₹N,N, via Chumbak",,~Muse's ideas for Maa,arjun aria,,keep,
+Other,/send,22,button,"Jaipur Gardens Kulhad Gift Box, set of N, ₹N,N, via Chumbak",,~Muse's ideas for Arjun,dadi,,keep,
 Other,/trace,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/trace,1,h1,What Muse did,,room-header,arjun dadi aria,,keep,
 Other,/trace,2,section,Nearer suggests,,,arjun dadi aria,,keep,
@@ -381,16 +385,16 @@ Rooms,/advice,23,button,Share these words,,~Blessings for occasions,arjun,icon-o
 Rooms,/advice,24,button,Play Papa's voice note,,~Blessings for occasions,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/advice,25,button,Voice note options,,~Blessings for occasions,arjun,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/bond,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/bond,1,button,Invite,,room-header,arjun dadi,,keep,
-Rooms,/bond,2,h1,Family tree,,room-header,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/bond,3,nav,Family,,room-tabs,arjun dadi,,keep,
+Rooms,/bond,1,h1,Family tree,,room-header,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/bond,2,nav,Family,,room-tabs,arjun dadi,,keep,
+Rooms,/bond,3,tab,Family tree,/bond,room-tabs,arjun dadi,,review,icon-only control: its name is only an aria-label
 Rooms,/bond,4,link,Anika (you),/people/aria,family-tree,aria,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/bond,4,tab,Family tree,/bond,room-tabs,arjun dadi,,review,icon-only control: its name is only an aria-label
-Rooms,/bond,5,tab,Homes,/bond/homes,room-tabs,arjun dadi,,keep,
-Rooms,/bond,6,tab,Kids,/bond/kids,room-tabs,arjun dadi,,keep,
-Rooms,/bond,7,tab,The Book,/book,room-tabs,arjun dadi,,keep,
-Rooms,/bond,8,tab,Advice,/advice,room-tabs,arjun dadi,,keep,
-Rooms,/bond,9,tab,Portrait,/portrait,room-tabs,arjun dadi,,keep,
+Rooms,/bond,4,tab,Homes,/bond/homes,room-tabs,arjun dadi,,keep,
+Rooms,/bond,5,tab,Kids,/bond/kids,room-tabs,arjun dadi,,keep,
+Rooms,/bond,6,tab,The Book,/book,room-tabs,arjun dadi,,keep,
+Rooms,/bond,7,tab,Advice,/advice,room-tabs,arjun dadi,,keep,
+Rooms,/bond,8,tab,Portrait,/portrait,room-tabs,arjun dadi,,keep,
+Rooms,/bond,9,button,Invite,,room-header,arjun dadi,,keep,
 Rooms,/bond,10,section,Family tree,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
 Rooms,/bond,11,link,Anaya,/people/anaya,family-tree,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/bond,12,button,Add someone related to Anaya,,family-tree,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
@@ -613,14 +617,14 @@ Rooms,/care/helpers,24,button,Electrician,,~Add someone who helps,arjun dadi,,ke
 Rooms,/care/helpers,25,button,Cook,,~Add someone who helps,arjun dadi,,keep,
 Rooms,/care/helpers,26,button,Caregiver,,~Add someone who helps,arjun dadi,,keep,
 Rooms,/gather,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/gather,1,button,Plan an event,,room-header,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/gather,2,h1,Coming up,,room-header,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/gather,3,nav,Celebrations,,room-tabs,arjun dadi aria,,keep,
-Rooms,/gather,4,tab,Coming up,/gather,room-tabs,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/gather,5,tab,Occasions,/rituals,room-tabs,arjun dadi,,keep,
-Rooms,/gather,6,tab,Visits,/together/visits,room-tabs,arjun dadi,,keep,
-Rooms,/gather,7,tab,Holidays,/together/holidays,room-tabs,arjun dadi,,keep,
-Rooms,/gather,8,tab,Play,/gather/play,room-tabs,arjun dadi aria,,keep,
+Rooms,/gather,1,h1,Coming up,,room-header,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/gather,2,nav,Celebrations,,room-tabs,arjun dadi aria,,keep,
+Rooms,/gather,3,tab,Coming up,/gather,room-tabs,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/gather,4,tab,Occasions,/rituals,room-tabs,arjun dadi,,keep,
+Rooms,/gather,5,tab,Visits,/together/visits,room-tabs,arjun dadi,,keep,
+Rooms,/gather,6,tab,Holidays,/together/holidays,room-tabs,arjun dadi,,keep,
+Rooms,/gather,7,tab,Play,/gather/play,room-tabs,arjun dadi aria,,keep,
+Rooms,/gather,8,button,Plan an event,,room-header,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/gather,9,section,Wish ahead,,,arjun dadi,,keep,
 Rooms,/gather,10,button,Record a voice blessing for Diwali,,~Wish ahead,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/gather,10,button,Record a voice wish for Diwali,,~Wish ahead,arjun,icon-only,review,icon-only control: its name is only an aria-label
@@ -1025,10 +1029,24 @@ Settings,/settings#window,19,toggle,N h,,~Your first screen,arjun dadi aria,,kee
 Settings,/settings#window,24,button,Save Your first screen,,~Your first screen,arjun dadi aria,,keep,
 Settings,/settings#window,25,section,Connected apps,,,arjun dadi aria,,keep,
 Settings,/settings#window,26,heading,Connected apps,,~Connected apps,arjun dadi aria,,keep,
-Settings,/settings#window,27,link,Connect,/api/partners/swiggy/connect,~Connected apps,arjun dadi aria,,keep,
-Settings,/settings#window,28,link,Connect,/api/partners/zomato/connect,~Connected apps,arjun dadi aria,,keep,
-Settings,/settings#window,29,link,Open Urban Company,https://www.urbancompany.com,~Connected apps,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,30,button,Sign out,,,arjun dadi aria,,keep,
+Settings,/settings#window,27,section,"For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",,~Connected apps,arjun dadi aria,,keep,
+Settings,/settings#window,28,heading,"For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
+Settings,/settings#window,29,link,Connect,/api/partners/swiggy/connect,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
+Settings,/settings#window,32,link,Connect,/api/partners/zomato/connect,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
+Settings,/settings#window,33,link,Open Urban Company,https://www.urbancompany.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,34,link,Open Blinkit,https://blinkit.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,35,link,Open Tata Nmg,https://www.Nmg.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,36,link,Open Ferns N Petals,https://www.fnp.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,37,link,Open Uber,https://www.uber.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,38,section,"For Rohan, Sneha & Kabir · United Kingdom",,~Connected apps,arjun dadi aria,,keep,
+Settings,/settings#window,39,heading,"For Rohan, Sneha & Kabir · United Kingdom",,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,,keep,
+Settings,/settings#window,40,link,Open Ocado,https://www.ocado.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,41,link,Open Deliveroo,https://deliveroo.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,42,link,Open Boots,https://www.boots.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,43,link,Open TaskRabbit,https://www.taskrabbit.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,44,link,Open Interflora,https://www.interflora.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,45,link,Open Uber,https://www.uber.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,46,button,Sign out,,,arjun dadi aria,,keep,
 Settings,/settings#you,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Settings,/settings#you,1,h1,Settings,,room-header,arjun dadi aria,,keep,
 Settings,/settings#you,2,nav,Settings sections,,settings-tabs,arjun dadi aria,,keep,
@@ -1075,13 +1093,20 @@ Settings,/settings#you,35,image,Your home photo,,~Where you are,arjun dadi aria,
 Settings,/settings#you,36,button,Change,,~Where you are,arjun dadi aria,,keep,
 Settings,/settings#you,37,button,Save Where you are,,~Where you are,arjun dadi aria,,keep,
 Settings,/settings#you,38,button,Sign out,,,arjun dadi aria,,keep,
-Sheets,sheet:add,0,button,Close,,add-sheet,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Sheets,sheet:add,1,heading,Share a moment,,add-sheet,arjun dadi aria,,keep,
-Sheets,sheet:add,3,button,"Choose photos or a video From today, or any day you want to keep",,add-sheet,arjun dadi aria,,keep,
-Sheets,sheet:add,4,input:text,Caption,,add-sheet,arjun dadi aria,,keep,
-Sheets,sheet:add,5,input:text,Where,,add-sheet,arjun dadi aria,,keep,
-Sheets,sheet:add,6,input:text,A note,,add-sheet,arjun dadi aria,,keep,
-Sheets,sheet:add,7,button,Share with the family,,add-sheet,arjun dadi aria,,keep,
+Sheets,sheet:add,0,button,Close,,person-day,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Sheets,sheet:add,0,button,Close,,add-sheet,aria,icon-only,review,icon-only control: its name is only an aria-label
+Sheets,sheet:add,1,button,Previous,,person-day,arjun dadi,icon-only,review,
+Sheets,sheet:add,1,heading,Share a moment,,add-sheet,aria,,keep,
+Sheets,sheet:add,2,button,Back N seconds,,person-day,arjun dadi,icon-only,review,
+Sheets,sheet:add,3,button,"Choose photos or a video From today, or any day you want to keep",,add-sheet,aria,,keep,
+Sheets,sheet:add,3,button,Pause,,person-day,arjun dadi,icon-only,review,
+Sheets,sheet:add,4,button,Forward N seconds,,person-day,arjun dadi,icon-only,review,
+Sheets,sheet:add,4,input:text,Caption,,add-sheet,aria,,keep,
+Sheets,sheet:add,5,button,Next,,person-day,arjun dadi,icon-only,review,
+Sheets,sheet:add,5,input:text,Where,,add-sheet,aria,,keep,
+Sheets,sheet:add,6,button,A line about today,,person-day,arjun dadi,,keep,
+Sheets,sheet:add,6,input:text,A note,,add-sheet,aria,,keep,
+Sheets,sheet:add,7,button,Share with the family,,add-sheet,aria,,keep,
 Sheets,sheet:house,0,button,Close,,~The house,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Sheets,sheet:house,1,nav,The house,,house-sheet,arjun dadi aria,,keep,
 Sheets,sheet:house,2,link,"Memories Everyday photos and voices, and stories",/lane,house-sheet,arjun dadi,,keep,

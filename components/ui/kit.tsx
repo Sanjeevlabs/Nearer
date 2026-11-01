@@ -4,7 +4,7 @@ import * as L from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { roomOf, tabsFor } from "@/lib/spaces";
+import { tabsFor } from "@/lib/spaces";
 import { canStartPortrait } from "@/lib/muse-portrait";
 import { isKid } from "@/lib/kids";
 import { useViewer } from "@/components/viewer";
@@ -276,41 +276,15 @@ export function Monogram({ name, size }: { name: string; size: number }) {
 }
 
 /* ---------------------------------------------------------------- rooms */
-/** Header for every room: back to the courtyard, a large title, optional subtitle. */
-export function RoomHeader({ title, subtitle, action, room }: { title: string; subtitle?: string; action?: React.ReactNode; /** For a page that is in a room but not one of its tabs (Send something → "Care"). */ room?: string }) {
+/**
+ * One compact sticky bar for every room page: back, then the room's tabs in the same row
+ * (the open tab is bold and underlined and is the title; the h1 is for screen readers).
+ * A page with no tabs (Kitchen, or anything opened from a room) shows back + its title.
+ * Back goes to where you came in (tabs replace each other, so they never stack).
+ * Each page mounts it once; the same bar in the same place does not re-mount between loading states.
+ */
+export function RoomHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode; /** Kept for callers; the bar no longer names the room above the title. */ room?: string }) {
   const router = useRouter();
-  return (
-    <header data-ui="room-header" className="mb-5">
-      <div className="mb-1 flex h-11 items-center justify-between">
-        <button
-          type="button"
-          onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
-          aria-label="Back"
-          className="press -ml-2 grid h-11 w-11 place-items-center rounded-full"
-        >
-          <Icon name="back" />
-        </button>
-        {action}
-      </div>
-      <RoomName override={room} />
-      <h1 data-display className="m-0 text-display font-light leading-[1.05] tracking-[-0.015em]">{title}</h1>
-      {/* Subtitles stay in the code for screen readers only: the page says it, the header doesn't repeat it. */}
-      {subtitle && <p className="sr-only">{subtitle}</p>}
-      <SpaceTabs />
-    </header>
-  );
-}
-
-/** Which room of the house this tab page is in, as a quiet line above its title. */
-function RoomName({ override }: { override?: string }) {
-  const room = roomOf(usePathname());
-  const title = override ?? room?.title;
-  if (!title) return null;
-  return <p className="m-0 mb-1 text-caption font-semibold uppercase tracking-[0.12em] text-ink-soft">{title}</p>;
-}
-
-/** The pages of the current room, as one quiet row. Only on a room's own tab page. */
-function SpaceTabs() {
   const pathname = usePathname();
   const { viewer, members } = useViewer();
   const at = tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), members.some((m) => isKid(m)));
@@ -318,35 +292,57 @@ function SpaceTabs() {
   // The last tabs (Play, Nearby) sit past the screen edge: bring the open one into view, without animating.
   // Measured in the row's own pixels (not scrollIntoView), so it is right under the elders' larger text zoom too.
   useEffect(() => {
-    const pill = active.current;
-    const row = pill?.parentElement;
-    if (!pill || !row) return;
-    const gutter = 20;
-    const left = pill.offsetLeft - gutter;
-    const right = pill.offsetLeft + pill.offsetWidth + gutter;
+    const tab = active.current;
+    const row = tab?.parentElement;
+    if (!tab || !row) return;
+    const gutter = 24;
+    const left = tab.offsetLeft - gutter;
+    const right = tab.offsetLeft + tab.offsetWidth + gutter;
     if (left < row.scrollLeft) row.scrollLeft = left;
     else if (right > row.scrollLeft + row.clientWidth) row.scrollLeft = right - row.clientWidth;
   }, [pathname]);
-  if (!at) return null;
   return (
-    <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar relative -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 py-1">
-      {at.space.rooms.map((r) => (
-        <Link
-          key={r.href}
-          href={r.href}
-          replace
-          ref={r.href === at.room ? active : undefined}
-          aria-current={r.href === at.room ? "page" : undefined}
-          className={cn(
-            // 40px pill, 44px hit area (the ::before reaches 2px past it, top and bottom).
-            "press relative flex h-10 shrink-0 items-center rounded-full px-4 text-callout font-semibold no-underline before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']",
-            r.href === at.room ? "bg-ink text-white" : "bg-card text-ink-soft shadow-card",
-          )}
-        >
-          {r.title}
-        </Link>
-      ))}
-    </nav>
+    <header
+      data-ui="room-header"
+      className="sticky top-0 z-30 -mx-4 mb-3 bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] px-4 backdrop-blur"
+      style={{ marginTop: "calc(-16px - env(safe-area-inset-top))", paddingTop: "calc(4px + env(safe-area-inset-top))" }}
+    >
+      <div className="flex h-11 items-center gap-1">
+        <button type="button" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} aria-label="Back" className="press -ml-2 grid h-11 w-11 shrink-0 place-items-center rounded-full">
+          <Icon name="back" />
+        </button>
+        {at ? (
+          <>
+            <h1 className="sr-only">{title}</h1>
+            <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar flex min-w-0 flex-1 overflow-x-auto">
+              {at.space.rooms.map((r) => {
+                const on = r.href === at.room;
+                return (
+                  <Link
+                    key={r.href}
+                    href={r.href}
+                    replace
+                    ref={on ? active : undefined}
+                    aria-current={on ? "page" : undefined}
+                    className={cn(
+                      "press relative flex h-11 shrink-0 items-center px-3 text-body no-underline",
+                      on ? "font-bold text-ink after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-ink after:content-['']" : "font-medium text-ink-soft",
+                    )}
+                  >
+                    {r.title}
+                  </Link>
+                );
+              })}
+            </nav>
+          </>
+        ) : (
+          <h1 className="m-0 min-w-0 flex-1 truncate text-title font-semibold">{title}</h1>
+        )}
+        {action && <div className="shrink-0">{action}</div>}
+      </div>
+      {/* Subtitles stay in the code for screen readers only: the page says it, the header doesn't repeat it. */}
+      {subtitle && <p className="sr-only">{subtitle}</p>}
+    </header>
   );
 }
 

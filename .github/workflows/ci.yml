@@ -50,6 +50,12 @@ jobs:
             git --no-pager diff -U0 -- docs/ui-inventory.csv | head -80
             exit 1
           fi
+      - name: Upload the regenerated UI inventory (commit this file when the step above fails)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-inventory
+          path: docs/ui-inventory.csv
       - name: Bundle budget (shared client JS)
         run: node scripts/perf-budget.mjs
       - name: Vitals (courtyard LCP and CLS, 390px, 4G, 4x CPU)

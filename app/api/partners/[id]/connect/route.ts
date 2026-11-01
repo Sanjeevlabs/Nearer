@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/auth";
-import { isMockMode } from "@/lib/config";
+import { isSampleMode } from "@/lib/config";
 import { authorizeUrl, clientIdFor, flowCookie, metadata, newFlow, redirectUriFor } from "@/lib/partners/oauth";
 import { getAccount, isEnabled } from "@/lib/partners/registry";
 import { deleteToken, saveToken } from "@/lib/partners/tokens";
@@ -21,7 +21,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
   if (auth instanceof Response) return auth;
   const acct = account(params.id);
   if (!acct) return Response.json({ error: "unknown-partner" }, { status: 404 });
-  if (isMockMode()) {
+  if (isSampleMode()) {
     await saveToken(auth.familyId, auth.memberId, acct.id, { accessToken: "sample", sample: true });
     return Response.redirect(done(req, acct.id, "ok"), 302);
   }

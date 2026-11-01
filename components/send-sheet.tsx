@@ -54,6 +54,7 @@ type Result =
 type Step =
   | { s: "loading" }
   | { s: "error" }
+  | { s: "none" }
   | { s: "list"; items: SuggestionView[]; sample: boolean; refused?: string }
   | { s: "previewing"; items: SuggestionView[]; sample: boolean; picked: SuggestionView }
   | { s: "preview"; items: SuggestionView[]; sample: boolean; picked: SuggestionView; preview: PreviewView; busy?: boolean }
@@ -62,10 +63,14 @@ type Step =
 
 const KIND_ICON: Record<Kind, IconName> = { groceries: "basket", food: "utensils", dining: "utensils", gifts: "gift", "home-services": "wrench" };
 
-export function money(minor: number, currency: string): string {
+/** The home locale of the common currencies, so a pound reads as a pound and a rupee as a rupee. */
+const CURRENCY_LOCALE: Record<string, string> = { INR: "en-IN", GBP: "en-GB", USD: "en-US", CAD: "en-CA", AUD: "en-AU", EUR: "de-DE", AED: "en-AE", SGD: "en-SG" };
+
+/** Minor units (pence, paise) in the item's own currency and locale; never a fixed locale. */
+export function money(minor: number, currency: string, locale?: string): string {
   const major = minor / 100;
   try {
-    return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: Number.isInteger(major) ? 0 : 2 }).format(major);
+    return new Intl.NumberFormat(locale ?? CURRENCY_LOCALE[currency] ?? "en", { style: "currency", currency, maximumFractionDigits: Number.isInteger(major) ? 0 : 2 }).format(major);
   } catch {
     return `${currency} ${major.toFixed(2)}`;
   }
@@ -111,8 +116,10 @@ export function SendSheet({
     setStep({ s: "loading" });
     const body: Record<string, string> = { forMemberId };
     if (context?.title) body[context.kind] = context.title;
-    const res = await postJson<{ suggestions: SuggestionView[]; sample: boolean; refused?: string }>("/api/partners/suggest", body);
+    const res = await postJson<{ eligible?: boolean; suggestions: SuggestionView[]; sample: boolean; refused?: string }>("/api/partners/suggest", body);
     if (!res) return setStep({ s: "error" });
+    // No partner serves their country: the section is left out (the page keeps its app links).
+    if (res.eligible === false) return setStep({ s: "none" });
     setStep({ s: "list", items: res.suggestions, sample: res.sample, refused: res.refused });
   }, [forMemberId, context?.kind, context?.title]);
 
@@ -148,6 +155,8 @@ export function SendSheet({
   };
 
   const back = step.s === "preview" || step.s === "connect" ? () => setStep({ s: "list", items: step.items, sample: step.sample }) : null;
+
+  if (step.s === "none") return null;
 
   if (inline)
     return (
@@ -214,6 +223,7 @@ function Body({
   onRetry: () => void;
   onClose: () => void;
 }) {
+  if (step.s === "none") return null;
   if (step.s === "loading")
     return (
       <div className="mt-3 space-y-3" aria-busy="true" aria-label="Finding things to send">

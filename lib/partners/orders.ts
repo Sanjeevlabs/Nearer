@@ -7,7 +7,7 @@
 // Server only.
 import { randomBytes } from "crypto";
 import { claimDoc } from "../family-docs";
-import { isMockMode } from "../config";
+import { isSampleMode } from "../config";
 import { NeedsConnect, openPartner } from "./adapter";
 import type { Candidate } from "./catalog";
 import { pickAddress } from "./catalog";
@@ -89,7 +89,7 @@ export async function createPreview(input: {
   if (partner.transport === "mcp-public") {
     // Gift stores: the price as the store listed it; the address is entered at the store's checkout.
     preview = { ...base, total: c.price, address: null, addresses: [], eta: null, handoff: true, sample: c.sample };
-  } else if (isMockMode() || c.sample) {
+  } else if (isSampleMode() || c.sample) {
     const addresses = sampleAddresses(input.recipientCity, input.ownCity);
     const address = pickAddress(addresses, input.recipientCity, input.addressId) ?? addresses[0];
     preview = { ...base, total: c.price, address, addresses, eta: partner.eta ?? null, handoff: false, sample: true };

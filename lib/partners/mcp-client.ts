@@ -141,8 +141,9 @@ export class McpClient {
         const parsed = RpcResponseSchema.safeParse(json);
         if (!parsed.success || parsed.data.id !== payload.id) continue;
         if (parsed.data.error) {
-          // -32001 is how some servers (Swiggy) report auth failure in-band.
-          if (parsed.data.error.code === -32001) throw new McpError("unauthorized", "mcp-unauthorized");
+          // -32001 is how Swiggy reports auth failure in-band. On other hosts (Shopify stores) it means
+          // the agent profile could not be fetched: a server fault, not a sign-in to ask for.
+          if (parsed.data.error.code === -32001 && /(^|\.)swiggy\.com$/.test(new URL(this.url).hostname)) throw new McpError("unauthorized", "mcp-unauthorized");
           throw new McpError("rpc", `mcp-rpc-${parsed.data.error.code}`);
         }
         return parsed.data.result;

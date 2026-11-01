@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { dbGetMember } from "@/lib/db";
-import { countryForZones } from "@/lib/holidays";
+import { sendCountry } from "@/lib/send-apps";
+import { partnersForCountry, storesForCountry } from "@/lib/partners/registry";
 import { callName } from "@/lib/people";
 import { isBlockedText, refFor, searchCandidates } from "@/lib/partners/catalog";
 import { pickSuggestions } from "@/lib/partners/suggest";
@@ -43,7 +44,11 @@ export async function POST(req: Request): Promise<Response> {
       refused: "medical",
     });
 
-  const country = countryForZones([recipient.tz]);
+  // The recipient's own country, same resolver as the app links; an unknown zone is generic, never India.
+  const country = sendCountry(recipient.tz);
+  const eligible = partnersForCountry(country).some((p) => p.sendable) || storesForCountry(country).length > 0;
+  // Nobody to ask in their country: no search, and the page leaves this section out (the links stay).
+  if (!eligible) return Response.json({ eligible: false, suggestions: [], sample: false });
   const found = await searchCandidates({
     familyId: auth.familyId,
     memberId: auth.memberId,
@@ -60,6 +65,7 @@ export async function POST(req: Request): Promise<Response> {
     candidates: found.candidates,
   });
   return Response.json({
+    eligible: true,
     sample: found.sample,
     source,
     connectable: found.connectable,
