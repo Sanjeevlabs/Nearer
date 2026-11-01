@@ -29,7 +29,9 @@ declare global {
   }
 }
 
-const JITSI_SCRIPT = "https://meet.jit.si/external_api.js";
+type RoomInfo = { provider: "jaas" | "jitsi"; domain: string; appId?: string; room: string; jwt?: string };
+const roomName = (r: RoomInfo) => (r.provider === "jaas" ? `${r.appId}/${r.room}` : r.room);
+const scriptFor = (r: RoomInfo) => (r.provider === "jaas" ? `https://${r.domain}/${r.appId}/external_api.js` : `https://${r.domain}/external_api.js`);
 
 /** The venue photo as a data URL (the call's background must not taint its canvas); the plain URL if that fails. */
 async function backgroundFor(path: string): Promise<string> {
@@ -59,6 +61,7 @@ export default function CallPage() {
   const { setChromeHidden } = useShell();
   const { viewer, members } = useViewer();
   const { data } = useJson<{ sittings: Sitting[]; knocks: Knock[] }>("/api/sit");
+  const [info, setInfo] = useState<RoomInfo | null>(null);
   const [now, setNow] = useState<Date | null>(null);
   const [mode, setMode] = useState<"loading" | "api" | "iframe">("loading");
   const [bg, setBg] = useState(true);
@@ -87,17 +90,31 @@ export default function CallPage() {
   const venue = venueOf((knock ?? sitting)?.venue);
   const title = sitting?.title ?? (knock ? `${callName(members.find((m) => m.id === knock.memberId))}'s ${venue.name.toLowerCase()}` : "Sitting together");
 
+  // How to open the room (JaaS token or public Jitsi), asked once per sitting.
+  useEffect(() => {
+    if (!valid) return;
+    let gone = false;
+    fetch(`/api/sit/token?id=${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? (r.json() as Promise<RoomInfo>) : Promise.reject(new Error("token"))))
+      .then((r) => !gone && setInfo(r))
+      .catch(() => !gone && setInfo({ provider: "jitsi", domain: "meet.jit.si", room: roomUrl(id).split("/").pop()! }));
+    return () => {
+      gone = true;
+    };
+  }, [valid, id]);
+
   // The video room: Jitsi's IFrame API so everyone gets the venue as a background;
   // the plain iframe if the script is slow (6 s) or fails.
   useEffect(() => {
-    if (!valid) return;
+    if (!valid || !info) return;
     let gone = false;
     const fallback = window.setTimeout(() => !gone && !apiRef.current && setMode("iframe"), 6000);
     const start = () => {
       if (gone || !holder.current || !window.JitsiMeetExternalAPI) return;
       try {
-        const api = new window.JitsiMeetExternalAPI("meet.jit.si", {
-          roomName: roomUrl(id).split("/").pop(),
+        const api = new window.JitsiMeetExternalAPI(info.domain, {
+          roomName: roomName(info),
+          jwt: info.jwt,
           parentNode: holder.current,
           width: "100%",
           height: "100%",
@@ -127,7 +144,7 @@ export default function CallPage() {
     if (window.JitsiMeetExternalAPI) start();
     else {
       const s = document.createElement("script");
-      s.src = JITSI_SCRIPT;
+      s.src = scriptFor(info);
       s.async = true;
       s.onload = start;
       s.onerror = () => !gone && setMode("iframe");
@@ -145,7 +162,7 @@ export default function CallPage() {
     };
     // The room is made once per sitting; the venue and members are read when it opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valid, id]);
+  }, [valid, id, info]);
 
   const toggleBg = () => {
     const next = !bg;
@@ -193,7 +210,7 @@ export default function CallPage() {
               </button>
             )}
             {valid && (
-              <a href={roomUrl(id)} target="_blank" rel="noreferrer" aria-label="Open in browser" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/35 text-white no-underline">
+              <a href={roomUrl(id, info ?? undefined)} target="_blank" rel="noreferrer" aria-label="Open in browser" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/35 text-white no-underline">
                 <Icon name="share" size={16} />
               </a>
             )}
@@ -223,7 +240,7 @@ export default function CallPage() {
             mode === "iframe" ? (
               <iframe
                 title="Family video call"
-                src={`${roomUrl(id)}#config.prejoinConfig.enabled=false&userInfo.displayName=%22${encodeURIComponent(callName(viewer))}%22`}
+                src={`https://${info?.domain ?? "meet.jit.si"}/${info ? roomName(info) : roomUrl(id).split("/").pop()}${info?.jwt ? `?jwt=${info.jwt}` : ""}#config.prejoinConfig.enabled=false&userInfo.displayName=%22${encodeURIComponent(callName(viewer))}%22`}
                 allow="camera; microphone; fullscreen; display-capture; autoplay"
                 className="h-full w-full border-0"
               />
