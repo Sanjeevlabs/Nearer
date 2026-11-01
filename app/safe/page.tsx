@@ -152,7 +152,7 @@ function CheckIn({ data, onChange }: { data: SafetyData; onChange: () => Promise
                 key={n}
                 type="button"
                 disabled={busy}
-                onClick={() => send({ kind: mode, etaMinutes: mode === "heading" ? n : n * 60 }, `${names} will hear from Aangan only if you're not in by then.`)}
+                onClick={() => send({ kind: mode, etaMinutes: mode === "heading" ? n : n * 60 }, `${names} will hear from Nearer only if you're not in by then.`)}
                 className="press h-11 rounded-full bg-white px-4 text-[15px] font-semibold"
               >
                 {mode === "heading" ? `${n} min` : `${n} h`}

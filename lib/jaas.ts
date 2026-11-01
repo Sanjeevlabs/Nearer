@@ -16,8 +16,8 @@ export function jaasConfig(): JaasConfig | null {
 
 export const jaasEnabled = (): boolean => jaasConfig() !== null;
 
-/** The room name used inside Aangan: unguessable per knock or sitting. */
-export const roomName = (id: string): string => `Aangan-${id.replace(/[^a-zA-Z0-9-]/g, "")}`;
+/** The room name used inside Nearer: unguessable per knock or sitting. */
+export const roomName = (id: string): string => `Nearer-${id.replace(/[^a-zA-Z0-9-]/g, "")}`;
 
 const enc = new TextEncoder();
 function b64url(bytes: Uint8Array): string {

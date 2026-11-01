@@ -195,7 +195,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     setBusy(true);
     saveIntent();
     // Google blocks sign-in inside app webviews: in the native app it opens in the system browser
-    // and comes back through the app.aangan.family:// deep link.
+    // and comes back through the com.sanjeevlabs.nearer:// deep link.
     const native = isNative();
     const { data, error: err } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: authRedirectUrl("oauth"), skipBrowserRedirect: native } });
     if (!err && native && data?.url) await openExternal(data.url);

@@ -16,15 +16,15 @@ const WINDOW_SRCSET = [390, 780].map((w) => `${DEFAULT_IMAGE.replace(/\.jpg$/, `
 const HERO_PRELOAD = `try{if(sessionStorage.getItem("aangan:door")==="open"){document.documentElement.dataset.door="open";var l=document.createElement("link");l.rel="preload";l.as="image";l.setAttribute("imagesrcset","/demo/courtyard-390.webp 390w, /demo/courtyard-780.webp 780w");l.setAttribute("imagesizes","${HERO_SIZES}");l.setAttribute("fetchpriority","high");document.head.appendChild(l)}else{var h=localStorage.getItem("aangan:hero");if(h&&h!==${JSON.stringify(DEFAULT_IMAGE)}){document.documentElement.dataset.hero="custom"}else if(innerWidth<900){var w=document.createElement("link");w.rel="preload";w.as="image";w.setAttribute("imagesrcset","${WINDOW_SRCSET}");w.setAttribute("imagesizes","${WINDOW_SIZES}");w.setAttribute("fetchpriority","high");document.head.appendChild(w)}}}catch(e){}`;
 
 export const metadata: Metadata = {
-  title: "Aangan — far from home, never far from them",
-  description: "A window into your parents' day, and theirs into yours. Voices, the light in the window, the family's occasions.",
+  title: "Nearer — the window between two homes",
+  description: "A live window between two homes: their time, weather and sky, a Safe & sound when they are well, and a lamp that says you are thinking of them.",
   manifest: "/manifest.webmanifest",
   icons: { icon: [{ url: "/icons/icon-192.png", sizes: "192x192" }, { url: "/icons/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "Aangan", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Nearer", statusBarStyle: "black-translucent" },
   // og:image comes from app/opengraph-image.tsx; APP_ORIGIN (at build time) makes its URL absolute.
   metadataBase: process.env.APP_ORIGIN ? new URL(process.env.APP_ORIGIN) : undefined,
-  openGraph: { type: "website", siteName: "Aangan", title: "Aangan", description: "Far from home. Never far from them." },
-  twitter: { card: "summary_large_image", title: "Aangan", description: "Far from home. Never far from them." },
+  openGraph: { type: "website", siteName: "Nearer", title: "Nearer", description: "The window between two homes." },
+  twitter: { card: "summary_large_image", title: "Nearer", description: "The window between two homes." },
 };
 
 export const viewport: Viewport = {

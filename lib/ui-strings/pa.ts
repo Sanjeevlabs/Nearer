@@ -12,7 +12,7 @@ export const pa: Catalogue = {
   "welcome.morning": "ਸ਼ੁਭ ਸਵੇਰ",
   "welcome.afternoon": "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ",
   "welcome.evening": "ਸ਼ੁਭ ਸ਼ਾਮ",
-  "welcome.title": "{name} ਦੇ ਵਿਹੜੇ ਵਿੱਚ ਜੀ ਆਇਆਂ ਨੂੰ",
+  "welcome.title": "ਘਰ ਵਿੱਚ ਜੀ ਆਇਆਂ ਨੂੰ, {name}",
   "welcome.enter": "ਅੰਦਰ ਆਓ",
 
   "auth.back": "ਪਿੱਛੇ",

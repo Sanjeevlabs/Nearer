@@ -14,7 +14,7 @@ export default async function ConnectDone(
   const title = status === "ok" ? `${name} is connected` : status === "denied" ? "Not connected" : "Couldn't connect";
   const line =
     status === "ok"
-      ? "Orders are placed from your own account. Aangan never sees your payment details."
+      ? "Orders are placed from your own account. Nearer never sees your payment details."
       : status === "denied"
         ? `You chose not to connect ${name}. You can try again any time.`
         : `Something went wrong talking to ${name}. Please try again.`;
@@ -28,7 +28,7 @@ export default async function ConnectDone(
       <h1 className="m-0 text-[26px]">{title}</h1>
       <p className="m-0 mt-3 max-w-[300px] text-[15px] text-ink-soft">{line}</p>
       <Link href="/settings#connected-apps" className="press mt-8 flex h-[52px] items-center justify-center rounded-full bg-black px-8 text-[16px] font-semibold text-white no-underline">
-        Back to Aangan
+        Back to Nearer
       </Link>
     </main>
   );

@@ -32,7 +32,7 @@ describe("session cookies (HMAC)", () => {
       new Request("http://test/api/session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "leo" }),
+        body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "leo" }),
       }),
     );
     expect(ok.status).toBe(200);

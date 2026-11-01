@@ -72,7 +72,7 @@ function hourWord(h: number): string {
 }
 
 /** The sentence under a name. */
-/** An app heartbeat (just opening Aangan) older than this no longer says "active": it says "quiet since". */
+/** An app heartbeat (just opening Nearer) older than this no longer says "active": it says "quiet since". */
 export const HEARTBEAT_FRESH_MS = 6 * 3_600_000;
 
 export function rhythmLine(

@@ -33,7 +33,7 @@ const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.D
  */
 function CheckingShell() {
   return (
-    <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Aangan">
+    <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Nearer">
       <div className="win-hero mx-auto w-full max-w-[480px]" aria-hidden="true">
         <HeroBox src={DEFAULT_IMAGE} />
       </div>
@@ -74,7 +74,7 @@ export default function Page() {
   }, []);
 
   const startDemo = useCallback(async () => {
-    const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "arjun" }) });
+    const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "arjun" }) });
     if (res.ok) {
       resetFamilyCards();
       markEntered();
@@ -83,7 +83,7 @@ export default function Page() {
     }
   }, []);
   // Everyone (phone or laptop) sees the home page first, even with a session from an earlier
-  // day; one tap on Open Aangan (or any app route) steps inside for the rest of the session.
+  // day; one tap on Open Nearer (or any app route) steps inside for the rest of the session.
   // Straight in: the installed app, ?demo=1, and anyone who already stepped inside.
   const [entered, setEntered] = useState<boolean | null>(null);
   const [direct, setDirect] = useState(false);

@@ -13,9 +13,12 @@ const ExchangeSchema = z.object({
   memberId: z.string().min(1).max(64),
 });
 
+// The demo code before the rename to Nearer; old links and bookmarks still carry it.
+const LEGACY_DEMO_CODE = "AANGAN-DEMO";
+
 // Invite code -> httpOnly signed session cookie. The code must be a live,
 // unexpired family invite (Privacy page) for the member's family — or the
-// documented AANGAN-DEMO bootstrap code for the synthetic demo families.
+// documented NEARER-DEMO bootstrap code for the synthetic demo families.
 // Members with their own account, and admins, must use the email code.
 export async function POST(req: Request): Promise<Response> {
   let body: unknown;
@@ -27,13 +30,15 @@ export async function POST(req: Request): Promise<Response> {
   // Slow down guessing: per caller address and per target member.
   const ip = callerKey(req) ?? "local";
   const claimed = (body as { memberId?: unknown } | null)?.memberId;
-  const demoCode = (body as { inviteCode?: unknown } | null)?.inviteCode === DEMO_INVITE_CODE;
+  const sent = (body as { inviteCode?: unknown } | null)?.inviteCode;
+  const demoCode = sent === DEMO_INVITE_CODE || sent === LEGACY_DEMO_CODE;
   // The per-member limit slows invite-code guessing; the public demo code has
   // nothing to guess, and every demo visitor asks for the same seed member.
   if (!allowAuthAttempt(`session:${ip}`, 20) || (!demoCode && typeof claimed === "string" && !allowAuthAttempt(`session-member:${claimed}`, 10))) return Response.json({ error: "too-many-attempts" }, { status: 429 });
   const parsed = ExchangeSchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "invalid-session" }, { status: 400 });
-  const code = parsed.data.inviteCode.trim();
+  const trimmed = parsed.data.inviteCode.trim();
+  const code = trimmed === LEGACY_DEMO_CODE ? DEMO_INVITE_CODE : trimmed;
   if (code === DEMO_INVITE_CODE && dbLive()) return enterDemo(req, parsed.data.memberId);
   const member = await dbGetMember(parsed.data.memberId);
   if (!member) return Response.json({ error: "unknown-member" }, { status: 404 });

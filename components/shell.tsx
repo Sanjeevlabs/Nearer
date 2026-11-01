@@ -205,7 +205,7 @@ function Dock() {
 }
 
 /**
- * Being in Aangan is the "safe & sound" signal the other home sees (green
+ * Being in Nearer is the "safe & sound" signal the other home sees (green
  * dot). Sent on open and whenever the app comes back to the foreground; the
  * server keeps at most one every 30 minutes and skips people who opted out.
  */

@@ -224,11 +224,11 @@ describe("scan nudges: occasion, call, letter digest", () => {
 
 describe("the email", () => {
   it("is big, plain, one button, the letter inside, and escapes text", () => {
-    const m = renderDigestEmail({ name: "Arjun", lines: ["Maa heard your <b>voice</b> note"], letter: { title: "A good week", body: "Dear family" }, openUrl: "https://aangan.example", shareUrl: "https://wa.me/?text=x" });
+    const m = renderDigestEmail({ name: "Arjun", lines: ["Maa heard your <b>voice</b> note"], letter: { title: "A good week", body: "Dear family" }, openUrl: "https://nearer.example", shareUrl: "https://wa.me/?text=x" });
     expect(m.subject).toBe("A good week");
-    expect(m.html).toContain("Open Aangan");
+    expect(m.html).toContain("Open Nearer");
     expect(m.html).not.toContain("<b>voice</b>");
-    expect(m.html.match(/Open Aangan/g)).toHaveLength(1);
+    expect(m.html.match(/Open Nearer/g)).toHaveLength(1);
     expect(m.text).toContain("Dear family");
     expect(m.html + m.text).not.toMatch(/days since|streak/i);
   });

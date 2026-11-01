@@ -26,7 +26,7 @@ export function earlyHeroSrc(): string {
 }
 
 /** The loading frame: the photo box and quiet placeholders sized like the real thing. */
-export function WindowLoading({ label = "Opening Aangan" }: { label?: string }) {
+export function WindowLoading({ label = "Opening Nearer" }: { label?: string }) {
   return (
     <div className="fixed inset-0 z-30 overflow-hidden bg-paper" aria-busy="true" aria-label={label}>
       <div className="mx-auto w-full max-w-[480px]">

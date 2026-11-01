@@ -17,7 +17,7 @@ export function EntryFrame({ image = COURTYARD, children }: { image?: string; ch
       <Photo src={image} alt="" sizes="100vw" priority />
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/30" aria-hidden="true" />
       <div className="relative mx-auto flex h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
-        <p className="m-0 px-2 text-[22px] font-bold tracking-[-0.02em] text-white drop-shadow">Aangan</p>
+        <p className="m-0 px-2 text-[22px] font-bold tracking-[-0.02em] text-white drop-shadow">Nearer</p>
         <div className="flex-1" />
         <div className="glass rounded-[30px] p-6">{children}</div>
       </div>

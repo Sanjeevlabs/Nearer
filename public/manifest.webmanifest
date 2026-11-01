@@ -1,7 +1,7 @@
 {
-  "name": "Aangan",
-  "short_name": "Aangan",
-  "description": "Far from home. Never far from them.",
+  "name": "Nearer",
+  "short_name": "Nearer",
+  "description": "The window between two homes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

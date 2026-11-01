@@ -19,7 +19,7 @@ function store(): EdgeCache | null {
   }
 }
 
-const keyUrl = (key: string) => `https://edge-cache.aangan.invalid/${encodeURIComponent(key)}`;
+const keyUrl = (key: string) => `https://edge-cache.nearer.invalid/${encodeURIComponent(key)}`;
 
 export async function edgeGet<T>(key: string): Promise<T | undefined> {
   try {

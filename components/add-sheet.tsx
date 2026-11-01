@@ -333,7 +333,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       rec.start();
       setPhase("recording");
     } catch {
-      setError("Aangan needs your microphone. Allow it in your browser settings, then try again.");
+      setError("Nearer needs your microphone. Allow it in your browser settings, then try again.");
     }
   };
 
@@ -430,7 +430,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         <h2 className="m-0 text-[24px]">Before your first recording</h2>
         <ul className="m-0 mt-4 list-none space-y-3 p-0 text-[15px] text-ink-soft">
           <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Only your family can hear it.</li>
-          <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Aangan writes down your words so everyone can read them in their own language.</li>
+          <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Nearer writes down your words so everyone can read them in their own language.</li>
           <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Your voice is never used to create a copy of it.</li>
         </ul>
         <p className="m-0 mt-4 text-[13px] text-ink-faint">In this demo, Meta&rsquo;s AI models process recordings to transcribe and translate them.</p>

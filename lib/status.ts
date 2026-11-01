@@ -1,7 +1,7 @@
 // Safe & sound at a glance (SPEC §29.12): is the other home OK right now?
-// Built only from activity people already share in Aangan (opening it,
+// Built only from activity people already share in Nearer (opening it,
 // a moment, a voice note, a check-in). A web app can't see general phone
-// use, so the words say "in Aangan". Pure (client + server).
+// use, so the words say "in Nearer". Pure (client + server).
 import { hourIn } from "./zones";
 
 export type Alive = "active" | "quiet" | "asleep" | "unknown" | "private";

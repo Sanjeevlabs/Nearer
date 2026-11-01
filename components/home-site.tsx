@@ -4,7 +4,7 @@ import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 
-// The home page, phone first: what Aangan is and the way in (Open Aangan when signed in;
+// The home page, phone first: what Nearer is and the way in (Open Nearer when signed in;
 // the demo, create and sign-in when not). On a laptop or a projector it also shows a QR
 // code that opens the demo family on a phone. The installed app skips it (components/welcome.tsx).
 
@@ -33,12 +33,12 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
         <span className="flex items-center gap-2.5 text-[18px] font-semibold">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/icon-192.png" alt="" width={32} height={32} className="rounded-[9px]" />
-          Aangan
+          Nearer
         </span>
         <nav className="flex items-center gap-4 text-[15px] sm:gap-5">
           {signedIn ? (
             <button type="button" onClick={onEnter} className="press min-h-11 rounded-full bg-ink px-4 py-2 font-semibold text-white">
-              Open Aangan
+              Open Nearer
             </button>
           ) : (
             <>
@@ -56,13 +56,13 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
       {/* Hero: the promise, the phone, the QR */}
       <section className="mx-auto grid max-w-[1120px] items-center gap-10 px-5 pb-12 pt-2 sm:px-8 sm:pb-16 sm:pt-6 md:grid-cols-[1.15fr_.85fr] md:gap-12">
         <div>
-          <h1 className="m-0 text-[clamp(36px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">Far from home. Never far from them.</h1>
+          <h1 className="m-0 text-[clamp(36px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">The window between two homes.</h1>
           <p className="voice m-0 mt-5 max-w-[34ch] text-[19px] sm:text-[22px] leading-snug text-ink-soft">A window into your parents&rsquo; day, and theirs into yours.</p>
           {/* The way in: on every screen when signed in, and on a phone when not (no QR there). */}
           <div className={signedIn ? "mt-7 flex flex-col gap-2.5 sm:max-w-[320px]" : "mt-7 flex flex-col gap-2.5 sm:max-w-[320px] md:hidden"} data-ui="home-actions">
             {signedIn ? (
               <button type="button" onClick={onEnter} className="press h-[54px] rounded-full bg-ink text-[17px] font-semibold text-white">
-                Open Aangan
+                Open Nearer
               </button>
             ) : (
               <>
@@ -88,7 +88,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             )}
           </div>
           <div className="mt-9 hidden items-center gap-6 md:flex rounded-[28px] bg-white p-5 shadow-[0_20px_50px_-30px_rgba(0,0,0,.35)] ring-1 ring-black/[.05]" style={{ maxWidth: 480 }}>
-            <div className="h-[132px] w-[132px] shrink-0 overflow-hidden rounded-[14px] [&_svg]:h-full [&_svg]:w-full" aria-label="QR code: open the Aangan demo on your phone" role="img" dangerouslySetInnerHTML={qr ? { __html: qr } : undefined} />
+            <div className="h-[132px] w-[132px] shrink-0 overflow-hidden rounded-[14px] [&_svg]:h-full [&_svg]:w-full" aria-label="QR code: open the Nearer demo on your phone" role="img" dangerouslySetInnerHTML={qr ? { __html: qr } : undefined} />
             <div>
               <p className="m-0 text-[19px] font-semibold leading-tight">Scan to open it on your phone</p>
               <p className="m-0 mt-1.5 text-[14.5px] text-ink-soft">Opens straight into a demo family. On your phone, &ldquo;Add to Home Screen&rdquo; makes it an app.</p>
@@ -132,13 +132,13 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
 
       {/* Why it exists */}
       <section className="mx-auto max-w-[760px] px-5 py-14 text-center sm:px-8 sm:py-20">
-        <p className="voice m-0 text-[22px] leading-snug sm:text-[26px]">Millions of parents live far from their children. A call a week isn&rsquo;t enough. Aangan is the courtyard the family shares again.</p>
+        <p className="voice m-0 text-[22px] leading-snug sm:text-[26px]">Millions of parents live far from their children. A call a week isn&rsquo;t enough. Nearer is the courtyard the family shares again.</p>
         <p className="m-0 mt-6 text-[15px] text-ink-soft">Free for every family. 55 languages. Built with Muse on Meta&rsquo;s models.</p>
       </section>
 
       <footer className="border-t border-[var(--line)]">
         <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-6 sm:px-8 text-[13.5px] text-ink-soft">
-          <span>Aangan · made in Bengaluru for families everywhere</span>
+          <span>Nearer · made in Bengaluru for families everywhere</span>
           <span className="flex gap-5">
             <Link href="/privacy" className="text-ink-soft no-underline hover:text-ink">
               Privacy

@@ -64,7 +64,7 @@ describe("family export", () => {
     const res = await exportGet(req("/api/export", "arjun"));
     expect(res.headers.get("content-disposition")).toMatch(/aangan-sharma-\d{4}-\d{2}-\d{2}\.json/);
     const out = (await res.json()) as Record<string, unknown>;
-    expect(out.format).toBe("aangan-family-export");
+    expect(out.format).toBe("nearer-family-export");
     expect((out.members as unknown[]).length).toBe(12);
     expect((out.recipe as unknown[]).length).toBeGreaterThan(3);
     expect(out).not.toHaveProperty("muse_call");

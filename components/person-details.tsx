@@ -142,7 +142,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
             </select>
             <BirthYearField value={year} onChange={setYear} className="!px-4" />
           </div>
-          <p className="m-0 text-[13px] text-ink-soft">The year is optional. With it, Aangan can show {callName(person)}&rsquo;s age.</p>
+          <p className="m-0 text-[13px] text-ink-soft">The year is optional. With it, Nearer can show {callName(person)}&rsquo;s age.</p>
           <div className="flex gap-2 pt-1">
             <Button className="flex-1" disabled={busy || !name.trim()} onClick={() => void save()}>
               {busy ? "Saving…" : "Save"}

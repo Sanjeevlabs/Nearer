@@ -12,7 +12,7 @@ export const mr: Catalogue = {
   "welcome.morning": "सुप्रभात",
   "welcome.afternoon": "नमस्कार",
   "welcome.evening": "शुभ संध्याकाळ",
-  "welcome.title": "{name} यांच्या अंगणात स्वागत",
+  "welcome.title": "घरात स्वागत, {name}",
   "welcome.enter": "आत या",
 
   "auth.back": "मागे",

@@ -149,7 +149,7 @@ export function familyName(id: string): string | undefined {
 }
 
 
-/** Every Aangan this person belongs to (one row per family), by personId. */
+/** Every family space this person belongs to (one row per family), by personId. */
 export function findMembersByPerson(personId: string): Member[] {
   return members.filter((m) => m.personId === personId).map((m) => ({ ...m }));
 }
@@ -496,7 +496,7 @@ export function clearRelationships(): void {
   addRelationship({ id: "rel-rohan-kabir", familyId: "demo-family", memberId: "rohan", relationMemberId: "kabir", relation: "son", canonicalKind: "child" });
   addRelationship({ id: "rel-sneha-kabir", familyId: "demo-family", memberId: "sneha", relationMemberId: "kabir", relation: "son", canonicalKind: "child" });
 
-  // Priya's side, the Iyer Aangan.
+  // Priya's side, the Iyer family.
   const I = "demo-iyer";
   const rel = (id: string, a: string, b: string, relation: string, canonicalKind: Relationship["canonicalKind"]) => addRelationship({ id, familyId: I, memberId: a, relationMemberId: b, relation, canonicalKind });
   rel("rel-i-nani-nana", "iyer-nani", "iyer-nana", "husband", "spouse");

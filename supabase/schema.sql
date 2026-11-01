@@ -1,4 +1,4 @@
--- Aangan schema — full PRD table list. Run ONCE in the Supabase SQL editor.
+-- Nearer schema — full PRD table list. Run ONCE in the Supabase SQL editor.
 -- This script is IDEMPOTENT: every object is created IF NOT EXISTS and every
 -- policy is dropped before creation, so re-running it is always safe.
 --
@@ -55,7 +55,7 @@ alter table members add column if not exists home_image_ref text;
 alter table members add column if not exists home_palette text[] default '{}';
 alter table members add column if not exists photo_ref text;
 alter table members add column if not exists email text;
--- Two courtyards, one door: the same person in another family's Aangan.
+-- Two courtyards, one door: the same person in another family's space.
 -- Server-set only; sides are found by this id, never by a client claim.
 alter table members add column if not exists person_id text;
 -- The city a person lives in, as they say it (shown on the window, never tracked).

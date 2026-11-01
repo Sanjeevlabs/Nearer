@@ -12,7 +12,7 @@ export const ml: Catalogue = {
   "welcome.morning": "സുപ്രഭാതം",
   "welcome.afternoon": "നമസ്കാരം",
   "welcome.evening": "ശുഭസന്ധ്യ",
-  "welcome.title": "{name}യുടെ മുറ്റത്തേക്ക് സ്വാഗതം",
+  "welcome.title": "വീട്ടിലേക്ക് സ്വാഗതം, {name}",
   "welcome.enter": "അകത്തേക്ക് വരൂ",
 
   "auth.back": "തിരികെ",

@@ -22,7 +22,7 @@ export default function PrivacyPage() {
   return (
     <div>
       <RoomHeader title="Privacy" />
-      <p className="m-0 text-[17px] leading-snug text-ink-soft">Aangan is a private place for one family. Here is what that means.</p>
+      <p className="m-0 text-[17px] leading-snug text-ink-soft">Nearer is a private place for one family. Here is what that means.</p>
       <ul className="m-0 mt-6 list-none space-y-3 p-0">
         {POINTS.map((p) => (
           <li key={p.title} className="rounded-card bg-card px-4 py-4 shadow-card">

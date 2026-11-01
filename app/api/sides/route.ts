@@ -9,9 +9,9 @@ import { guardWrites } from "@/lib/api-guard";
 import { memberFor } from "@/lib/request-memo";
 import { cardsFor, familyNameFor, membersFor } from "@/lib/request-data";
 
-// Two courtyards, one door. Each family keeps its own Aangan; a married couple
-// and their children belong to both. Nothing crosses between Aangans: this
-// route only lists the Aangans *you* are in and moves your session between them.
+// Two courtyards, one door. Each family keeps its own Nearer; a married couple
+// and their children belong to both. Nothing crosses between homes: this
+// route only lists the homes *you* are in and moves your session between them.
 //
 // GET  → your sides
 // POST → switch {familyId} · create {familyName, bring[]} ("Add my family")
@@ -36,8 +36,8 @@ async function sidesOf(me: Member, req?: Request) {
   const since = Date.now() - WEEK_MS;
   return Promise.all(
     rows.map(async (m) => {
-      // Only this week's cards are counted, so the other Aangans are asked for just those.
-      // The viewer's own Aangan is shared with the other courtyard slices when there is a request to share it on.
+      // Only this week's cards are counted, so the other homes are asked for just those.
+      // The viewer's own Nearer is shared with the other courtyard slices when there is a request to share it on.
       const own = req && m.familyId === me.familyId;
       const [name, people, cards] = await Promise.all([
         own ? familyNameFor(req, m.familyId) : dbGetFamilyName(m.familyId),
@@ -79,7 +79,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (!me || me.familyId !== auth.familyId) return Response.json({ error: "unknown-member" }, { status: 404 });
 
   if (body.action === "switch") {
-    // Only to an Aangan where this same person already has a place.
+    // Only to a home where this same person already has a place.
     const target = (await dbListSides(me)).find((m) => m.familyId === body.familyId);
     if (!target) return Response.json({ error: "not-your-family" }, { status: 403 });
     const signed = signSession({ familyId: target.familyId, memberId: target.id });
@@ -87,7 +87,7 @@ async function postHandler(req: Request): Promise<Response> {
     return Response.json({ familyId: target.familyId, memberId: target.id }, { headers: { "set-cookie": sessionCookieHeader(signed) } });
   }
 
-  // "Add my family": a new Aangan for my parents' side, with my home inside it.
+  // "Add my family": a new Nearer for my parents' side, with my home inside it.
   // Never from a shared demo family: everyone who opens the demo is the same
   // person there, so a side made from it would be open to every visitor.
   if (isDemoFamily(auth.familyId)) return Response.json({ error: "not-in-demo" }, { status: 403 });

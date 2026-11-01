@@ -1,7 +1,7 @@
 // A parent's day, felt from far away. Pure functions (client and server).
 //
 // Presence is not tracking. It is what the parent chooses to share: one tap
-// ("chai on the verandah"), or simply opening Aangan if they allow it. The
+// ("chai on the verandah"), or simply opening Nearer if they allow it. The
 // quiet-day note is opt-in, owned by the parent, goes to one person they
 // chose, and is judged against *their own* usual rhythm, never a fixed rule.
 import type { CareSettings, Presence, PresenceMoment } from "./kinds";
@@ -18,7 +18,7 @@ export const MOMENT_LABEL: Record<PresenceMoment, { label: string; line: string 
   resting: { label: "Resting", line: "is resting" },
   visitors: { label: "Visitors", line: "has visitors" },
   thinking: { label: "Thinking of you", line: "is thinking of you" },
-  here: { label: "In Aangan", line: "was in the courtyard" },
+  here: { label: "In Nearer", line: "was in the courtyard" },
   work: { label: "At work", line: "is at work" },
   school: { label: "At school", line: "is at school" },
   commute: { label: "On the way", line: "is on the way" },

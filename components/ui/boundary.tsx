@@ -15,7 +15,7 @@ export class Boundary extends Component<{ children: ReactNode; label?: string },
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error(`Aangan section failed${this.props.label ? ` (${this.props.label})` : ""}:`, error, info.componentStack);
+    console.error(`Nearer section failed${this.props.label ? ` (${this.props.label})` : ""}:`, error, info.componentStack);
   }
 
   render() {

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { AUTH_INTENT_KEY, browserAuth } from "@/lib/supabase-browser";
 import { resetFamilyCards } from "@/lib/use-family";
 
-// Back from Google or a magic link: turn the Supabase sign-in into Aangan's
+// Back from Google or a magic link: turn the Supabase sign-in into Nearer's
 // own session (POST /api/auth/verify with the token), with what you were
 // doing before you left (sign in, start a family, join one).
 interface Saved {

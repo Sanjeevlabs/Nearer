@@ -12,7 +12,7 @@ export const kn: Catalogue = {
   "welcome.morning": "ಶುಭೋದಯ",
   "welcome.afternoon": "ನಮಸ್ಕಾರ",
   "welcome.evening": "ಶುಭ ಸಂಜೆ",
-  "welcome.title": "{name} ಅವರ ಅಂಗಳಕ್ಕೆ ಸ್ವಾಗತ",
+  "welcome.title": "ಮನೆಗೆ ಸ್ವಾಗತ, {name}",
   "welcome.enter": "ಒಳಗೆ ಬನ್ನಿ",
 
   "auth.back": "ಹಿಂದೆ",

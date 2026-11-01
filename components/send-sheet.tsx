@@ -236,7 +236,7 @@ function Body({
   if (step.s === "list" || step.s === "previewing") {
     const { items, sample } = step;
     if (step.s === "list" && step.refused === "medical")
-      return <p className="m-0 py-8 text-center text-[15px] text-ink-soft">Aangan doesn&rsquo;t order medicines. Please use a licensed pharmacy with the prescription.</p>;
+      return <p className="m-0 py-8 text-center text-[15px] text-ink-soft">Nearer doesn&rsquo;t order medicines. Please use a licensed pharmacy with the prescription.</p>;
     if (items.length === 0) return <p className="m-0 py-8 text-center text-[15px] text-ink-soft">Nothing from our partners fits this right now.</p>;
     return (
       <div className="mt-2">
@@ -283,7 +283,7 @@ function Body({
           <Icon name="plug" />
         </span>
         <p className="m-0 text-[16px] font-semibold">Connect your {step.name} account</p>
-        <p className="m-0 mx-auto mt-1 max-w-[300px] text-[14px] text-ink-soft">Orders are placed from your own account. Aangan never sees your payment details.</p>
+        <p className="m-0 mx-auto mt-1 max-w-[300px] text-[14px] text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
         <a href={`/api/partners/${encodeURIComponent(step.account)}/connect`} className="press mx-auto mt-5 flex h-[52px] w-fit items-center justify-center gap-2 rounded-full bg-black px-7 text-[16px] font-semibold text-white no-underline">
           Connect {step.name}
         </a>

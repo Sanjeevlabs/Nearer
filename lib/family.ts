@@ -274,7 +274,7 @@ export const DEMO_IYER_MEMBERS: Member[] = [
   iyer("iyer-diya", "Diya", "Diya", "child", "child", "Asia/Kolkata", "2016-10-02", null, null, "en", "en", "Pune"),
 ];
 
-/** Demo Aangans: the synthetic families the demo invite code opens. */
+/** Demo homes: the synthetic families the demo invite code opens. */
 export const DEMO_FAMILY_IDS = ["demo-family", "demo-iyer"] as const;
 /** The seed itself: synthetic, in memory, never written to. */
 export const isSeedFamily = (familyId: string): boolean => (DEMO_FAMILY_IDS as readonly string[]).includes(familyId);

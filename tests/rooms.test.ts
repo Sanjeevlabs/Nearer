@@ -190,7 +190,7 @@ describe("sit together", () => {
     const ics = icsFor({ id: "sit-1", title: "Chai, together; Sunday", start: new Date("2026-11-01T13:30:00Z") });
     expect(ics).toContain("DTSTART:20261101T133000Z");
     expect(ics).toContain(String.raw`SUMMARY:Chai\, together\; Sunday`);
-    expect(roomUrl("sit-<script>")).toBe("https://meet.jit.si/Aangan-sit-script");
+    expect(roomUrl("sit-<script>")).toBe("https://meet.jit.si/Nearer-sit-script");
   });
 });
 
