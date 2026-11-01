@@ -36,7 +36,7 @@ Entry,courtyard,27,section,"Today, for both homes",,today-card,arjun dadi,,keep,
 Entry,courtyard,28,button,Answer by voice,,today-card,arjun,,keep,
 Entry,courtyard,29,button,I'm in,,~Together habit,aria,,keep,
 Entry,courtyard,29,section,Together habit,,,arjun dadi aria,,keep,
-Entry,courtyard,30,heading,Morning walk · N AM,,~Together habit,arjun dadi aria,,keep,
+Entry,courtyard,30,heading,Morning walk · <time>,,~Together habit,arjun dadi aria,,keep,
 Entry,courtyard,31,button,Habit options,,~Together habit,arjun dadi,icon-only,review,
 Entry,courtyard,32,image,Maa,,~Together habit,arjun dadi aria,,review,icon-only control: its name is only an aria-label
 Entry,courtyard,32,link,Maa A story from Maa The elephant and the tailor,/stories,~Now in the family,aria,,keep,
@@ -119,7 +119,7 @@ Entry,window,6,button,Play Maa's voice note,,window-lamp,arjun aria,icon-only du
 Entry,window,7,section,Safe and sound,,window-safe,arjun dadi aria,,keep,
 Entry,window,8,heading,Safe & sound,,window-safe,arjun dadi aria,,keep,
 Entry,window,9,link,See check-ins,/safe,window-safe,arjun dadi aria,,keep,
-Entry,window,10,button,Arjun: Up since N PM · active <ago>. Open their day,,window-safe,dadi,,keep,
+Entry,window,10,button,Arjun: Up since <time> · active <ago>. Open their day,,window-safe,dadi,,keep,
 Entry,window,10,button,Maa: Up since <time> · active <ago>. Open their day,,window-safe,arjun aria,,keep,
 Entry,window,11,image,Arjun,,window-safe,dadi,,review,icon-only control: its name is only an aria-label
 Entry,window,11,image,Maa,,window-safe,arjun aria,,review,icon-only control: its name is only an aria-label
@@ -132,7 +132,7 @@ Entry,window,14,link,"Awake now: Papa, Arjun, Priya, Kavya, Rahul, in Amritsar �
 Entry,window,15,link,Waiting for you: Maa's answer is waiting for yours,/,window-glance,arjun,,keep,
 Entry,window,15,link,Waiting for you: Priya asked you for a recipe,/kitchen,window-glance,dadi,,keep,
 Entry,window,16,link,Next: Diwali · <day> <date>,/gather,window-glance,arjun dadi aria,,keep,
-Entry,window,17,link,Our call: <day> N PM · yours and theirs,/gather,window-glance,arjun dadi aria,,keep,
+Entry,window,17,link,Our call: <day> <time> · yours and theirs,/gather,window-glance,arjun dadi aria,,keep,
 Entry,window,18,section,Since you were here,,window-since,arjun dadi,,keep,
 Entry,window,19,section,Call,,window-call,arjun dadi aria,,keep,
 Entry,window,20,button,Send Arjun & Priya something,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
@@ -470,7 +470,7 @@ Rooms,/care,14,button,Normal priority हफ़्ते भर की सब्
 Rooms,/care,15,button,Pick up: Vegetables and milk for the week,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,16,link,Send something for: Vegetables and milk for the week,/send?for=dadi&kind=need&title=Vegetables%Nand%Nmilk%Nfor%Nthe%Nweek,~Tasks,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,17,button,Mark done: Vegetables and milk for the week,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/care,17,button,"Normal priority A ride to the temple fair Arjun · <day>, N PM · for Maa",,~Tasks,aria,,keep,
+Rooms,/care,17,button,"Normal priority A ride to the temple fair Arjun · <day>, <time> · for Maa",,~Tasks,aria,,keep,
 Rooms,/care,18,button,Normal priority The gas cylinder is almost empty You · This week · for Maa,,~Tasks,arjun,,keep,
 Rooms,/care,18,button,Normal priority गैस सिलेंडर लगभग खत्म है Arjun · This week · for Maa,,~Tasks,dadi,,keep,
 Rooms,/care,19,image,Arjun,,~Tasks,dadi aria,,review,icon-only control: its name is only an aria-label
@@ -479,8 +479,8 @@ Rooms,/care,20,button,Pick up: The gas cylinder is almost empty,,~Tasks,dadi,ico
 Rooms,/care,20,link,Send something for: The gas cylinder is almost empty,/send?for=dadi&kind=need&title=The%Ngas%Ncylinder%Nis%Nalmost%Nempty,~Tasks,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,21,button,Mark done: The gas cylinder is almost empty,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,22,button,Done this week · N,,~Tasks,arjun dadi aria,,keep,
-Rooms,/care,23,button,"Normal priority A ride to the temple fair You · <day>, N PM · for Maa",,~Tasks,arjun,,keep,
-Rooms,/care,24,button,"Normal priority मंदिर के मेले तक जाने के लिए गाड़ी Arjun · <day>, N PM · for Maa",,~Tasks,dadi,,keep,
+Rooms,/care,23,button,"Normal priority A ride to the temple fair You · <day>, <time> · for Maa",,~Tasks,arjun,,keep,
+Rooms,/care,24,button,"Normal priority मंदिर के मेले तक जाने के लिए गाड़ी Arjun · <day>, <time> · for…",,~Tasks,dadi,,keep,
 Rooms,/care,25,section,Start a task,,~Tasks,arjun dadi,,keep,
 Rooms,/care,26,heading,Start a task,,~Start a task,arjun dadi,,keep,
 Rooms,/care,27,button,Groceries,,~Start a task,arjun dadi,,keep,
@@ -551,7 +551,7 @@ Rooms,/gather/play,4,tab,Occasions,/rituals,room-tabs,arjun dadi aria,,keep,
 Rooms,/gather/play,5,tab,Visits,/together/visits,room-tabs,arjun dadi aria,,keep,
 Rooms,/gather/play,6,tab,Holidays,/together/holidays,room-tabs,arjun dadi aria,,keep,
 Rooms,/gather/play,7,tab,Play,/gather/play,room-tabs,arjun dadi aria,,keep,
-Rooms,/gather/play,8,button,Maa Maa ’s door is open Evening chai. Come sit?,,,arjun aria,,keep,
+Rooms,/gather/play,8,button,Maa Maa ’s door is open,,,arjun aria,,keep,
 Rooms,/gather/play,9,image,Maa,,,arjun aria,,review,icon-only control: its name is only an aria-label
 Rooms,/gather/play,10,button,"Tea and catch-up A cup each, wherever you are. Just talk. Start",,,arjun dadi aria,,keep,
 Rooms,/gather/play,11,button,"Story night A grandparent tells one, the children listen. Start",,,arjun dadi aria,,keep,
