@@ -105,7 +105,7 @@ export function Icon({ name, size = 22, className, strokeWidth = 2 }: { name: Ic
 
 /** The bundled demo photos come in small WebP widths too (scripts/demo-variants.mjs). */
 function demoWidths(src: string): number[] | null {
-  if (src === "/demo/courtyard.jpg") return [390, 780];
+  if (src === "/demo/courtyard.jpg" || /^\/demo\/home-(courtyard|balcony|window)\.jpg$/.test(src)) return [390, 780];
   if (/^\/demo\/family-[a-z]+\.webp$/.test(src)) return [440, 880];
   if (/^\/demo\/portrait-[a-z]+\.webp$/.test(src)) return [160, 400];
   return null;

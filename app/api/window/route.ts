@@ -1,15 +1,16 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
-import { dbListCards, dbListMembers } from "@/lib/db";
+import { dbListMembers } from "@/lib/db";
 import { getDoc, putDoc } from "@/lib/family-docs";
-import { composeWindow, defaultView, homePhotoOk, photoRefFor, windowState } from "@/lib/window-server";
-import { withDemoShelf } from "@/lib/demo";
+import { defaultView, homePhotoOk, photoRefFor, windowState } from "@/lib/window-server";
 import { FIRST_SCENES, POTS, WALLS } from "@/lib/kinds";
 import { can } from "@/lib/permissions";
 import { guardWrites } from "@/lib/api-guard";
 
-// The window (LITE): your view into the other home. Each person sets their
-// own: a family photo, still or living. Muse composes the living motion.
+// The window (LITE): your view into the other home, one still photograph.
+// Each person may pick a family photo or a photo of their home. The old
+// slideshow ("living"), scene, pots and mixAlbum actions are still accepted
+// (so older clients don't break) but change nothing on screen.
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
@@ -51,7 +52,7 @@ async function postHandler(req: Request): Promise<Response> {
       memberId: auth.memberId,
       cardId: choose.data.cardId,
       imageRef,
-      style: choose.data.style,
+      style: "still",
       madeBy: "family",
       updatedAt: now,
     });
@@ -93,20 +94,8 @@ async function postHandler(req: Request): Promise<Response> {
     return Response.json({ view });
   }
 
-  if (Compose.safeParse(body).success) {
-    const state = await windowState(auth.familyId, auth.memberId);
-    if (state.view?.style === "still") return Response.json({ error: "still-window" }, { status: 409 });
-    const caption = state.view?.cardId ? (withDemoShelf(await dbListCards(auth.familyId), auth.familyId).find((c) => c.id === state.view?.cardId)?.caption ?? "") : "";
-    const scene = await composeWindow(auth.familyId, { ...state, layers: state.layers }, caption);
-    const view = await putDoc(auth.familyId, "window_view", {
-      ...base,
-      layers: scene.layers,
-      line: scene.line,
-      madeBy: scene.source === "muse" ? "muse" : "family",
-      updatedAt: now,
-    });
-    return Response.json({ view, source: scene.source });
-  }
+  // Muse no longer composes motion over the photo: there is no living window.
+  if (Compose.safeParse(body).success) return Response.json({ error: "still-window" }, { status: 409 });
   return Response.json({ error: "invalid-window" }, { status: 400 });
 }
 
