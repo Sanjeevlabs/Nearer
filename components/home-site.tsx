@@ -30,9 +30,9 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
   const [busy, setBusy] = useState(false);
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-paper text-ink">
-      <header className="mx-auto flex max-w-[1120px] items-center justify-between px-5 pb-4 sm:px-8 sm:pb-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))" }}>
+      <header className="mx-auto flex max-w-[1120px] items-center justify-between px-4 pb-4 sm:px-8 sm:pb-6" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))" }}>
         <Lockup mark={28} word={84} className="text-ink" />
-        <nav className="flex items-center gap-4 text-[15px] sm:gap-5">
+        <nav className="flex items-center gap-4 text-body sm:gap-5">
           {signedIn ? (
             <button type="button" onClick={onEnter} className="press min-h-11 rounded-full bg-ink px-4 py-2 font-semibold text-white">
               Open Nearer
@@ -51,19 +51,19 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
       </header>
 
       {/* Hero: the promise, the phone, the QR */}
-      <section className="mx-auto grid max-w-[1120px] items-center gap-10 px-5 pb-12 pt-2 sm:px-8 sm:pb-16 sm:pt-6 md:grid-cols-[1.15fr_.85fr] md:gap-12">
+      <section className="mx-auto grid max-w-[1120px] items-center gap-10 px-4 pb-12 pt-2 sm:px-8 sm:pb-16 sm:pt-6 md:grid-cols-[1.15fr_.85fr] md:gap-12">
         <div>
           {/* The hero lockup: the mark above the name, then the promise. */}
           <div className="mb-6 flex flex-col items-start gap-3 text-ink md:mb-8">
             <Mark size={96} className="md:!h-[140px] md:!w-[140px]" />
             <Wordmark width={140} className="md:!h-[34px] md:!w-[188px]" />
           </div>
-          <h1 className="m-0 text-[clamp(36px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">The window between two homes.</h1>
-          <p className="voice m-0 mt-5 max-w-[34ch] text-[19px] sm:text-[22px] leading-snug text-ink-soft">A window into your parents&rsquo; day, and theirs into yours.</p>
+          <h1 data-display className="m-0 text-display md:text-[clamp(44px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">The window between two homes.</h1>
+          <p className="voice m-0 mt-5 max-w-[34ch] text-title leading-snug text-ink-soft">A window into your parents&rsquo; day, and theirs into yours.</p>
           {/* The way in: on every screen when signed in, and on a phone when not (no QR there). */}
           <div className={signedIn ? "mt-7 flex flex-col gap-2.5 sm:max-w-[320px]" : "mt-7 flex flex-col gap-2.5 sm:max-w-[320px] md:hidden"} data-ui="home-actions">
             {signedIn ? (
-              <button type="button" onClick={onEnter} className="press h-[54px] rounded-full bg-ink text-[17px] font-semibold text-white">
+              <button type="button" onClick={onEnter} className="press h-12 rounded-full bg-ink text-headline font-semibold text-white">
                 Open Nearer
               </button>
             ) : (
@@ -76,24 +76,24 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
                     await onDemo();
                     setBusy(false);
                   }}
-                  className="press h-[54px] rounded-full bg-ink text-[17px] font-semibold text-white disabled:opacity-60"
+                  className="press h-12 rounded-full bg-ink text-headline font-semibold text-white disabled:opacity-60"
                 >
                   {busy ? "Opening…" : "Try the demo family"}
                 </button>
-                <Link href="/create" className="press flex h-[50px] items-center justify-center rounded-full bg-black/[.07] text-[16px] font-semibold text-ink no-underline">
+                <Link href="/create" className="press flex h-[50px] items-center justify-center rounded-full bg-black/[.07] text-body font-semibold text-ink no-underline">
                   Start your family
                 </Link>
-                <Link href="/signin" className="flex h-11 items-center justify-center text-[15px] font-medium text-ink-soft no-underline">
+                <Link href="/signin" className="flex h-11 items-center justify-center text-body font-medium text-ink-soft no-underline">
                   Sign in
                 </Link>
               </>
             )}
           </div>
-          <div className="mt-9 hidden items-center gap-6 md:flex rounded-[28px] bg-white p-5 shadow-[0_20px_50px_-30px_rgba(0,0,0,.35)] ring-1 ring-black/[.05]" style={{ maxWidth: 480 }}>
+          <div className="mt-9 hidden items-center gap-6 md:flex rounded-[28px] bg-white p-4 shadow-[0_20px_50px_-30px_rgba(0,0,0,.35)] ring-1 ring-black/[.05]" style={{ maxWidth: 480 }}>
             <div className="h-[132px] w-[132px] shrink-0 overflow-hidden rounded-[14px] [&_svg]:h-full [&_svg]:w-full" aria-label="QR code: open the Nearer demo on your phone" role="img" dangerouslySetInnerHTML={qr ? { __html: qr } : undefined} />
             <div>
-              <p className="m-0 text-[19px] font-semibold leading-tight">Scan to open it on your phone</p>
-              <p className="m-0 mt-1.5 text-[14.5px] text-ink-soft">Opens straight into a demo family. On your phone, &ldquo;Add to Home Screen&rdquo; makes it an app.</p>
+              <p className="m-0 text-title font-semibold leading-tight">Scan to open it on your phone</p>
+              <p className="m-0 mt-1.5 text-callout text-ink-soft">Opens straight into a demo family. On your phone, &ldquo;Add to Home Screen&rdquo; makes it an app.</p>
               <button
                 type="button"
                 disabled={busy}
@@ -101,7 +101,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
                   setBusy(true);
                   await onDemo();
                 }}
-                className="press mt-3 text-[14.5px] font-semibold text-ink underline underline-offset-4"
+                className="press mt-3 text-callout font-semibold text-ink underline underline-offset-4"
               >
                 {busy ? "Opening…" : "Or try the demo here"}
               </button>
@@ -118,28 +118,28 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
 
       {/* Four things it does */}
       <section className="bg-white py-12 sm:py-16">
-        <div className="mx-auto grid max-w-[1120px] gap-10 px-5 sm:px-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-[1120px] gap-10 px-4 sm:px-8 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <article key={f.title}>
               <div className="overflow-hidden rounded-[26px] bg-paper ring-1 ring-black/[.05]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={f.img} alt="" className="block aspect-[390/560] w-full object-cover object-top" loading="lazy" />
               </div>
-              <h2 className="m-0 mt-4 text-[19px] font-semibold">{f.title}</h2>
-              <p className="m-0 mt-1.5 text-[15px] leading-relaxed text-ink-soft">{f.line}</p>
+              <h2 className="m-0 mt-4 text-title font-semibold">{f.title}</h2>
+              <p className="m-0 mt-1.5 text-body leading-relaxed text-ink-soft">{f.line}</p>
             </article>
           ))}
         </div>
       </section>
 
       {/* Why it exists */}
-      <section className="mx-auto max-w-[760px] px-5 py-14 text-center sm:px-8 sm:py-20">
-        <p className="voice m-0 text-[22px] leading-snug sm:text-[26px]">Millions of parents live far from their children. A call a week isn&rsquo;t enough. Nearer is the courtyard the family shares again.</p>
-        <p className="m-0 mt-6 text-[15px] text-ink-soft">Free for every family. 55 languages. Built with Muse on Meta&rsquo;s models.</p>
+      <section className="mx-auto max-w-[760px] px-4 py-14 text-center sm:px-8 sm:py-20">
+        <p data-display className="voice m-0 text-title leading-snug sm:text-display">Millions of parents live far from their children. A call a week isn&rsquo;t enough. Nearer is the courtyard the family shares again.</p>
+        <p className="m-0 mt-6 text-body text-ink-soft">Free for every family. 55 languages. Built with Muse on Meta&rsquo;s models.</p>
       </section>
 
       <footer className="border-t border-[var(--line)]">
-        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-6 sm:px-8 text-[13.5px] text-ink-soft">
+        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-6 sm:px-8 text-footnote text-ink-soft">
           <span className="flex items-center gap-2"><Mark size={20} /> Nearer · made in Bengaluru for families everywhere</span>
           <span className="flex gap-5">
             <Link href="/privacy" className="text-ink-soft no-underline hover:text-ink">

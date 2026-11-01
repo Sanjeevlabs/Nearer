@@ -22,17 +22,17 @@ export default function PrivacyPage() {
   return (
     <div>
       <RoomHeader title="Privacy" />
-      <p className="m-0 text-[17px] leading-snug text-ink-soft">Nearer is a private place for one family. Here is what that means.</p>
+      <p className="m-0 text-headline leading-snug text-ink-soft">Nearer is a private place for one family. Here is what that means.</p>
       <ul className="m-0 mt-6 list-none space-y-3 p-0">
         {POINTS.map((p) => (
           <li key={p.title} className="rounded-card bg-card px-4 py-4 shadow-card">
-            <h2 className="m-0 text-[17px]">{p.title}</h2>
-            <p className="m-0 mt-1 text-[15px] leading-snug text-ink-soft">{p.line}</p>
+            <h2 className="m-0 text-headline">{p.title}</h2>
+            <p className="m-0 mt-1 text-body leading-snug text-ink-soft">{p.line}</p>
           </li>
         ))}
       </ul>
       {signedIn && (
-        <Link href="/settings#privacy" className="press mt-6 flex min-h-[52px] items-center justify-between rounded-card bg-card px-4 text-[16px] font-medium text-ink no-underline shadow-card">
+        <Link href="/settings#privacy" className="press mt-6 flex min-h-12 items-center justify-between rounded-card bg-card px-4 text-body font-medium text-ink no-underline shadow-card">
           Your privacy settings
           <Icon name="chevron" size={17} className="text-ink-faint" />
         </Link>

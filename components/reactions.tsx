@@ -57,7 +57,7 @@ export function HeardChip({ cardId }: { cardId: string }) {
   }, [cardId, viewer.id, displayLang]);
 
   if (!line) return null;
-  return <p className="m-0 text-[12px] text-ink-soft">{line}</p>;
+  return <p className="m-0 text-caption text-ink-soft">{line}</p>;
 }
 
 const KINDS = ["love", "laugh", "bless"] as const;
@@ -142,7 +142,7 @@ export function ReactionBar({ cardId, tone = "light", onReply }: { cardId: strin
               onClick={() => void react(kind)}
               title={labelFor(kind)}
               className={cn(
-                "press flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-[15px] font-medium",
+                "press flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-body font-medium",
                 on ? (glass ? "bg-white text-black" : "bg-black text-white") : glass ? "text-white" : "text-ink",
               )}
             >
@@ -155,7 +155,7 @@ export function ReactionBar({ cardId, tone = "light", onReply }: { cardId: strin
           <button
             type="button"
             onClick={onReply}
-            className={cn("press flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-[15px] font-medium", glass ? "text-white" : "text-ink")}
+            className={cn("press flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-body font-medium", glass ? "text-white" : "text-ink")}
           >
             <Icon name="reply" size={18} />
             Reply
@@ -215,7 +215,7 @@ export function ReactorsLine({ reactions, className }: { reactions: Reaction[]; 
   return (
     <ul className={cn("m-0 flex list-none flex-wrap items-center gap-x-1 gap-y-1.5 p-0", className)} aria-label="Reactions from the family">
       {rows.map(({ r, m, name }, i) => (
-        <li key={r.memberId} className="flex items-center gap-1.5 text-[15px] font-medium text-white">
+        <li key={r.memberId} className="flex items-center gap-1.5 text-body font-medium text-white">
           {i > 0 && (
             <span className="px-1 text-white/45" aria-hidden="true">
               ·
@@ -245,7 +245,7 @@ export function ReactButtons({ mine, onToggle, className }: { mine: Reaction["ki
             aria-pressed={on}
             aria-label={on ? `Take back your ${REACTION_WORD[kind]}` : `Send ${REACTION_WORD[kind]}`}
             onClick={() => onToggle(kind)}
-            className={cn("press grid h-12 w-12 shrink-0 place-items-center rounded-full text-[22px] transition-colors", on ? "bg-white shadow-[0_0_0_2px_rgba(255,255,255,.9)]" : "bg-white/15 backdrop-blur")}
+            className={cn("press grid h-12 w-12 shrink-0 place-items-center rounded-full text-title transition-colors", on ? "bg-white shadow-[0_0_0_2px_rgba(255,255,255,.9)]" : "bg-white/15 backdrop-blur")}
           >
             <span aria-hidden="true">{REACTION_EMOJI[kind]}</span>
           </button>

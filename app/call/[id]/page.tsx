@@ -199,13 +199,13 @@ export default function CallPage() {
               <Icon name="back" size={20} />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="m-0 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-[#7be3a6]">
+              <p className="m-0 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.1em] text-[#7be3a6]">
                 <span className="h-2 w-2 rounded-full bg-[#7be3a6]" /> Sitting together
               </p>
-              <h1 className="m-0 truncate text-[19px] text-white">{title}</h1>
+              <h1 className="m-0 truncate text-title text-white">{title}</h1>
             </div>
             {valid && mode === "api" && (
-              <button type="button" onClick={toggleBg} aria-pressed={bg} className="press flex h-9 shrink-0 items-center rounded-full bg-black/35 px-3 text-[12.5px] font-semibold text-white">
+              <button type="button" onClick={toggleBg} aria-pressed={bg} className="press flex h-9 shrink-0 items-center rounded-full bg-black/35 px-3 text-caption font-semibold text-white">
                 Background {bg ? "on" : "off"}
               </button>
             )}
@@ -219,7 +219,7 @@ export default function CallPage() {
             {members.map((m) => (
               <li key={m.id} className="flex shrink-0 items-center gap-1.5 rounded-full bg-black/40 py-0.5 pl-0.5 pr-2.5 ring-1 ring-white/15">
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={22} />
-                <span className="text-[11.5px] leading-tight text-white/85">
+                <span className="text-caption leading-tight text-white/85">
                   <span className="font-semibold">{m.id === viewer.id ? "You" : callName(m)}</span>
                   <span className="text-white/60" suppressHydrationWarning>
                     {" "}

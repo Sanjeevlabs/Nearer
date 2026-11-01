@@ -43,10 +43,10 @@ export function CaptionEditor({ card, onDone }: { card: Card; onDone: () => void
   const [busy, setBusy] = useState(false);
   return (
     <div className="mt-2 rounded-[18px] bg-surface p-3">
-      <textarea value={value} onChange={(e) => setValue(e.target.value)} maxLength={280} rows={3} className="w-full resize-none rounded-[14px] bg-white p-3 text-[16px] outline-none focus:ring-2 focus:ring-marigold" aria-label="Words" />
+      <textarea value={value} onChange={(e) => setValue(e.target.value)} maxLength={280} rows={3} className="w-full resize-none rounded-[14px] bg-white p-3 text-body outline-none focus:ring-2 focus:ring-marigold" aria-label="Words" />
       <div className="mt-2 flex gap-2">
         <Button
-          className="h-11 flex-1 text-[15px]"
+          className="h-11 flex-1 text-body"
           disabled={busy || !value.trim()}
           onClick={async () => {
             setBusy(true);
@@ -59,7 +59,7 @@ export function CaptionEditor({ card, onDone }: { card: Card; onDone: () => void
         >
           Save
         </Button>
-        <Button variant="secondary" className="h-11 flex-1 !bg-white text-[15px]" onClick={onDone}>
+        <Button variant="secondary" className="h-11 flex-1 !bg-white text-body" onClick={onDone}>
           Cancel
         </Button>
       </div>
@@ -82,7 +82,7 @@ export function VoiceRow({ card, showAuthor = true }: { card: Card; showAuthor?:
         type="button"
         onClick={() => (active ? toggle() : play(card))}
         aria-label={`Play ${callName(author)}'s voice note`}
-        className="press relative h-16 w-16 shrink-0 overflow-hidden rounded-[16px] bg-surface"
+        className="press relative h-14 w-14 shrink-0 overflow-hidden rounded-[16px] bg-surface"
         style={{ boxShadow: tintShadow(card, 0.35) }}
       >
         <Photo src={cardCover(card, members)} alt="" sizes="128px" position="center 30%" />
@@ -91,14 +91,14 @@ export function VoiceRow({ card, showAuthor = true }: { card: Card; showAuthor?:
         </span>
       </button>
       <div className="min-w-0 flex-1">
-        <p className="m-0 flex items-center gap-1.5 text-[13px] text-ink-soft">
+        <p className="m-0 flex items-center gap-1.5 text-footnote text-ink-soft">
           {active && isPlaying && <LiveDot />}
           {showAuthor ? `${callName(author)} · ` : ""}
           {relativeDay(card.takenAt)}
         </p>
-        <p className="voice m-0 line-clamp-2 text-[17px] leading-snug text-ink">{text ?? "…"}</p>
+        <p className="voice m-0 line-clamp-2 text-headline leading-snug text-ink">{text ?? "…"}</p>
       </div>
-      <span className="tnum shrink-0 text-[13px] text-ink-faint">{formatDuration(cardDuration(card))}</span>
+      <span className="tnum shrink-0 text-footnote text-ink-faint">{formatDuration(cardDuration(card))}</span>
       <CardActions card={card} onEditing={setEditing} />
     </div>
     {editing && <CaptionEditor card={card} onDone={() => setEditing(false)} />}
@@ -119,8 +119,8 @@ export function PhotoCard({ card, tall = false }: { card: Card; tall?: boolean }
     return (
       <div>
         <PrintFrame card={card} author={author} src={cardCover(card, members)} alt={text ?? "Family photo"} imageHeight={tall ? 380 : 280} signed>
-          {card.source === "glasses" && <span className="glass absolute left-2.5 top-2.5 rounded-full px-3 py-1.5 text-[12px] font-medium">Captured hands-free</span>}
-          {museLabel(card.source) && <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-semibold text-[#1c1b1a]"><Icon name="sparkle" size={12} />{museLabel(card.source)}</span>}
+          {card.source === "glasses" && <span className="glass absolute left-2.5 top-2.5 rounded-full px-3 py-1.5 text-caption font-medium">Captured hands-free</span>}
+          {museLabel(card.source) && <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-caption font-semibold text-[#1c1b1a]"><Icon name="sparkle" size={12} />{museLabel(card.source)}</span>}
           <div className="glass absolute right-2.5 top-2.5 rounded-full">
             <CardActions card={card} tone="light" onEditing={setEditing} />
           </div>
@@ -138,16 +138,16 @@ export function PhotoCard({ card, tall = false }: { card: Card; tall?: boolean }
           <Icon name="play" size={16} />
         </span>
       )}
-      {card.source === "glasses" && <span className="glass absolute right-14 top-3 rounded-full px-3 py-1.5 text-[12px] font-medium">Captured hands-free</span>}
+      {card.source === "glasses" && <span className="glass absolute right-14 top-3 rounded-full px-3 py-1.5 text-caption font-medium">Captured hands-free</span>}
       <div className="glass absolute right-2.5 top-2.5 rounded-full">
         <CardActions card={card} tone="light" onEditing={setEditing} />
       </div>
       <figcaption className="glass absolute inset-x-2.5 bottom-2.5 rounded-[18px] px-4 py-3">
-        <p className="m-0 text-[13px] text-white/80">
+        <p className="m-0 text-footnote text-white/80">
           {callName(author)} · {relativeDay(card.takenAt)}
           {translated ? " · translated" : ""}
         </p>
-        <p className="m-0 text-[17px] font-semibold leading-snug">{text || "Untitled moment"}</p>
+        <p className="m-0 text-headline font-semibold leading-snug">{text || "Untitled moment"}</p>
       </figcaption>
     </figure>
     {editing && <CaptionEditor card={card} onDone={() => setEditing(false)} />}

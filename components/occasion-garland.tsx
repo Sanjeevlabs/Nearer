@@ -136,7 +136,7 @@ export function GarlandPlayer({
           style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex items-center gap-2 px-4 pt-3">
-            <p className="m-0 min-w-0 flex-1 truncate text-[13px] font-semibold uppercase tracking-[0.08em] text-white/60">Wishes for {celebrant}</p>
+            <p className="m-0 min-w-0 flex-1 truncate text-footnote font-semibold uppercase tracking-[0.08em] text-white/60">Wishes for {celebrant}</p>
             {!done && (
               <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Play" : "Pause"} className="press grid h-11 w-11 place-items-center rounded-full bg-white/10">
                 <Icon name={paused ? "play" : "pause"} size={18} />
@@ -174,9 +174,9 @@ export function GarlandPlayer({
                   )}
                   <div className="mt-5 flex items-center gap-2.5">
                     {(kind === "photo" || kind === "video") && <Avatar src={memberPhoto(cur.member)} name={name} size={32} />}
-                    <p className="m-0 text-[20px] font-semibold">{name}</p>
+                    <p className="m-0 text-title font-semibold">{name}</p>
                   </div>
-                  {words && <p className="voice m-0 mt-2 line-clamp-4 max-w-[340px] text-center text-[19px] leading-snug text-white/85">&ldquo;{words}&rdquo;</p>}
+                  {words && <p className="voice m-0 mt-2 line-clamp-4 max-w-[340px] text-center text-title leading-snug text-white/85">&ldquo;{words}&rdquo;</p>}
                   {kind === "audio" && src && <audio ref={audioRef} key={src} src={src} autoPlay onEnded={next} onError={next} />}
                 </m.div>
               ) : (
@@ -184,20 +184,20 @@ export function GarlandPlayer({
                   <div className="flex -space-x-3">
                     {wishers.slice(0, 7).map((w) => (
                       <span key={w.id} className="rounded-full ring-2 ring-[#15110d]">
-                        <Avatar src={memberPhoto(w)} name={callName(w)} size={52} />
+                        <Avatar src={memberPhoto(w)} name={callName(w)} size={44} />
                       </span>
                     ))}
                   </div>
-                  <p className="voice m-0 mt-5 text-[28px] leading-tight">{everyone ? `Everyone wished ${celebrant}` : `${wishers.length} wished ${celebrant}`}</p>
+                  <p data-display className="voice m-0 mt-5 text-display leading-tight">{everyone ? `Everyone wished ${celebrant}` : `${wishers.length} wished ${celebrant}`}</p>
                   {canAdd && (
                     <>
                       <button type="button" onClick={onAdd} aria-label={`Record your wish for ${celebrant}`} className="press mt-6 grid h-16 w-16 place-items-center rounded-full bg-white text-black">
                         <Icon name="mic" size={26} />
                       </button>
-                      <p className="m-0 mt-2 text-[14px] text-white/70">Add yours</p>
+                      <p className="m-0 mt-2 text-callout text-white/70">Add yours</p>
                     </>
                   )}
-                  <button type="button" onClick={() => setAt(0)} className="press mt-5 flex h-10 items-center gap-1.5 rounded-full bg-white/10 px-4 text-[14px] font-semibold">
+                  <button type="button" onClick={() => setAt(0)} className="press mt-5 flex h-10 items-center gap-1.5 rounded-full bg-white/10 px-4 text-callout font-semibold">
                     <Icon name="play" size={14} />
                     Play again
                   </button>
@@ -215,7 +215,7 @@ export function GarlandPlayer({
 
           <div className="px-4 pb-5">
             <Beads count={beads.length} at={at} done={done} />
-            <p className="m-0 text-center text-[12.5px] text-white/50 tnum" aria-live="polite">
+            <p className="m-0 text-center text-caption text-white/50 tnum" aria-live="polite">
               {done ? `${beads.length} wish${beads.length === 1 ? "" : "es"}` : `${at + 1} of ${beads.length}`}
             </p>
           </div>

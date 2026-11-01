@@ -43,9 +43,9 @@ export function AlbumCover({ album, cards, wide = false, compact = false }: { al
       {src && <Photo src={src} alt="" sizes={wide ? "440px" : "220px"} position="center 30%" />}
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0)_40%,rgba(0,0,0,.72))]" aria-hidden="true" />
       <span className="absolute inset-x-3.5 bottom-3">
-        <span className="block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-white/75">{EVENT_LABEL[album.event]}</span>
-        <span className={`mt-0.5 line-clamp-2 block font-bold leading-tight ${compact ? "text-[15px]" : "text-[18px]"}`}>{album.title}</span>
-        <span className="mt-0.5 block text-[12.5px] text-white/80">
+        <span className="block text-caption font-semibold uppercase tracking-[0.08em] text-white/75">{EVENT_LABEL[album.event]}</span>
+        <span className={`mt-0.5 line-clamp-2 block font-bold leading-tight ${compact ? "text-body" : "text-headline"}`}>{album.title}</span>
+        <span className="mt-0.5 block text-caption text-white/80">
           {compact ? `${inAlbum.length} · ${albumDates(album)}` : `${albumDates(album)} · ${inAlbum.length} ${inAlbum.length === 1 ? "photo" : "photos"}`}
         </span>
       </span>

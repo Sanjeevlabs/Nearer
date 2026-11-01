@@ -76,7 +76,7 @@ export function BottomSheet({ open, onClose, label, children, z = 80 }: { open: 
         <div className="fixed inset-0 flex items-end justify-center text-ink" style={{ zIndex: z }} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()}>
           <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/35" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <m.div
-            className="relative max-h-[94dvh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-paper px-5 pt-3 shadow-frost"
+            className="relative max-h-[94dvh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-paper px-4 pt-3 shadow-frost"
             style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -197,7 +197,7 @@ export function SharePanel({ target, renderKey = 0, lead }: { target: ShareTarge
             // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="What will be shared" className={cn("block w-auto max-w-full object-contain", target.transparent ? "max-h-[32dvh]" : "max-h-[44dvh] shadow-[0_8px_24px_rgba(0,0,0,.18)]")} />
           ) : failed ? (
-            <p className="m-0 px-6 py-10 text-center text-[15px] text-ink-soft">Couldn&rsquo;t draw this one. The photo may still be loading; try again in a moment.</p>
+            <p className="m-0 px-6 py-10 text-center text-body text-ink-soft">Couldn&rsquo;t draw this one. The photo may still be loading; try again in a moment.</p>
           ) : (
             <div className="skeleton h-[260px] w-[208px] rounded-[14px]" aria-busy="true" aria-label="Drawing the image" />
           )}
@@ -210,14 +210,14 @@ export function SharePanel({ target, renderKey = 0, lead }: { target: ShareTarge
             type="button"
             disabled={Boolean(busy) || (!blob && a.key !== "link")}
             onClick={() => void run(a.key, a.onClick)}
-            className={cn("press flex h-[76px] flex-col items-center justify-center gap-1.5 rounded-[20px] text-[14px] font-semibold disabled:opacity-50", i === 0 ? "bg-black text-white" : "bg-surface text-ink")}
+            className={cn("press flex h-16 flex-col items-center justify-center gap-1.5 rounded-[20px] text-callout font-semibold disabled:opacity-50", i === 0 ? "bg-black text-white" : "bg-surface text-ink")}
           >
             <Icon name={a.icon} size={22} />
             {busy === a.key ? "One moment…" : a.label}
           </button>
         ))}
         {lead && (
-          <button type="button" disabled={Boolean(busy)} onClick={lead.onClick} className="press flex h-[76px] flex-col items-center justify-center gap-1.5 rounded-[20px] bg-[#fff1d6] text-[14px] font-semibold text-[#7a3d00] disabled:opacity-50">
+          <button type="button" disabled={Boolean(busy)} onClick={lead.onClick} className="press flex h-16 flex-col items-center justify-center gap-1.5 rounded-[20px] bg-[#fff1d6] text-callout font-semibold text-[#7a3d00] disabled:opacity-50">
             <Icon name={lead.icon} size={22} />
             {lead.label}
           </button>
@@ -230,8 +230,8 @@ export function SharePanel({ target, renderKey = 0, lead }: { target: ShareTarge
               <button type="button" disabled={Boolean(busy)} onClick={() => void run(a.key, a.onClick)} className="press flex min-h-[56px] w-full items-center gap-3 rounded-[18px] bg-surface px-4 py-2.5 text-left disabled:opacity-60">
                 {a.icon && <Icon name={a.icon} size={20} className="text-ink-soft" />}
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[16px] font-semibold">{busy === a.key ? "One moment…" : a.label}</span>
-                  {a.sub && <span className="block text-[13px] text-ink-soft">{a.sub}</span>}
+                  <span className="block text-body font-semibold">{busy === a.key ? "One moment…" : a.label}</span>
+                  {a.sub && <span className="block text-footnote text-ink-soft">{a.sub}</span>}
                 </span>
                 <Icon name="chevron" size={18} className="text-ink-faint" />
               </button>
@@ -240,7 +240,7 @@ export function SharePanel({ target, renderKey = 0, lead }: { target: ShareTarge
         </ul>
       )}
       {note && (
-        <p className="m-0 mt-3 text-center text-[14px] text-[#3d6b2a]" role="status">
+        <p className="m-0 mt-3 text-center text-callout text-[#3d6b2a]" role="status">
           {note}
         </p>
       )}

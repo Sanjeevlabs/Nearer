@@ -79,11 +79,11 @@ export function ScanRecipeButton({ onScanned }: { onScanned: (r: ScanResult) => 
           </span>
         )}
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold">{busy ? "Reading the card…" : "Scan a recipe card"}</span>
-          <span className="block text-[12.5px] text-ink-soft">Handwritten or printed, any language. You check it before it&rsquo;s saved.</span>
+          <span className="block text-body font-semibold">{busy ? "Reading the card…" : "Scan a recipe card"}</span>
+          <span className="block text-caption text-ink-soft">Handwritten or printed, any language. You check it before it&rsquo;s saved.</span>
         </span>
       </button>
-      {error && <p className="m-0 mt-2 text-[13px] text-[#b42318]" role="alert">{error}</p>}
+      {error && <p className="m-0 mt-2 text-footnote text-[#b42318]" role="alert">{error}</p>}
     </div>
   );
 }

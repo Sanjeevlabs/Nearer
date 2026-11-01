@@ -30,11 +30,11 @@ import { Boundary } from "@/components/ui/boundary";
 function RowHead({ title, count, range, extra }: { title: string; count: number; range?: string; extra?: React.ReactNode }) {
   return (
     <div className="mb-2 flex items-baseline gap-2">
-      <h2 className="m-0 text-[18px]">{title}</h2>
-      <span className="tnum text-[13px] text-ink-faint">{count}</span>
+      <h2 className="m-0 text-headline">{title}</h2>
+      <span className="tnum text-footnote text-ink-faint">{count}</span>
       <span className="flex-1" />
       {extra}
-      {range && <span className="tnum text-[12.5px] text-ink-soft">{range}</span>}
+      {range && <span className="tnum text-caption text-ink-soft">{range}</span>}
     </div>
   );
 }
@@ -55,26 +55,26 @@ function Tile({ card, kind, onOpen }: { card: Card; kind: LaneKind; onOpen: () =
     >
       <Photo src={cardCover(card, members)} alt="" sizes="240px" position="center 30%" />
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.28),transparent_38%,transparent_58%,rgba(0,0,0,.55))]" aria-hidden="true" />
-      <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold">{monthChip(card.takenAt)}</span>
+      <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-caption font-semibold">{monthChip(card.takenAt)}</span>
       {kind !== "photo" && (
         <span className="glass absolute bottom-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full">
           <Icon name={voice && current?.id === card.id && isPlaying ? "pause" : "play"} size={11} />
         </span>
       )}
       {museLabel(card.source) && (
-        <span className="absolute bottom-7 left-1.5 flex items-center gap-0.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-[#1c1b1a]">
+        <span className="absolute bottom-7 left-1.5 flex items-center gap-0.5 rounded-full bg-white/90 px-1.5 py-0.5 text-caption font-semibold text-[#1c1b1a]">
           <Icon name="sparkle" size={10} />
           {museLabel(card.source)}
         </span>
       )}
-      <span className="absolute bottom-2 left-2 right-10 truncate text-[12px] font-medium text-white">{voice ? `${callName(author)} · ${formatDuration(cardDuration(card))}` : callName(author)}</span>
+      <span className="absolute bottom-2 left-2 right-10 truncate text-caption font-medium text-white">{voice ? `${callName(author)} · ${formatDuration(cardDuration(card))}` : callName(author)}</span>
     </button>
   );
 }
 
 function Row({ children, label }: { children: React.ReactNode; label: string }) {
   return (
-    <div aria-label={label} className="no-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-2.5 overflow-x-auto px-5 pb-1">
+    <div aria-label={label} className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2.5 overflow-x-auto px-4 pb-1">
       {children}
     </div>
   );
@@ -127,17 +127,17 @@ export default function LanePage() {
       <RoomHeader title="Memory Lane" subtitle="Everyday photos and voices, by the years" />
 
       {groups !== null && (people.length > 1 || kidsOnly) && (
-        <div className="no-scrollbar -mx-5 mb-4 flex gap-1.5 overflow-x-auto px-5" role="radiogroup" aria-label="Show memories from">
-          <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-[14px] font-medium", who === null && !kidsOnly ? "bg-ink text-white" : "bg-surface")}>
+        <div className="no-scrollbar -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Show memories from">
+          <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-medium", who === null && !kidsOnly ? "bg-ink text-white" : "bg-surface")}>
             Everyone
           </button>
           {kidsOnly && (
-            <button type="button" role="radio" aria-checked onClick={() => setKidsOnly(false)} className="press h-10 shrink-0 rounded-full bg-ink px-4 text-[14px] font-medium text-white">
+            <button type="button" role="radio" aria-checked onClick={() => setKidsOnly(false)} className="press h-10 shrink-0 rounded-full bg-ink px-4 text-callout font-medium text-white">
               From the kids
             </button>
           )}
           {people.map((m) => (
-            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-[14px] font-medium", who === m.id ? "bg-ink text-white" : "bg-surface")}>
+            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", who === m.id ? "bg-ink text-white" : "bg-surface")}>
               <Avatar src={memberPhoto(m)} name={callName(m)} size={32} />
               {callName(m)}
             </button>
@@ -174,7 +174,7 @@ export default function LanePage() {
                     disabled={sorting === "busy"}
                     aria-label="Sort older photos into albums"
                     title="Sort older photos into albums"
-                    className="press -my-2 flex h-9 items-center gap-1 rounded-full px-2 text-[12.5px] font-medium text-ink-soft"
+                    className="press -my-2 flex h-9 items-center gap-1 rounded-full px-2 text-caption font-medium text-ink-soft"
                   >
                     <Icon name="wand" size={16} />
                     {sorting && sorting !== "busy" ? sorting : sorting === "busy" ? "…" : null}
@@ -188,7 +188,7 @@ export default function LanePage() {
                   ))}
                 </Row>
               ) : (
-                <p className="m-0 text-[14px] text-ink-soft">No albums yet. Tap the wand to sort photos into albums.</p>
+                <p className="m-0 text-callout text-ink-soft">No albums yet. Tap the wand to sort photos into albums.</p>
               )}
             </section></Boundary>
           )}

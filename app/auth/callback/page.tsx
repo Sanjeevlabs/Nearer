@@ -73,15 +73,15 @@ export default function AuthCallback() {
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 text-center">
-      {state === "working" && <p className="m-0 text-[16px] text-ink-soft">Opening your window…</p>}
+      {state === "working" && <p className="m-0 text-body text-ink-soft">Opening your window…</p>}
       {state === "no-family" && (
         <>
-          <p className="m-0 text-[18px]">You&rsquo;re signed in, but not in a family yet.</p>
+          <p className="m-0 text-headline">You&rsquo;re signed in, but not in a family yet.</p>
           <div className="flex gap-3">
-            <Link href="/create" className="press rounded-full bg-ink px-5 py-3 text-[15px] font-semibold text-white no-underline">
+            <Link href="/create" className="press rounded-full bg-ink px-5 py-3 text-body font-semibold text-white no-underline">
               Start a family
             </Link>
-            <Link href="/join" className="press rounded-full bg-black/[.06] px-5 py-3 text-[15px] font-semibold text-ink no-underline">
+            <Link href="/join" className="press rounded-full bg-black/[.06] px-5 py-3 text-body font-semibold text-ink no-underline">
               Join with a code
             </Link>
           </div>
@@ -89,8 +89,8 @@ export default function AuthCallback() {
       )}
       {state === "failed" && (
         <>
-          <p className="m-0 text-[18px]">That sign-in link didn&rsquo;t work.</p>
-          <Link href="/signin" className="press rounded-full bg-ink px-5 py-3 text-[15px] font-semibold text-white no-underline">
+          <p className="m-0 text-headline">That sign-in link didn&rsquo;t work.</p>
+          <Link href="/signin" className="press rounded-full bg-ink px-5 py-3 text-body font-semibold text-white no-underline">
             Try again
           </Link>
         </>

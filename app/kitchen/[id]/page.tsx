@@ -107,26 +107,26 @@ export default function RecipePage() {
 
       <RecipeCover recipe={r} photo={cover ? (resolveMediaUrl(cover) ?? cover) : null} className="h-[230px] rounded-hero" />
 
-      <p className="m-0 mt-5 text-[13px] font-semibold uppercase tracking-[0.08em]" style={{ color: look.ink }}>
+      <p className="m-0 mt-5 text-footnote font-semibold uppercase tracking-[0.08em]" style={{ color: look.ink }}>
         {look.label}
         {totalTime(r) ? ` · ${totalTime(r)}` : ""}
       </p>
-      <h1 className="m-0 mt-1 text-[30px] leading-[1.08]">{r.title}</h1>
+      <h1 data-display className="m-0 mt-1 text-display leading-[1.08]">{r.title}</h1>
       <Link href={cook ? `/people/${cook.id}` : "#"} className="mt-3 flex items-center gap-2.5 text-ink no-underline">
         <Avatar src={memberPhoto(cook)} name={callName(cook)} size={36} />
-        <span className="text-[15px]">
+        <span className="text-body">
           <span className="font-semibold">{cook?.id === viewer.id ? "Your" : `${callName(cook)}'s`}</span> recipe
           {writer && writer.id !== cook?.id ? <span className="text-ink-soft"> · written down by {writer.id === viewer.id ? "you" : callName(writer)}</span> : null}
         </span>
       </Link>
-      {r.memory && <p className="voice m-0 mt-4 text-[19px] leading-snug">&ldquo;{r.memory}&rdquo;</p>}
+      {r.memory && <p className="voice m-0 mt-4 text-title leading-snug">&ldquo;{r.memory}&rdquo;</p>}
 
       {stats.length > 0 && (
         <dl className="m-0 mt-5 grid divide-x divide-[var(--line)] rounded-card bg-surface py-3" style={{ gridTemplateColumns: `repeat(${stats.length}, 1fr)` }}>
           {stats.map(([k, v]) => (
             <div key={k} className="px-2 text-center">
-              <dt className="text-[12px] font-medium text-ink-soft">{k}</dt>
-              <dd className="m-0 mt-0.5 text-[16px] font-semibold">{v}</dd>
+              <dt className="text-caption font-medium text-ink-soft">{k}</dt>
+              <dd className="m-0 mt-0.5 text-body font-semibold">{v}</dd>
             </div>
           ))}
         </dl>
@@ -138,8 +138,8 @@ export default function RecipePage() {
             <div className="flex items-center gap-3 rounded-card bg-[#fff6e6] p-3.5">
               <PlayButton playing={Boolean(active && isPlaying)} onClick={() => (active ? toggle() : play(voice))} label={`Hear ${callName(cook)} teach it`} />
               <span className="min-w-0">
-                <span className="block text-[15px] font-semibold">Hear {callName(cook)} teach it</span>
-                <span className="block text-[13px] text-[#8a4b00]">In their own words, step by step</span>
+                <span className="block text-body font-semibold">Hear {callName(cook)} teach it</span>
+                <span className="block text-footnote text-[#8a4b00]">In their own words, step by step</span>
               </span>
             </div>
           )}
@@ -152,7 +152,7 @@ export default function RecipePage() {
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
         {data.original.madeBy === "muse" && <MuseMark>written from {callName(cook)}&rsquo;s voice note</MuseMark>}
         {data.translated && (
-          <button type="button" onClick={() => setShowOriginal((v) => !v)} className="text-[12px] font-medium text-ink-soft underline underline-offset-2">
+          <button type="button" onClick={() => setShowOriginal((v) => !v)} className="text-caption font-medium text-ink-soft underline underline-offset-2">
             {showOriginal ? `Show in ${language(displayLang).native}` : `Translated · show ${language(data.original.lang).native}`}
           </button>
         )}
@@ -163,7 +163,7 @@ export default function RecipePage() {
           <SectionTitle>Before you start</SectionTitle>
           <ul className="m-0 list-none space-y-2 p-0">
             {r.prepWork.map((p, n) => (
-              <li key={n} className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-3 text-[16px]">
+              <li key={n} className="flex items-start gap-3 rounded-[16px] bg-surface px-4 py-3 text-body">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: look.accent }} aria-hidden="true" />
                 {p}
               </li>
@@ -174,7 +174,7 @@ export default function RecipePage() {
 
       <section aria-label="Ingredients">
         <SectionTitle>
-          Ingredients <span className="text-[15px] font-medium text-ink-faint">· {r.ingredients.length}</span>
+          Ingredients <span className="text-body font-medium text-ink-faint">· {r.ingredients.length}</span>
         </SectionTitle>
         <ul className="m-0 list-none divide-y divide-[var(--line)] rounded-card bg-surface p-0 px-2">
           {r.ingredients.map((i, n) => {
@@ -185,17 +185,17 @@ export default function RecipePage() {
                   <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full border-2", got ? "border-black bg-black text-white" : "border-black/20")} aria-hidden="true">
                     {got && <Icon name="check" size={14} strokeWidth={3} />}
                   </span>
-                  <span className={cn("min-w-0 flex-1 text-[16px] font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
+                  <span className={cn("min-w-0 flex-1 text-body font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
                   <span className="shrink-0 text-right">
-                    {i.said && <span className="voice block text-[16px]">{i.said}</span>}
-                    {i.approx && <span className="tnum block text-[13px] text-ink-faint">{i.said ? "≈ " : ""}{i.approx.replace(/^(about|≈)\s*/i, "")}</span>}
+                    {i.said && <span className="voice block text-body">{i.said}</span>}
+                    {i.approx && <span className="tnum block text-footnote text-ink-faint">{i.said ? "≈ " : ""}{i.approx.replace(/^(about|≈)\s*/i, "")}</span>}
                   </span>
                 </button>
               </li>
             );
           })}
         </ul>
-        <p className="m-0 mt-2 px-1 text-[12px] text-ink-faint">Tap to tick what you have. Amounts are as {callName(cook)} says them; ≈ is a rough guide.</p>
+        <p className="m-0 mt-2 px-1 text-caption text-ink-faint">Tap to tick what you have. Amounts are as {callName(cook)} says them; ≈ is a rough guide.</p>
       </section>
 
       <section aria-label="Method">
@@ -203,12 +203,12 @@ export default function RecipePage() {
         <ol className="m-0 list-none space-y-5 p-0">
           {r.steps.map((st, n) => (
             <li key={n} className="flex gap-3.5">
-              <span className="tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-[14px] font-bold text-white" style={{ background: look.ink }}>{n + 1}</span>
+              <span className="tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-callout font-bold text-white" style={{ background: look.ink }}>{n + 1}</span>
               <div className="pt-1">
-                <p className="m-0 text-[17px] leading-snug">{st.text}</p>
+                <p className="m-0 text-headline leading-snug">{st.text}</p>
                 {st.tip && (
-                  <p className="voice m-0 mt-1.5 text-[17px] text-[#8a4b00]">
-                    &ldquo;{st.tip}&rdquo; <span className="not-italic text-[13px] text-ink-faint">— {callName(cook)}</span>
+                  <p className="voice m-0 mt-1.5 text-headline text-[#8a4b00]">
+                    &ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-faint">— {callName(cook)}</span>
                   </p>
                 )}
               </div>
@@ -219,14 +219,14 @@ export default function RecipePage() {
 
       {r.outcome && (
         <section aria-label="How you know it's right" className="mt-8 rounded-card p-4" style={{ background: look.bg }}>
-          <p className="m-0 text-[13px] font-semibold uppercase tracking-[0.06em]" style={{ color: look.ink }}>
+          <p className="m-0 text-footnote font-semibold uppercase tracking-[0.06em]" style={{ color: look.ink }}>
             How you know it&rsquo;s right
           </p>
-          <p className="m-0 mt-1 text-[17px] leading-snug">{r.outcome}</p>
+          <p className="m-0 mt-1 text-headline leading-snug">{r.outcome}</p>
         </section>
       )}
 
-      <Link href={`/gather?reason=cook&recipe=${encodeURIComponent(data.original.id)}`} className="press mt-8 flex h-[52px] items-center justify-center gap-2 rounded-full bg-surface text-[16px] font-semibold text-ink no-underline">
+      <Link href={`/gather?reason=cook&recipe=${encodeURIComponent(data.original.id)}`} className="press mt-8 flex h-12 items-center justify-center gap-2 rounded-full bg-surface text-body font-semibold text-ink no-underline">
         <Icon name="door" size={18} />
         Cook this together, live
       </Link>
@@ -261,7 +261,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
   return (
     <section aria-label="Cooked by the family">
       <SectionTitle>Cooked by the family</SectionTitle>
-      {attempts.length === 0 && <p className="m-0 mb-3 text-[15px] text-ink-soft">Nobody has cooked it yet. {isCook ? "When they do, you can bless it." : `${cookName} would love to see yours.`}</p>}
+      {attempts.length === 0 && <p className="m-0 mb-3 text-body text-ink-soft">Nobody has cooked it yet. {isCook ? "When they do, you can bless it." : `${cookName} would love to see yours.`}</p>}
       <ul className="m-0 list-none space-y-3 p-0">
         {attempts.map((a) => {
           const who = members.find((m) => m.id === a.memberId);
@@ -280,8 +280,8 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
               <div className="p-4">
                 <div className="flex items-center gap-2.5">
                   <Avatar src={memberPhoto(who)} name={callName(who)} size={32} />
-                  <span className="text-[15px] font-semibold">{a.memberId === viewerId ? "You" : callName(who)}</span>
-                  <span className="text-[13px] text-ink-faint">{ago(a.createdAt)}</span>
+                  <span className="text-body font-semibold">{a.memberId === viewerId ? "You" : callName(who)}</span>
+                  <span className="text-footnote text-ink-faint">{ago(a.createdAt)}</span>
                   <span className="flex-1" />
                   {canChange(me, a.memberId) && (
                     <ActionMenu
@@ -290,11 +290,11 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                     />
                   )}
                 </div>
-                {a.note && <p className="voice m-0 mt-2 text-[17px] leading-snug">“{a.note}”</p>}
+                {a.note && <p className="voice m-0 mt-2 text-headline leading-snug">“{a.note}”</p>}
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <span className="text-[13px] text-ink-soft">{blessed.length ? `${blessed.map((m) => callName(m)).join(", ")} blessed this` : ""}</span>
+                  <span className="text-footnote text-ink-soft">{blessed.length ? `${blessed.map((m) => callName(m)).join(", ")} blessed this` : ""}</span>
                   {blessedByMe && (
-                    <button type="button" onClick={async () => { await postJson("/api/kitchen", { action: "unbless", attemptId: a.id }); onChange(); }} className="press flex h-10 items-center gap-1.5 rounded-full bg-[#fff6e6] px-4 text-[14px] font-semibold text-[#8a4b00]">
+                    <button type="button" onClick={async () => { await postJson("/api/kitchen", { action: "unbless", attemptId: a.id }); onChange(); }} className="press flex h-10 items-center gap-1.5 rounded-full bg-[#fff6e6] px-4 text-callout font-semibold text-[#8a4b00]">
                       <Icon name="bless" size={16} />
                       Blessed
                     </button>
@@ -306,7 +306,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                         await postJson("/api/kitchen", { action: "bless", attemptId: a.id });
                         onChange();
                       }}
-                      className="press flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[14px] font-semibold"
+                      className="press flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-callout font-semibold"
                     >
                       <Icon name="bless" size={16} />
                       Bless
@@ -327,8 +327,8 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
             </Button>
           ) : (
             <div className="rounded-card bg-surface p-4">
-              <p className="m-0 text-[17px] font-semibold">How did it turn out?</p>
-              <button type="button" onClick={() => fileRef.current?.click()} className="press mt-3 flex h-[120px] w-full items-center justify-center overflow-hidden rounded-[18px] bg-white text-[15px] font-medium text-ink-soft">
+              <p className="m-0 text-headline font-semibold">How did it turn out?</p>
+              <button type="button" onClick={() => fileRef.current?.click()} className="press mt-3 flex h-[120px] w-full items-center justify-center overflow-hidden rounded-[18px] bg-white text-body font-medium text-ink-soft">
                 {photo?.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={photo.url} alt="Your dish" className="h-full w-full object-cover" />
@@ -340,7 +340,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                 )}
               </button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && void pick(e.target.files[0])} />
-              <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={240} placeholder={`A line for ${cookName}`} className="mt-3 h-[52px] w-full rounded-full bg-white px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold" />
+              <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={240} placeholder={`A line for ${cookName}`} className="mt-3 h-12 w-full rounded-full bg-white px-5 text-body outline-none focus:ring-2 focus:ring-marigold" />
               <div className="mt-3 flex gap-2">
                 <Button
                   className="flex-[1.4]"

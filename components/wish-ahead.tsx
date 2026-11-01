@@ -50,8 +50,8 @@ export function WishAhead({ viewer }: { viewer: Member }) {
     <section aria-label="Wish ahead" className="mb-4 flex items-center gap-3 rounded-card bg-card px-4 py-3 shadow-card">
       {person ? <Avatar src={memberPhoto(person)} name={callName(person)} size={44} /> : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well text-ink"><Icon name="flower" size={20} /></span>}
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold leading-snug">Record a {word} for {title}</span>
-        <span className="block text-[13px] text-ink-soft">{whenLabel(daysBetween(today, o.date), o.date)} · it plays with everyone&rsquo;s on the day</span>
+        <span className="block text-body font-semibold leading-snug">Record a {word} for {title}</span>
+        <span className="block text-footnote text-ink-soft">{whenLabel(daysBetween(today, o.date), o.date)} · it plays with everyone&rsquo;s on the day</span>
       </span>
       <button type="button" onClick={() => openAdd("voice", { runId: run.id, kind: viewer.role === "elder" ? "blessing" : "wish" }, o.memberId)} aria-label={`Record a voice ${word} for ${title}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-white">
         <Icon name="mic" size={18} />

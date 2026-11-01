@@ -20,7 +20,7 @@ export function BirthYearField({ value, onChange, className }: { value: string; 
       placeholder="Year"
       value={value}
       onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 4))}
-      className={cn("h-[52px] w-full rounded-full bg-white px-5 text-[16px] outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold", bad && "ring-2 ring-[#b42318]", className)}
+      className={cn("h-12 w-full rounded-full bg-white px-5 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold", bad && "ring-2 ring-[#b42318]", className)}
     />
   );
 }

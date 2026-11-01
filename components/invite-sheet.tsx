@@ -45,27 +45,27 @@ export function InviteSheet({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <BottomSheet open={open} onClose={onClose} label="Invite family">
-      <p className="m-0 text-[21px] font-semibold">Invite family</p>
+      <p className="m-0 text-title font-semibold">Invite family</p>
       {!allowed ? (
-        <p className="m-0 mt-2 text-[15px] text-ink-soft">Ask a grown-up in the family to invite people.</p>
+        <p className="m-0 mt-2 text-body text-ink-soft">Ask a grown-up in the family to invite people.</p>
       ) : (
         <>
-          <p className="m-0 mt-1 text-[15px] text-ink-soft">A sibling, a cousin, your in-laws. Send them this code; it works for 7 days.</p>
+          <p className="m-0 mt-1 text-body text-ink-soft">A sibling, a cousin, your in-laws. Send them this code; it works for 7 days.</p>
           {state === "failed" ? (
             <div className="mt-4 rounded-[22px] bg-card p-4 text-center shadow-card">
-              <p className="m-0 text-[15px]">Couldn&rsquo;t make a code just now.</p>
+              <p className="m-0 text-body">Couldn&rsquo;t make a code just now.</p>
               <Button variant="secondary" className="mx-auto mt-3 !bg-well" onClick={() => void load()}>
                 Try again
               </Button>
             </div>
           ) : (
             <>
-              <p className="tnum m-0 mt-4 rounded-[22px] bg-card py-4 text-center text-[28px] font-bold tracking-[0.12em] shadow-card" aria-busy={!code}>
+              <p data-display className="tnum m-0 mt-4 rounded-[22px] bg-card py-4 text-center text-display font-bold tracking-[0.12em] shadow-card" aria-busy={!code}>
                 {code ?? "······"}
               </p>
               {code && (
                 <>
-                  <a href={whatsappInvite(window.location.origin, code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-black text-[16px] font-semibold text-white no-underline">
+                  <a href={whatsappInvite(window.location.origin, code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
                     <Icon name="whatsapp" size={20} />
                     Send on WhatsApp
                   </a>
@@ -74,7 +74,7 @@ export function InviteSheet({ open, onClose }: { open: boolean; onClose: () => v
                     onClick={() => {
                       void navigator.clipboard?.writeText(code).then(() => setCopied(true), () => undefined);
                     }}
-                    className="press mt-2 h-11 w-full rounded-full text-[15px] font-semibold text-ink-soft"
+                    className="press mt-2 h-11 w-full rounded-full text-body font-semibold text-ink-soft"
                   >
                     {copied ? "Copied" : "Copy the code"}
                   </button>

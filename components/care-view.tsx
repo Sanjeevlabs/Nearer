@@ -61,10 +61,10 @@ const ROLE_ICON: Partial<Record<Helper["role"], IconName>> = { groceries: "baske
 const ROLE_SUGGEST: Helper["role"][] = ["groceries", "driver", "plumber", "electrician", "cook", "caregiver"];
 const chip = (on: boolean) =>
   cn(
-    "press relative h-10 shrink-0 rounded-full px-4 text-[15px] font-medium before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']",
+    "press relative h-10 shrink-0 rounded-full px-4 text-body font-medium before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']",
     on ? "bg-black text-white" : "bg-card shadow-card",
   );
-const field = "h-12 w-full rounded-[14px] bg-well px-4 text-[16px] outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30";
+const field = "h-12 w-full rounded-[14px] bg-well px-4 text-body outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30";
 
 export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
   const pageTitle = tab === "tasks" ? "Care tasks" : "Local helpers";
@@ -91,8 +91,8 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
       <div>
         <RoomHeader title={pageTitle} />
         <div className="rounded-card bg-card px-6 py-10 text-center shadow-card">
-          <p className="m-0 text-[18px] font-semibold">Add a parent or grandparent first</p>
-          <p className="mx-auto mt-2 max-w-[300px] text-[15px] text-ink-soft">Care forms around the homes of the elders in your family tree.</p>
+          <p className="m-0 text-headline font-semibold">Add a parent or grandparent first</p>
+          <p className="mx-auto mt-2 max-w-[300px] text-body text-ink-soft">Care forms around the homes of the elders in your family tree.</p>
         </div>
       </div>
     );
@@ -110,9 +110,9 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
       <RoomHeader title={pageTitle} subtitle={`${isParent ? "Your home" : householdName(home, (x) => callName(x))} · ${timeIn(home.tz)} in ${placeFromTz(home.tz)}`} />
 
       {!isParent && homes.length > 1 && (
-        <div className="no-scrollbar -mx-5 mb-4 flex gap-2 overflow-x-auto px-5 py-1">
+        <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 py-1">
           {homes.map((h) => (
-            <button key={h.id} type="button" onClick={() => setChosen(h.id)} aria-pressed={h.id === home.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-[15px] font-medium", h.id === home.id ? "bg-black text-white" : "bg-card shadow-card")}>
+            <button key={h.id} type="button" onClick={() => setChosen(h.id)} aria-pressed={h.id === home.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", h.id === home.id ? "bg-black text-white" : "bg-card shadow-card")}>
               <span className="flex -space-x-2">
                 {h.members.slice(0, 2).map((x) => (
                   <Avatar key={x.id} src={memberPhoto(x)} name={callName(x)} size={30} />
@@ -125,8 +125,8 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
       )}
 
       {care.failed && !data ? (
-        <div className="rounded-card bg-card px-5 py-8 text-center shadow-card">
-          <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t load care right now.</p>
+        <div className="rounded-card bg-card px-4 py-8 text-center shadow-card">
+          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load care right now.</p>
           <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-well" onClick={() => void care.reload()}>
             Try again
           </Button>
@@ -190,7 +190,7 @@ function Tasks({ home, parent, isParent, needs, helpers, pets, onChange }: { hom
     <section aria-label="Tasks">
       {mayAdd && (
         <div className="flex items-center gap-2 rounded-[24px] bg-card p-2 shadow-card">
-          <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: parent.id })} aria-label="Say a task" className="press grid h-14 w-14 shrink-0 place-items-center rounded-full bg-black text-white">
+          <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: parent.id })} aria-label="Say a task" className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-black text-white">
             <Icon name="mic" size={24} />
           </button>
           <input
@@ -199,16 +199,16 @@ function Tasks({ home, parent, isParent, needs, helpers, pets, onChange }: { hom
             onKeyDown={(e) => e.key === "Enter" && void quickAdd()}
             placeholder={isParent ? "What do you need?" : "Add a task: the geyser, groceries…"}
             aria-label="New task"
-            className="h-12 min-w-0 flex-1 bg-transparent px-1 text-[16px] outline-none placeholder:text-ink-faint"
+            className="h-12 min-w-0 flex-1 bg-transparent px-1 text-body outline-none placeholder:text-ink-faint"
           />
           <button type="button" disabled={busy} onClick={() => void quickAdd()} aria-label={title.trim().length >= 3 ? "Add task" : "New task with details"} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well disabled:opacity-40">
             <Icon name="plus" size={20} />
           </button>
         </div>
       )}
-      {err && <p className="m-0 mt-2 px-2 text-[13px] text-[#a3271b]" role="alert">{err}</p>}
+      {err && <p className="m-0 mt-2 px-2 text-footnote text-[#a3271b]" role="alert">{err}</p>}
 
-      <div className="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 py-1" role="radiogroup" aria-label="Filter">
+      <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 py-1" role="radiogroup" aria-label="Filter">
         {(["all", "mine", "unassigned", "urgent"] as const).map((f) => (
           <button key={f} type="button" role="radio" aria-checked={filter === f} onClick={() => setFilter(f)} className={chip(filter === f)}>
             {FILTER_LABEL[f]}
@@ -221,7 +221,7 @@ function Tasks({ home, parent, isParent, needs, helpers, pets, onChange }: { hom
       {doing.length > 0 && <Lane title="In progress" items={doing} onOpen={setOpenId} manage={manage} act={act} />}
       {done.length > 0 && (
         <div className="mt-5">
-          <button type="button" onClick={() => setShowDone(!showDone)} aria-expanded={showDone} className="flex h-11 items-center gap-1.5 text-[13px] font-semibold uppercase tracking-[0.06em] text-ink-soft">
+          <button type="button" onClick={() => setShowDone(!showDone)} aria-expanded={showDone} className="flex h-11 items-center gap-1.5 text-footnote font-semibold uppercase tracking-[0.06em] text-ink-soft">
             Done this week · {done.length}
             <Icon name="down" size={16} className={cn("transition-transform", showDone && "rotate-180")} />
           </button>
@@ -280,11 +280,11 @@ function Lane({ title, items, onOpen, manage, act, empty, muted }: { title?: str
   return (
     <div className={title ? "mt-5" : "mt-1"}>
       {title && (
-        <p className="m-0 mb-2 text-[13px] font-semibold uppercase tracking-[0.06em] text-ink-soft">
+        <p className="m-0 mb-2 text-footnote font-semibold uppercase tracking-[0.06em] text-ink-soft">
           {title} · {items.length}
         </p>
       )}
-      {items.length === 0 && empty ? <p className="m-0 rounded-card bg-card px-4 py-6 text-center text-[15px] text-ink-soft shadow-card">{empty}</p> : null}
+      {items.length === 0 && empty ? <p className="m-0 rounded-card bg-card px-4 py-6 text-center text-body text-ink-soft shadow-card">{empty}</p> : null}
       {items.length > 0 && (
         <ul className="m-0 list-none divide-y divide-[var(--line)] overflow-hidden rounded-card bg-card p-0 shadow-card">
           {items.map((n) => (
@@ -310,13 +310,13 @@ function TaskRow({ need, onOpen, manage, act, muted }: { need: Need; onOpen: () 
   };
   return (
     <li className="flex items-center gap-1.5 pr-2">
-      <button type="button" onClick={onOpen} className="press flex min-h-[64px] min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left">
+      <button type="button" onClick={onOpen} className="press flex min-h-[56px] min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left">
         <span className={cn("h-2 w-2 shrink-0 rounded-full", need.priority === "urgent" ? "bg-[#d92d20]" : need.priority === "soon" ? "bg-[#d99a1e]" : "bg-black/15")} aria-label={`${PRIORITY_LABEL[need.priority]} priority`} />
         <span className="min-w-0 flex-1">
-          <span className={cn("line-clamp-2 block text-[15px] font-semibold leading-snug", muted && "text-ink-soft line-through decoration-black/20")}>
+          <span className={cn("line-clamp-2 block text-body font-semibold leading-snug", muted && "text-ink-soft line-through decoration-black/20")}>
             <Translated text={need.title} />
           </span>
-          <span className="mt-0.5 block truncate text-[14px] text-ink-soft">
+          <span className="mt-0.5 block truncate text-callout text-ink-soft">
             {[who ? (who.id === viewer.id ? "You" : callName(who)) : "Unassigned", due, forWhom ? `for ${callName(forWhom)}` : "", need.recurring !== "none" ? REPEAT_LABEL[need.recurring].toLowerCase() : ""].filter(Boolean).join(" · ")}
           </span>
         </span>
@@ -386,7 +386,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={need ? need.title : "New task"} data-ui="care-task-sheet">
       <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
       <m.div
-        className="frost relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-5 pt-3"
+        className="frost relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3"
         style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
@@ -395,7 +395,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
       >
         <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
         <div className="mb-2 flex items-center justify-between">
-          <p className="m-0 text-[13px] font-semibold uppercase tracking-[0.06em] text-ink-faint">{need ? STATUS_LABEL[need.status] : "New task"}</p>
+          <p className="m-0 text-footnote font-semibold uppercase tracking-[0.06em] text-ink-faint">{need ? STATUS_LABEL[need.status] : "New task"}</p>
           <div className="flex items-center">
             {need && mayEdit && (
               <button
@@ -424,13 +424,13 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
           placeholder="What needs doing?"
           aria-label="Task"
           disabled={!mayEdit}
-          className="w-full border-0 bg-transparent text-[22px] font-semibold outline-none placeholder:text-ink-faint"
+          className="w-full border-0 bg-transparent text-title font-semibold outline-none placeholder:text-ink-faint"
         />
 
         {mayEdit && (
           <div className="mt-3 space-y-2.5">
             <Row label="Kind">
-              <select value={kind} onChange={(e) => setKind(e.target.value as Kind)} className="h-10 rounded-full bg-surface px-3 text-[14px] font-semibold" aria-label="Kind">
+              <select value={kind} onChange={(e) => setKind(e.target.value as Kind)} className="h-10 rounded-full bg-surface px-3 text-callout font-semibold" aria-label="Kind">
                 {NEED_KINDS.map((k) => (
                   <option key={k} value={k}>
                     {KIND_LABEL[k]}
@@ -442,7 +442,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
               <Row label="For">
                 <div className="flex gap-1.5">
                   {elders.map((x) => (
-                    <button key={x.id} type="button" aria-pressed={forId === x.id} onClick={() => setForId(x.id)} disabled={Boolean(need)} className={cn("press h-10 rounded-full px-3.5 text-[14px] font-semibold", forId === x.id ? "bg-black text-white" : "bg-surface", need && "opacity-60")}>
+                    <button key={x.id} type="button" aria-pressed={forId === x.id} onClick={() => setForId(x.id)} disabled={Boolean(need)} className={cn("press h-10 rounded-full px-3.5 text-callout font-semibold", forId === x.id ? "bg-black text-white" : "bg-surface", need && "opacity-60")}>
                       {callName(x)}
                     </button>
                   ))}
@@ -451,7 +451,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
             )}
             {kind === "pets" && pets.length > 0 && (
               <Row label="Pet">
-                <select value={petId ?? ""} onChange={(e) => setPetId(e.target.value || null)} className="h-10 rounded-full bg-surface px-3 text-[14px] font-semibold" aria-label="Pet">
+                <select value={petId ?? ""} onChange={(e) => setPetId(e.target.value || null)} className="h-10 rounded-full bg-surface px-3 text-callout font-semibold" aria-label="Pet">
                   <option value="">Choose</option>
                   {pets.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -465,7 +465,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
               <Segmented value={priority} options={PRIORITIES} labels={PRIORITY_LABEL} onChange={setPriority} />
             </Row>
             <Row label="Due">
-              <input type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} className="h-10 rounded-full bg-surface px-3 text-[14px]" aria-label="Due" />
+              <input type="datetime-local" value={due} onChange={(e) => setDue(e.target.value)} className="h-10 rounded-full bg-surface px-3 text-callout" aria-label="Due" />
             </Row>
             <Row label="Repeats">
               <Segmented value={recurring} options={RECURRENCE} labels={REPEAT_LABEL} onChange={setRecurring} />
@@ -482,7 +482,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
         {manage && (
           <>
             <SectionTitle>Who&rsquo;s on it</SectionTitle>
-            <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5">
+            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
               {family.map((x) => {
                 const on = (need ? need.claimedBy : assignee) === x.id;
                 return (
@@ -492,7 +492,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
                     aria-pressed={on}
                     disabled={busy}
                     onClick={() => (need ? void act({ action: x.id === viewer.id ? "claim" : "assign-to", needId: need.id, memberId: x.id }) : setAssignee(on ? null : x.id))}
-                    className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-[14px] font-semibold", on ? "bg-black text-white" : "bg-surface")}
+                    className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-callout font-semibold", on ? "bg-black text-white" : "bg-surface")}
                   >
                     <Avatar src={memberPhoto(x)} name={callName(x)} size={32} />
                     {x.id === viewer.id ? "Me" : callName(x)}
@@ -506,7 +506,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
                 disabled={busy}
                 value={need.helperId ?? ""}
                 onChange={(e) => e.target.value && void act({ action: "assign", needId: need.id, helperId: e.target.value })}
-                className="mt-3 h-11 w-full rounded-full bg-surface px-4 text-[14px] font-semibold"
+                className="mt-3 h-11 w-full rounded-full bg-surface px-4 text-callout font-semibold"
               >
                 <option value="">Send a local helper?</option>
                 {helpers.map((h) => (
@@ -524,18 +524,18 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
             {manage && (
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {need.status === "done" || need.status === "cancelled" ? (
-                  <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "open" })} className="press col-span-3 h-11 rounded-full bg-surface text-[14px] font-semibold">
+                  <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "open" })} className="press col-span-3 h-11 rounded-full bg-surface text-callout font-semibold">
                     Re-open
                   </button>
                 ) : (
                   <>
-                    <button type="button" disabled={busy || need.status === "progress"} onClick={() => act({ action: "status", needId: need.id, status: "progress" })} className="press h-11 rounded-full bg-surface text-[14px] font-semibold disabled:opacity-40">
+                    <button type="button" disabled={busy || need.status === "progress"} onClick={() => act({ action: "status", needId: need.id, status: "progress" })} className="press h-11 rounded-full bg-surface text-callout font-semibold disabled:opacity-40">
                       Start
                     </button>
-                    <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "done" })} className="press h-11 rounded-full bg-black text-[14px] font-semibold text-white">
+                    <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "done" })} className="press h-11 rounded-full bg-black text-callout font-semibold text-white">
                       Done
                     </button>
-                    <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "cancelled" })} className="press h-11 rounded-full bg-surface text-[14px] font-semibold text-ink-soft">
+                    <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "cancelled" })} className="press h-11 rounded-full bg-surface text-callout font-semibold text-ink-soft">
                       Cancel
                     </button>
                   </>
@@ -544,26 +544,26 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
             )}
             {need.noteForParent && (
               <div className="mt-4 rounded-[18px] bg-surface px-4 py-3">
-                <p className="voice m-0 text-[17px] leading-snug">{need.noteForParent}</p>
+                <p className="voice m-0 text-headline leading-snug">{need.noteForParent}</p>
                 <MuseMark>
                   what {callName(parent)} sees, in {language(parent?.displayLang ?? "en").native}
                 </MuseMark>
               </div>
             )}
             <details className="mt-4">
-              <summary className="cursor-pointer text-[14px] font-semibold text-ink-soft">Timeline · {need.history.length || 1}</summary>
+              <summary className="cursor-pointer text-callout font-semibold text-ink-soft">Timeline · {need.history.length || 1}</summary>
               <ol className="m-0 mt-3 list-none space-y-2.5 border-l-2 border-[var(--line)] p-0 pl-4">
                 {[...need.history].reverse().map((h, i) => (
-                  <li key={i} className="relative text-[14px]">
+                  <li key={i} className="relative text-callout">
                     <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-black/20" aria-hidden="true" />
                     <span className="font-medium">{h.what}</span>
-                    <span className="block text-[12px] text-ink-faint">
+                    <span className="block text-caption text-ink-faint">
                       {name(h.by)} · {ago(h.at)}
                     </span>
                   </li>
                 ))}
                 {need.history.length === 0 && (
-                  <li className="text-[14px] text-ink-soft">
+                  <li className="text-callout text-ink-soft">
                     Asked {ago(need.createdAt)} by {name(need.askedBy)}
                   </li>
                 )}
@@ -589,7 +589,7 @@ function toLocalInput(iso: string): string {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-[14px] text-ink-soft">{label}</span>
+      <span className="text-callout text-ink-soft">{label}</span>
       {children}
     </div>
   );
@@ -599,7 +599,7 @@ function Segmented<T extends string>({ value, options, labels, onChange }: { val
   return (
     <div className="flex rounded-full bg-surface p-0.5" role="radiogroup">
       {options.map((o) => (
-        <button key={o} type="button" role="radio" aria-checked={value === o} onClick={() => onChange(o)} className={cn("press h-9 rounded-full px-3 text-[13px] font-semibold", value === o ? "bg-white shadow-sm" : "text-ink-soft")}>
+        <button key={o} type="button" role="radio" aria-checked={value === o} onClick={() => onChange(o)} className={cn("press h-9 rounded-full px-3 text-footnote font-semibold", value === o ? "bg-white shadow-sm" : "text-ink-soft")}>
           {labels[o]}
         </button>
       ))}
@@ -635,11 +635,11 @@ function Helpers({ parent, helpers, needs, canManage, onChange }: { parent: Memb
             const meta = [h.role, h.hours, done ? `helped ${done}×` : ""].filter(Boolean).join(" · ");
             return (
               <Fragment key={h.id}>
-                <li className="flex min-h-[68px] items-center gap-2 py-3">
+                <li className="flex min-h-[56px] items-center gap-2 py-3">
                   <Avatar src={null} name={h.name} size={40} />
                   <span className="ml-1 min-w-0 flex-1">
-                    <span className="block truncate text-[16px] font-semibold leading-tight">{h.name}</span>
-                    <span className="mt-0.5 block truncate text-[14px] text-ink-soft first-letter:uppercase">{meta}</span>
+                    <span className="block truncate text-body font-semibold leading-tight">{h.name}</span>
+                    <span className="mt-0.5 block truncate text-callout text-ink-soft first-letter:uppercase">{meta}</span>
                   </span>
                   {h.phone && (
                     <>
@@ -671,7 +671,7 @@ function Helpers({ parent, helpers, needs, canManage, onChange }: { parent: Memb
           })}
         </ul>
       )}
-      <Link href="/nearby" replace className="mt-3 flex min-h-[44px] items-center gap-1 text-[14px] font-medium text-ink-soft no-underline">
+      <Link href="/nearby" replace className="mt-3 flex min-h-[44px] items-center gap-1 text-callout font-medium text-ink-soft no-underline">
         <Icon name="shield" size={15} /> Your first-to-call list is in Nearby <Icon name="chevron" size={14} />
       </Link>
       {canManage &&
@@ -681,7 +681,7 @@ function Helpers({ parent, helpers, needs, canManage, onChange }: { parent: Memb
           </div>
         ) : (
           <>
-            <button type="button" onClick={() => setAdding(true)} className="press mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-card border-2 border-dashed border-black/[.12] text-[15px] font-semibold text-ink">
+            <button type="button" onClick={() => setAdding(true)} className="press mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-card border-2 border-dashed border-black/[.12] text-body font-semibold text-ink">
               <Icon name="plus" size={18} />
               Add a local helper
             </button>
@@ -709,7 +709,7 @@ function Helpers({ parent, helpers, needs, canManage, onChange }: { parent: Memb
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card">
           <Icon name="phone" size={18} strokeWidth={1.8} />
         </span>
-        <p className="m-0 text-[15px] leading-snug text-ink-soft">One contact book for the family: whoever picks up a task can call the right person.</p>
+        <p className="m-0 text-body leading-snug text-ink-soft">One contact book for the family: whoever picks up a task can call the right person.</p>
       </div>
     </section>
   );
@@ -746,7 +746,7 @@ function HelperForm({ helper, role: preset, forMemberId, onDone }: { helper?: He
   return (
     <div className="space-y-2 rounded-[22px] bg-card p-4 shadow-card">
       {picker && !helper && (
-        <button type="button" onClick={() => void pick()} className="press flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-well text-[15px] font-semibold">
+        <button type="button" onClick={() => void pick()} className="press flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-well text-body font-semibold">
           <Icon name="contacts" size={16} />
           Pick from my contacts
         </button>
@@ -764,10 +764,10 @@ function HelperForm({ helper, role: preset, forMemberId, onDone }: { helper?: He
       </div>
       <input className={field} value={hours} onChange={(e) => setHours(e.target.value)} maxLength={60} placeholder="When they're available (Mon–Sat, 8–11 am)" aria-label="Available" />
       <input className={field} value={note} onChange={(e) => setNote(e.target.value)} maxLength={160} placeholder="A note (Knows the way to the clinic)" aria-label="Note" />
-      {err && <p className="m-0 px-1 text-[13px] text-[#a3271b]" role="alert">{err}</p>}
+      {err && <p className="m-0 px-1 text-footnote text-[#a3271b]" role="alert">{err}</p>}
       <div className="flex gap-2">
         <Button
-          className="h-11 flex-1 text-[15px]"
+          className="h-11 flex-1 text-body"
           disabled={!name.trim()}
           onClick={async () => {
             const fields = { name: name.trim(), role, phone: phone.trim(), hours: hours.trim(), note: note.trim() };
@@ -778,7 +778,7 @@ function HelperForm({ helper, role: preset, forMemberId, onDone }: { helper?: He
         >
           {helper ? "Save" : "Add"}
         </Button>
-        <Button variant="secondary" className="h-11 flex-1 !bg-well text-[15px]" onClick={onDone}>
+        <Button variant="secondary" className="h-11 flex-1 !bg-well text-body" onClick={onDone}>
           Cancel
         </Button>
       </div>

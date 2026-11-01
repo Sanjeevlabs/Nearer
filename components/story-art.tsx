@@ -89,7 +89,7 @@ export function StoryCover({ theme, className, label = false }: { theme: Story["
         ))}
         <Motif theme={theme} accent={look.accent} />
       </svg>
-      {label && <span className="absolute left-2 top-2 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">{look.label}</span>}
+      {label && <span className="absolute left-2 top-2 rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">{look.label}</span>}
     </div>
   );
 }

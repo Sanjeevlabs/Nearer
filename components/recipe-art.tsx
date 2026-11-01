@@ -84,7 +84,7 @@ export function RecipeCover({ recipe, photo, className, label = false }: { recip
         </svg>
       )}
       {label && (
-        <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-[11px] font-semibold" style={{ color: look.ink }}>
+        <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-caption font-semibold" style={{ color: look.ink }}>
           {look.label}
         </span>
       )}

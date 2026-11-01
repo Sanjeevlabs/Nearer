@@ -71,8 +71,8 @@ export default function PersonPage() {
         )}
         <div className="glass absolute inset-x-2.5 bottom-2.5 flex items-center justify-between rounded-[20px] px-4 py-3">
           <div>
-            <p className="m-0 text-[13px] text-white/80">It&rsquo;s {now || "…"} there</p>
-            <p className="m-0 text-[17px] font-semibold">{!Number.isFinite(days) ? "Birthday not added yet" : days === 0 ? "Birthday today" : days === 1 ? "Birthday tomorrow" : `Birthday in ${days} days`}</p>
+            <p className="m-0 text-footnote text-white/80">It&rsquo;s {now || "…"} there</p>
+            <p className="m-0 text-headline font-semibold">{!Number.isFinite(days) ? "Birthday not added yet" : days === 0 ? "Birthday today" : days === 1 ? "Birthday tomorrow" : `Birthday in ${days} days`}</p>
           </div>
         </div>
       </div>
@@ -83,15 +83,15 @@ export default function PersonPage() {
             <Icon name="book" size={18} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="voice block text-[18px] leading-tight">The book of {callName(person)}</span>
-            <span className="block text-[13px] text-ink-soft">Their answers, in their own voice</span>
+            <span className="voice block text-headline leading-tight">The book of {callName(person)}</span>
+            <span className="block text-footnote text-ink-soft">Their answers, in their own voice</span>
           </span>
           <Icon name="chevron" size={18} className="text-ink-faint" />
         </Link>
       )}
 
       <section aria-label="Voices" className="mt-8">
-        <h2 className="m-0 mb-1 text-[20px]">Voice notes</h2>
+        <h2 className="m-0 mb-1 text-title">Voice notes</h2>
         {cards === null ? (
           <div className="skeleton mt-3 h-16" />
         ) : voices.length === 0 ? (
@@ -114,7 +114,7 @@ export default function PersonPage() {
 
       {photos.length > 0 && (
         <section aria-label="Photos" className="mt-8">
-          <h2 className="m-0 mb-3 text-[20px]">Moments</h2>
+          <h2 className="m-0 mb-3 text-title">Moments</h2>
           <div className="space-y-4">
             {photos.map((c) => (c.type === "video" ? <VideoPlaque key={c.id} card={c} /> : <PhotoCard key={c.id} card={c} />))}
           </div>

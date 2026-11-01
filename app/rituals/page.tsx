@@ -63,25 +63,25 @@ function Group({ g, members, albums, onOpen }: { g: OccasionGroup; members: Memb
     <section aria-label={g.title} data-occasion={g.key}>
       <div className="mb-2.5 flex items-end gap-2">
         <div className="min-w-0 flex-1">
-          <h2 className="m-0 truncate text-[18px] leading-tight">{g.title}</h2>
-          <p className="tnum m-0 mt-0.5 text-[13px] text-ink-soft">
+          <h2 className="m-0 truncate text-headline leading-tight">{g.title}</h2>
+          <p className="tnum m-0 mt-0.5 text-footnote text-ink-soft">
             {album ? albumDates(album) : dayLabel(g.date)}
             {count && ` · ${count}`}
           </p>
         </div>
         {album && (
-          <Link href={`/lane/album/${album.id}?from=rituals`} className="-my-2 flex min-h-[44px] shrink-0 items-center gap-0.5 text-[13.5px] font-medium text-ink-soft no-underline">
+          <Link href={`/lane/album/${album.id}?from=rituals`} className="-my-2 flex min-h-[44px] shrink-0 items-center gap-0.5 text-footnote font-medium text-ink-soft no-underline">
             Album <Icon name="chevron" size={14} />
           </Link>
         )}
         {g.runId && g.voices.length > 0 && (
-          <Link href={`/reel/${encodeURIComponent(g.runId)}`} className="-my-2 flex min-h-[44px] shrink-0 items-center gap-1 text-[13.5px] font-medium text-ink-soft no-underline">
+          <Link href={`/reel/${encodeURIComponent(g.runId)}`} className="-my-2 flex min-h-[44px] shrink-0 items-center gap-1 text-footnote font-medium text-ink-soft no-underline">
             <Icon name="play" size={12} /> Play the reel
           </Link>
         )}
       </div>
       {g.prints.length > 0 && (
-        <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 pt-1" aria-label={`Photos from ${g.title}`}>
+        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 pt-1" aria-label={`Photos from ${g.title}`}>
           {g.prints.map((c, i) => (
             <button
               key={c.id}
@@ -114,10 +114,10 @@ function Group({ g, members, albums, onOpen }: { g: OccasionGroup; members: Memb
                 <button type="button" data-card={c.id} onClick={() => (current?.id === c.id ? toggle() : play(c, g.voices))} aria-label={`${on ? "Pause" : "Play"} ${by ? `${callName(by)}'s` : "the"} voice from ${g.title}`} className="press flex w-full items-center gap-3 rounded-[18px] bg-card p-2 pr-3 text-left shadow-card">
                   {by ? <Avatar src={memberPhoto(by)} name={callName(by)} size={40} /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-well"><Icon name="music" size={17} /></span>}
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14.5px] font-semibold leading-tight">{by ? callName(by) : "The family"}</span>
-                    <span className="voice block truncate text-[14px] text-ink-soft">{c.caption || "A voice note"}</span>
+                    <span className="block truncate text-callout font-semibold leading-tight">{by ? callName(by) : "The family"}</span>
+                    <span className="voice block truncate text-callout text-ink-soft">{c.caption || "A voice note"}</span>
                   </span>
-                  <span className="tnum text-[12.5px] text-ink-faint">{formatDuration(cardDuration(c))}</span>
+                  <span className="tnum text-caption text-ink-faint">{formatDuration(cardDuration(c))}</span>
                   <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-marigold text-black" : "bg-ink text-white"}`}>
                     <Icon name={on ? "pause" : "play"} size={13} />
                   </span>
@@ -193,7 +193,7 @@ export default function OccasionsPage() {
 
       {failed ? (
         <div className="py-6 text-center">
-          <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t load occasions.</p>
+          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load occasions.</p>
           <Button variant="secondary" className="mx-auto mt-3 !bg-well" onClick={() => void reload()}>
             Try again
           </Button>
@@ -224,7 +224,7 @@ export default function OccasionsPage() {
               title="No occasion photos yet."
               line="Wishes, cake photos and festival voices from every home gather here, one occasion at a time."
               action={
-                <Link href="/gather" className="press flex h-12 w-full items-center justify-center rounded-full bg-ink text-[16px] font-semibold text-white no-underline">
+                <Link href="/gather" className="press flex h-12 w-full items-center justify-center rounded-full bg-ink text-body font-semibold text-white no-underline">
                   See what&rsquo;s coming up
                 </Link>
               }
@@ -238,10 +238,10 @@ export default function OccasionsPage() {
           <button type="button" onClick={() => setFestivalsOpen(true)} className="press flex w-full items-center gap-3 rounded-card bg-card px-4 py-3 text-left shadow-card">
             <Icon name="flower" size={20} className="text-ink-soft" />
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold">Our traditions</span>
-              <span className="block text-[13px] text-ink-soft">{choices.traditions.length === 0 && choices.kept.length === 0 ? "Which festivals does your family keep?" : "The festivals your family keeps"}</span>
+              <span className="block text-body font-semibold">Our traditions</span>
+              <span className="block text-footnote text-ink-soft">{choices.traditions.length === 0 && choices.kept.length === 0 ? "Which festivals does your family keep?" : "The festivals your family keeps"}</span>
             </span>
-            <span className="text-[14px] font-semibold text-ink-soft">{data.canEditKept ? "Change" : "See"}</span>
+            <span className="text-callout font-semibold text-ink-soft">{data.canEditKept ? "Change" : "See"}</span>
           </button>
         </div>
       )}

@@ -22,8 +22,8 @@ export class Boundary extends Component<{ children: ReactNode; label?: string },
     if (!this.state.failed) return this.props.children;
     return (
       <div className="mt-4 rounded-card bg-surface p-4 text-center" role="alert">
-        <p className="m-0 text-[15px] font-semibold">{this.props.label ? `${this.props.label} didn’t load` : "This part didn’t load"}</p>
-        <p className="m-0 mt-1 text-[14px] text-ink-soft">The rest of the page is fine.</p>
+        <p className="m-0 text-body font-semibold">{this.props.label ? `${this.props.label} didn’t load` : "This part didn’t load"}</p>
+        <p className="m-0 mt-1 text-callout text-ink-soft">The rest of the page is fine.</p>
         <Button variant="secondary" className="mx-auto mt-3" onClick={() => this.setState({ failed: false })}>
           Retry
         </Button>

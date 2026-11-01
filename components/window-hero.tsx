@@ -4,7 +4,7 @@ import { DEFAULT_IMAGE, WINDOW_PHOTO_HEIGHT, WINDOW_SIZES, rememberedHero } from
 import { resolveMediaUrl } from "@/lib/media-session";
 import { Photo } from "./ui/kit";
 
-// The first screen's photograph: full-bleed, about half the screen, in a box
+// The first screen's photograph: full-bleed, under half the screen, in a box
 // whose size is fixed before the photo arrives (so nothing moves when it does).
 // Shared by the window and by the loading frame in app/page.tsx, which is why it
 // is small and imports nothing heavy.

@@ -69,8 +69,8 @@ export default function GatherPage() {
     return (
       <div>
         <RoomHeader title="Coming up" />
-        <div className="rounded-[28px] bg-card p-5 shadow-card" role="alert">
-          <p className="m-0 text-[17px] font-semibold">Couldn&rsquo;t load your celebrations.</p>
+        <div className="rounded-[28px] bg-card p-4 shadow-card" role="alert">
+          <p className="m-0 text-headline font-semibold">Couldn&rsquo;t load your celebrations.</p>
           <Button variant="secondary" className="mt-3 !bg-well" onClick={() => void reload()}>
             Try again
           </Button>
@@ -126,7 +126,7 @@ export default function GatherPage() {
       <WeeklyCallCard />
 
       {visit && (
-        <Link href="/together/visits" replace className="mt-4 flex min-h-[44px] items-center gap-1.5 text-[14px] font-medium text-ink-soft no-underline">
+        <Link href="/together/visits" replace className="mt-4 flex min-h-[44px] items-center gap-1.5 text-callout font-medium text-ink-soft no-underline">
           <Icon name="rooms" size={15} /> {visit.title} is on Visits <Icon name="chevron" size={14} />
         </Link>
       )}
@@ -163,17 +163,17 @@ function ComingUp({ occasions, members, canPlan, onPlan }: { occasions: Upcoming
             <li key={o.key} className="flex items-center gap-3 p-3 pl-4">
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-well text-center leading-none" aria-hidden="true">
                 <span>
-                  <span className="tnum block text-[18px] font-bold">{d.getUTCDate()}</span>
-                  <span className="mt-0.5 block text-[11px] font-semibold uppercase tracking-[0.04em] text-ink-soft">{d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span>
+                  <span className="tnum block text-headline font-bold">{d.getUTCDate()}</span>
+                  <span className="mt-0.5 block text-caption font-semibold uppercase tracking-[0.04em] text-ink-soft">{d.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })}</span>
                 </span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="line-clamp-2 block text-[16px] font-semibold leading-tight">{o.label}</span>
-                <span className="mt-0.5 block text-[14px] text-ink-soft">{o.days === 0 ? "Today" : `In ${o.days} day${o.days > 1 ? "s" : ""}`}</span>
+                <span className="line-clamp-2 block text-body font-semibold leading-tight">{o.label}</span>
+                <span className="mt-0.5 block text-callout text-ink-soft">{o.days === 0 ? "Today" : `In ${o.days} day${o.days > 1 ? "s" : ""}`}</span>
               </span>
               {who && <Avatar src={memberPhoto(who)} name={callName(who)} size={32} />}
               {canPlan && (
-                <button type="button" onClick={() => onPlan(o)} aria-label={`Plan ${o.label}`} className="press h-11 shrink-0 rounded-full bg-[#1c1b1a] px-4 text-[15px] font-semibold text-white">
+                <button type="button" onClick={() => onPlan(o)} aria-label={`Plan ${o.label}`} className="press h-11 shrink-0 rounded-full bg-[#1c1b1a] px-4 text-body font-semibold text-white">
                   Plan
                 </button>
               )}

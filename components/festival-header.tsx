@@ -95,7 +95,7 @@ export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<Festiva
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="festival-steps-title" data-ui="festival-steps-sheet">
           <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <m.div
-            className="relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-5 pt-3 shadow-frost"
+            className="relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-4 pt-3 shadow-frost"
             style={{ maxHeight: "86vh", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -105,10 +105,10 @@ export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<Festiva
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
-                <h2 id="festival-steps-title" className="m-0 text-[22px] leading-tight">
+                <h2 id="festival-steps-title" className="m-0 text-title leading-tight">
                   How we do {week.title}
                 </h2>
-                <p className="m-0 mt-1.5 text-[14px] text-ink-soft">Tap a mic to say how your family does each step. The children will hear you.</p>
+                <p className="m-0 mt-1.5 text-callout text-ink-soft">Tap a mic to say how your family does each step. The children will hear you.</p>
               </div>
               <button type="button" onClick={onClose} aria-label="Close" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well text-ink">
                 <Icon name="close" size={18} />
@@ -123,7 +123,7 @@ export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<Festiva
                       <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", on ? "bg-ink text-white" : "ring-1 ring-black/25")} aria-hidden="true">
                         {on && <Icon name="check" size={13} />}
                       </span>
-                      <span className={cn("min-w-0 flex-1 text-[15px] leading-snug", on && "text-ink-soft line-through")}>{step}</span>
+                      <span className={cn("min-w-0 flex-1 text-body leading-snug", on && "text-ink-soft line-through")}>{step}</span>
                     </button>
                     <button type="button" onClick={() => openAdd("voice", { kind: "story", prompt: step })} aria-label={`Record how you do this step: ${step}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-white">
                       <Icon name="mic" size={18} />
@@ -151,10 +151,10 @@ export function FestivalLeadEntry() {
           <Icon name="flower" size={20} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold leading-snug">You lead {week.title} this year</span>
-          <span className="block text-[13px] text-ink-soft">{week.title} is {daysInWords(week.daysLeft)} · teach the steps</span>
+          <span className="block text-body font-semibold leading-snug">You lead {week.title} this year</span>
+          <span className="block text-footnote text-ink-soft">{week.title} is {daysInWords(week.daysLeft)} · teach the steps</span>
         </span>
-        <span className="text-[14px] font-semibold text-ink-soft">Steps</span>
+        <span className="text-callout font-semibold text-ink-soft">Steps</span>
       </button>
       <FestivalStepsSheet week={week} open={open} onClose={() => setOpen(false)} />
     </>
@@ -179,7 +179,7 @@ export function FestivalHeader() {
   const accent = week.accent && HEX.test(week.accent) ? week.accent : null;
   const lamp = lampGlowCss(week.lampAccent);
 
-  const btn = "press inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-5 text-[15px] font-semibold text-white no-underline";
+  const btn = "press inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-5 text-body font-semibold text-white no-underline";
   let line = `${leadName} leads this year`;
   let action: React.ReactNode = null;
   if (week.mode === "lead") {
@@ -221,8 +221,8 @@ export function FestivalHeader() {
       style={accent ? { backgroundImage: `linear-gradient(135deg, ${accent}33, ${accent}0d)`, boxShadow: `0 24px 50px -22px ${accent}88` } : { boxShadow: "var(--card-shadow)" }}
     >
       {lamp && <style>{lamp}</style>}
-      {week.greeting && <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-soft">{week.greeting}</p>}
-      <h2 className="m-0 mt-0.5 text-[22px] font-semibold leading-tight">
+      {week.greeting && <p className="m-0 text-caption font-semibold uppercase tracking-[0.14em] text-ink-soft">{week.greeting}</p>}
+      <h2 className="m-0 mt-0.5 text-title font-semibold leading-tight">
         {week.title} is {daysInWords(week.daysLeft)}
       </h2>
 
@@ -234,7 +234,7 @@ export function FestivalHeader() {
                 <span className="relative block h-[84px] w-[72px] overflow-hidden rounded-[14px] bg-surface">
                   <Photo src={cardCover(c, members)} alt="" sizes="144px" position="center 30%" />
                 </span>
-                <span className="tnum mt-1 block text-center text-[11.5px] text-ink-soft">{new Date(c.takenAt).getFullYear()}</span>
+                <span className="tnum mt-1 block text-center text-caption text-ink-soft">{new Date(c.takenAt).getFullYear()}</span>
               </li>
             ))}
           </ul>
@@ -242,10 +242,10 @@ export function FestivalHeader() {
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="m-0 min-w-0 flex-1 basis-[140px] text-[15px] font-medium leading-snug">{line}</p>
+        <p className="m-0 min-w-0 flex-1 basis-[140px] text-body font-medium leading-snug">{line}</p>
         {action}
       </div>
-      {week.mode === "ask" && <p className="m-0 mt-2 text-[13px] text-ink-soft">{week.askForChildren}</p>}
+      {week.mode === "ask" && <p className="m-0 mt-2 text-footnote text-ink-soft">{week.askForChildren}</p>}
 
     </section>
     <FestivalStepsSheet week={week} open={steps} onClose={() => setSteps(false)} />

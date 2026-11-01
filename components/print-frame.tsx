@@ -95,15 +95,15 @@ export function PrintFrame({
           />
         </div>
       )}
-      <figcaption className={cn("px-1 pt-3 font-hand", shareable && "min-h-[52px] pr-12")}>
+      <figcaption className={cn("px-1 pt-3 font-hand", shareable && "min-h-12 pr-12")}>
         {note && (
-          <p className="m-0 line-clamp-3 text-[22px] leading-[1.25]" lang={text && text !== note ? displayLang : card.lang}>
+          <p className="m-0 line-clamp-3 text-title leading-[1.25]" lang={text && text !== note ? displayLang : card.lang}>
             {text ?? note}
             {signed && by ? <span className="text-[#4a413a]">{` — ${by}`}</span> : null}
           </p>
         )}
         {(when || where) && (
-          <p className={cn("m-0 text-[18px] leading-snug text-[#4a413a]", note && "mt-1")}>
+          <p className={cn("m-0 text-headline leading-snug text-[#4a413a]", note && "mt-1")}>
             {[when, where].filter(Boolean).join(" · ")}
           </p>
         )}

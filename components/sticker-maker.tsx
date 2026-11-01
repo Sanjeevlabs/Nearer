@@ -144,8 +144,8 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
 
   return (
     <BottomSheet open={open} onClose={onClose} label={spec.title} z={85}>
-      <p className="m-0 text-[20px] font-semibold">{spec.title}</p>
-      <p className="m-0 mb-3 mt-1 text-[14px] text-ink-soft">A sticker for any chat. It stays on your phone until you share it.</p>
+      <p className="m-0 text-title font-semibold">{spec.title}</p>
+      <p className="m-0 mb-3 mt-1 text-callout text-ink-soft">A sticker for any chat. It stays on your phone until you share it.</p>
 
       {photoSrc && (
         <div className="mb-3">
@@ -158,11 +158,11 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
               void cutOut(p);
             }}
           />
-          <p className="m-0 mt-2 text-center text-[13px] text-ink-soft">{cutting ? "Cutting out…" : (cutNote ?? (sam ? "Tap a person or the dish to cut it out." : "Tap where the sticker should centre."))}</p>
+          <p className="m-0 mt-2 text-center text-footnote text-ink-soft">{cutting ? "Cutting out…" : (cutNote ?? (sam ? "Tap a person or the dish to cut it out." : "Tap where the sticker should centre."))}</p>
           {!mask && (
             <div className="mt-2 flex justify-center gap-1.5" role="radiogroup" aria-label="Shape">
               {(["circle", "rounded"] as const).map((s) => (
-                <button key={s} type="button" role="radio" aria-checked={shape === s} onClick={() => setShape(s)} className={cn("press h-10 rounded-full px-4 text-[14px] font-semibold", shape === s ? "bg-black text-white" : "bg-surface")}>
+                <button key={s} type="button" role="radio" aria-checked={shape === s} onClick={() => setShape(s)} className={cn("press h-10 rounded-full px-4 text-callout font-semibold", shape === s ? "bg-black text-white" : "bg-surface")}>
                   {s === "circle" ? "Circle" : "Rounded"}
                 </button>
               ))}
@@ -177,7 +177,7 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
           onChange={(e) => setLabel(e.target.value.slice(0, 40))}
           placeholder={spec.kind === "photo" ? "Add a few words (optional)" : "Words on the sticker"}
           aria-label="Words on the sticker"
-          className="mb-3 h-12 w-full rounded-full bg-surface px-5 font-hand text-[20px] outline-none focus:ring-2 focus:ring-marigold"
+          className="mb-3 h-12 w-full rounded-full bg-surface px-5 font-hand text-title outline-none focus:ring-2 focus:ring-marigold"
         />
       )}
 
@@ -185,7 +185,7 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
         <div className="mb-3">
           {words.length > 0 && (
             <>
-              <p className="m-0 mb-1.5 text-[13px] font-medium text-ink-soft">Tap up to 6 words from what {spec.by} said</p>
+              <p className="m-0 mb-1.5 text-footnote font-medium text-ink-soft">Tap up to 6 words from what {spec.by} said</p>
               <div className="no-scrollbar flex max-h-[120px] flex-wrap gap-1.5 overflow-y-auto">
                 {words.map((w, i) => {
                   const on = picked.includes(i);
@@ -199,7 +199,7 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
                         setPicked(next);
                         setBlessing(next.map((n) => words[n]).join(" "));
                       }}
-                      className={cn("press h-9 rounded-full px-3 font-hand text-[17px]", on ? "bg-[#7a2e0e] text-white" : "bg-surface")}
+                      className={cn("press h-9 rounded-full px-3 font-hand text-headline", on ? "bg-[#7a2e0e] text-white" : "bg-surface")}
                     >
                       {w}
                     </button>
@@ -208,13 +208,13 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
               </div>
             </>
           )}
-          <input value={blessing} onChange={(e) => e.target.value.trim().split(/\s+/).filter(Boolean).length <= 6 && setBlessing(e.target.value.slice(0, 60))} aria-label="The words on the sticker (up to 6)" className="mt-2 h-12 w-full rounded-full bg-surface px-5 font-hand text-[20px] outline-none focus:ring-2 focus:ring-marigold" />
-          <p className="m-0 mt-1 px-2 text-[12px] text-ink-faint">Up to 6 words. Only the words go on the sticker, never the voice.</p>
+          <input value={blessing} onChange={(e) => e.target.value.trim().split(/\s+/).filter(Boolean).length <= 6 && setBlessing(e.target.value.slice(0, 60))} aria-label="The words on the sticker (up to 6)" className="mt-2 h-12 w-full rounded-full bg-surface px-5 font-hand text-title outline-none focus:ring-2 focus:ring-marigold" />
+          <p className="m-0 mt-1 px-2 text-caption text-ink-faint">Up to 6 words. Only the words go on the sticker, never the voice.</p>
         </div>
       )}
 
       <SharePanel target={target} renderKey={renderKey} />
-      <button type="button" onClick={onClose} className="press mt-3 flex h-11 w-full items-center justify-center gap-1.5 text-[15px] font-semibold text-ink-soft">
+      <button type="button" onClick={onClose} className="press mt-3 flex h-11 w-full items-center justify-center gap-1.5 text-body font-semibold text-ink-soft">
         <Icon name="close" size={16} /> Done
       </button>
     </BottomSheet>
@@ -236,7 +236,7 @@ export function StickerButton({ spec, label = "Make a sticker", className, iconO
           setBuilt(spec());
           setOpen(true);
         }}
-        className={cn("press flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full text-[14px] font-semibold", iconOnly ? "w-10" : "px-3.5", className)}
+        className={cn("press flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full text-callout font-semibold", iconOnly ? "w-10" : "px-3.5", className)}
       >
         <Icon name="sticker" size={17} />
         {!iconOnly && label}

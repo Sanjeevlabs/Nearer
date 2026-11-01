@@ -293,7 +293,7 @@ export function RoomHeader({ title, subtitle, action, room }: { title: string; s
         {action}
       </div>
       <RoomName override={room} />
-      <h1 className="m-0 text-[32px] font-light leading-[1.05] tracking-[-0.015em]">{title}</h1>
+      <h1 data-display className="m-0 text-display font-light leading-[1.05] tracking-[-0.015em]">{title}</h1>
       {/* Subtitles stay in the code for screen readers only: the page says it, the header doesn't repeat it. */}
       {subtitle && <p className="sr-only">{subtitle}</p>}
       <SpaceTabs />
@@ -306,7 +306,7 @@ function RoomName({ override }: { override?: string }) {
   const room = roomOf(usePathname());
   const title = override ?? room?.title;
   if (!title) return null;
-  return <p className="m-0 mb-1 text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-soft">{title}</p>;
+  return <p className="m-0 mb-1 text-caption font-semibold uppercase tracking-[0.12em] text-ink-soft">{title}</p>;
 }
 
 /** The pages of the current room, as one quiet row. Only on a room's own tab page. */
@@ -329,7 +329,7 @@ function SpaceTabs() {
   }, [pathname]);
   if (!at) return null;
   return (
-    <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar relative -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 py-1">
+    <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar relative -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 py-1">
       {at.space.rooms.map((r) => (
         <Link
           key={r.href}
@@ -339,7 +339,7 @@ function SpaceTabs() {
           aria-current={r.href === at.room ? "page" : undefined}
           className={cn(
             // 40px pill, 44px hit area (the ::before reaches 2px past it, top and bottom).
-            "press relative flex h-10 shrink-0 items-center rounded-full px-4 text-[15px] font-semibold no-underline before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']",
+            "press relative flex h-10 shrink-0 items-center rounded-full px-4 text-callout font-semibold no-underline before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']",
             r.href === at.room ? "bg-ink text-white" : "bg-card text-ink-soft shadow-card",
           )}
         >
@@ -353,9 +353,9 @@ function SpaceTabs() {
 export function SectionTitle({ children, href, linkLabel }: { children: React.ReactNode; href?: string; linkLabel?: string }) {
   return (
     <div className="mb-3 mt-8 flex items-baseline justify-between">
-      <h2 className="m-0 text-[20px]">{children}</h2>
+      <h2 className="m-0 text-title">{children}</h2>
       {href && (
-        <Link href={href} className="text-[14px] font-medium text-ink-soft no-underline">
+        <Link href={href} className="text-callout font-medium text-ink-soft no-underline">
           {linkLabel ?? "See all"}
         </Link>
       )}
@@ -384,7 +384,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "press flex h-[52px] items-center justify-center gap-2 rounded-full px-6 text-[16px] font-semibold disabled:opacity-40",
+        "press flex h-11 items-center justify-center gap-2 rounded-full px-5 text-body font-semibold disabled:opacity-40",
         variant === "primary" && "bg-black text-white",
         variant === "secondary" && "bg-surface text-ink",
         variant === "quiet" && "bg-transparent text-ink-soft",
@@ -407,7 +407,7 @@ export function Button({
 export function MuseMark({ children = "powered by Muse", tone = "soft", className, show = false }: { children?: React.ReactNode; tone?: "soft" | "light"; className?: string; show?: boolean }) {
   if (!show) return null;
   return (
-    <span className={cn("inline-flex items-center gap-1 text-[12px] font-medium", tone === "light" ? "text-white/80" : "text-ink-faint", className)}>
+    <span className={cn("inline-flex items-center gap-1 text-caption font-medium", tone === "light" ? "text-white/80" : "text-ink-faint", className)}>
       <Icon name="sparkle" size={13} strokeWidth={1.8} />
       {children}
     </span>
@@ -441,9 +441,9 @@ export function EmptyState({
         <Photo src={photo} sizes="(max-width: 480px) 100vw, 480px" position={position} />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--card)] to-transparent" aria-hidden="true" />
       </div>
-      <div className="px-5 pb-5">
-        <p className="m-0 text-[21px] font-semibold leading-tight tracking-[-0.01em]">{title}</p>
-        <p className="m-0 mt-1.5 text-[15px] leading-snug text-ink-soft">{line}</p>
+      <div className="px-4 pb-5">
+        <p className="m-0 text-title font-semibold leading-tight tracking-[-0.01em]">{title}</p>
+        <p className="m-0 mt-1.5 text-body leading-snug text-ink-soft">{line}</p>
         {action && <div className="mt-4">{action}</div>}
         {children}
       </div>
@@ -456,7 +456,7 @@ export function SuggestionTile({ icon, title, line, onClick, href, disabled }: {
   // With a line: icon above, two lines of words. Name only: one compact row.
   const cls = cn(
     "press flex h-full w-full rounded-[22px] bg-card p-4 text-left text-ink no-underline shadow-card disabled:opacity-60",
-    line ? "min-h-[120px] flex-col items-start gap-3" : "min-h-[64px] items-center gap-3 py-3 pl-3",
+    line ? "min-h-[120px] flex-col items-start gap-3" : "min-h-[56px] items-center gap-3 py-3 pl-3",
   );
   const body = (
     <>
@@ -464,8 +464,8 @@ export function SuggestionTile({ icon, title, line, onClick, href, disabled }: {
         <Icon name={icon} size={19} strokeWidth={1.8} />
       </span>
       <span className="min-w-0">
-        <span className="block text-[15px] font-semibold leading-tight">{title}</span>
-        {line && <span className="mt-1 block text-[14px] leading-snug text-ink-soft">{line}</span>}
+        <span className="block text-body font-semibold leading-tight">{title}</span>
+        {line && <span className="mt-1 block text-callout leading-snug text-ink-soft">{line}</span>}
       </span>
     </>
   );
@@ -481,7 +481,7 @@ export function SuggestionTile({ icon, title, line, onClick, href, disabled }: {
 }
 
 export function EmptyLine({ children }: { children: React.ReactNode }) {
-  return <p className="m-0 py-6 text-center text-[15px] text-ink-soft">{children}</p>;
+  return <p className="m-0 py-6 text-center text-body text-ink-soft">{children}</p>;
 }
 
 /* -------------------------------------------------------------- actions */
@@ -550,12 +550,12 @@ export function ActionMenu({ actions, label = "More", tone = "soft", className }
           {actions.map((a, i) =>
             confirming === i ? (
               <div key={a.label} className="px-3 py-2">
-                <p className="m-0 text-[14px] text-ink">{a.confirm ?? `${a.label}?`}</p>
+                <p className="m-0 text-callout text-ink">{a.confirm ?? `${a.label}?`}</p>
                 <div className="mt-2 flex gap-2">
-                  <button type="button" disabled={busy} onClick={() => void run(a)} className="press h-11 flex-1 rounded-full bg-[#b42318] text-[14px] font-semibold text-white">
+                  <button type="button" disabled={busy} onClick={() => void run(a)} className="press h-11 flex-1 rounded-full bg-[#b42318] text-callout font-semibold text-white">
                     {busy ? "…" : "Yes"}
                   </button>
-                  <button type="button" onClick={() => setConfirming(null)} className="press h-11 flex-1 rounded-full bg-black/[.06] text-[14px] font-semibold">
+                  <button type="button" onClick={() => setConfirming(null)} className="press h-11 flex-1 rounded-full bg-black/[.06] text-callout font-semibold">
                     Keep
                   </button>
                 </div>
@@ -567,7 +567,7 @@ export function ActionMenu({ actions, label = "More", tone = "soft", className }
                 role="menuitem"
                 disabled={busy}
                 onClick={() => (a.danger ? setConfirming(i) : void run(a))}
-                className={cn("press flex h-11 w-full items-center rounded-[12px] px-3 text-left text-[15px] font-medium hover:bg-black/[.04]", a.danger && "text-[#b42318]")}
+                className={cn("press flex h-11 w-full items-center rounded-[12px] px-3 text-left text-body font-medium hover:bg-black/[.04]", a.danger && "text-[#b42318]")}
               >
                 {a.label}
               </button>

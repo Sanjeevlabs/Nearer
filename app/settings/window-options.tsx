@@ -32,9 +32,9 @@ export function WindowOptions({ onMessage }: { onMessage?: (m: string) => void }
   const { data, failed, reload } = useJson<W>("/api/window");
   if (failed)
     return (
-      <div role="alert" className="mb-6 rounded-[22px] bg-surface px-4 py-4 text-[14px] text-ink-soft">
+      <div role="alert" className="mb-6 rounded-[22px] bg-surface px-4 py-4 text-callout text-ink-soft">
         Couldn&rsquo;t load your first screen.
-        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-white px-4 text-[14px] font-semibold text-ink">
+        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-white px-4 text-callout font-semibold text-ink">
           Retry
         </button>
       </div>
@@ -84,14 +84,14 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
         return r;
       }}
     >
-      <p className="m-0 text-[13px] font-medium text-ink-soft">The photo you see first</p>
+      <p className="m-0 text-footnote font-medium text-ink-soft">The photo you see first</p>
       <div className="mt-2 grid grid-cols-2 gap-3" role="radiogroup" aria-label="The photo you see first">
         <button type="button" role="radio" aria-checked={nowPhoto === null} disabled={busy} onClick={() => form.set({ photo: null })} className="text-left">
           <span className={tile(nowPhoto === null)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={DEFAULT_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
           </span>
-          <span className="mt-1.5 block text-[14px] font-semibold">Default photo</span>
+          <span className="mt-1.5 block text-callout font-semibold">Default photo</span>
         </button>
         <button type="button" role="radio" aria-checked={nowPhoto !== null} disabled={busy || uploading} onClick={() => input.current?.click()} className="text-left">
           <span className={cn(tile(nowPhoto !== null), "grid place-items-center")}>
@@ -104,7 +104,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
               </span>
             )}
           </span>
-          <span className="mt-1.5 block text-[14px] font-semibold">{uploading ? "Adding…" : url ? "Your photo · change" : "Upload your own"}</span>
+          <span className="mt-1.5 block text-callout font-semibold">{uploading ? "Adding…" : url ? "Your photo · change" : "Upload your own"}</span>
         </button>
       </div>
       <input
@@ -120,9 +120,9 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
         }}
       />
 
-      <p className="m-0 mt-5 text-[13px] font-medium text-ink-soft">Who&rsquo;s at your window · up to two</p>
+      <p className="m-0 mt-5 text-footnote font-medium text-ink-soft">Who&rsquo;s at your window · up to two</p>
       {others.length === 0 ? (
-        <p className="m-0 mt-2 text-[14px] text-ink-soft">When grown-ups in another home join, you can put them here.</p>
+        <p className="m-0 mt-2 text-callout text-ink-soft">When grown-ups in another home join, you can put them here.</p>
       ) : (
         <ul className="m-0 mt-1 list-none p-0">
           {others.map((mm) => {
@@ -132,8 +132,8 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
               <li key={mm.id} className="flex min-h-[44px] items-center gap-3 border-t border-[var(--line)] py-2.5 first:border-0">
                 <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px]">{callName(mm)}</span>
-                  <span className="block text-[12px] text-ink-soft">{mm.city || placeFromTz(mm.tz)}</span>
+                  <span className="block text-body">{callName(mm)}</span>
+                  <span className="block text-caption text-ink-soft">{mm.city || placeFromTz(mm.tz)}</span>
                 </span>
                 <button
                   type="button"
@@ -153,7 +153,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
         </ul>
       )}
 
-      <p className="m-0 mt-5 mb-2 text-[13px] font-medium text-ink-soft">Turn their dot amber when they&rsquo;ve been quiet for</p>
+      <p className="m-0 mt-5 mb-2 text-footnote font-medium text-ink-soft">Turn their dot amber when they&rsquo;ve been quiet for</p>
       <div className="flex gap-1.5" role="radiogroup" aria-label="Amber after">
         {QUIET_CHOICES.map((h) => (
           <button
@@ -163,15 +163,15 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
             aria-checked={form.draft.quietAfterHours === h}
             disabled={busy}
             onClick={() => form.set({ quietAfterHours: h })}
-            className={cn("press h-11 flex-1 rounded-full text-[14px] font-semibold", form.draft.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", form.draft.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
           >
             {h} h
           </button>
         ))}
       </div>
-      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Nearer.</p>
+      <p className="m-0 mt-1.5 text-caption text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Nearer.</p>
       {pickError && (
-        <p className="m-0 mt-2 text-[13px] text-[#c2343a]" role="alert">
+        <p className="m-0 mt-2 text-footnote text-[#c2343a]" role="alert">
           {pickError}
         </p>
       )}

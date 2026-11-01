@@ -86,7 +86,7 @@ function Thumb({ src, kind, size = 64 }: { src: string | null | undefined; kind:
 }
 
 function SampleTag() {
-  return <span className="rounded-full border border-[var(--line)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint">Sample</span>;
+  return <span className="rounded-full border border-[var(--line)] px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.06em] text-ink-faint">Sample</span>;
 }
 
 export function SendSheet({
@@ -158,9 +158,9 @@ export function SendSheet({
               <Icon name="back" />
             </button>
           )}
-          <h2 className="m-0 min-w-0 flex-1 text-[20px]">Muse&rsquo;s ideas for {name}</h2>
+          <h2 className="m-0 min-w-0 flex-1 text-title">Muse&rsquo;s ideas for {name}</h2>
         </div>
-        {context?.title && step.s !== "done" && <p className="voice m-0 mb-3 text-[16px] text-ink-soft">For {context.title}</p>}
+        {context?.title && step.s !== "done" && <p className="voice m-0 mb-3 text-body text-ink-soft">For {context.title}</p>}
         <Body step={step} name={name} onPick={preview} onSend={send} onRetry={load} onClose={() => void load()} />
       </section>
     );
@@ -171,7 +171,7 @@ export function SendSheet({
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={`Send something to ${name}`} data-ui="send-sheet">
           <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <m.div
-            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-5 pt-3 shadow-frost"
+            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-4 pt-3 shadow-frost"
             style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -185,12 +185,12 @@ export function SendSheet({
                   <Icon name="back" />
                 </button>
               )}
-              <h2 className="m-0 min-w-0 flex-1 truncate text-[22px]">Send something to {name}</h2>
+              <h2 className="m-0 min-w-0 flex-1 truncate text-title">Send something to {name}</h2>
               <button type="button" onClick={onClose} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
                 <Icon name="close" />
               </button>
             </div>
-            {context?.title && step.s !== "done" && <p className="voice m-0 mb-3 text-[16px] text-ink-soft">For {context.title}</p>}
+            {context?.title && step.s !== "done" && <p className="voice m-0 mb-3 text-body text-ink-soft">For {context.title}</p>}
             <Body step={step} name={name} onPick={preview} onSend={send} onRetry={load} onClose={onClose} />
           </m.div>
         </div>
@@ -226,7 +226,7 @@ function Body({
   if (step.s === "error")
     return (
       <div className="py-8 text-center">
-        <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t reach the shops just now.</p>
+        <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t reach the shops just now.</p>
         <Button variant="secondary" className="mx-auto mt-4" onClick={onRetry}>
           Try again
         </Button>
@@ -236,8 +236,8 @@ function Body({
   if (step.s === "list" || step.s === "previewing") {
     const { items, sample } = step;
     if (step.s === "list" && step.refused === "medical")
-      return <p className="m-0 py-8 text-center text-[15px] text-ink-soft">Nearer doesn&rsquo;t order medicines. Please use a licensed pharmacy with the prescription.</p>;
-    if (items.length === 0) return <p className="m-0 py-8 text-center text-[15px] text-ink-soft">Nothing from our partners fits this right now.</p>;
+      return <p className="m-0 py-8 text-center text-body text-ink-soft">Nearer doesn&rsquo;t order medicines. Please use a licensed pharmacy with the prescription.</p>;
+    if (items.length === 0) return <p className="m-0 py-8 text-center text-body text-ink-soft">Nothing from our partners fits this right now.</p>;
     return (
       <div className="mt-2">
         <ul className="m-0 list-none space-y-2.5 p-0">
@@ -254,9 +254,9 @@ function Body({
                 >
                   <Thumb src={it.image} kind={it.kind} />
                   <span className="min-w-0 flex-1">
-                    <span className="line-clamp-2 block text-[16px] font-semibold leading-snug">{it.name}</span>
-                    {it.why && <span className="voice mt-0.5 block truncate text-[14px] text-ink-soft">{it.why}</span>}
-                    <span className="mt-1 flex items-center gap-2 text-[13px] text-ink-soft">
+                    <span className="line-clamp-2 block text-body font-semibold leading-snug">{it.name}</span>
+                    {it.why && <span className="voice mt-0.5 block truncate text-callout text-ink-soft">{it.why}</span>}
+                    <span className="mt-1 flex items-center gap-2 text-footnote text-ink-soft">
                       <span className="font-semibold text-ink">{money(it.price, it.currency)}</span>
                       <span aria-hidden="true">·</span>
                       <span className="truncate">via {it.via}</span>
@@ -269,7 +269,7 @@ function Body({
           })}
         </ul>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="m-0 text-[12.5px] text-ink-faint">Picked from our partners&rsquo; shelves. No ads.</p>
+          <p className="m-0 text-caption text-ink-faint">Picked from our partners&rsquo; shelves. No ads.</p>
           {sample && <SampleTag />}
         </div>
       </div>
@@ -282,9 +282,9 @@ function Body({
         <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-surface text-ink" aria-hidden="true">
           <Icon name="plug" />
         </span>
-        <p className="m-0 text-[16px] font-semibold">Connect your {step.name} account</p>
-        <p className="m-0 mx-auto mt-1 max-w-[300px] text-[14px] text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
-        <a href={`/api/partners/${encodeURIComponent(step.account)}/connect`} className="press mx-auto mt-5 flex h-[52px] w-fit items-center justify-center gap-2 rounded-full bg-black px-7 text-[16px] font-semibold text-white no-underline">
+        <p className="m-0 text-body font-semibold">Connect your {step.name} account</p>
+        <p className="m-0 mx-auto mt-1 max-w-[300px] text-callout text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
+        <a href={`/api/partners/${encodeURIComponent(step.account)}/connect`} className="press mx-auto mt-5 flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-black px-7 text-body font-semibold text-white no-underline">
           Connect {step.name}
         </a>
       </div>
@@ -297,14 +297,14 @@ function Body({
         <div className="flex items-center gap-3 rounded-[22px] bg-surface p-3">
           <Thumb src={p.item.image} kind={picked.kind} size={56} />
           <span className="min-w-0 flex-1">
-            <span className="line-clamp-2 block text-[15px] font-semibold leading-snug">{p.item.name}</span>
-            <span className="mt-0.5 block text-[13px] text-ink-soft">
+            <span className="line-clamp-2 block text-body font-semibold leading-snug">{p.item.name}</span>
+            <span className="mt-0.5 block text-footnote text-ink-soft">
               {p.item.quantity} × {money(p.item.price, p.currency)} · via {p.via}
             </span>
           </span>
         </div>
 
-        <p className="m-0 mb-2 mt-5 text-[13px] font-medium text-ink-soft">Deliver to</p>
+        <p className="m-0 mb-2 mt-5 text-footnote font-medium text-ink-soft">Deliver to</p>
         {p.address ? (
           <div className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label="Delivery address">
             {p.addresses.map((a) => (
@@ -317,27 +317,27 @@ function Body({
                 onClick={() => a.id !== p.address?.id && onPick(step.items, step.sample, picked, a.id)}
                 className={cn("press shrink-0 rounded-[18px] px-4 py-2.5 text-left", p.address?.id === a.id ? "bg-ink text-white" : "bg-surface text-ink")}
               >
-                <span className="block text-[14px] font-semibold">{a.label}</span>
-                <span className={cn("block max-w-[200px] truncate text-[12.5px]", p.address?.id === a.id ? "text-white/70" : "text-ink-soft")}>{a.line}</span>
+                <span className="block text-callout font-semibold">{a.label}</span>
+                <span className={cn("block max-w-[200px] truncate text-caption", p.address?.id === a.id ? "text-white/70" : "text-ink-soft")}>{a.line}</span>
               </button>
             ))}
           </div>
         ) : (
-          <p className="m-0 text-[14px] text-ink-soft">You&rsquo;ll add {name}&rsquo;s address at {p.via}&rsquo;s checkout.</p>
+          <p className="m-0 text-callout text-ink-soft">You&rsquo;ll add {name}&rsquo;s address at {p.via}&rsquo;s checkout.</p>
         )}
 
         <div className="mt-5 flex items-baseline justify-between border-t border-[var(--line)] pt-4">
-          <span className="text-[15px] text-ink-soft">{p.handoff ? "Price" : "Total"}</span>
-          <span className="text-[22px] font-semibold">{money(p.total, p.currency)}</span>
+          <span className="text-body text-ink-soft">{p.handoff ? "Price" : "Total"}</span>
+          <span className="text-title font-semibold">{money(p.total, p.currency)}</span>
         </div>
-        {p.eta && <p className="m-0 mt-1 text-right text-[13px] text-ink-soft">Arrives {p.eta}</p>}
+        {p.eta && <p className="m-0 mt-1 text-right text-footnote text-ink-soft">Arrives {p.eta}</p>}
 
         <Button className="mt-5 w-full" disabled={step.busy} onClick={() => onSend(step)}>
           <Icon name={p.handoff ? "external" : "send"} size={19} />
           {step.busy ? "Sending…" : p.handoff ? `Continue at ${p.via}` : "Send"}
         </Button>
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="m-0 text-[12.5px] text-ink-faint">{p.handoff ? "You pay on the store's own checkout." : "From your own account. You pay in the app."}</p>
+          <p className="m-0 text-caption text-ink-faint">{p.handoff ? "You pay on the store's own checkout." : "From your own account. You pay in the app."}</p>
           {p.sample && <SampleTag />}
         </div>
       </div>
@@ -357,10 +357,10 @@ function Body({
       <m.span initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-ink text-white" aria-hidden="true">
         <Icon name={r.status === "placed" ? "check" : r.status === "handoff" ? "external" : "send"} size={28} />
       </m.span>
-      <p className="m-0 text-[19px] font-semibold" role="status">
+      <p className="m-0 text-title font-semibold" role="status">
         {line}
       </p>
-      <p className="m-0 mt-1 text-[14px] text-ink-soft">
+      <p className="m-0 mt-1 text-callout text-ink-soft">
         {step.preview.item.name} · via {step.preview.via}
       </p>
       {r.status === "awaiting-payment" && r.qr && (r.qr.startsWith("https://") || r.qr.startsWith("data:image/")) && (
@@ -368,12 +368,12 @@ function Body({
         <img src={r.qr} alt="UPI QR code to pay" className="mx-auto mt-4 h-48 w-48 rounded-[16px]" />
       )}
       {r.status === "awaiting-payment" && r.paymentUrl && (
-        <a href={r.paymentUrl} className="press mx-auto mt-4 flex h-[48px] w-fit items-center rounded-full bg-black px-6 text-[15px] font-semibold text-white no-underline">
+        <a href={r.paymentUrl} className="press mx-auto mt-4 flex h-[48px] w-fit items-center rounded-full bg-black px-6 text-body font-semibold text-white no-underline">
           Open UPI app
         </a>
       )}
       {r.status === "handoff" && (
-        <a href={r.url} target="_blank" rel="noopener noreferrer" className="press mx-auto mt-4 flex h-[48px] w-fit items-center gap-2 rounded-full bg-surface px-6 text-[15px] font-semibold text-ink no-underline">
+        <a href={r.url} target="_blank" rel="noopener noreferrer" className="press mx-auto mt-4 flex h-[48px] w-fit items-center gap-2 rounded-full bg-surface px-6 text-body font-semibold text-ink no-underline">
           <Icon name="external" size={17} /> Open {step.preview.via}
         </a>
       )}

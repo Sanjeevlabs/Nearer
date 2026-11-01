@@ -179,12 +179,12 @@ function Recipients({ value, onChange }: { value: string[]; onChange: (ids: stri
   const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
   const isHome = (ids: string[]) => ids.length === value.length && ids.every((id) => value.includes(id));
   return (
-    <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label="Who is this for">
+    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Who is this for">
       {homes.map((h) => {
         const ids = h.members.map((m) => m.id);
         const on = isHome(ids);
         return (
-          <button key={h.id} type="button" aria-pressed={on} onClick={() => onChange(on ? [] : ids)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-[15px] font-medium", on ? "bg-black text-white" : "bg-surface text-ink")}>
+          <button key={h.id} type="button" aria-pressed={on} onClick={() => onChange(on ? [] : ids)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-black text-white" : "bg-surface text-ink")}>
             <span className="flex -space-x-2">
               {h.members.slice(0, 2).map((m) => (
                 <Avatar key={m.id} src={memberPhoto(m)} name={callName(m)} size={30} />
@@ -202,7 +202,7 @@ function Recipients({ value, onChange }: { value: string[]; onChange: (ids: stri
             type="button"
             aria-pressed={on}
             onClick={() => toggle(mm.id)}
-            className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-[15px] font-medium", on ? "bg-black text-white" : "bg-surface text-ink")}
+            className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-black text-white" : "bg-surface text-ink")}
           >
             <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />
             {callName(mm)}
@@ -213,7 +213,7 @@ function Recipients({ value, onChange }: { value: string[]; onChange: (ids: stri
         type="button"
         aria-pressed={value.length === 0}
         onClick={() => onChange([])}
-        className={cn("press h-11 shrink-0 rounded-full px-4 text-[15px] font-medium", value.length === 0 ? "bg-black text-white" : "bg-surface text-ink")}
+        className={cn("press h-11 shrink-0 rounded-full px-4 text-body font-medium", value.length === 0 ? "bg-black text-white" : "bg-surface text-ink")}
       >
         Everyone
       </button>
@@ -427,13 +427,13 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
   if (consent === false) {
     return (
       <div className="pt-2">
-        <h2 className="m-0 text-[24px]">Before your first recording</h2>
-        <ul className="m-0 mt-4 list-none space-y-3 p-0 text-[15px] text-ink-soft">
+        <h2 className="m-0 text-title">Before your first recording</h2>
+        <ul className="m-0 mt-4 list-none space-y-3 p-0 text-body text-ink-soft">
           <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Only your family can hear it.</li>
           <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Nearer writes down your words so everyone can read them in their own language.</li>
           <li className="flex gap-3"><Icon name="check" size={20} className="mt-0.5 shrink-0 text-ink" />Your voice is never used to create a copy of it.</li>
         </ul>
-        <p className="m-0 mt-4 text-[13px] text-ink-faint">In this demo, Meta&rsquo;s AI models process recordings to transcribe and translate them.</p>
+        <p className="m-0 mt-4 text-footnote text-ink-faint">In this demo, Meta&rsquo;s AI models process recordings to transcribe and translate them.</p>
         <Button
           className="mt-6 w-full"
           onClick={() => {
@@ -455,13 +455,13 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
     <div className="flex min-h-[460px] flex-col">
       {purpose ? (
         <div className="rounded-[20px] bg-surface px-4 py-3">
-          {(contribution?.kind === "answer" || contribution?.kind === "today" || (contribution?.kind === "story" && contribution.prompt)) && <p className="voice m-0 mb-1 text-[19px] leading-snug text-ink">“{contribution.prompt}”</p>}
-          {contribution?.kind === "recipe" && contribution.title && <p className="m-0 mb-1 text-[17px] font-semibold">{contribution.title}</p>}
-          <p className="m-0 text-[14px] text-ink-soft">{purpose.hint}</p>
+          {(contribution?.kind === "answer" || contribution?.kind === "today" || (contribution?.kind === "story" && contribution.prompt)) && <p className="voice m-0 mb-1 text-title leading-snug text-ink">“{contribution.prompt}”</p>}
+          {contribution?.kind === "recipe" && contribution.title && <p className="m-0 mb-1 text-headline font-semibold">{contribution.title}</p>}
+          <p className="m-0 text-callout text-ink-soft">{purpose.hint}</p>
         </div>
       ) : (
         <>
-          <p className="m-0 mb-3 text-[13px] font-medium text-ink-soft">To</p>
+          <p className="m-0 mb-3 text-footnote font-medium text-ink-soft">To</p>
           <Recipients value={to} onChange={setTo} />
         </>
       )}
@@ -490,11 +490,11 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
                   <span key={i} className="block flex-1 rounded-full bg-black/70" style={{ maxWidth: 3.5, height: `${Math.max(14, v * 100)}%` }} />
                 ))}
               </div>
-              <span className="tnum pr-1 text-[13px] text-ink-soft">{formatDuration(seconds)}</span>
+              <span className="tnum pr-1 text-footnote text-ink-soft">{formatDuration(seconds)}</span>
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <audio ref={audioRef} src={ready.url} preload="auto" onEnded={() => setPreviewPlaying(false)} />
             </div>
-            <p className="voice m-0 mt-5 px-2 text-left text-[19px] leading-snug text-ink">
+            <p className="voice m-0 mt-5 px-2 text-left text-title leading-snug text-ink">
               {ready.unavailable ? "We couldn't write this one down, but your voice will still be heard." : `“${ready.transcript}”`}
             </p>
           </div>
@@ -509,7 +509,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
                 />
               ))}
             </div>
-            <p className="tnum m-0 mt-4 text-[15px] text-ink-soft" role="status">
+            <p className="tnum m-0 mt-4 text-body text-ink-soft" role="status">
               {phase === "recording" ? (
                 <span className="inline-flex items-center gap-2">
                   <LiveDot />
@@ -534,7 +534,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
           </>
         )}
         {error && (
-          <p className="m-0 mt-4 text-[14px] text-[#b42318]" role="alert">
+          <p className="m-0 mt-4 text-callout text-[#b42318]" role="alert">
             {error}
           </p>
         )}
@@ -544,8 +544,8 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         <button type="button" role="switch" aria-checked={letter} onClick={() => setLetter((v) => !v)} className="press mb-2 flex w-full items-center gap-3 rounded-[18px] border border-[var(--line)] px-3.5 py-3 text-left">
           <Icon name="coffee" size={20} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-semibold">Morning letter</span>
-            <span className="block text-[12.5px] text-ink-soft">It&rsquo;s night there. Arrives at 7:30 AM their time.</span>
+            <span className="block text-body font-semibold">Morning letter</span>
+            <span className="block text-caption text-ink-soft">It&rsquo;s night there. Arrives at 7:30 AM their time.</span>
           </span>
           <span className={cn("relative h-[26px] w-[44px] shrink-0 rounded-full transition-colors", letter ? "bg-ink" : "bg-black/15")}>
             <span className={cn("absolute top-[3px] h-5 w-5 rounded-full bg-white shadow transition-all", letter ? "left-[21px]" : "left-[3px]")} />
@@ -565,14 +565,14 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       ) : (
         phase === "idle" && !purpose && (
           <div>
-            <button type="button" onClick={() => setIdeas((v) => !v)} aria-expanded={ideas} className="press mx-auto flex h-11 items-center gap-1.5 text-[15px] font-medium text-ink-soft">
+            <button type="button" onClick={() => setIdeas((v) => !v)} aria-expanded={ideas} className="press mx-auto flex h-11 items-center gap-1.5 text-body font-medium text-ink-soft">
               Need something to say?
               <Icon name="down" size={16} className={cn("transition-transform", ideas && "rotate-180")} />
             </button>
             {ideas && (
               <ul className="m-0 mt-2 list-none space-y-2 p-0">
                 {ASK_STARTERS.en.map((q) => (
-                  <li key={q} className="voice rounded-[18px] bg-surface px-4 py-3 text-[16px] text-ink">
+                  <li key={q} className="voice rounded-[18px] bg-surface px-4 py-3 text-body text-ink">
                     {q}
                   </li>
                 ))}
@@ -673,8 +673,8 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
           <span className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-frost">
             <Icon name="image" size={28} />
           </span>
-          <span className="text-[17px] font-semibold">Choose photos or a video</span>
-          <span className="text-[14px] text-ink-soft">From today, or any day you want to keep</span>
+          <span className="text-headline font-semibold">Choose photos or a video</span>
+          <span className="text-callout text-ink-soft">From today, or any day you want to keep</span>
         </button>
       ) : (
         <div className="grid flex-1 grid-cols-3 content-start gap-1.5">
@@ -697,10 +697,10 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
 
       {fridge && (
         <fieldset className="m-0 mt-4 border-0 p-0" data-ui="fridge-whose">
-          <legend className="mb-2 p-0 text-[15px] font-semibold">Whose is this?</legend>
+          <legend className="mb-2 p-0 text-body font-semibold">Whose is this?</legend>
           <div className="flex flex-wrap gap-2">
             {kids.map((k) => (
-              <button key={k.id} type="button" aria-pressed={whose === k.id} onClick={() => setWhose(k.id)} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1.5 pr-4 text-[15px] font-semibold", whose === k.id ? "bg-black text-white" : "bg-surface text-ink")}>
+              <button key={k.id} type="button" aria-pressed={whose === k.id} onClick={() => setWhose(k.id)} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1.5 pr-4 text-body font-semibold", whose === k.id ? "bg-black text-white" : "bg-surface text-ink")}>
                 <Avatar src={memberPhoto(k)} name={callName(k)} size={32} />
                 {callName(k)}
               </button>
@@ -719,14 +719,14 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
           maxLength={280}
           onChange={(e) => setNote(e.target.value)}
           placeholder={fridge ? "What is it? (optional)" : "Caption (optional)"}
-          className="h-[52px] w-full rounded-full bg-surface px-5 text-[16px] outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
+          className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
         />
       </label>
       {!fridge && (
       <div className="mt-3 rounded-[22px] border border-[var(--line)] p-3">
-        <p className="m-0 px-1 text-[13px] font-medium text-ink-soft">Written on the print</p>
+        <p className="m-0 px-1 text-footnote font-medium text-ink-soft">Written on the print</p>
         <label className="mt-2 flex items-center gap-3">
-          <span className="w-[64px] shrink-0 px-1 text-[15px] font-semibold">Where</span>
+          <span className="w-[64px] shrink-0 px-1 text-body font-semibold">Where</span>
           <input
             type="text"
             value={where}
@@ -734,11 +734,11 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
             onChange={(e) => setWhere(e.target.value)}
             placeholder="Amritsar"
             autoComplete="off"
-            className="h-12 min-w-0 flex-1 rounded-[14px] bg-surface px-4 text-[16px] outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
+            className="h-12 min-w-0 flex-1 rounded-[14px] bg-surface px-4 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
           />
         </label>
         <label className="mt-2 flex items-center gap-3">
-          <span className="w-[64px] shrink-0 px-1 text-[15px] font-semibold">A note</span>
+          <span className="w-[64px] shrink-0 px-1 text-body font-semibold">A note</span>
           <input
             type="text"
             value={printNote}
@@ -746,18 +746,18 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
             onChange={(e) => setPrintNote(e.target.value)}
             placeholder="Optional, in your words"
             autoComplete="off"
-            className="h-12 min-w-0 flex-1 rounded-[14px] bg-surface px-4 font-hand text-[19px] outline-none placeholder:font-sans placeholder:text-[16px] placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
+            className="h-12 min-w-0 flex-1 rounded-[14px] bg-surface px-4 font-hand text-title outline-none placeholder:font-sans placeholder:text-body placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
           />
         </label>
       </div>
       )}
       {error && (
-        <p className="m-0 mt-2 text-[14px] text-[#b42318]" role="alert">
+        <p className="m-0 mt-2 text-callout text-[#b42318]" role="alert">
           {error}
         </p>
       )}
       {sending && (
-        <p className="m-0 mt-2 text-[14px] text-ink-soft" role="status">
+        <p className="m-0 mt-2 text-callout text-ink-soft" role="status">
           {sending}
         </p>
       )}
@@ -799,7 +799,7 @@ export function AddSheet() {
             onClick={closeAdd}
           />
           <m.div
-            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-5 pt-3 shadow-frost"
+            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-4 pt-3 shadow-frost"
             style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -808,7 +808,7 @@ export function AddSheet() {
           >
             <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="m-0 text-[22px]">{voice ? (purposeTitle(replyTo) ?? "New voice note") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}</h2>
+              <h2 className="m-0 text-title">{voice ? (purposeTitle(replyTo) ?? "New voice note") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}</h2>
               <button type="button" onClick={closeAdd} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
                 <Icon name="close" />
               </button>

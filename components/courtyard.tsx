@@ -54,11 +54,11 @@ function VoiceSlide({ card }: { card: Card }) {
       <Photo src={cardCover(card, members)} alt="" sizes="440px" position="center 30%" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/75" aria-hidden="true" />
       <div className="absolute inset-x-4 bottom-4 text-white">
-        <p className="voice m-0 line-clamp-2 text-[18px] leading-snug">“{text ?? card.caption}”</p>
+        <p className="voice m-0 line-clamp-2 text-headline leading-snug">“{text ?? card.caption}”</p>
         <div className="mt-3 flex items-center gap-3">
           <span className="min-w-0 flex-1">
-            <span className="block text-[13.5px] font-semibold">{callName(author)}</span>
-            <span className="block text-[12px] text-white/70">{relativeDay(card.takenAt)}</span>
+            <span className="block text-footnote font-semibold">{callName(author)}</span>
+            <span className="block text-caption text-white/70">{relativeDay(card.takenAt)}</span>
           </span>
           <span className="hidden min-[400px]:block [&_span>span]:!bg-white/60">
             <VoiceCode peaks={card.peaks} bars={16} className="h-5" />
@@ -100,22 +100,22 @@ function SitSlide() {
     if (out?.knock) router.push(`/call/${out.knock.id}`);
   };
   return (
-    <article className={`flex ${SLIDE_H} flex-col justify-between rounded-[26px] bg-[#1c1b1a] p-5 text-white`}>
+    <article className={`flex ${SLIDE_H} flex-col justify-between rounded-[26px] bg-[#1c1b1a] p-4 text-white`}>
       <div className="flex items-center justify-between">
-        <p className="m-0 flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] text-white/60">
+        <p className="m-0 flex items-center gap-2 text-caption uppercase tracking-[0.14em] text-white/60">
           <span className={`h-2 w-2 rounded-full ${knock ? "animate-pulse bg-[#3ccf7a]" : "bg-white/50"}`} />
           {knock ? "Live now" : "Sit together"}
         </p>
       </div>
       {picking && !knock ? (
         <div>
-          <p className="m-0 mb-2 text-[15px] text-white/80">Where shall we sit?</p>
+          <p className="m-0 mb-2 text-body text-white/80">Where shall we sit?</p>
           <VenuePicker value={venue} onChange={setVenue} />
         </div>
       ) : (
       <div>
-        <p className="m-0 text-[22px] font-light leading-tight">{knock ? `${host?.id === viewer.id ? "You're" : `${callName(host)} is`} on a video call` : awake.length > 1 ? `${awake.length} of you are awake now` : "Everyone's asleep somewhere"}</p>
-        <p className="m-0 mt-1 text-[13.5px] text-white/60">{knock ? `Until ${now ? timeIn(viewer.tz, new Date(knock.until)) : ""}` : next ? `Next: ${next.title} · ${relativeDay(next.startsAt)} · ${venueOf(next.venue).name}` : "Leave the camera on, like sitting in one room"}</p>
+        <p className="m-0 text-title font-light leading-tight">{knock ? `${host?.id === viewer.id ? "You're" : `${callName(host)} is`} on a video call` : awake.length > 1 ? `${awake.length} of you are awake now` : "Everyone's asleep somewhere"}</p>
+        <p className="m-0 mt-1 text-footnote text-white/60">{knock ? `Until ${now ? timeIn(viewer.tz, new Date(knock.until)) : ""}` : next ? `Next: ${next.title} · ${relativeDay(next.startsAt)} · ${venueOf(next.venue).name}` : "Leave the camera on, like sitting in one room"}</p>
       </div>
       )}
       <div className="flex items-center justify-between gap-3">
@@ -149,8 +149,8 @@ function ComingUpSlide() {
       <Link href="/gather" className="absolute inset-0" aria-label="Coming up" />
       <div className="pointer-events-none absolute inset-x-4 bottom-4 flex items-end gap-3 text-white">
         <span className="min-w-0 flex-1">
-          <span className="block text-[12px] uppercase tracking-[0.14em] text-white/70">{when}</span>
-          <span className="block truncate text-[19px] font-semibold">{occ.title}</span>
+          <span className="block text-caption uppercase tracking-[0.14em] text-white/70">{when}</span>
+          <span className="block truncate text-title font-semibold">{occ.title}</span>
         </span>
       </div>
     </article>
@@ -168,8 +168,8 @@ function YearsSlide({ card }: { card: Card }) {
         <Photo src={cardCover(card, members)} alt={text ?? ""} sizes="440px" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70" aria-hidden="true" />
         <div className="absolute inset-x-4 bottom-4">
-          <p className="m-0 text-[12px] uppercase tracking-[0.14em] text-white/70">{years} year{years > 1 ? "s" : ""} ago</p>
-          <p className="m-0 truncate text-[18px] font-semibold">{text ?? "…"}</p>
+          <p className="m-0 text-caption uppercase tracking-[0.14em] text-white/70">{years} year{years > 1 ? "s" : ""} ago</p>
+          <p className="m-0 truncate text-headline font-semibold">{text ?? "…"}</p>
         </div>
       </article>
     </Link>
@@ -194,8 +194,8 @@ function PersonChip({ member, lamp, onOpen }: { member: Member; lamp: { glow: bo
         <span className={`relative mx-auto block h-[68px] w-[68px] rounded-full ${lamp.glow ? "kutumb-lamp" : "ring-1 ring-black/15"}`}>
           <span className="absolute inset-[3px] overflow-hidden rounded-full bg-surface">{photo ? <Photo src={photo} alt="" sizes="140px" position="center 30%" /> : <Monogram name={callName(member)} size={62} />}</span>
         </span>
-        <span className="mt-2 block truncate text-[13.5px] font-semibold">{callName(member)}</span>
-        <span className="block truncate text-[11.5px] text-ink-soft">{lamp.line}</span>
+        <span className="mt-2 block truncate text-footnote font-semibold">{callName(member)}</span>
+        <span className="block truncate text-caption text-ink-soft">{lamp.line}</span>
       </button>
     </li>
   );
@@ -213,8 +213,8 @@ function MyDayChip({ member, onOpen }: { member: Member; onOpen: () => void }) {
             <Icon name="plus" size={14} />
           </span>
         </span>
-        <span className="mt-2 block truncate text-[13.5px] font-semibold">You</span>
-        <span className="block truncate text-[11.5px] text-ink-soft">Add to your day</span>
+        <span className="mt-2 block truncate text-footnote font-semibold">You</span>
+        <span className="block truncate text-caption text-ink-soft">Add to your day</span>
       </button>
     </li>
   );
@@ -224,7 +224,7 @@ function MyDayChip({ member, onOpen }: { member: Member; onOpen: () => void }) {
 // The "Everyone" row's loading shape: the same box as the chips that replace it.
 function ChipsSkeleton() {
   return (
-    <div className="-mx-5 flex gap-0 overflow-hidden px-5 pb-1 pt-2" aria-busy="true" aria-label="Loading">
+    <div className="-mx-4 flex gap-0 overflow-hidden px-4 pb-1 pt-2" aria-busy="true" aria-label="Loading">
       {[0, 1, 2, 3, 4].map((i) => (
         <div key={i} className="w-[92px] shrink-0">
           <div className="skeleton mx-auto h-[68px] w-[68px] rounded-full" />
@@ -296,7 +296,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
             </Link>
           </div>
           <div className="absolute inset-x-4 bottom-3.5 text-white">
-            <h1 className="m-0 mt-0.5 truncate text-[26px] font-light leading-[1.1] tracking-[-0.01em]">{familyName ? `The ${familyName} family` : "Your family"}</h1>
+            <h1 data-display className="m-0 mt-0.5 truncate text-display font-light leading-[1.1] tracking-[-0.01em]">{familyName ? `The ${familyName} family` : "Your family"}</h1>
           </div>
         </div>
         {ready && <SideSwitch />}
@@ -309,7 +309,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
       {ready && people.length > 0 && (
         <section data-ui="courtyard-everyone" aria-label="Everyone" className="mt-5">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="m-0 text-[17px] font-semibold">Everyone</h2>
+            <h2 className="m-0 text-headline font-semibold">Everyone</h2>
             <Link href="/bond" aria-label="Family tree" className="grid h-9 w-9 place-items-center rounded-full text-ink-soft no-underline">
               <Icon name="tree" size={18} />
             </Link>
@@ -317,7 +317,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
           {pres.data === null ? (
             <ChipsSkeleton />
           ) : (
-            <ul className="no-scrollbar -mx-5 m-0 flex list-none gap-2 overflow-x-auto px-5 pb-1 pt-2" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 20 }}>
+            <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2 overflow-x-auto px-4 pb-1 pt-2" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 16 }}>
               <MyDayChip member={viewer} onOpen={() => setDayOfId(viewer.id)} />
               {people.map((mm) => (
                 <PersonChip key={mm.id} member={mm} lamp={lampFor(mm, lampData)} onOpen={() => setDayOfId(mm.id)} />

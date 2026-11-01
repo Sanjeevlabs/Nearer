@@ -20,13 +20,13 @@ const INK = "#2a211b";
 
 function BigButton({ label, hint, icon, tone, onClick }: { label: string; hint: string; icon: IconName; tone: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} data-kid={label.toLowerCase()} className="press flex min-h-[104px] w-full items-center gap-4 rounded-[30px] px-5 text-left" style={{ background: tone, color: INK }}>
+    <button type="button" onClick={onClick} data-kid={label.toLowerCase()} className="press flex min-h-[104px] w-full items-center gap-4 rounded-[30px] px-4 text-left" style={{ background: tone, color: INK }}>
       <span className="grid h-[60px] w-[60px] shrink-0 place-items-center rounded-full bg-white/70">
         <Icon name={icon} size={30} strokeWidth={1.9} />
       </span>
       <span className="min-w-0">
-        <span className="block text-[28px] font-semibold leading-none">{label}</span>
-        <span className="mt-1.5 block text-[16px] leading-tight opacity-75">{hint}</span>
+        <span data-display className="block text-display font-semibold leading-none">{label}</span>
+        <span className="mt-1.5 block text-body leading-tight opacity-75">{hint}</span>
       </span>
     </button>
   );
@@ -53,11 +53,11 @@ function Tonight() {
 
   return (
     <section data-ui="kid-tonight" aria-label="Tonight's story" className="mt-8">
-      <h2 className="m-0 text-[22px]">{by ? `${callName(by)}’s story for tonight` : "Your story for tonight"}</h2>
+      <h2 className="m-0 text-title">{by ? `${callName(by)}’s story for tonight` : "Your story for tonight"}</h2>
       {tonight.data === null ? (
         <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
       ) : !t ? (
-        <p className="m-0 mt-2 text-[17px] leading-snug text-ink-soft">No story yet. Ask for one with the big Ask button!</p>
+        <p className="m-0 mt-2 text-headline leading-snug text-ink-soft">No story yet. Ask for one with the big Ask button!</p>
       ) : !card ? (
         <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
       ) : (
@@ -66,9 +66,9 @@ function Tonight() {
             <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause the story" : "Play the story"} className="press grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-black text-white">
               <Icon name={playing ? "pause" : "play"} size={30} />
             </button>
-            <p className="voice m-0 min-w-0 text-[20px] leading-snug">{card.caption || "A story for you"}</p>
+            <p className="voice m-0 min-w-0 text-title leading-snug">{card.caption || "A story for you"}</p>
           </div>
-          <button type="button" onClick={another} disabled={asked} className="press mt-4 h-12 w-full rounded-full bg-well text-[17px] font-semibold disabled:opacity-60">
+          <button type="button" onClick={another} disabled={asked} className="press mt-4 h-12 w-full rounded-full bg-well text-headline font-semibold disabled:opacity-60">
             {asked ? `Asked. ${callName(by ?? viewer)} will hear it.` : "Another one?"}
           </button>
         </div>
@@ -94,9 +94,9 @@ export function KidHome() {
   return (
     <div data-ui="kid-home" className="pb-32 pt-5">
       <header className="flex items-center gap-3">
-        <h1 className="m-0 min-w-0 flex-1 truncate text-[32px] font-light leading-tight">Hello, {callName(viewer)}</h1>
+        <h1 data-display className="m-0 min-w-0 flex-1 truncate text-display font-light leading-tight">Hello, {callName(viewer)}</h1>
         <Link href="/settings" aria-label="You: settings" className="press rounded-full no-underline">
-          <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={52} ring />
+          <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={44} ring />
         </Link>
       </header>
 
@@ -105,11 +105,11 @@ export function KidHome() {
           {grand.slice(0, 4).map((g) => (
             <li key={g.id} className="flex w-[88px] shrink-0 flex-col items-center text-center">
               <span className="relative">
-                <Avatar src={memberPhoto(g)} name={callName(g)} size={80} ring />
+                <Avatar src={memberPhoto(g)} name={callName(g)} size={72} ring />
                 <span className="absolute bottom-0 right-0 h-5 w-5 rounded-full ring-2 ring-white" style={{ background: awake.has(g.id) ? "#3f9d5a" : "#9a9086" }} aria-hidden="true" />
               </span>
-              <span className="mt-1.5 block max-w-full truncate text-[17px] font-semibold">{callName(g)}</span>
-              <span className="text-[14px] text-ink-soft">{awake.has(g.id) ? "Awake" : "Asleep"}</span>
+              <span className="mt-1.5 block max-w-full truncate text-headline font-semibold">{callName(g)}</span>
+              <span className="text-callout text-ink-soft">{awake.has(g.id) ? "Awake" : "Asleep"}</span>
             </li>
           ))}
         </ul>

@@ -88,7 +88,7 @@ function VoiceWords({ card }: { card: Card }) {
   const words = card.transcript || card.caption;
   const { text } = useDisplayText(words, card.transcript ? card.transcriptLang : card.lang, displayLang);
   if (!words) return null;
-  return <p className="voice m-0 line-clamp-4 text-[21px] leading-snug">&ldquo;{text ?? words}&rdquo;</p>;
+  return <p className="voice m-0 line-clamp-4 text-title leading-snug">&ldquo;{text ?? words}&rdquo;</p>;
 }
 
 function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSaved: () => void; onCancel: () => void }) {
@@ -117,7 +117,7 @@ function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSave
         if (text.trim()) void save();
       }}
     >
-      <label htmlFor="day-line" className="block px-2 pb-1.5 pt-0.5 text-[14px] font-semibold">
+      <label htmlFor="day-line" className="block px-2 pb-1.5 pt-0.5 text-callout font-semibold">
         A line about today
       </label>
       <input
@@ -127,25 +127,25 @@ function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSave
         maxLength={DAY_LINE_MAX}
         onChange={(e) => setText(e.target.value)}
         placeholder="At the temple with Papa"
-        className="h-[52px] w-full rounded-[16px] bg-surface px-4 font-hand text-[21px] text-ink outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-black"
+        className="h-12 w-full rounded-[16px] bg-surface px-4 font-hand text-title text-ink outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-black"
       />
-      <p className="m-0 px-2 pt-1.5 text-[13px] text-ink-soft">Shows on your day until midnight your time.</p>
+      <p className="m-0 px-2 pt-1.5 text-footnote text-ink-soft">Shows on your day until midnight your time.</p>
       {error && (
-        <p className="m-0 px-2 pt-1 text-[14px] text-[#b42318]" role="alert">
+        <p className="m-0 px-2 pt-1 text-callout text-[#b42318]" role="alert">
           {error}
         </p>
       )}
       <div className="mt-2 flex gap-2">
         {initial ? (
-          <button type="button" onClick={() => void takeDown()} disabled={busy} className="press h-12 flex-1 rounded-full bg-surface text-[15px] font-semibold">
+          <button type="button" onClick={() => void takeDown()} disabled={busy} className="press h-12 flex-1 rounded-full bg-surface text-body font-semibold">
             Take it down
           </button>
         ) : (
-          <button type="button" onClick={onCancel} className="press h-12 flex-1 rounded-full bg-surface text-[15px] font-semibold">
+          <button type="button" onClick={onCancel} className="press h-12 flex-1 rounded-full bg-surface text-body font-semibold">
             Cancel
           </button>
         )}
-        <button type="submit" disabled={busy || !text.trim()} className="press h-12 flex-[1.4] rounded-full bg-black text-[15px] font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={busy || !text.trim()} className="press h-12 flex-[1.4] rounded-full bg-black text-body font-semibold text-white disabled:opacity-40">
           {busy ? "Saving…" : "Show it today"}
         </button>
       </div>
@@ -314,8 +314,8 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
           </div>
           <div className="mt-3 flex items-center gap-2 px-1">
             <span className="min-w-0 flex-1">
-              <span className="block text-[16px] font-semibold">{own ? "Your day" : name}</span>
-              <span className="block text-[13px] text-white/75">
+              <span className="block text-body font-semibold">{own ? "Your day" : name}</span>
+              <span className="block text-footnote text-white/75">
                 {today ? "Today" : card ? relativeDay(card.takenAt) : own ? "Today" : "Their day"} · {place}
               </span>
             </span>
@@ -335,18 +335,18 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
             </button>
           </div>
           {line && !editingLine && (
-            <p className="m-0 mt-2 px-1 font-hand text-[23px] leading-snug text-white" aria-label={`${own ? "Your" : `${name}'s`} line about today: ${line.text}`}>
+            <p className="m-0 mt-2 px-1 font-hand text-title leading-snug text-white" aria-label={`${own ? "Your" : `${name}'s`} line about today: ${line.text}`}>
               &ldquo;{line.text}&rdquo;
             </p>
           )}
         </div>
 
         {/* the moment */}
-        <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-5 py-3">
+        <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-4 py-3">
           {!card ? (
             <div className="px-6 text-center">
-              <p className="voice m-0 text-[22px]">{own ? "Nothing from you yet today." : `Nothing from ${name} yet.`}</p>
-              <p className="m-0 mt-2 text-[15px] text-white/70">
+              <p className="voice m-0 text-title">{own ? "Nothing from you yet today." : `Nothing from ${name} yet.`}</p>
+              <p className="m-0 mt-2 text-body text-white/70">
                 {own ? "Add a photo or a voice and it shows here for the family." : "When they share a photo or a voice, their day appears here."}
               </p>
             </div>
@@ -357,7 +357,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
               </div>
               <div className="mt-5 w-full">
                 <VoiceWords card={card} />
-                <p className="m-0 mt-2 text-[14px] text-white/70">{[printWhen(card.takenAt, author.tz), printWhere(card, author)].filter(Boolean).join(" · ")}</p>
+                <p className="m-0 mt-2 text-callout text-white/70">{[printWhen(card.takenAt, author.tz), printWhere(card, author)].filter(Boolean).join(" · ")}</p>
               </div>
               <VoiceControls card={card} queue={items} onPrev={at > 0 ? stepPrev : null} onNext={at + 1 < items.length ? stepNext : null} className="mt-3 w-full" />
             </div>
@@ -384,7 +384,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
         </div>
 
         {/* who reacted, and the ways to answer (or, on your own day, to add) */}
-        <div className="relative z-10 px-5 pt-1" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
+        <div className="relative z-10 px-4 pt-1" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
           {card && <ReactorsLine reactions={reactions} className="mb-3" />}
           {own ? (
             editingLine ? (
@@ -398,7 +398,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
               />
             ) : (
               <div className="space-y-2">
-                <button type="button" onClick={() => setEditingLine(true)} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/35 bg-white/10 text-[16px] font-semibold backdrop-blur">
+                <button type="button" onClick={() => setEditingLine(true)} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/35 bg-white/10 text-body font-semibold backdrop-blur">
                   <Icon name="edit" size={18} />
                   {line ? "Change today's line" : "A line about today"}
                 </button>
@@ -413,7 +413,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
                   close();
                   openAdd("voice", null, [member.id]);
                 }}
-                className={cn("press flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white text-[15px] font-semibold text-black")}
+                className={cn("press flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black")}
               >
                 <Icon name="mic" size={18} />
                 {card ? "Reply by voice" : "Send a voice"}

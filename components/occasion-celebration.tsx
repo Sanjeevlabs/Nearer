@@ -53,7 +53,7 @@ function LampHour({ hour, sticker = false }: { hour: number; sticker?: boolean }
       <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#ffd27a]/20 text-[#ffd27a]" style={state === "lit" ? { boxShadow: "0 0 16px 4px rgba(255,190,90,.5)" } : undefined} aria-hidden="true">
         <Icon name="lamp" size={18} />
       </span>
-      <p className="m-0 min-w-0 flex-1 text-[13.5px] leading-snug text-white/90">{line}</p>
+      <p className="m-0 min-w-0 flex-1 text-footnote leading-snug text-white/90">{line}</p>
       {sticker && <StickerButton iconOnly label="Lamp sticker: Thinking of you" className="bg-white/20 text-white" spec={() => ({ kind: "lamp", title: "Lamp sticker" })} />}
       {state !== "lit" && state !== "unavailable" && (
         <button type="button" onClick={() => void light()} disabled={state === "busy"} aria-label="Light your lamp" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-black disabled:opacity-50">
@@ -141,7 +141,7 @@ export function OccasionCelebration({
       <Photo src={memberPhoto(person) ?? "/demo/family-group.webp"} alt="" sizes="(max-width: 480px) 100vw, 440px" priority position="center 30%" />
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,0)_35%,rgba(0,0,0,.65))]" aria-hidden="true" />
       <Sparkle />
-      <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-[12px] font-semibold text-black">
+      <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-caption font-semibold text-black">
         <Icon name="sparkle" size={14} />
         Today
       </div>
@@ -172,7 +172,7 @@ export function OccasionCelebration({
         </div>
       )}
       <div className="glass absolute inset-x-2.5 bottom-2.5 rounded-[22px] p-4">
-        <p className="m-0 text-[22px] font-bold leading-tight">{mine ? "Happy birthday to you" : title}</p>
+        <p className="m-0 text-title font-bold leading-tight">{mine ? "Happy birthday to you" : title}</p>
         <div className="mt-2 flex items-center gap-2">
           {wishers.length > 0 && (
             <div className="flex -space-x-2">
@@ -181,15 +181,15 @@ export function OccasionCelebration({
                   <Avatar src={memberPhoto(member)} name={callName(member)} size={30} />
                 </button>
               ))}
-              {wishers.length > 6 && <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-white/20 text-[11px] font-semibold ring-2 ring-black/40">+{wishers.length - 6}</span>}
+              {wishers.length > 6 && <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-white/20 text-caption font-semibold ring-2 ring-black/40">+{wishers.length - 6}</span>}
             </div>
           )}
-          <p className="m-0 min-w-0 flex-1 text-[14px] text-white/85">{line}</p>
+          <p className="m-0 min-w-0 flex-1 text-callout text-white/85">{line}</p>
         </div>
         <div className="mt-3 flex gap-2">
           {!mine && !iWished && (
             <>
-              <button type="button" onClick={onWish} className="press flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white text-[15px] font-semibold text-black">
+              <button type="button" onClick={onWish} className="press flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black">
                 <Icon name="mic" size={18} />
                 {viewer.role === "elder" ? "Bless" : "Wish"} {person ? name : ""}
               </button>
@@ -197,14 +197,14 @@ export function OccasionCelebration({
             </>
           )}
           {beads.length > 0 && (
-            <button type="button" onClick={() => setGarland(true)} aria-label="Play the Chorus: everyone’s wishes" className={`press flex h-11 items-center justify-center gap-2 rounded-full bg-white/20 px-4 text-[15px] font-semibold text-white ${mine || iWished ? "flex-1" : ""}`}>
+            <button type="button" onClick={() => setGarland(true)} aria-label="Play the Chorus: everyone’s wishes" className={`press flex h-11 items-center justify-center gap-2 rounded-full bg-white/20 px-4 text-body font-semibold text-white ${mine || iWished ? "flex-1" : ""}`}>
               <Icon name="play" size={16} />
               {mine || iWished ? "Play the Chorus" : null}
             </button>
           )}
         </div>
         {run && beads.some((b) => b.card) && (
-          <Link href={`/reel/${encodeURIComponent(run.id)}`} className="press mt-2 flex h-10 items-center justify-center gap-1.5 rounded-full text-[14px] font-semibold text-white/90 no-underline">
+          <Link href={`/reel/${encodeURIComponent(run.id)}`} className="press mt-2 flex h-10 items-center justify-center gap-1.5 rounded-full text-callout font-semibold text-white/90 no-underline">
             <Icon name="play" size={13} /> Play the reel
           </Link>
         )}

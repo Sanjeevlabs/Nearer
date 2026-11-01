@@ -18,7 +18,7 @@ export function WindowSettings() {
   if (!data) return <div key="loading" className="skeleton h-[96px] rounded-card" aria-busy="true" aria-label="Loading" />;
   return (
     <div>
-      <p className="m-0 mb-2 text-[13px] font-medium text-ink-soft">Turn their dot amber when they&rsquo;ve been quiet for</p>
+      <p className="m-0 mb-2 text-footnote font-medium text-ink-soft">Turn their dot amber when they&rsquo;ve been quiet for</p>
       <div className="flex gap-1.5" role="radiogroup" aria-label="Amber after">
         {QUIET_CHOICES.map((h) => (
           <button
@@ -33,13 +33,13 @@ export function WindowSettings() {
               await reload();
               setBusy(false);
             }}
-            className={cn("press h-11 flex-1 rounded-full text-[14px] font-semibold", data.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", data.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
           >
             {h} h
           </button>
         ))}
       </div>
-      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Nearer.</p>
+      <p className="m-0 mt-1.5 text-caption text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Nearer.</p>
     </div>
   );
 }

@@ -35,7 +35,7 @@ export function EventPrompts({ prompts, onChange, className, kinds }: { prompts?
             <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full", dark ? "bg-white/10" : "bg-well")}>
               {p.kind === "live" ? <span className="h-2.5 w-2.5 rounded-full bg-[#ffb84d]" style={{ boxShadow: "0 0 0 4px rgba(255,184,77,.25)" }} aria-hidden="true" /> : <Icon name={ICON[p.kind]} size={18} />}
             </span>
-            <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug">{p.text}</span>
+            <span className="min-w-0 flex-1 text-body font-semibold leading-snug">{p.text}</span>
           </>
         );
         const row = cn("flex items-center gap-3 rounded-[22px] p-2 pr-2", dark ? "bg-[#1c1b1a] text-white" : "bg-surface text-ink");
@@ -63,7 +63,7 @@ export function EventPrompts({ prompts, onChange, className, kinds }: { prompts?
                 setBusy(null);
                 if (out?.event) router.push(`/gather/${out.event.id}`);
               }}
-              className="press h-10 shrink-0 rounded-full bg-[#1c1b1a] px-4 text-[14px] font-semibold text-white disabled:opacity-50"
+              className="press h-10 shrink-0 rounded-full bg-[#1c1b1a] px-4 text-callout font-semibold text-white disabled:opacity-50"
             >
               {busy === p.id ? "…" : "Plan"}
             </button>
@@ -74,7 +74,7 @@ export function EventPrompts({ prompts, onChange, className, kinds }: { prompts?
                 await eventAction({ action: "dismiss", key: p.id });
                 refresh();
               }}
-              className="press h-10 shrink-0 rounded-full px-3 text-[14px] font-semibold text-ink-soft"
+              className="press h-10 shrink-0 rounded-full px-3 text-callout font-semibold text-ink-soft"
             >
               Not now
             </button>

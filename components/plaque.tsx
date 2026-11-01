@@ -46,8 +46,8 @@ function Meta({ title, line, card }: { title: React.ReactNode; line: string; car
   return (
     <div className="flex items-start gap-2 px-2 pt-4">
       <div className="min-w-0 flex-1">
-        <p className="voice m-0 line-clamp-2 text-[19px] leading-snug text-ink">{title}</p>
-        <p className="m-0 mt-1 text-[13px] text-ink-soft">{line}</p>
+        <p className="voice m-0 line-clamp-2 text-title leading-snug text-ink">{title}</p>
+        <p className="m-0 mt-1 text-footnote text-ink-soft">{line}</p>
       </div>
       <CardActions card={card} />
     </div>
@@ -70,7 +70,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
       card={card}
       footer={
         <>
-          <span className="text-[12px] font-semibold tracking-wide text-ink-soft">NEARER</span>
+          <span className="text-caption font-semibold tracking-wide text-ink-soft">NEARER</span>
           <VoiceCode peaks={card.peaks} progress={progress} className="flex-1 justify-end" />
         </>
       }
@@ -94,7 +94,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
             <span className="block h-full rounded-full bg-ink transition-[width] duration-200" style={{ width: `${Math.min(100, progress * 100)}%` }} />
           </span>
         </button>
-        <div className="tnum flex justify-between text-[11px] text-ink-faint">
+        <div className="tnum flex justify-between text-caption text-ink-faint">
           <span>{formatDuration(elapsed)}</span>
           <span>-{formatDuration(total - elapsed)}</span>
         </div>
@@ -128,7 +128,7 @@ export function VideoPlaque({ card }: { card: Card }) {
       card={card}
       footer={
         <>
-          <span className="text-[12px] font-semibold tracking-wide text-ink-soft">NEARER</span>
+          <span className="text-caption font-semibold tracking-wide text-ink-soft">NEARER</span>
           <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-black/[.08]">
             <span className="block h-full bg-ink" style={{ width: `${progress * 100}%` }} />
           </span>

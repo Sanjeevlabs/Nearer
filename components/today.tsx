@@ -61,36 +61,36 @@ export function TodayCard({ variant = "card" }: { variant?: "card" | "line" }) {
           <Icon name={task.mine ? "check" : "mic"} size={18} strokeWidth={2.4} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[12px] font-semibold uppercase tracking-[0.08em] text-white/60">Today, both homes</span>
-          <span className="voice block truncate text-[17px] leading-snug">{prompt}</span>
-          <span className="block truncate text-[12.5px] text-white/70">{status}</span>
+          <span className="block text-caption font-semibold uppercase tracking-[0.08em] text-white/60">Today, both homes</span>
+          <span className="voice block truncate text-headline leading-snug">{prompt}</span>
+          <span className="block truncate text-caption text-white/70">{status}</span>
         </span>
       </button>
     );
 
   return (
-    <section data-ui="today-card" aria-label="Today, for both homes" className="relative mt-5 overflow-hidden rounded-[28px] p-5 text-white" style={{ background: "#1c1b1a" }}>
-      <p className="relative m-0 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/65">
+    <section data-ui="today-card" aria-label="Today, for both homes" className="relative mt-5 overflow-hidden rounded-[28px] p-4 text-white" style={{ background: "#1c1b1a" }}>
+      <p className="relative m-0 flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.1em] text-white/65">
         <Icon name="sparkle" size={14} /> Today · both homes
       </p>
-      <p className="voice relative m-0 mt-3 text-[24px] leading-[1.2]">{prompt}</p>
-      <p className="relative m-0 mt-2 text-[14px] text-white/75">{status}</p>
+      <p className="voice relative m-0 mt-3 text-title leading-[1.2]">{prompt}</p>
+      <p className="relative m-0 mt-2 text-callout text-white/75">{status}</p>
       <div className="relative mt-4 flex items-center gap-2">
         {!task.mine ? (
-          <button type="button" onClick={answer} className="press flex h-12 items-center gap-2 rounded-full bg-white pl-2 pr-5 text-[15px] font-semibold text-black">
+          <button type="button" onClick={answer} className="press flex h-12 items-center gap-2 rounded-full bg-white pl-2 pr-5 text-body font-semibold text-black">
             <span className="grid h-9 w-9 place-items-center rounded-full bg-black/10">
               <Icon name="mic" size={18} strokeWidth={2.4} />
             </span>
             Answer by voice
           </button>
         ) : (
-          <span className="flex h-12 items-center gap-2 rounded-full bg-white/10 px-4 text-[14px] font-semibold">
+          <span className="flex h-12 items-center gap-2 rounded-full bg-white/10 px-4 text-callout font-semibold">
             <Icon name="check" size={16} /> You answered
           </span>
         )}
         {myAnswer && <ShareTodayAnswer cardId={myAnswer.cardId} className="h-12 w-12" />}
         {task.sealed > 0 && (
-          <span className="flex h-12 items-center gap-2 rounded-full border border-white/15 px-4 text-[13px] text-white/80">
+          <span className="flex h-12 items-center gap-2 rounded-full border border-white/15 px-4 text-footnote text-white/80">
             <Icon name="key" size={15} /> {task.sealed} sealed
           </span>
         )}
