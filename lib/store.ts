@@ -224,6 +224,14 @@ export function seedDemo(): void {
   photo("demo-wed-mehendi", "priya", "2025-12-05T14:00:00.000Z", "/demo/portrait-aria.webp", "Anika's first mehendi, drying in the sun.", { place: "Jaipur" });
   photo("demo-wed-baraat", "arjun", "2025-12-06T15:45:00.000Z", "/demo/portrait-dad.webp", "Dancing in the baraat till the band gave up.", { place: "Jaipur" });
 
+  // The kids' side of the house: what Vihaan and Anika shared lately (lib/demo-rooms.ts seeds their asks, bedtime story and height marks).
+  const mins = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+  photo("demo-kid-leo-drawing", "leo", mins(5 * 60), "/demo/drawing-leo.webp", "My house, with the sun and all of us.", { place: "Bengaluru", note: "I drew this for Maa." });
+  photo("demo-kid-leo-top", "leo", mins(26 * 60), "/demo/family-leo.webp", "My top spun for a whole minute.", { place: "Bengaluru" });
+  voice("demo-kid-aria-whistle", "aria", mins(9 * 60), "I can whistle now!", "Maa, I can whistle now! Listen. Fweeeet. Papa says it sounds like a kettle.", { source: "upload", coverRef: "/demo/portrait-aria.webp", addressedTo: "dadi" });
+  voice("demo-kid-leo-ask", "leo", mins(3 * 60), "A question for Maa", "Maa, how did you and Papa meet?", { source: "upload", coverRef: "/demo/portrait-leo.webp", addressedTo: "dadi" });
+  voice("demo-bedtime-dadi-aria", "dadi", mins(20 * 60), "The little elephant and the moon", "Once there was a little elephant who wanted to touch the moon. Every night she walked a little further, and every night the moon stayed just out of reach. Then one evening she stopped at the river, and there was the moon, sleeping in the water. She put in her trunk, very gently, and the moon wobbled and smiled. Goodnight, little one.", { source: "upload", coverRef: "/demo/family-dadi.webp", addressedTo: "aria" });
+
   // A few real-looking listens so a parent's "your gifts this week" isn't empty
   // in the demo: each is someone hearing something Maa or Papa gave.
   const h = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
@@ -478,6 +486,9 @@ export function clearRelationships(): void {
   addRelationship({ id: "rel-kavya-anaya", familyId: "demo-family", memberId: "kavya", relationMemberId: "anaya", relation: "daughter", canonicalKind: "child" });
   addRelationship({ id: "rel-priya-leo", familyId: "demo-family", memberId: "priya", relationMemberId: "leo", relation: "son", canonicalKind: "child" });
   addRelationship({ id: "rel-priya-aria", familyId: "demo-family", memberId: "priya", relationMemberId: "aria", relation: "daughter", canonicalKind: "child" });
+  // Arjun is their father too, which makes Maa and Papa their grandparents in the tree (kids' rituals, lib/kids.ts).
+  addRelationship({ id: "rel-arjun-leo", familyId: "demo-family", memberId: "arjun", relationMemberId: "leo", relation: "son", canonicalKind: "child" });
+  addRelationship({ id: "rel-arjun-aria", familyId: "demo-family", memberId: "arjun", relationMemberId: "aria", relation: "daughter", canonicalKind: "child" });
   // Rohan, Arjun's younger brother in London, with Sneha and their son Kabir:
   // cousins and in-laws, not just the household.
   addRelationship({ id: "rel-arjun-rohan", familyId: "demo-family", memberId: "arjun", relationMemberId: "rohan", relation: "brother", canonicalKind: "sibling" });
