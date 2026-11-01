@@ -94,8 +94,8 @@ Entry,courtyard,68,link,Priya cooked your Dal tadka · <day>,/kitchen/recipe-dad
 Entry,courtyard,69,section,A question for you,,,dadi,,keep,
 Entry,courtyard,70,button,Teach it,,~A question for you,dadi,,keep,
 Entry,courtyard,71,section,Help,,,dadi,,keep,
-Entry,courtyard,72,link,Vegetables and milk for the week Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
-Entry,courtyard,73,link,The gas cylinder is almost empty अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार क…,/care,~Help,dadi,,keep,
+Entry,courtyard,72,link,हफ़्ते भर की सब्ज़ी और दूध Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
+Entry,courtyard,73,link,गैस सिलेंडर लगभग खत्म है अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार को सिलेंड…,/care,~Help,dadi,,keep,
 Entry,courtyard,74,button,Ask the family for help,,~Help,dadi,,keep,
 Entry,courtyard,76,link,"For you, N waiting: Vihaan asked you something",/inbox,dock,dadi,icon-only,review,
 Entry,home-laptop,0,badge,Nearer,,,arjun,,keep,
@@ -561,17 +561,20 @@ Rooms,/care,6,section,Tasks,,,arjun dadi aria,,keep,
 Rooms,/care,7,button,Say a task,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,8,input:text,New task,,~Tasks,arjun dadi,,keep,
 Rooms,/care,9,button,New task with details,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/care,9,button,Normal priority The gas cylinder is almost empty Arjun · This week · for Maa,,~Tasks,aria,,keep,
 Rooms,/care,10,toggle,All N,,~Tasks,arjun dadi aria,,keep,
 Rooms,/care,11,toggle,Mine,,~Tasks,dadi aria,,keep,
 Rooms,/care,11,toggle,Mine N,,~Tasks,arjun,,keep,
 Rooms,/care,12,toggle,Unassigned N,,~Tasks,arjun dadi aria,,keep,
+Rooms,/care,13,button,"Normal priority A ride to the temple fair Arjun · <day>, <time> · for Maa",,~Tasks,aria,,keep,
 Rooms,/care,13,toggle,Urgent,,~Tasks,arjun dadi aria,,keep,
-Rooms,/care,14,button,Normal priority Vegetables and milk for the week Unassigned · Tomorrow morning…,,~Tasks,arjun dadi aria,,keep,
+Rooms,/care,14,button,Normal priority Vegetables and milk for the week Unassigned · Tomorrow morning…,,~Tasks,arjun aria,,keep,
+Rooms,/care,14,button,Normal priority हफ़्ते भर की सब्ज़ी और दूध Unassigned · Tomorrow morning · for…,,~Tasks,dadi,,keep,
 Rooms,/care,15,button,Pick up: Vegetables and milk for the week,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,16,link,Send something for: Vegetables and milk for the week,/send?for=dadi&kind=need&title=Vegetables%Nand%Nmilk%Nfor%Nthe%Nweek,~Tasks,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,17,button,Mark done: Vegetables and milk for the week,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/care,18,button,Normal priority The gas cylinder is almost empty Arjun · This week · for Maa,,~Tasks,dadi aria,,keep,
 Rooms,/care,18,button,Normal priority The gas cylinder is almost empty You · This week · for Maa,,~Tasks,arjun,,keep,
+Rooms,/care,18,button,Normal priority गैस सिलेंडर लगभग खत्म है Arjun · This week · for Maa,,~Tasks,dadi,,keep,
 Rooms,/care,19,image,Arjun,,~Tasks,dadi aria,,review,icon-only control: its name is only an aria-label
 Rooms,/care,19,image,You,,~Tasks,arjun,,review,on more than 2 screens: one path per job?
 Rooms,/care,20,button,Pick up: The gas cylinder is almost empty,,~Tasks,dadi,icon-only,review,icon-only control: its name is only an aria-label
@@ -579,7 +582,7 @@ Rooms,/care,20,link,Send something for: The gas cylinder is almost empty,/send?f
 Rooms,/care,21,button,Mark done: The gas cylinder is almost empty,,~Tasks,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,22,button,Done this week · N,,~Tasks,arjun dadi aria,,keep,
 Rooms,/care,23,button,"Normal priority A ride to the temple fair You · <day>, <time> · for Maa",,~Tasks,arjun,,keep,
-Rooms,/care,24,button,"Normal priority A ride to the temple fair Arjun · <day>, <time> · for Maa",,~Tasks,dadi aria,,keep,
+Rooms,/care,24,button,"Normal priority मंदिर के मेले तक जाने के लिए गाड़ी Arjun · <day>, <time> · for…",,~Tasks,dadi,,keep,
 Rooms,/care,25,section,Start a task,,~Tasks,arjun dadi,,keep,
 Rooms,/care,26,heading,Start a task,,~Start a task,arjun dadi,,keep,
 Rooms,/care,27,button,Groceries,,~Start a task,arjun dadi,,keep,
