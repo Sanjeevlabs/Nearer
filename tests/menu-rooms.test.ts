@@ -63,7 +63,7 @@ describe("the five rooms", () => {
     // The dock opens it with a house, not ⋯.
     const dock = src.slice(src.indexOf("function Dock("));
     expect(dock).toContain('aria-label="Open the house"');
-    expect(dock).toContain('name="rooms"');
+    expect(dock).toContain("<HouseGlyph");
     expect(dock).not.toContain('name="more"');
   });
 });
