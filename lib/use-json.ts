@@ -72,7 +72,7 @@ export function invalidateJson(): void {
   }, 200);
 }
 
-/** Writes that are not a change to anything shown: the "I opened Aangan" heartbeat and pure computations. */
+/** Writes that are not a change to anything shown: the "I opened Nearer" heartbeat and pure computations. */
 const QUIET_WRITES = /^\/api\/(transcribe|stickers\/cutout|muse\/|translate|kitchen\/scan|auth\/start|media\/upload-url)/;
 
 export function isChangingWrite(url: string, method: string | undefined, body: unknown): boolean {

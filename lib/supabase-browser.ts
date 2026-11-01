@@ -1,6 +1,6 @@
 "use client";
 // Supabase Auth in the browser, only for signing in (Google, a magic link, a
-// phone code). Aangan's own signed session cookie is minted by
+// phone code). Nearer's own signed session cookie is minted by
 // /api/auth/verify from the Supabase token; Supabase's session is then dropped.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 

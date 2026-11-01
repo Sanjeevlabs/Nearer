@@ -13,7 +13,7 @@ import { useShell } from "./shell";
 import { Icon, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
 
-// Festival Week (courtyard header, Occasions, Aangan suggests): the days
+// Festival Week (courtyard header, Occasions, Nearer suggests): the days
 // before a festival the family keeps. Title, steps, colour and greeting are
 // the ritual's own JSON (rituals/*.json); this file names no festival.
 

@@ -96,7 +96,7 @@ export function ConnectedApps() {
           </li>
         ))}
       </ul>
-      <p className="m-0 mt-3 px-1 text-[13px] text-ink-soft">Orders are placed from your own account. Aangan never sees your payment details.</p>
+      <p className="m-0 mt-3 px-1 text-[13px] text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
       {data.sample && <p className="m-0 mt-1 px-1 text-[12px] text-ink-faint">Sample mode: connections and orders are pretend.</p>}
     </div>
   );

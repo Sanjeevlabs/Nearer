@@ -95,9 +95,9 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
   return (
     <section aria-label="Add someone">
       <h2 className="m-0 mb-1 text-[20px]">Add someone</h2>
-      <p className="m-0 mb-4 text-[15px] text-ink-soft">Tell Aangan how they&rsquo;re related to someone already here.</p>
+      <p className="m-0 mb-4 text-[15px] text-ink-soft">Tell Nearer how they&rsquo;re related to someone already here.</p>
       <p className="m-0 mb-4 rounded-[16px] bg-surface px-4 py-3 text-[14px] text-ink-soft">
-        <span className="font-semibold text-ink">Uncles, aunts and cousins:</span> add them through a parent. &ldquo;Chachu is <em>Papa&rsquo;s brother</em>&rdquo;, &ldquo;Mausi is <em>Maa&rsquo;s sister</em>&rdquo;, then their children as their son or daughter. Aangan works out &ldquo;your uncle&rdquo; or &ldquo;your cousin&rdquo; for everyone.
+        <span className="font-semibold text-ink">Uncles, aunts and cousins:</span> add them through a parent. &ldquo;Chachu is <em>Papa&rsquo;s brother</em>&rdquo;, &ldquo;Mausi is <em>Maa&rsquo;s sister</em>&rdquo;, then their children as their son or daughter. Nearer works out &ldquo;your uncle&rdquo; or &ldquo;your cousin&rdquo; for everyone.
       </p>
       {welcomed && (
         <div className="bond-bloom mb-4 rounded-[22px] bg-surface px-4 py-3" role="status">
@@ -185,7 +185,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
           <BirthYearField value={year} onChange={setYear} className="!bg-surface !px-4" />
         </label>
       </div>
-      <p className="m-0 mt-2 text-[13px] text-ink-soft">The year is optional. With it, Aangan can show their age.</p>
+      <p className="m-0 mt-2 text-[13px] text-ink-soft">The year is optional. With it, Nearer can show their age.</p>
       {error && (
         <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
           {error}

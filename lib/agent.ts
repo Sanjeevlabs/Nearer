@@ -70,7 +70,7 @@ async function mockPlan(goal: string, tools: AgentTool[]): Promise<AgentResult> 
 }
 
 const AGENT_SYSTEM =
-  "You are Aangan's family ritual assistant. Reply with JSON only: " +
+  "You are Nearer's family ritual assistant. Reply with JSON only: " +
   '{"steps": [{"tool": "<tool-name>", "args": {}}]}. ' +
   "Use at most 6 steps. Never invent people or events; only use tool results.";
 

@@ -87,7 +87,7 @@ export function PrintFrame({
             target={() => ({
               title: "Share this print",
               note: "Only you can share your photos. It goes as an image, never a link into the family.",
-              filename: `${slug(note || "aangan-print")}.png`,
+              filename: `${slug(note || "nearer-print")}.png`,
               text: note,
               render: () => photoPrintCard({ src, note: text ?? note, when, where, by }),
             })}

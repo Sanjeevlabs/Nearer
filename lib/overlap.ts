@@ -40,7 +40,7 @@ export function suggestTimes(zones: string[], from = new Date(), n = 3): Date[] 
 
 /** A video room both sides can open with no account. Unguessable per sitting/knock. */
 export function roomUrl(id: string, info?: { provider: string; domain: string; appId?: string }): string {
-  const room = `Aangan-${id.replace(/[^a-zA-Z0-9-]/g, "")}`;
+  const room = `Nearer-${id.replace(/[^a-zA-Z0-9-]/g, "")}`;
   return info?.provider === "jaas" && info.appId ? `https://${info.domain}/${info.appId}/${room}` : `https://meet.jit.si/${room}`;
 }
 
@@ -52,7 +52,7 @@ export function icsFor(input: { id: string; title: string; start: Date; minutes?
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Aangan//Sit together//EN",
+    "PRODID:-//Nearer//Sit together//EN",
     "BEGIN:VEVENT",
     `UID:${input.id}@aangan`,
     `DTSTAMP:${stamp(new Date())}`,

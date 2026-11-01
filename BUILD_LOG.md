@@ -1,4 +1,4 @@
-# BUILD_LOG.md — Aangan (Meta Global AI Developer Hackathon, Indie track)
+# BUILD_LOG.md — Nearer (Meta Global AI Developer Hackathon, Indie track)
 
 ## 28 Oct 2026 — CRITICAL FIX 1: real media to models (recipes 06_muse_voice/01, 01_api_fundamentals/07)
 
@@ -309,3 +309,10 @@
 - Together habits: one family habit ("Morning walk · 7 AM"), anyone joins, "Maa and Priya walked today", the lamp glows when everyone has; words, never scores.
 - UI inventory: docs/ui-inventory.csv/.xlsx generated from the running app (987 rows, 36 screens); CI fails when the UI changes without regenerating it.
 - Tests: 784.
+
+## 1 Nov 2026 · Stage 35: renamed to Nearer
+
+- 1 Nov: renamed to Nearer, tagline "the window between two homes". Every visible string, page title, manifest, share image, email, i18n table and the README now say Nearer.
+- Native: appId, Android package and URL scheme `com.sanjeevlabs.nearer`; the deep link is `com.sanjeevlabs.nearer://auth/callback` (update the Supabase redirect list). Domain: `nearer.sanjeevlabs.com` only; the old host is retired, not redirected.
+- Demo code is `NEARER-DEMO`; the server still accepts the old demo code for old links.
+- Kept on purpose so sessions and deploys survive: the Worker name, `aangan:*` storage keys, the `aangan_session` cookie, IndexedDB, bucket and table names, Modal app names.

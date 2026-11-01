@@ -7,6 +7,6 @@ export function joinLink(origin: string, code: string): string {
 }
 
 export function whatsappInvite(origin: string, code: string, from?: string): string {
-  const text = `${from ? `${from} has` : "I've"} opened a window between our homes on Aangan. Join here: ${joinLink(origin, code)} (your code: ${code})`;
+  const text = `${from ? `${from} has` : "I've"} opened a window between our homes on Nearer. Join here: ${joinLink(origin, code)} (your code: ${code})`;
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }

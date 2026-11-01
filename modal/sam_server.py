@@ -1,4 +1,4 @@
-"""Meta SAM on Modal: one point in, one cut-out mask out, for Aangan stickers.
+"""Meta SAM on Modal: one point in, one cut-out mask out, for Nearer stickers.
 
 The app's /api/stickers/cutout forwards a photo the person chose (their own)
 and the point they tapped. This returns a PNG mask the same size as the photo:

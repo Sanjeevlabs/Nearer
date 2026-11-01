@@ -12,7 +12,7 @@ export const gu: Catalogue = {
   "welcome.morning": "સુપ્રભાત",
   "welcome.afternoon": "નમસ્તે",
   "welcome.evening": "શુભ સાંજ",
-  "welcome.title": "{name}ના આંગણામાં સ્વાગત છે",
+  "welcome.title": "ઘરમાં સ્વાગત છે, {name}",
   "welcome.enter": "અંદર આવો",
 
   "auth.back": "પાછા",

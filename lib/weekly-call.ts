@@ -136,11 +136,11 @@ export function weeklyCallIcs(o: IcsOptions): string {
   const l = localParts(o.call.tz, first);
   const dt = `${pad(l.y, 4)}${pad(l.mo)}${pad(l.d)}T${pad(l.h)}${pad(l.mi)}00`;
   const title = o.call.name?.trim() || "Our weekly call";
-  const desc = [`${title}, every ${WEEKDAYS[o.call.weekday]}.`, callLabel(o.call, now, o.yourTz, o.theirTz), "Open Aangan and tap Start now."].join("\n");
+  const desc = [`${title}, every ${WEEKDAYS[o.call.weekday]}.`, callLabel(o.call, now, o.yourTz, o.theirTz), "Open Nearer and tap Start now."].join("\n");
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Aangan//Weekly call//EN",
+    "PRODID:-//Nearer//Weekly call//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     ...vtimezone(o.call.tz, first),

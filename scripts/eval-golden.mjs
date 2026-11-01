@@ -27,8 +27,8 @@ const r = spawnSync("npx", ["vitest", "run", "--config", "vitest.live.config.ts"
     RUN_GOLDEN: "1",
     RUN_LIVE_CACHE: "1",
     MOCK: "",
-    TEMP: "D:\\Aangan\\.tmp",
-    TMP: "D:\\Aangan\\.tmp",
+    TEMP: "D:\\Nearer\\.tmp",
+    TMP: "D:\\Nearer\\.tmp",
   },
 });
 process.exit(r.status ?? 1);

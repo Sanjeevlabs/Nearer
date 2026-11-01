@@ -12,7 +12,7 @@ export const ar: Catalogue = {
   "welcome.morning": "صباح الخير",
   "welcome.afternoon": "طاب يومك",
   "welcome.evening": "مساء الخير",
-  "welcome.title": "أهلًا بك في فناء {name}",
+  "welcome.title": "أهلًا بك في بيتك يا {name}",
   "welcome.enter": "تفضّل بالدخول",
 
   "auth.back": "رجوع",
@@ -74,7 +74,7 @@ export const ar: Catalogue = {
   "error.no-family": "لا توجد عائلة بهذا البريد بعد. ابدأ واحدة، أو انضم برمز دعوة.",
   "error.already-member": "هذا البريد مسجّل في عائلة. سجّل الدخول بدلًا من ذلك.",
   "error.invalid-invite": "رمز الدعوة غير صالح أو انتهت مدته. اطلب رمزًا جديدًا.",
-  "error.too-many-sides": "أنت في أربع عائلات بالفعل، وهو الحد الأقصى في Aangan.",
+  "error.too-many-sides": "أنت في أربع عائلات بالفعل، وهو الحد الأقصى في Nearer.",
   "error.generic": "حدث خطأ ما. حاول مجددًا.",
 
   "other.sub": "من في البيت على الجانب الآخر؟ أضفهم بالاسم الذي تناديهم به.",
@@ -133,7 +133,7 @@ export const ar: Catalogue = {
   "settings.done": "تم",
   "settings.search": "ابحث عن لغة",
   "settings.noMatch": "لا نتائج. جرّب الاسم بالإنجليزية.",
-  "settings.languageNote": "كلمات Aangan في الشاشات الرئيسية تتبع هذه اللغة. وكل ما تشاركه العائلة (الأصوات، التعليقات، الوصفات، الملاحظات) يُترجم لك. وتبقى الأسماء كما تقولها العائلة.",
+  "settings.languageNote": "كلمات Nearer في الشاشات الرئيسية تتبع هذه اللغة. وكل ما تشاركه العائلة (الأصوات، التعليقات، الوصفات، الملاحظات) يُترجم لك. وتبقى الأسماء كما تقولها العائلة.",
   "settings.languageUpdated": "تم تغيير اللغة",
   "settings.appSpeaks": "كلمات التطبيق نفسه متوفرة بهذه اللغة أيضًا.",
 };

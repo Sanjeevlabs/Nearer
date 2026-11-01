@@ -33,16 +33,16 @@ async function originOf(): Promise<URL | undefined> {
 export async function generateMetadata(props: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const params = await props.params;
   const [share, metadataBase] = await Promise.all([getShare(params.token), originOf()]);
-  if (!share) return { title: "Aangan", metadataBase, robots: { index: false } };
+  if (!share) return { title: "Nearer", metadataBase, robots: { index: false } };
   const r = share.snapshot;
   const title = `${r.title}, from ${r.from}'s kitchen`;
-  const description = r.memory || `A family recipe from ${r.from}, shared on Aangan.`;
+  const description = r.memory || `A family recipe from ${r.from}, shared on Nearer.`;
   return {
     title: `${r.title} · from ${r.from}'s kitchen`,
     description,
     metadataBase,
     robots: { index: false, follow: false },
-    openGraph: { type: "article", siteName: "Aangan", title, description, url: `/r/${params.token}` },
+    openGraph: { type: "article", siteName: "Nearer", title, description, url: `/r/${params.token}` },
     twitter: { card: "summary_large_image", title, description },
   };
 }
@@ -69,13 +69,13 @@ export default async function SharedRecipe(props: { params: Promise<{ token: str
   return (
     <article className="pb-10 pt-2">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-2 text-ink no-underline" aria-label="Aangan home">
+        <Link href="/" className="flex items-center gap-2 text-ink no-underline" aria-label="Nearer home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/icon-192.png" alt="" width={32} height={32} className="rounded-[9px]" />
-          <span className="text-[17px] font-semibold">Aangan</span>
+          <span className="text-[17px] font-semibold">Nearer</span>
         </Link>
         <Link href="/" className="press flex h-10 items-center rounded-full bg-black px-4 text-[14px] font-semibold text-white no-underline">
-          Start your family on Aangan
+          Start your family on Nearer
         </Link>
       </div>
       <RecipeCover recipe={r} className="h-[220px] rounded-hero" />
@@ -142,9 +142,9 @@ export default async function SharedRecipe(props: { params: Promise<{ token: str
       )}
       <aside className="mt-10 rounded-hero bg-[linear-gradient(135deg,#1c1712,#3a2a1c)] p-6 text-white">
         <p className="m-0 text-[20px] font-semibold leading-snug">Whose cooking do you miss?</p>
-        <p className="m-0 mt-1.5 text-[15px] text-white/80">Aangan keeps your family&rsquo;s recipes in the voices that taught them, private to your family.</p>
+        <p className="m-0 mt-1.5 text-[15px] text-white/80">Nearer keeps your family&rsquo;s recipes in the voices that taught them, private to your family.</p>
         <Link href="/" className="press mt-4 flex h-12 items-center justify-center rounded-full bg-white text-[16px] font-semibold text-ink no-underline">
-          Start your family on Aangan
+          Start your family on Nearer
         </Link>
       </aside>
     </article>

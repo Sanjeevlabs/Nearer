@@ -12,7 +12,7 @@ export const te: Catalogue = {
   "welcome.morning": "శుభోదయం",
   "welcome.afternoon": "నమస్కారం",
   "welcome.evening": "శుభ సాయంత్రం",
-  "welcome.title": "{name} గారి వాకిలికి స్వాగతం",
+  "welcome.title": "ఇంటికి స్వాగతం, {name}",
   "welcome.enter": "లోపలికి రండి",
 
   "auth.back": "వెనక్కి",

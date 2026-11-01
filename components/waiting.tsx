@@ -14,7 +14,7 @@ const CHECK_MS = 30_000;
 export function Waiting({ hostName, onCheck }: { hostName: string | null; onCheck: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const who = hostName || "your family";
-  const ask = `Hi${hostName ? ` ${hostName}` : ""}, I've joined our family on Aangan. Could you let me in? (Settings, Family, Waiting to join)`;
+  const ask = `Hi${hostName ? ` ${hostName}` : ""}, I've joined our family on Nearer. Could you let me in? (Settings, Family, Waiting to join)`;
 
   useEffect(() => {
     const tick = () => void onCheck();
@@ -39,7 +39,7 @@ export function Waiting({ hostName, onCheck }: { hostName: string | null; onChec
       <Photo src={COURTYARD} alt="" sizes="100vw" priority />
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/40" aria-hidden="true" />
       <main className="relative mx-auto flex h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
-        <p className="m-0 px-2 text-[22px] font-bold tracking-[-0.02em] text-white drop-shadow">Aangan</p>
+        <p className="m-0 px-2 text-[22px] font-bold tracking-[-0.02em] text-white drop-shadow">Nearer</p>
         <div className="flex-1" />
         <section aria-live="polite" className="glass rounded-[30px] p-6">
           <span className="relative mb-4 flex h-3 w-3" aria-hidden="true">

@@ -1,4 +1,4 @@
-# AGENTS.md — Aangan
+# AGENTS.md — Nearer
 
 Solo Indie-track hackathon entry. Public repo. Deadline 4 Nov 2026, 9:00 PM ET.
 

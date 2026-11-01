@@ -12,7 +12,7 @@ export const es: Catalogue = {
   "welcome.morning": "Buenos días",
   "welcome.afternoon": "Buenas tardes",
   "welcome.evening": "Buenas noches",
-  "welcome.title": "Bienvenido al Aangan de {name}",
+  "welcome.title": "Bienvenido a casa, {name}",
   "welcome.enter": "Pasa",
 
   "auth.back": "Atrás",
@@ -75,7 +75,7 @@ export const es: Catalogue = {
   "error.no-family": "Ninguna familia usa este correo todavía. Crea una o únete con un código.",
   "error.already-member": "Este correo ya pertenece a una familia. Entra con él.",
   "error.invalid-invite": "Ese código no es válido o ha caducado. Pide uno nuevo.",
-  "error.too-many-sides": "Ya estás en cuatro familias, el máximo en Aangan.",
+  "error.too-many-sides": "Ya estás en cuatro familias, el máximo en Nearer.",
   "error.generic": "Algo salió mal. Inténtalo de nuevo.",
 
   "other.sub": "¿Quién vive en la casa del otro lado? Añádelos con el nombre con que los llamas.",
@@ -134,7 +134,7 @@ export const es: Catalogue = {
   "settings.done": "Listo",
   "settings.search": "Buscar idiomas",
   "settings.noMatch": "Sin resultados. Prueba con el nombre en inglés.",
-  "settings.languageNote": "Las palabras de Aangan en las pantallas principales siguen este idioma. Todo lo que comparte la familia (voces, pies de foto, recetas, notas) se traduce para ti. Los nombres se quedan como los dice la familia.",
+  "settings.languageNote": "Las palabras de Nearer en las pantallas principales siguen este idioma. Todo lo que comparte la familia (voces, pies de foto, recetas, notas) se traduce para ti. Los nombres se quedan como los dice la familia.",
   "settings.languageUpdated": "Idioma cambiado",
   "settings.appSpeaks": "La app también habla este idioma.",
 };

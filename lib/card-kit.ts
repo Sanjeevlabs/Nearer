@@ -55,7 +55,7 @@ export async function cardFonts(): Promise<Fonts> {
     document.fonts.load(`600 40px ${first(fonts.body)}`),
     document.fonts.load(`700 40px ${first(fonts.body)}`),
     document.fonts.load(`italic 400 40px ${first(fonts.voice)}`),
-    document.fonts.load(`400 40px ${first(fonts.hand)}`, "Aangan"),
+    document.fonts.load(`400 40px ${first(fonts.hand)}`, "Nearer"),
     document.fonts.load(`400 40px ${first(fonts.hand)}`, "आँगन"),
   ]);
   return fonts;
@@ -115,7 +115,7 @@ function mark(): Promise<HTMLImageElement | null> {
 }
 
 /**
- * The footer every card carries: the Aangan mark and the site. Small and
+ * The footer every card carries: the Nearer mark and the site. Small and
  * quiet, bottom-centred. `tone` picks ink for light or dark backgrounds.
  */
 export async function drawFooter(ctx: CanvasRenderingContext2D, fonts: Fonts, opts: { w?: number; h?: number; tone?: "light" | "dark"; bottom?: number } = {}): Promise<void> {
@@ -126,7 +126,7 @@ export async function drawFooter(ctx: CanvasRenderingContext2D, fonts: Fonts, op
   const host = siteHost();
   ctx.save();
   ctx.font = `600 28px ${fonts.body}`;
-  const label = host || "Aangan";
+  const label = host || "Nearer";
   const tw = ctx.measureText(label).width;
   const total = size + 16 + tw;
   const x = (W - total) / 2;
@@ -159,5 +159,5 @@ export function cardDate(iso: string, tz?: string | null): string {
 }
 
 export function slug(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "aangan";
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "nearer";
 }

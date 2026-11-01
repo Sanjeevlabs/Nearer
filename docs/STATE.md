@@ -1,6 +1,6 @@
 # What the app remembers, and when it forgets
 
-Every badge, dot, notice and status line in Aangan, where it lives, what sets it, what clears it,
+Every badge, dot, notice and status line in Nearer, where it lives, what sets it, what clears it,
 and how long it can be wrong. Written for the next person to check against the code.
 
 How to read the "where" column:
@@ -36,7 +36,7 @@ The numbers are in one place: `TTL` in `lib/purge.ts`.
 | Today: "sealed" and "answered" | Postgres (`today_task`) | Each person's answer | Not cleared: the finished task is kept, it is part of the memory book. The "waiting" part clears as above | Never stale: the state is read from the answers |
 | Lamp glow | Derived from `lamp.litAt` and the newest card from that home. Fades to nothing over 72 h | Lighting the lamp, sending a voice, photo or call | Time | None (computed from the clock on every read) |
 | Heartbeats between homes | Postgres (`lamp.beats`) | Holding the lamp | Felt once (`felt`), expire after 2 days on read, trimmed from the row by the daily scan | None |
-| "In Aangan" heartbeat (`presence`, moment `here`) | Postgres (`presence`) | Opening Aangan (at most one every 30 min, only if the person shares visits) | Deleted after 15 days. A heartbeat is the only sign of life for at most 6 h: after that the line reads "quiet since" | Up to 30 min between beats |
+| "In Nearer" heartbeat (`presence`, moment `here`) | Postgres (`presence`) | Opening Nearer (at most one every 30 min, only if the person shares visits) | Deleted after 15 days. A heartbeat is the only sign of life for at most 6 h: after that the line reads "quiet since" | Up to 30 min between beats |
 | Safe & sound state (Active / Quiet / Asleep, the dot) | Derived from the newest sign of life (a moment, a card, a check-in a person closed) and the viewer's quiet-after setting | | | None. Closing a check-in by timeout is not a sign of life |
 | The "Everyone" row, "active 12 min ago" | Derived from the same newest sign of life | | | None |
 | Safety check-in, open or closed | Postgres (`safety_checkin`) | "Heading home", "Travelling", "I need help" | The person closes it, or starts a new one. **Open for 48 h: closed as "no reply"** (`noReply`, location dropped). Closed ones are deleted after 30 days | None: the 48 h rule is applied on every read and stored by the daily scan |

@@ -1,4 +1,4 @@
-// Visits & holidays: the only plans Aangan keeps (SPEC §29.8 trims). Data
+// Visits & holidays: the only plans Nearer keeps (SPEC §29.8 trims). Data
 // only (client and server), like ritual configs: no culture or festival is
 // hard-coded in logic.
 import type { PROJECT_KINDS } from "./kind-values";

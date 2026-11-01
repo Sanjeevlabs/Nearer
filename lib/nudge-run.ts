@@ -106,7 +106,7 @@ export async function deliverDueNudges(familyId: string, members: Member[], now:
       const letterNudge = b.nudges.find((n) => n.kind === "letter");
       const letterId = letterNudge ? new URL(letterNudge.href, "http://x").searchParams.get("letter") : null;
       const letter = letters.find((l) => l.id === letterId && l.body);
-      const openUrl = origin || "https://aangan.invalid";
+      const openUrl = origin || "https://nearer.invalid";
       const mail = renderDigestEmail({
         name: member.displayName || member.firstName,
         lines: b.nudges.filter((n) => n.kind !== "letter").map((n) => renderNudgeText(n.text, members)),

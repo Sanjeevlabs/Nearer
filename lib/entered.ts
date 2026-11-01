@@ -1,5 +1,5 @@
 // "/" is the public home page (phone or laptop) until the person steps into
-// the app once this session (Open Aangan, the demo, or any app route). After
+// the app once this session (Open Nearer, the demo, or any app route). After
 // that, "/" is the app again, so in-app links back to "/" keep working.
 // The installed app (home-screen PWA, Capacitor shell) never shows it.
 import { isNative } from "@/lib/native";

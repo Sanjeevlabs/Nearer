@@ -1,6 +1,6 @@
-# Deploying Aangan to Cloudflare Workers
+# Deploying Nearer to Cloudflare Workers
 
-Aangan runs on Cloudflare Workers through the OpenNext adapter (`@opennextjs/cloudflare`). `npm run build` is still a plain `next build`; the Workers build is separate.
+Nearer runs on Cloudflare Workers through the OpenNext adapter (`@opennextjs/cloudflare`). `npm run build` is still a plain `next build`; the Workers build is separate.
 
 | Script | What it does |
 |---|---|
@@ -29,7 +29,7 @@ For local `cf:preview`, put runtime values in `.dev.vars` (gitignored, same `KEY
 |---|---|---|---|
 | `SESSION_SECRET` | runtime secret | yes | 32+ random chars. Signs session cookies and seals partner tokens. |
 | `CRON_SECRET` | runtime secret | yes | Long random string. The daily cron and any manual GET of `/api/ritual-scan` send `Authorization: Bearer <CRON_SECRET>`. |
-| `APP_ORIGIN` | runtime var | yes in production | Your public origin, e.g. `https://aangan.sanjeevlabs.com` (no trailing slash). Pins OAuth redirect URIs and is the URL the cron calls. Not hardcoded anywhere. |
+| `APP_ORIGIN` | runtime var | yes in production | Your public origin, e.g. `https://nearer.sanjeevlabs.com` (no trailing slash). Pins OAuth redirect URIs and is the URL the cron calls. Not hardcoded anywhere. |
 | `MOCK` | runtime var | yes | `false` for live Supabase; `true` only for a demo (see per-isolate note below). |
 | `META_API_KEY` | runtime secret | for live AI | Meta model calls. Environment only, never in a file. |
 | `BASETEN_API_KEY` | runtime secret | optional | Muse Spark Open failover on Baseten. |
@@ -37,7 +37,7 @@ For local `cf:preview`, put runtime values in `.dev.vars` (gitignored, same `KEY
 | `MUSE_PROVIDER` | runtime var | optional | `meta` (default), `baseten` or `modal`. |
 | `SAM_URL`, `SAM_API_KEY` | runtime (key is secret) | optional | Sticker cut-outs with Meta SAM (`modal/sam_server.py`, see below). Without both, and always with `MOCK=true`, stickers use a clean circle/rounded crop. Each cut-out counts ~USD 0.002 against the spend cap. |
 | `JAAS_APP_ID`, `JAAS_KID`, `JAAS_PRIVATE_KEY` | runtime (key is secret) | optional | Video rooms on 8x8 Jitsi as a Service, so grandparents never meet a moderator sign-in. All three or none; without them "Sit together" uses public meet.jit.si. See the JaaS section below. |
-| `RESEND_API_KEY`, `MAIL_FROM` | runtime (key is secret) | optional | The morning email: one digest a day per person (the weekly letter on Sunday, plus up to 3 small nudges a week), sent through Resend. `MAIL_FROM` like `Aangan <hello@yourdomain>` on a verified domain. Without the key, or with `MOCK=true`, nothing is mailed and nudges show only in the app. Delivery happens when the daily scan runs after each person's 8 AM; with one daily cron (09:00 UTC) a nudge waits for the next run, so an hourly trigger gives true 8 AM local. |
+| `RESEND_API_KEY`, `MAIL_FROM` | runtime (key is secret) | optional | The morning email: one digest a day per person (the weekly letter on Sunday, plus up to 3 small nudges a week), sent through Resend. `MAIL_FROM` like `Nearer <hello@yourdomain>` on a verified domain. Without the key, or with `MOCK=true`, nothing is mailed and nudges show only in the app. Delivery happens when the daily scan runs after each person's 8 AM; with one daily cron (09:00 UTC) a nudge waits for the next run, so an hourly trigger gives true 8 AM local. |
 | `SUPABASE_SECRET_KEY` | runtime secret | live mode | Service-role key. Never prefix with `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_SUPABASE_URL` | **build time** | live mode | Also read server-side, so set it as a runtime var too. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **build time** | live mode | Also set as a runtime var. |
@@ -56,7 +56,7 @@ npx wrangler secret put SESSION_SECRET
 npx wrangler secret put CRON_SECRET
 npx wrangler secret put META_API_KEY
 npx wrangler secret put SUPABASE_SECRET_KEY
-npx wrangler secret put APP_ORIGIN      # e.g. https://aangan.sanjeevlabs.com
+npx wrangler secret put APP_ORIGIN      # e.g. https://nearer.sanjeevlabs.com
 npx wrangler secret put MOCK            # false
 # build-time values, then deploy
 export NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... NEXT_PUBLIC_AUTH_GOOGLE=true
@@ -71,14 +71,14 @@ npm run cf:deploy
 
 ## 4. Custom domain
 
-Dashboard → Workers & Pages → aangan → Settings → Domains & Routes → Add → Custom domain. The domain's DNS must be on Cloudflare (add the site to your account first). Cloudflare issues the certificate. Then set `APP_ORIGIN` to `https://<that-domain>` (e.g. `https://aangan.sanjeevlabs.com`) and redeploy (or just update the secret).
+Dashboard → Workers & Pages → aangan → Settings → Domains & Routes → Add → Custom domain. The domain's DNS must be on Cloudflare (add the site to your account first). Cloudflare issues the certificate. Then set `APP_ORIGIN` to `https://<that-domain>` (e.g. `https://nearer.sanjeevlabs.com`) and redeploy (or just update the secret).
 
 ## 5. Supabase
 
 Supabase → Authentication → URL Configuration:
 
 - **Site URL**: `https://<your-domain>` (same as `APP_ORIGIN`).
-- **Redirect URLs**: add `https://<your-domain>/auth/callback`, the `https://aangan.<subdomain>.workers.dev/auth/callback` URL if you use it, and the native app's `app.aangan.family://auth/callback`.
+- **Redirect URLs**: add `https://<your-domain>/auth/callback`, the `https://aangan.<subdomain>.workers.dev/auth/callback` URL if you use it, and the native app's `com.sanjeevlabs.nearer://auth/callback`.
 - Google provider: enable under Authentication → Providers (its own redirect URI stays Supabase's).
 
 Native builds: `CAP_SERVER_URL=https://<your-domain> npm run cap:sync` (see docs/NATIVE.md).
@@ -114,7 +114,7 @@ Link previews use static images (`app/opengraph-image.png`, `app/r/[token]/openg
   Moving these to KV/Durable Objects/Supabase is a later change; nothing was redesigned for this port.
 - **No filesystem at runtime.** Ritual configs are bundled through `rituals/index.ts` (a test keeps it in step with `rituals/*.json`).
 - **Images are not optimised.** Workers has no built-in Next.js image optimizer; `next.config.mjs` sets `images.unoptimized`, so the few bundled demo photos are served as-is from static assets (edge-cached). To optimise later, add Cloudflare Images (`"images": { "binding": "IMAGES" }` in `wrangler.jsonc`, see opennext.js.org/cloudflare/howtos/image) and remove `unoptimized`.
-- **No ISR.** `open-next.config.ts` serves prerendered pages from static assets; Aangan uses no revalidation, so no R2/KV cache bucket is needed. If revalidation is ever added, switch to the R2 incremental cache.
+- **No ISR.** `open-next.config.ts` serves prerendered pages from static assets; Nearer uses no revalidation, so no R2/KV cache bucket is needed. If revalidation is ever added, switch to the R2 incremental cache.
 - `node:crypto` (HMAC, SHA-256, AES-256-GCM, `randomBytes`, `randomInt`) and `Buffer` work under `nodejs_compat`.
 - Request bodies: Workers accepts request bodies of at least 100 MB, above the app's own 25 MB video limit.
 

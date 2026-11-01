@@ -12,7 +12,7 @@ import { postJson, useJson } from "@/lib/use-json";
 import { LaneViewer } from "./lane-viewer";
 import { usePlayer } from "./player";
 import { useShell } from "./shell";
-import { Icon, Photo } from "./ui/kit";
+import { Icon, Photo, petalFor } from "./ui/kit";
 import { useViewer } from "./viewer";
 
 // The kids on the grown-ups' courtyard (lib/kids.ts): tonight's bedtime prompt, what the
@@ -116,7 +116,7 @@ export function FridgeBoard({ cards, replyTo, grid = false }: { cards: Card[]; r
           return (
             <li key={c.id} className="shrink-0" style={{ transform: `rotate(${i % 2 ? 2.2 : -2.2}deg)` }}>
               <button type="button" onClick={() => setOpen(i)} aria-label={`${callName(author)}'s ${c.type === "audio" ? "voice note" : c.type === "video" ? "video" : "picture"}, ${relativeDay(c.takenAt)}${pinnerName ? `, pinned by ${pinnerName}` : ""}`} className={`press relative block bg-white p-1.5 text-left ${pinnerName ? "pb-9" : "pb-6"}`} style={{ width: 104, boxShadow: "0 6px 14px -8px rgba(60,42,24,.5)" }}>
-                <span className="absolute -top-1.5 left-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 rounded-full" style={{ background: ["#d4553f", "#3f7fb5", "#e0a324"][i % 3], boxShadow: "0 2px 3px rgba(0,0,0,.35)" }} aria-hidden="true" />
+                <span className="absolute -top-1.5 left-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 rounded-full" style={{ background: petalFor(fridgeKidId(c) ?? String(i)), boxShadow: "0 2px 3px rgba(0,0,0,.35)" }} aria-hidden="true" />
                 <span className="relative block h-[96px] w-full overflow-hidden bg-well">
                   <Photo src={cardCover(c, members)} alt="" sizes="120px" position="center 30%" />
                   {c.type !== "photo" && (

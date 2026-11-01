@@ -1,4 +1,4 @@
-// The nudge queue. People under-initiate contact, so Aangan lends a little
+// The nudge queue. People under-initiate contact, so Nearer lends a little
 // push, in one gentle batch: at most 3 event nudges a week per person plus the
 // weekly letter, delivered together at their next 8 AM local. Reply loops
 // ("she heard your note") are welcome; there are no streaks, no counts and no

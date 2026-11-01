@@ -235,7 +235,7 @@ const KNOWN_EN_TO_HI_DEVA: Array<[RegExp, string]> = [
 
 const KNOWN_EN_TO_LATN: Array<[RegExp, string]> = [
   [/birthday song/i, "Parivaar ne milkar janmadin ka geet gaya."],
-  [/courtyard game/i, "Aangan ka khel, poore josh mein sunaya."],
+  [/courtyard game/i, "Angan ka khel, poore josh mein sunaya."],
   [/morning blessing|morning prayer/i, "Subah ki dua — aaj ka din achha ho."],
   [/lullaby/i, "Ek meethi lori."],
   [/warm family moment|family memory/i, "Parivaar ki ek pyaari yaad."],
@@ -261,7 +261,7 @@ const KNOWN_HI_TO_EN: Array<[RegExp, string]> = [
 
 const KNOWN_HI_TO_LATN: Array<[RegExp, string]> = [
   [/जन्मदिन का गीत/, "Parivaar ne milkar janmadin ka geet gaya."],
-  [/आँगन में धूप/, "Aangan mein dhoop aur chai."],
+  [/आँगन में धूप/, "Angan mein dhoop aur chai."],
   [/सुबह की दुआ/, "Subah ki dua — aaj ka din achha ho."],
   [/पार्क में धूप/, "Aaj subah park mein badi achhi dhoop thi. Tum kab aa rahe ho?"],
   [/परिवार की एक प्यारी याद/, "Parivaar ki ek pyaari yaad."],

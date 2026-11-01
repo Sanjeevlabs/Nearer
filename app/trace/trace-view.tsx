@@ -33,7 +33,7 @@ export function TraceView() {
 
   return (
     <div>
-      <RoomHeader title="What Muse did" subtitle="Every step Aangan's helper took for your family, and what it cost" />
+      <RoomHeader title="What Muse did" subtitle="Every step Nearer's helper took for your family, and what it cost" />
       <div className="mb-6 rounded-card bg-surface p-5">
         <p className="m-0 flex items-center gap-2 text-[17px] font-semibold">
           <Icon name="sparkle" size={18} />

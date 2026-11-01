@@ -57,7 +57,7 @@ describe("two courtyards, one door", () => {
     expect((await sidesPost(req("/api/sides", "dadi", "demo-family", { action: "switch", familyId: "demo-iyer" }))).status).toBe(403);
   });
 
-  it("Add my family: a new Aangan with only my own home inside it, and an invite for my parents", async () => {
+  it("Add my family: a new family with only my own home inside it, and an invite for my parents", async () => {
     const f = await realFamily();
     expect((await sidesPost(req("/api/sides", f.kavya.id, f.familyId, { action: "create", familyName: "Verma", bring: [f.mother.id] }))).status).toBe(400);
     const out = await json<{ familyId: string; memberId: string; invite: { code: string } }>(sidesPost(req("/api/sides", f.kavya.id, f.familyId, { action: "create", familyName: "Verma", bring: [f.rahul.id, f.anaya.id] })));

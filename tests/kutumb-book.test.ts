@@ -64,7 +64,7 @@ describe("Kutumb: the lamp-glow ring and their day", () => {
     expect(lamp).toEqual({ glow: true, line: "shared today" });
   });
 
-  it("glows when they were in Aangan today, and says so in words", () => {
+  it("glows when they were in Nearer today, and says so in words", () => {
     expect(lampFor(maa, { presence: [pres("2026-10-30T10:00:00.000Z")], settings: [], cards: [] }, now)).toEqual({ glow: true, line: "here today" });
   });
 

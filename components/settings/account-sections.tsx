@@ -116,7 +116,7 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
           </select>
           <BirthYearField value={form.draft.birthYear} onChange={(v) => form.set({ birthYear: v })} className="!bg-surface !px-4" />
         </div>
-        <p className="m-0 mt-1.5 text-[13px] text-ink-soft">The year is optional. With it, Aangan can show your age.</p>
+        <p className="m-0 mt-1.5 text-[13px] text-ink-soft">The year is optional. With it, Nearer can show your age.</p>
       </div>
       {busy && <p className="m-0 mt-2 text-[13px] text-ink-soft">Adding your photo…</p>}
       {pickError && (
@@ -408,7 +408,7 @@ function LampForm({ initial, reload, onMessage }: { initial: LampDraft; reload: 
       <label className="mt-4 flex min-h-[44px] items-center justify-between gap-3 rounded-[22px] bg-surface px-4 py-4">
         <span>
           <span className="block text-[16px] font-medium">Show my lamp and activity to family</span>
-          <span className="block text-[13px] text-ink-soft">When it&rsquo;s off, nobody sees when you were last in Aangan.</span>
+          <span className="block text-[13px] text-ink-soft">When it&rsquo;s off, nobody sees when you were last in Nearer.</span>
         </span>
         <input type="checkbox" className="h-6 w-6 shrink-0 accent-black" checked={form.draft.shareVisits} onChange={(e) => form.set({ shareVisits: e.target.checked })} />
       </label>

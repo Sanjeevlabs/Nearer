@@ -57,7 +57,7 @@ async function postHandler(req: Request, props: { params: Promise<{ id: string }
       await dbAddCard({
         familyId,
         type: (card?.type as "photo" | "audio" | "video") ?? "photo",
-        caption: String(card?.caption ?? "A family memory, saved by Aangan."),
+        caption: String(card?.caption ?? "A family memory, saved by Nearer."),
         lang: String(card?.lang ?? "en"),
         takenAt: new Date().toISOString(),
         ritualSlug: null,

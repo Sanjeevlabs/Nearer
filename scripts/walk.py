@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Navigation walk: every room tab, as three demo people, in a real browser.
 
-Signs in to the demo (AANGAN-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
+Signs in to the demo (NEARER-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
 opens the house from the dock, then visits every tab of every room
 (lib/menu.ts). Fails on a page error, an error-level console message, a
 4xx/5xx document or a 5xx API call, a missing page title, or a room tile
@@ -9,7 +9,7 @@ that doesn't open its first tab.
 
 CI runs it against a mock build (.github/workflows/ci.yml). It also works
 against the live site after a deploy:
-    python3 scripts/walk.py --base https://aangan.sanjeevlabs.com
+    python3 scripts/walk.py --base https://nearer.sanjeevlabs.com
 (live, each person gets their own demo copy; the daily cron removes them).
 """
 import argparse
@@ -70,7 +70,7 @@ def dock_overlaps(page, where: str, problems: list[str], person: str) -> None:
 def first_screen(base: str, person: str, browser, problems: list[str]) -> None:
     """The first screen at 390pt: the home page first, then exactly one bottom bar on the window, the dock only behind the open door."""
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base)
-    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": person}), headers={"content-type": "application/json"})
+    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
     if not res.ok:
         problems.append(f"{person}: first-screen sign-in failed {res.status}")
         ctx.close()
@@ -78,14 +78,14 @@ def first_screen(base: str, person: str, browser, problems: list[str]) -> None:
     page = ctx.new_page()
     page.goto("/", wait_until="load")
     try:
-        page.get_by_role("button", name="Open Aangan").first.wait_for(timeout=15_000)
+        page.get_by_role("button", name="Open Nearer").first.wait_for(timeout=15_000)
     except Exception:
-        problems.append(f"{person} /: signed in on a phone, the home page has no 'Open Aangan' button")
+        problems.append(f"{person} /: signed in on a phone, the home page has no 'Open Nearer' button")
         ctx.close()
         return
     if page.locator("[data-ui=dock]").count():
         problems.append(f"{person} /: the dock shows on the home page")
-    page.get_by_role("button", name="Open Aangan").first.click()
+    page.get_by_role("button", name="Open Nearer").first.click()
     page.locator("[data-ui=window-lamp]").wait_for(timeout=15_000)
     page.wait_for_timeout(1200)
     if page.locator("[data-ui=dock]").count():
@@ -128,7 +128,7 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
         lambda r: r.status >= 500 and "/api/" in r.url and problems.append(f"{person} {where['url']}: {r.status} {r.url}"),
     )
 
-    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": person}), headers={"content-type": "application/json"})
+    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
     if not res.ok:
         ctx.close()
         return [f"{person}: demo sign-in failed {res.status} {res.text()[:200]}"]

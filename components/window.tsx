@@ -559,7 +559,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const heartbeat = async () => {
     const to = atWindow[0];
     if (!to) return;
-    setLampNote(`Heartbeat sent · ${callName(to)} will feel it next time they open Aangan`);
+    setLampNote(`Heartbeat sent · ${callName(to)} will feel it next time they open Nearer`);
     let n = 0;
     const iv = window.setInterval(() => {
       setPulse((k) => k + 1);

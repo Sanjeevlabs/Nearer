@@ -1,4 +1,4 @@
-// Children in Aangan: kid cards, asks that clear when answered, bedtime stories that open at
+// Children in Nearer: kid cards, asks that clear when answered, bedtime stories that open at
 // 7 PM their time, kid mode's three rooms and what is deleted
 // with a child. No model calls anywhere.
 import { readFileSync } from "fs";

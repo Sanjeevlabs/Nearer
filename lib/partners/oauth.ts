@@ -81,7 +81,7 @@ export async function clientIdFor(acct: PartnerAccount, redirectUri: string): Pr
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        client_name: "Aangan",
+        client_name: "Nearer",
         redirect_uris: [redirectUri],
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],

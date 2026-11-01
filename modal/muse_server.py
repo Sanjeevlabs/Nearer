@@ -1,4 +1,4 @@
-"""Muse Spark Open on Modal: an OpenAI-compatible endpoint (vLLM) for Aangan.
+"""Muse Spark Open on Modal: an OpenAI-compatible endpoint (vLLM) for Nearer.
 
 Deploy (uses Modal credits; scales to zero when idle):
     pip install modal && modal setup

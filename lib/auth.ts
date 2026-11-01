@@ -8,6 +8,8 @@ import { memberFor } from "./request-memo";
 import { DEMO_FAMILY_IDS as DEMO_IDS, isDemoFamily, isSeedFamily } from "./family";
 import { dbLive } from "./family-db";
 
+// Internal keys (this cookie, the aangan:* storage and event keys, IndexedDB and bucket names) keep the old
+// codename so existing sessions survive the rename.
 export const SESSION_COOKIE = "aangan_session";
 const SESSION_TTL_MS = 14 * 24 * 3600 * 1000;
 
@@ -20,9 +22,9 @@ export interface Session {
 // Documented demo backdoor (synthetic demo data only): the welcome screen
 // redeems this for demo-family when no Privacy code is at hand. Real
 // families use Privacy-generated expiring codes.
-export const DEMO_INVITE_CODE = "AANGAN-DEMO";
+export const DEMO_INVITE_CODE = "NEARER-DEMO";
 export const DEMO_FAMILY_ID = "demo-family";
-/** Synthetic demo Aangans (both sides of the demo couple). */
+/** Synthetic demo homes (both sides of the demo couple). */
 export const DEMO_FAMILY_IDS: readonly string[] = DEMO_IDS;
 export { isDemoFamily };
 

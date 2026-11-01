@@ -1,4 +1,4 @@
-// Children in Aangan: who counts as a kid, whose grandparent or parent someone is,
+// Children in Nearer: who counts as a kid, whose grandparent or parent someone is,
 // the bedtime-story rules and kid asks. Pure and client-safe (no fs, no db): the
 // routes load, this decides.
 import type { BedtimeStory, KidAsk } from "./kinds";

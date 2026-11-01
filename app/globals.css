@@ -273,6 +273,10 @@ html[data-door="open"] .door-hero { display: block; }
 html[data-door="open"] .win-hero, html[data-hero="custom"] .win-hero { display: none; }
 @media (min-width: 900px) { .win-hero { display: none; } }
 html[data-door="open"] .checking-ground { background: var(--paper); }
+/* The mark waits on the plain ground only; over a photo header it stays out of the way. */
+.checking-mark { display: none; }
+html[data-door="open"] .checking-mark, html[data-hero="custom"] .checking-mark { display: grid; }
+@media (min-width: 900px) { .checking-mark { display: grid; } }
 .glass-dark {
   background: rgba(20, 16, 13, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.14);

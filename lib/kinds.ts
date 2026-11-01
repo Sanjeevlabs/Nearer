@@ -366,7 +366,7 @@ export const WALLS = ["jodhpur", "jaipur", "chettinad", "goa", "kerala", "lime"]
 
 // ---------- The window (LITE): what each person sees of the other home ----------
 export const WINDOW_LAYERS = ["steam", "rain", "leaves", "birds", "stars", "clouds", "lamp", "breeze"] as const;
-/** What you stand at when Aangan opens: a window, a balcony, or inside the courtyard. */
+/** What you stand at when Nearer opens: a window, a balcony, or inside the courtyard. */
 export const FIRST_SCENES = ["window", "balcony", "courtyard"] as const;
 /** Flower pots on the sill, along the railing, or by the courtyard wall (up to three). */
 export const POTS = ["marigold", "rose", "jasmine", "geranium", "moneyplant", "succulent"] as const;

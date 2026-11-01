@@ -188,7 +188,7 @@ export default function KitchenPage() {
       {data && recipes.length === 0 && (
         <div className="mt-6 rounded-hero bg-surface px-6 py-10 text-center">
           <p className="m-0 text-[20px] font-semibold">The kitchen is waiting for its first recipe</p>
-          <p className="mx-auto mt-2 max-w-[300px] text-[15px] text-ink-soft">Ask the person whose cooking you miss most. They talk; Aangan writes the card; you cook it wherever you are.</p>
+          <p className="mx-auto mt-2 max-w-[300px] text-[15px] text-ink-soft">Ask the person whose cooking you miss most. They talk; Nearer writes the card; you cook it wherever you are.</p>
         </div>
       )}
     </div>

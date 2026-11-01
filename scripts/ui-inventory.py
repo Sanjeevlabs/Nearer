@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """UI inventory: every item visible on every screen, as three demo people (+ signed out).
 
-Generated, not hand-kept. Signs in to the demo (AANGAN-DEMO) as arjun (adult),
+Generated, not hand-kept. Signs in to the demo (NEARER-DEMO) as arjun (adult),
 dadi (parent/elder) and aria (child), visits every route and state (all room
 tabs from lib/menu.ts, the window with the door closed, the courtyard with it
 open, the laptop home page at 1280px, each settings tab, the house sheet and the
@@ -66,7 +66,7 @@ def screens() -> list[dict]:
 
     add("Entry", "courtyard", "/", door="open")
     add("Entry", "window", "/", door="closed")
-    # The home page comes first, on a phone and a laptop, until "Open Aangan" (sessionStorage aangan:entered).
+    # The home page comes first, on a phone and a laptop, until "Open Nearer" (sessionStorage aangan:entered).
     add("Entry", "home-laptop", "/", who="arjun", vp=LAPTOP, door="closed", entered=False)
     add("Entry", "home-phone", "/", who="arjun", door="closed", entered=False)
     add("Entry", "landing", "/", who="anon", door="closed", entered=False)
@@ -315,7 +315,7 @@ def run(base: str) -> tuple[list[dict], list[str]]:
         browser = p.chromium.launch()
         for who, _ in PEOPLE:
             ctx = browser.new_context(base_url=base)
-            res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": who}), headers={"content-type": "application/json"})
+            res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": who}), headers={"content-type": "application/json"})
             if not res.ok:
                 raise SystemExit(f"ui-inventory: demo sign-in as {who} failed {res.status} {res.text()[:200]}")
             states[who] = ctx.storage_state()

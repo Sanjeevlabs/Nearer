@@ -266,7 +266,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     return m?.displayName || m?.firstName || "";
   };
   const shelf = withDemoShelf(recent, familyId);
-  // Last sign of life in Aangan: any moment (opening the app included), a
+  // Last sign of life in Nearer: any moment (opening the app included), a
   // voice or photo they sent, a safety check-in. Only what they already share.
   const signs = (id: string): string[] =>
     [
@@ -282,7 +282,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
       const lastActive = shares ? lastSeen(m.id) : null;
       const state = aliveState(lastActive, m.tz, { shares, now, quietAfter: view?.quietAfterHours });
       const rhythm = dayRhythm(shares ? signs(m.id) : [], m.tz, now);
-      // The only sign being the app heartbeat (just opening Aangan) is not "active" for long.
+      // The only sign being the app heartbeat (just opening Nearer) is not "active" for long.
       const latestShared = presence.find((p) => p.memberId === m.id && p.at === lastActive);
       const heartbeatOnly = Boolean(lastActive) && latestShared?.moment === "here";
       const shared = dayOf(m.id, m.tz);
@@ -347,7 +347,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     wall: view?.wall ?? "jodhpur",
     sky: skyOver(farPlace, herePlace, now),
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
-    // Signed in, or has done anything in Aangan (the demo family has no emails).
+    // Signed in, or has done anything in Nearer (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
     glance: glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous }),
     homePhoto: own.homePhoto,
