@@ -13,7 +13,7 @@ import { postJson, useJson } from "@/lib/use-json";
 import { venueOf } from "@/lib/venues";
 import { placeFromTz, timeIn } from "@/lib/zones";
 
-// Sitting together, inside Aangan: a venue (courtyard, terrace...) with the
+// Sitting together, inside Nearer: a venue (courtyard, terrace...) with the
 // family on their seats, and the video room as the table in the middle. Only a
 // knock or sitting of this family opens a room; its name is the random id,
 // never a guessable family name.

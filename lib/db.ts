@@ -1,3 +1,4 @@
+import { parseBirthday } from "./birthday";
 import { ritualRunId } from "./rituals";
 // Data-access seam: mock memory store vs Supabase.
 // Every route handler goes through these async functions; the shapes match
@@ -105,6 +106,7 @@ export function cardFromRow(r: Record<string, unknown>): Card {
     addressedTo: (r.addressed_to as string | null) ?? null,
     place: typeof r.place === "string" ? r.place.slice(0, 60) : "",
     note: typeof r.note === "string" ? r.note.slice(0, 140) : "",
+    forMemberId: (r.for_member_id as string | null) ?? null,
   });
 }
 
@@ -119,7 +121,7 @@ function memberFromRow(r: Record<string, unknown>): Member {
     displayLang: r.display_lang ?? "en",
     tz: r.tz ?? "UTC",
     city: typeof r.city === "string" ? r.city : "",
-    birthday: typeof r.birthday === "string" && /^\d{2}-\d{2}$/.test(r.birthday) ? r.birthday : "",
+    birthday: typeof r.birthday === "string" && parseBirthday(r.birthday) ? r.birthday : "",
     homeImageRef: (r.home_image_ref as string | null) ?? null,
     homePalette: Array.isArray(r.home_palette) ? (r.home_palette as string[]) : [],
     photoRef: (r.photo_ref as string | null) ?? null,
@@ -207,6 +209,7 @@ export function cardRow(card: Card): Record<string, unknown> {
     // Only sent when set, so a database that hasn't added the columns yet keeps working.
     ...(card.place ? { place: card.place } : {}),
     ...(card.note ? { note: card.note } : {}),
+    ...(card.forMemberId ? { for_member_id: card.forMemberId } : {}),
   };
 }
 
@@ -318,13 +321,13 @@ export async function dbFindMemberByEmail(email: string): Promise<Member | undef
 }
 
 /**
- * Every Aangan this member's person belongs to: one row per family, the same
- * human. A member without a personId belongs to one Aangan only.
+ * Every family space this member's person belongs to: one row per family, the same
+ * human. A member without a personId belongs to one family space only.
  */
 export async function dbListSides(member: Member): Promise<Member[]> {
   if (!member.personId) return [member];
   const local = memFindByPerson(member.personId);
-  // A demo person's sides are the demo Aangans, in memory.
+  // A demo person's sides are the demo homes, in memory.
   const sb = dbFor(member.familyId);
   if (!sb) return local;
   const { data, error } = await sb.from("members").select("*").eq("person_id", member.personId).limit(8);
@@ -874,7 +877,7 @@ export async function dbListInvites(): Promise<Invite[]> {
   const sb = dbFor(null);
   if (!sb) return memListInvites();
   // Invites made inside the demo stay in memory; they redeem alongside the
-  // live ones (the AANGAN-DEMO code itself needs no invite row).
+  // live ones (the NEARER-DEMO code itself needs no invite row).
   const demo = memListInvites().filter((i) => isSeedFamily(i.familyId));
   const { data, error } = await sb.from("invites").select("*").order("created_at", { ascending: false });
   if (error || !data) return memListInvites();

@@ -158,21 +158,32 @@ function routeFetch(memberId = "dadi") {
 
 beforeEach(() => resetDemo());
 
+const NOB = { birthMonth: "", birthDay: "", birthYear: "" };
+
 describe("Profile Save", () => {
   it("one PATCH /api/members/profile with only what changed", async () => {
     const { f, calls } = routeFetch("dadi");
     const before = (await dbGetMember("dadi"))!;
-    const r = await saveProfile(f, { firstName: "  Dadima ", photoRef: before.photoRef }, { firstName: before.firstName, photoRef: before.photoRef });
+    const r = await saveProfile(f, { firstName: "  Dadima ", photoRef: before.photoRef, ...NOB }, { firstName: before.firstName, photoRef: before.photoRef, ...NOB });
     expect(r.ok).toBe(true);
     expect(calls).toEqual([{ method: "PATCH", path: "/api/members/profile", body: { firstName: "Dadima" } }]);
     expect((await dbGetMember("dadi"))!.firstName).toBe("Dadima");
   });
+  it("a birthday with a year is one request; a year without a day is refused before any request", async () => {
+    const { f, calls } = routeFetch("dadi");
+    const r = await saveProfile(f, { firstName: "A", photoRef: null, birthMonth: "01", birthDay: "22", birthYear: "1955" }, { firstName: "A", photoRef: null, ...NOB });
+    expect(r.ok).toBe(true);
+    expect(calls).toEqual([{ method: "PATCH", path: "/api/members/profile", body: { birthday: "1955-01-22" } }]);
+    const none = routeFetch("dadi");
+    expect(await saveProfile(none.f, { firstName: "A", photoRef: null, birthMonth: "", birthDay: "", birthYear: "1955" }, { firstName: "A", photoRef: null, ...NOB })).toMatchObject({ ok: false });
+    expect(none.calls).toHaveLength(0);
+  });
   it("no request when nothing changed, and a failed request is reported", async () => {
     const { f, calls } = routeFetch();
-    expect((await saveProfile(f, { firstName: "A", photoRef: null }, { firstName: "A", photoRef: null })).ok).toBe(true);
+    expect((await saveProfile(f, { firstName: "A", photoRef: null, ...NOB }, { firstName: "A", photoRef: null, ...NOB })).ok).toBe(true);
     expect(calls).toHaveLength(0);
     const bad = (async () => new Response("{}", { status: 500 })) as unknown as typeof fetch;
-    expect(await saveProfile(bad, { firstName: "B", photoRef: null }, { firstName: "A", photoRef: null })).toMatchObject({ ok: false });
+    expect(await saveProfile(bad, { firstName: "B", photoRef: null, ...NOB }, { firstName: "A", photoRef: null, ...NOB })).toMatchObject({ ok: false });
   });
 });
 

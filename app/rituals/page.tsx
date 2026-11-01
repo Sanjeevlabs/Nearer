@@ -185,7 +185,7 @@ export default function OccasionsPage() {
     const todayRuns = new Set(todays.map((o) => data.runs.find((r) => r.ritualSlug === o.slug && r.occasionDate === o.date)?.id).filter(Boolean));
     return all.filter((g) => !(g.runId && todayRuns.has(g.runId)));
   }, [data, cards, albumsQ.data, titleFor, todays]);
-  const sourceLine = data ? (data.holidaySource === "google" ? `Festival dates from Google’s public holiday calendar for ${data.countryName}.` : `Festival dates from Aangan’s own list for ${data.countryName}.`) : "";
+  const sourceLine = data ? (data.holidaySource === "google" ? `Festival dates from Google’s public holiday calendar for ${data.countryName}.` : `Festival dates from Nearer’s own list for ${data.countryName}.`) : "";
 
   return (
     <div>

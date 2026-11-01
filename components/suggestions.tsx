@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { FestivalStepsSheet, useFestivalWeek } from "./festival-header";
 import { useViewer } from "./viewer";
 
-// "Aangan suggests · Review / Approve" — flat surface card. Actions execute
+// "Nearer suggests · Review / Approve" — flat surface card. Actions execute
 // ONLY after approval (POST to the approve route).
 export function Suggestions({ compact }: { compact?: boolean }) {
   const { lang } = useViewer();
@@ -76,7 +76,7 @@ export function Suggestions({ compact }: { compact?: boolean }) {
 
   // Agent proposals: nothing happens until a person approves.
   return (
-    <section aria-label="Aangan suggests" className="mb-6">
+    <section aria-label="Nearer suggests" className="mb-6">
       <ul className="m-0 list-none space-y-2 p-0">
         {items.map((s) => (
           <li key={s.id} className="rounded-[22px] bg-black/[.04] px-4 py-3.5">

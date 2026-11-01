@@ -3,7 +3,7 @@
 //   confirm → only with the single-use preview id, from the same member,
 //             after an explicit tap (the route requires confirm: true).
 // Muse never reaches this module. Payment happens in the partner's own
-// flow (UPI QR / store checkout); Aangan never sees payment details.
+// flow (UPI QR / store checkout); Nearer never sees payment details.
 // Server only.
 import { randomBytes } from "crypto";
 import { claimDoc } from "../family-docs";

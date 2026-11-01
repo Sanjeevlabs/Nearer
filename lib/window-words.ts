@@ -48,6 +48,14 @@ export function lampLine(last: { litAt: string | null; litBy: string | null } | 
   return `Lit by ${who || "someone"}, ${dayWord(last.litAt, now, tz)}`;
 }
 
+/** The lamp row's line: "Lit by Maa · 2 h ago" while it is lit (within a day), else "Not lit yet today". */
+export function lampToday(last: { litAt: string | null } | undefined, who: string, now: Date): { lit: boolean; line: string } {
+  const hours = last?.litAt ? (now.getTime() - Date.parse(last.litAt)) / 3_600_000 : Infinity;
+  if (!(hours >= 0 && hours < 24)) return { lit: false, line: "Not lit yet today" };
+  const ago = hours < 1 ? "just now" : `${Math.floor(hours)} h ago`;
+  return { lit: true, line: `Lit by ${who || "someone"} · ${ago}` };
+}
+
 /** "Chai · 6:40 AM"-style facts for one shared moment. */
 export interface DayMoment {
   label: string;

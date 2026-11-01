@@ -4,11 +4,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { awakeNow } from "@/lib/glance";
 import { grandparentsOf, guardiansOf } from "@/lib/kids";
-import type { HeightMark } from "@/lib/kinds";
 import { callName, memberPhoto } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
-import { Doorframe } from "./doorframe";
 import { usePlayer } from "./player";
 import { useShell } from "./shell";
 import { Avatar, Icon, type IconName } from "./ui/kit";
@@ -79,25 +77,6 @@ function Tonight() {
   );
 }
 
-function Wall({ memberId }: { memberId: string }) {
-  const { data } = useJson<{ marks: HeightMark[] }>(`/api/height?memberId=${encodeURIComponent(memberId)}`);
-  const marks = data?.marks ?? [];
-  return (
-    <section data-ui="kid-wall" aria-label="Your wall" className="mt-8">
-      <h2 className="m-0 text-[22px]">Your wall</h2>
-      {data === null ? (
-        <div className="skeleton mt-3 h-[200px] rounded-[26px]" />
-      ) : marks.length === 0 ? (
-        <p className="m-0 mt-2 text-[17px] leading-snug text-ink-soft">Ask a grown-up to make your first mark.</p>
-      ) : (
-        <div className="mt-3 rounded-[26px] bg-surface px-4 py-5" style={{ boxShadow: "var(--surface-edge)" }}>
-          <Doorframe marks={marks} />
-        </div>
-      )}
-    </section>
-  );
-}
-
 export function KidHome() {
   const { viewer, members, relationships } = useViewer();
   const { openAdd } = useShell();
@@ -143,7 +122,6 @@ export function KidHome() {
       </div>
 
       <Tonight />
-      <Wall memberId={viewer.id} />
     </div>
   );
 }

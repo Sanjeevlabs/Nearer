@@ -1,4 +1,4 @@
-// Aangan offline shell. Hand-written, no dependencies.
+// Nearer offline shell. Hand-written, no dependencies.
 //  - static files (/_next/static, /demo, /icons, /home, /window): stale-while-revalidate
 //  - pages: network first, then the last copy, then /offline.html
 //  - /api GETs: network first, then the last copy (never media, session or auth)

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Aangan</string>
-    <string name="title_activity_main">Aangan</string>
-    <string name="package_name">app.aangan.family</string>
-    <string name="custom_url_scheme">app.aangan.family</string>
+    <string name="app_name">Nearer</string>
+    <string name="title_activity_main">Nearer</string>
+    <string name="package_name">com.sanjeevlabs.nearer</string>
+    <string name="custom_url_scheme">com.sanjeevlabs.nearer</string>
 </resources>

@@ -1,4 +1,4 @@
-package app.aangan.family;
+package com.sanjeevlabs.nearer;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -17,7 +17,7 @@ export type NeedDraft = z.infer<typeof NeedDraftSchema>;
 const NEED_SYSTEM = [
   "A parent asked their family for practical help by voice. Turn it into one task. Reply JSON only:",
   '{"title": str, "kind": "groceries"|"house"|"ride"|"repair"|"gas"|"bills"|"health"|"errand"|"visit"|"pets"|"other", "when": str}',
-  "- kind \"health\" is only for logistics (an appointment, a medicine pickup); \"bills\" is only a reminder task. Aangan never handles money.",
+  "- kind \"health\" is only for logistics (an appointment, a medicine pickup); \"bills\" is only a reminder task. Nearer never handles money.",
   "- title: short, in English, in the parent's own framing (\"The geyser isn't heating\").",
   "- when: only if they said a time (\"Tuesday morning\"), else \"\".",
   "- Never diagnose, never give medical or any other advice. If they mention feeling unwell, the task is kind \"visit\": \"Someone to visit and check on me\".",

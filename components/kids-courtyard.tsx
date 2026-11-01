@@ -3,7 +3,7 @@
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { growLine, isKid, kidCards, kidsOf, type Grew } from "@/lib/kids";
+import { fridgeKidId, isKid, kidCards, kidsOf, pinnedBy } from "@/lib/kids";
 import type { KidAsk } from "@/lib/kinds";
 import type { Card, Member } from "@/lib/schemas";
 import { callName, cardCover, relativeDay } from "@/lib/people";
@@ -12,11 +12,11 @@ import { postJson, useJson } from "@/lib/use-json";
 import { LaneViewer } from "./lane-viewer";
 import { usePlayer } from "./player";
 import { useShell } from "./shell";
-import { Icon, Photo } from "./ui/kit";
+import { Icon, Photo, petalFor } from "./ui/kit";
 import { useViewer } from "./viewer";
 
 // The kids on the grown-ups' courtyard (lib/kids.ts): tonight's bedtime prompt, what the
-// kids asked, a line when a new mark lands on the doorframe, and the fridge strip.
+// kids asked, and the fridge strip.
 // Nothing here appears for a child, and nothing appears when the family has no children.
 
 export const Label = ({ children }: { children: React.ReactNode }) => <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-soft">{children}</p>;
@@ -98,28 +98,6 @@ function AskedByKids() {
   );
 }
 
-/** A new mark on the doorframe, in one line each. No advice. */
-function GrewCard() {
-  const { members } = useViewer();
-  const q = useJson<{ grew: Grew[] }>("/api/height");
-  const grew = q.data?.grew ?? [];
-  if (grew.length === 0) return null;
-  return (
-    <section data-ui="courtyard-kid-grew" aria-label="From the kids" className="mt-5 rounded-[26px] bg-surface p-5">
-      <Label>From the kids</Label>
-      <ul className="m-0 mt-2 list-none space-y-1.5 p-0">
-        {grew.slice(0, 3).map((g) => (
-          <li key={g.memberId}>
-            <Link href={`/people/${g.memberId}`} className="voice text-[19px] leading-snug text-ink no-underline">
-              {growLine(callName(members.find((m) => m.id === g.memberId)), g)}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 /**
  * The fridge's polaroids held by a magnet: tap one to open it, and a "Reply by voice" pill per child.
  * `grid` wraps them all (the Kids page); otherwise one scrolling strip (the courtyard).
@@ -132,11 +110,13 @@ export function FridgeBoard({ cards, replyTo, grid = false }: { cards: Card[]; r
     <>
       <ul className={grid ? "m-0 mt-3 flex list-none flex-wrap gap-x-3 gap-y-4 p-0 pt-2" : "no-scrollbar -mx-1 m-0 mt-3 flex list-none gap-3 overflow-x-auto px-1 pb-2 pt-2"}>
         {cards.map((c, i) => {
-          const author = members.find((m) => m.id === c.authorId);
+          const author = members.find((m) => m.id === fridgeKidId(c));
+          const pinner = pinnedBy(c);
+          const pinnerName = pinner ? callName(members.find((m) => m.id === pinner)) : null;
           return (
             <li key={c.id} className="shrink-0" style={{ transform: `rotate(${i % 2 ? 2.2 : -2.2}deg)` }}>
-              <button type="button" onClick={() => setOpen(i)} aria-label={`${callName(author)}'s ${c.type === "audio" ? "voice note" : c.type === "video" ? "video" : "picture"}, ${relativeDay(c.takenAt)}`} className="press relative block bg-white p-1.5 pb-6 text-left" style={{ width: 104, boxShadow: "0 6px 14px -8px rgba(60,42,24,.5)" }}>
-                <span className="absolute -top-1.5 left-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 rounded-full" style={{ background: ["#d4553f", "#3f7fb5", "#e0a324"][i % 3], boxShadow: "0 2px 3px rgba(0,0,0,.35)" }} aria-hidden="true" />
+              <button type="button" onClick={() => setOpen(i)} aria-label={`${callName(author)}'s ${c.type === "audio" ? "voice note" : c.type === "video" ? "video" : "picture"}, ${relativeDay(c.takenAt)}${pinnerName ? `, pinned by ${pinnerName}` : ""}`} className={`press relative block bg-white p-1.5 text-left ${pinnerName ? "pb-9" : "pb-6"}`} style={{ width: 104, boxShadow: "0 6px 14px -8px rgba(60,42,24,.5)" }}>
+                <span className="absolute -top-1.5 left-1/2 z-10 h-3.5 w-3.5 -translate-x-1/2 rounded-full" style={{ background: petalFor(fridgeKidId(c) ?? String(i)), boxShadow: "0 2px 3px rgba(0,0,0,.35)" }} aria-hidden="true" />
                 <span className="relative block h-[96px] w-full overflow-hidden bg-well">
                   <Photo src={cardCover(c, members)} alt="" sizes="120px" position="center 30%" />
                   {c.type !== "photo" && (
@@ -145,7 +125,10 @@ export function FridgeBoard({ cards, replyTo, grid = false }: { cards: Card[]; r
                     </span>
                   )}
                 </span>
-                <span className="absolute inset-x-1.5 bottom-1 truncate text-[12px] font-medium text-ink">{callName(author)}</span>
+                <span className="absolute inset-x-1.5 bottom-1 block leading-tight">
+                  <span className="block truncate text-[12px] font-medium text-ink">{callName(author)}</span>
+                  {pinnerName && <span className="block truncate text-[10px] text-ink-soft">Pinned by {pinnerName}</span>}
+                </span>
               </button>
             </li>
           );
@@ -167,7 +150,7 @@ export function FridgeBoard({ cards, replyTo, grid = false }: { cards: Card[]; r
 /** The fridge strip on the courtyard: the kids' latest photos, drawings and voices. */
 function Fridge() {
   const { members } = useViewer();
-  const { refreshKey } = useShell();
+  const { openAdd, refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const asks = useJson<{ askCardIds?: string[] }>("/api/kid-ask");
   const strip = useMemo(() => {
@@ -175,14 +158,21 @@ function Fridge() {
     return kidCards(cards ?? [], members).filter((c) => !skip.has(c.id)).slice(0, 6);
   }, [cards, members, asks.data]);
   if (strip.length === 0) return null;
-  const latest = members.find((m) => m.id === strip[0].authorId);
+  const latest = members.find((m) => m.id === fridgeKidId(strip[0]));
+  const kids = members.filter((m) => isKid(m) && m.status !== "pending");
   return (
     <section data-ui="courtyard-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-5" style={{ background: "var(--well)" }}>
       <div className="flex items-center justify-between gap-3">
         <Label>Fridge</Label>
-        <Link href="/bond/kids" className="press -mr-2 flex h-10 items-center px-2 text-[14px] font-semibold text-ink no-underline">
-          All &rarr;
-        </Link>
+        <div className="-mr-2 flex items-center">
+          <button type="button" onClick={() => openAdd("photos", { kind: "fridge", ...(kids.length === 1 ? { forMemberId: kids[0].id } : {}) })} className="press flex h-10 items-center gap-1 px-2 text-[14px] font-semibold text-ink">
+            <Icon name="plus" size={14} />
+            Add to the fridge
+          </button>
+          <Link href="/bond/kids" className="press flex h-10 items-center px-2 text-[14px] font-semibold text-ink no-underline">
+            All &rarr;
+          </Link>
+        </div>
       </div>
       <FridgeBoard cards={strip} replyTo={latest ? [latest] : []} />
     </section>
@@ -198,7 +188,6 @@ export function KidsCourtyard() {
     <div data-ui="courtyard-kids">
       {mine.length > 0 && <BedtimePrompt />}
       <AskedByKids />
-      <GrewCard />
       <Fridge />
     </div>
   );

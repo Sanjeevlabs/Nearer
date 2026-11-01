@@ -1,11 +1,11 @@
-# Aangan design system and product map
+# Nearer design system and product map
 
 Source of truth for every screen, control and visual rule. If code and this
 file disagree, fix one of them in the same commit.
 
 ## 1. The one idea
 
-Aangan is a family's courtyard: a place where you **hear** the people you love
+Nearer is a family's courtyard: a place where you **hear** the people you love
 and **answer** them. Every screen serves one loop:
 
 > hear someone → feel something → answer them (voice, a blessing, a photo).
@@ -23,7 +23,7 @@ its controls (play, scrub, lyrics) and its tone (warm, intimate, never a feed).
 | **The photo is the surface** | Real faces carry the emotion; chrome should step back | Gradient placeholders, coloured card backgrounds, decorative illustration |
 | **Glass only over imagery** | Glass on white is invisible and looks like a bug; over a photo it lets the photo stay present while keeping text legible | Glass panels on the white page; stacked glass on glass |
 | **Serif means a real voice** | Literata italic is used only for words a person actually said (quotes, transcripts, lyrics). Readers learn the rule without being told | Serif headings, serif buttons |
-| **Never a dashboard, never a feed** | Metrics and infinite scroll create obligation and guilt; Aangan creates presence | Counts, streaks, "last active", unread badges, infinite lists |
+| **Never a dashboard, never a feed** | Metrics and infinite scroll create obligation and guilt; Nearer creates presence | Counts, streaks, "last active", unread badges, infinite lists |
 | **Settings live in Settings** | Language, timezone and notifications are set once; they must not tax every visit | Language pickers on Home or Welcome |
 | **Kinship from the viewer** | The same woman is Dadi to Leo, Maa to Arjun, Grandma to a cousin in Toronto. Labels always use the viewer's relation | Hard-coded "Dadi", "Talk to Dadi" |
 
@@ -60,7 +60,7 @@ A floating glass **dock** at the bottom of Home:
 
 `lib/menu.ts` is the single source. Each tab is its own page with its own content, and no card shows on two tab pages: Memory Lane is the everyday photos and voices; what an occasion, a story, the Book or Advice holds stays there. Its title is the tab label (or a fuller one: Helpers → "Local helpers", Nearby → "Trusted nearby"), with the room's name above it (Kitchen too: KITCHEN over "Recipes"). The open tab always scrolls into view. Invite family opens a sheet in place; Settings is only behind your own photo. Pages outside the rooms (Safe & sound, Settings, a person, an event, an album) have no tab row.
 
-**Why not tabs.** Tabs give five destinations equal weight and turn the app into a utility. Aangan has one loop, so it gets one big button.
+**Why not tabs.** Tabs give five destinations equal weight and turn the app into a utility. Nearer has one loop, so it gets one big button.
 
 **What it costs.** Rooms are one extra tap away. Mitigation: each room surfaces on Home as content with a door into it (the next occasion, the next celebration, a memory from years ago).
 
@@ -70,7 +70,7 @@ Inside a room: a large title, a back chevron, no dock. Rooms are places you visi
 
 | Screen | Job | Primary action | Notes |
 |---|---|---|---|
-| **Landing** (signed out) | Say what Aangan is in one breath | Get started | Full-bleed home photo, one line ("Hear the people you love, every day"), Sign in as a text link |
+| **Landing** (signed out) | Say what Nearer is in one breath | Get started | Full-bleed home photo, one line ("Hear the people you love, every day"), Sign in as a text link |
 | **Sign in** | Get back in without passwords | Send code | Email, then a 6-digit code. "Explore a demo family" link for judges |
 | **Create family** | Start a courtyard | Create | Family name, your first name, your relation (e.g. son) |
 | **Join family** | Join with a code from a relative | Join | Invite code, then "Who are you?": pick yourself or add yourself |

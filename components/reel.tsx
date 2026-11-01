@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
 import { useViewer } from "@/components/viewer";
+import { mmdd as mmddOf } from "@/lib/birthday";
 import { strings } from "@/lib/i18n";
 import type { Card, Member, RitualRun, Wish } from "@/lib/schemas";
 import { buildReelSegments, reelTitle, type ReelSegment } from "@/lib/reel";
@@ -163,5 +164,5 @@ export function ReelPlayer({ runId }: { runId: string }) {
 function celebrantOf(run: RitualRun, members: Member[]): Member | undefined {
   if (run.ritualSlug !== "birthday") return undefined;
   const mmdd = run.occasionDate.slice(5);
-  return members.find((m) => m.birthday === mmdd);
+  return members.find((mem) => mmddOf(mem.birthday) === mmdd);
 }

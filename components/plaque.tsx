@@ -70,7 +70,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
       card={card}
       footer={
         <>
-          <span className="text-[12px] font-semibold tracking-wide text-ink-soft">AANGAN</span>
+          <span className="text-[12px] font-semibold tracking-wide text-ink-soft">NEARER</span>
           <VoiceCode peaks={card.peaks} progress={progress} className="flex-1 justify-end" />
         </>
       }
@@ -128,7 +128,7 @@ export function VideoPlaque({ card }: { card: Card }) {
       card={card}
       footer={
         <>
-          <span className="text-[12px] font-semibold tracking-wide text-ink-soft">AANGAN</span>
+          <span className="text-[12px] font-semibold tracking-wide text-ink-soft">NEARER</span>
           <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-black/[.08]">
             <span className="block h-full bg-ink" style={{ width: `${progress * 100}%` }} />
           </span>

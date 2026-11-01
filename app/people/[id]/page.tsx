@@ -2,7 +2,6 @@
 
 import { placeFromTz } from "@/lib/zones";
 import { PersonDetails } from "@/components/person-details";
-import { HeightMarks } from "@/components/height-marks";
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -121,7 +120,6 @@ export default function PersonPage() {
           </div>
         </section>
       )}
-      <HeightMarks person={person} />
       <PersonDetails person={person} onChanged={() => undefined} />
     </div>
   );

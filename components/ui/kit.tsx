@@ -109,6 +109,7 @@ function demoWidths(src: string): number[] | null {
   if (src === "/demo/courtyard.jpg" || /^\/demo\/home-(courtyard|balcony|window)\.jpg$/.test(src)) return [390, 780];
   if (/^\/demo\/venues\/[a-z]+\.jpg$/.test(src)) return [390, 780, 1600];
   if (/^\/demo\/family-[a-z]+\.webp$/.test(src)) return [440, 880];
+  if (/^\/demo\/lamp-(lit|unlit)\.jpg$/.test(src)) return [160, 390];
   if (/^\/demo\/portrait-[a-z]+\.webp$/.test(src)) return [160, 400];
   return null;
 }
@@ -255,28 +256,18 @@ export function Avatar({ src, name, size = 40, ring = false }: { src: string | n
   );
 }
 
-/** Warm, stable tone per name, so a person without a photo still looks like someone. */
-const TONES: [string, string][] = [
-  ["#f4d7b5", "#c98a5a"],
-  ["#e7d3c0", "#a7705a"],
-  ["#dfe3c8", "#8c9a5f"],
-  ["#d7e2e4", "#6f8f99"],
-  ["#ecd2d0", "#b06f6a"],
-  ["#e6dcc9", "#9c8460"],
-];
-export function toneFor(name: string): [string, string] {
+/** One of the five family petal colours (app/tokens.css), stable per key: a person without a photo still has a colour of their own. */
+export function petalFor(key: string): string {
   let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return TONES[h % TONES.length];
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return `var(--petal-${(h % 5) + 1})`;
 }
 
-/** Initial in the voice serif on a soft gradient: used wherever a portrait is missing. */
 export function Monogram({ name, size }: { name: string; size: number }) {
-  const [light, deep] = toneFor(name || "?");
   return (
     <span
       className="voice grid h-full w-full select-none place-items-center text-white"
-      style={{ background: `radial-gradient(120% 120% at 30% 20%, ${light}, ${deep})`, fontSize: Math.max(14, size * 0.44) }}
+      style={{ background: petalFor(name || "?"), fontSize: Math.max(14, size * 0.44) }}
       aria-hidden="true"
     >
       {(name || "?").trim().slice(0, 1).toUpperCase()}

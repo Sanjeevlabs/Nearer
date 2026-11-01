@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """UI inventory: every item visible on every screen, as three demo people (+ signed out).
 
-Generated, not hand-kept. Signs in to the demo (AANGAN-DEMO) as arjun (adult),
+Generated, not hand-kept. Signs in to the demo (NEARER-DEMO) as arjun (adult),
 dadi (parent/elder) and aria (child), visits every route and state (all room
 tabs from lib/menu.ts, the window with the door closed, the courtyard with it
 open, the laptop home page at 1280px, each settings tab, the house sheet and the
@@ -70,14 +70,16 @@ def screens() -> list[dict]:
     tabs = re.findall(r'href:\s*"(/[^"]*)"', menu)  # every room tab, in order
     out: list[dict] = []
 
-    def add(group, screen, path, who="app", vp=PHONE, door="open", action=None, skip_kind=None):
-        out.append(dict(group=group, screen=screen, path=path, who=who, vp=vp, door=door, action=action, skip_kind=skip_kind))
+    def add(group, screen, path, who="app", vp=PHONE, door="open", action=None, skip_kind=None, entered=True):
+        out.append(dict(group=group, screen=screen, path=path, who=who, vp=vp, door=door, action=action, skip_kind=skip_kind, entered=entered))
 
     add("Entry", "courtyard", "/", door="open")
     add("Entry", "window", "/", door="closed")
-    add("Entry", "home-laptop", "/", who="arjun", vp=LAPTOP, door="closed")
-    add("Entry", "landing", "/", who="anon", door="closed")
-    add("Entry", "landing-laptop", "/", who="anon", vp=LAPTOP, door="closed")
+    # The home page comes first, on a phone and a laptop, until "Open Nearer" (sessionStorage aangan:entered).
+    add("Entry", "home-laptop", "/", who="arjun", vp=LAPTOP, door="closed", entered=False)
+    add("Entry", "home-phone", "/", who="arjun", door="closed", entered=False)
+    add("Entry", "landing", "/", who="anon", door="closed", entered=False)
+    add("Entry", "landing-laptop", "/", who="anon", vp=LAPTOP, door="closed", entered=False)
     for t in tabs:
         add("Rooms", t, t, skip_kind="child" if t == "/portrait" else None)
     for tid in ("you", "window", "family", "privacy"):
@@ -324,6 +326,8 @@ def walk_persona(base: str, persona: str, kind: str, state: dict | None, now: st
                 continue
             ctx = new_ctx(browser, now, viewport=scr["vp"], base_url=base, storage_state=state)
             ctx.add_init_script(f"try {{ sessionStorage.setItem('aangan:door', '{scr['door']}') }} catch (e) {{}}")
+            if scr["entered"]:
+                ctx.add_init_script("try { sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
             page = ctx.new_page()
             try:
                 rows = capture(page, scr, persona, other, log)
@@ -343,7 +347,7 @@ def run(base: str, now: str) -> tuple[list[dict], list[str]]:
         browser = p.chromium.launch()
         for who, _ in PEOPLE:
             ctx = new_ctx(browser, now, base_url=base)
-            res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": who}), headers={"content-type": "application/json"})
+            res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": who}), headers={"content-type": "application/json"})
             if not res.ok:
                 raise SystemExit(f"ui-inventory: demo sign-in as {who} failed {res.status} {res.text()[:200]}")
             states[who] = ctx.storage_state()
@@ -360,7 +364,7 @@ def run(base: str, now: str) -> tuple[list[dict], list[str]]:
         log += plog
         for group, screen, door, rows in seen:
             for order, r in enumerate(rows):
-                # The dock is hidden on the window and the landing (app/page.tsx setChromeHidden); a
+                # The dock is hidden on the window and the landing (on "/" it shows only for the courtyard and kid-home: app/page.tsx setDockOn); a
                 # frame of it mid-transition is not part of the screen.
                 if door == "closed" and group == "Entry" and r["component"] == "dock":
                     continue

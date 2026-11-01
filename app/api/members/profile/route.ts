@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { dbUpdateMemberProfile } from "@/lib/db";
+import { BirthdayInput } from "@/lib/schemas";
 
 const ProfileSchema = z.object({
   firstName: z.string().trim().min(1).max(40).optional(),
@@ -19,6 +20,8 @@ const ProfileSchema = z.object({
   photoRef: z.string().max(512).nullable().optional(),
   /** The city, in their words: shown on the other side's window with its weather. */
   city: z.string().trim().max(60).optional(),
+  /** "MM-DD", or "YYYY-MM-DD" with the year (lib/birthday.ts); "" clears it. */
+  birthday: BirthdayInput.optional(),
 });
 
 // The session member edits only their own profile; no member id is accepted.

@@ -4,7 +4,7 @@
 
 export const en = {
   // Landing (signed out)
-  "landing.tagline": "Far from home. Never far from them.",
+  "landing.tagline": "The window between two homes.",
   "landing.sub": "A window into your parents' day, and theirs into yours.",
   "landing.create": "Create",
   "landing.join": "Join with code",
@@ -16,7 +16,7 @@ export const en = {
   "welcome.morning": "Good morning",
   "welcome.afternoon": "Good afternoon",
   "welcome.evening": "Good evening",
-  "welcome.title": "Welcome to {name}'s Aangan",
+  "welcome.title": "Welcome home, {name}",
   "welcome.enter": "Step inside",
 
   // Auth: titles
@@ -89,7 +89,7 @@ export const en = {
   "error.no-family": "No family uses this email yet. Start one, or join with an invite code.",
   "error.already-member": "This email already belongs to a family. Sign in instead.",
   "error.invalid-invite": "That invite code isn't valid or has expired. Ask for a new one.",
-  "error.too-many-sides": "You're already in four families, the most Aangan allows.",
+  "error.too-many-sides": "You're already in four families, the most Nearer allows.",
   "error.generic": "Something went wrong. Try again.",
 
   // Onboarding: the other side of the window
@@ -154,7 +154,7 @@ export const en = {
   "settings.done": "Done",
   "settings.search": "Search languages",
   "settings.noMatch": "No match. Try the English name.",
-  "settings.languageNote": "Aangan's own words on the main screens follow this language where marked below. Everything the family shares (voices, captions, recipes, notes) is translated for you. Names stay as the family says them.",
+  "settings.languageNote": "Nearer's own words on the main screens follow this language where marked below. Everything the family shares (voices, captions, recipes, notes) is translated for you. Names stay as the family says them.",
   "settings.languageUpdated": "Language updated",
   "settings.appSpeaks": "The app's own words are in this language too.",
 } as const;

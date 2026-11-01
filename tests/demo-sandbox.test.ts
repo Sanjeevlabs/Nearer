@@ -88,7 +88,7 @@ import { createUploadUrl, storagePath } from "@/lib/storage";
 import { sessionCookie } from "./auth-helper";
 
 const enter = (memberId = "arjun", cookie = "") =>
-  session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": `10.0.0.${Math.floor(Math.random() * 250)}`, ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId }) }));
+  session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": `10.0.0.${Math.floor(Math.random() * 250)}`, ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId }) }));
 const cookieOf = (res: Response) => (res.headers.get("set-cookie") ?? "").split(";")[0];
 
 beforeEach(() => {
@@ -217,7 +217,7 @@ describe("purge", () => {
 });
 
 describe("per-caller brake", () => {
-  const from = (ip: string, cookie = "") => session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "arjun" }) }));
+  const from = (ip: string, cookie = "") => session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "arjun" }) }));
 
   it("the 6th copy in an hour from one caller is refused; another caller still gets in", async () => {
     for (let i = 0; i < 5; i++) expect((await from("203.0.113.7")).status).toBe(200);

@@ -9,7 +9,7 @@
 	     CAP_SERVER_URL origin; the origin must serve /.well-known/apple-app-site-association. -->
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:aangan.sanjeevlabs.com</string>
+		<string>applinks:nearer.sanjeevlabs.com</string>
 	</array>
 </dict>
 </plist>

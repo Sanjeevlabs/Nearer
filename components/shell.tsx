@@ -50,6 +50,12 @@ interface ShellState {
   bumpRefresh: () => void;
   chromeHidden: boolean;
   setChromeHidden: (v: boolean) => void;
+  /**
+   * On "/" the dock is OFF unless the page turns it on (app/page.tsx, for the courtyard and
+   * kid gates only). It is remembered per path, so leaving "/" and coming back starts off again.
+   */
+  dockOn: boolean;
+  setDockOn: (v: boolean) => void;
   /** Open the rooms sheet (the five rooms of the house). */
   openRooms: () => void;
 }
@@ -116,7 +122,7 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 // The dock: a voice note (to anyone; it says who is waiting for your reply),
 // a photo, and the house for the rooms (Memories, Kitchen, Care, Family, Celebrations).
 function Dock() {
-  const { openAdd, openRooms, refreshKey, chromeHidden } = useShell();
+  const { openAdd, openRooms, refreshKey, chromeHidden, dockOn } = useShell();
   const { viewer, members } = useViewer();
   const { cards } = useFamilyCards(refreshKey);
   const { current, open: playerOpen } = usePlayer();
@@ -137,7 +143,7 @@ function Dock() {
   const waitingList = wait?.items ?? [];
   const waiting = useMemo(() => new Set((wait?.items ?? []).flatMap((i) => (i.fromId ? [i.fromId] : []))), [wait]);
   const others = useMemo(() => peopleByRecency(viewer.id, members, cards ?? []).sort((a, b) => Number(waiting.has(b.id)) - Number(waiting.has(a.id)) || Number(a.role === "child") - Number(b.role === "child")), [viewer.id, members, cards, waiting]);
-  const show = (pathname === "/" || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
+  const show = ((pathname === "/" && dockOn) || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
   const voice = () => {
     if (pagePerson && pagePerson.id !== viewer.id) return openAdd("voice", null, [pagePerson.id]);
     if (others.length === 1) return openAdd("voice", null, [others[0].id]);
@@ -199,7 +205,7 @@ function Dock() {
 }
 
 /**
- * Being in Aangan is the "safe & sound" signal the other home sees (green
+ * Being in Nearer is the "safe & sound" signal the other home sees (green
  * dot). Sent on open and whenever the app comes back to the foreground; the
  * server keeps at most one every 30 minutes and skips people who opted out.
  */
@@ -241,6 +247,11 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   const [addressee, setAddressee] = useState<string[] | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [chromeHidden, setChromeHidden] = useState(false);
+  // The path that asked for the dock; it counts only while we are still on that path.
+  const path = usePathname();
+  const [dockPath, setDockPath] = useState<string | null>(null);
+  const dockOn = dockPath === path;
+  const setDockOn = useCallback((v: boolean) => setDockPath(v ? window.location.pathname : null), []);
   const [roomsOpen, setRoomsOpen] = useState(false);
   const openRooms = useCallback(() => setRoomsOpen(true), []);
   const closeRooms = useCallback(() => setRoomsOpen(false), []);
@@ -258,8 +269,8 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const value = useMemo<ShellState>(
-    () => ({ addOpen, addTab, replyTo, addressee, openAdd, closeAdd, refreshKey, bumpRefresh, chromeHidden, setChromeHidden, openRooms }),
-    [addOpen, addTab, replyTo, addressee, openAdd, closeAdd, refreshKey, bumpRefresh, chromeHidden, openRooms],
+    () => ({ addOpen, addTab, replyTo, addressee, openAdd, closeAdd, refreshKey, bumpRefresh, chromeHidden, setChromeHidden, dockOn, setDockOn, openRooms }),
+    [addOpen, addTab, replyTo, addressee, openAdd, closeAdd, refreshKey, bumpRefresh, chromeHidden, dockOn, setDockOn, openRooms],
   );
 
   return (
@@ -267,7 +278,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       <PlayerProvider>
         <main
           className="relative mx-auto min-h-full w-full max-w-[480px] px-5"
-          style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(140px + env(safe-area-inset-bottom))", zoom: large ? 1.12 : undefined }}
+          style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(172px + env(safe-area-inset-bottom))", zoom: large ? 1.12 : undefined }}
         >
           {children}
         </main>

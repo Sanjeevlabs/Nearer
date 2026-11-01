@@ -12,7 +12,7 @@ import { Avatar, Button, Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
 
 // Two courtyards, one door. A couple and their children belong to both
-// families' Aangans; each side stays its own (nothing crosses unless shared).
+// families' homes; each side stays its own (nothing crosses unless shared).
 
 export interface Side {
   familyId: string;
@@ -164,7 +164,7 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
       <div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-5 pt-5 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
         {made ? (
           <>
-            <p className="m-0 text-[21px] font-semibold">The {name.trim()} Aangan is ready</p>
+            <p className="m-0 text-[21px] font-semibold">The {name.trim()} Nearer is ready</p>
             <p className="m-0 mt-1 text-[15px] text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
             <p className="tnum m-0 mt-4 rounded-[22px] bg-surface py-4 text-center text-[28px] font-bold tracking-[0.12em]">{made.invite.code}</p>
             <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-black text-[16px] font-semibold text-white no-underline">
@@ -179,13 +179,13 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
                 window.location.assign("/");
               }}
             >
-              Open the {name.trim()} Aangan
+              Open the {name.trim()} family
             </Button>
           </>
         ) : (
           <>
             <p className="m-0 text-[21px] font-semibold">Add your family&rsquo;s side</p>
-            <p className="m-0 mt-1 text-[15px] text-ink-soft">A separate Aangan for your parents&rsquo; family. Nothing from this side shows there unless you share it.</p>
+            <p className="m-0 mt-1 text-[15px] text-ink-soft">A separate home for your parents&rsquo; family. Nothing from this side shows there unless you share it.</p>
             <label className="mt-4 block">
               <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Family name</span>
               <input value={name} onChange={(e) => setName(e.target.value.slice(0, 40))} placeholder="Your parents' family name" className="h-[52px] w-full rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-black/15" />
@@ -227,7 +227,7 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
                 } else setError("Couldn't create it. Try again in a moment.");
               }}
             >
-              {busy ? "Creating…" : "Create the Aangan"}
+              {busy ? "Creating…" : "Create the family"}
             </Button>
           </>
         )}

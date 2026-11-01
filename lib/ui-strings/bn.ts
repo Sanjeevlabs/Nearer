@@ -12,7 +12,7 @@ export const bn: Catalogue = {
   "welcome.morning": "সুপ্রভাত",
   "welcome.afternoon": "নমস্কার",
   "welcome.evening": "শুভ সন্ধ্যা",
-  "welcome.title": "{name}-এর উঠোনে স্বাগত",
+  "welcome.title": "ঘরে স্বাগত, {name}",
   "welcome.enter": "ভেতরে আসুন",
 
   "auth.back": "ফিরে যান",

@@ -20,14 +20,14 @@ import { sinceLabel } from "@/lib/since";
 import { useFamilyCards } from "@/lib/use-family";
 import { cn } from "@/lib/utils";
 import type { Weather } from "@/lib/weather";
-import { badgeParts, clockWord, dayWord, lampLine, type DayMoment } from "@/lib/window-words";
+import { badgeParts, clockWord, dayWord, lampToday, type DayMoment } from "@/lib/window-words";
 import { timeIn } from "@/lib/zones";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import { PeoplePicker } from "./people-picker";
 import { usePlayer } from "./player";
 import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
-import { Avatar, Icon, type IconName } from "./ui/kit";
+import { Avatar, Icon, Photo, type IconName } from "./ui/kit";
 import { useViewer } from "./viewer";
 import { HeroBox, earlyHeroSrc } from "./window-hero";
 
@@ -192,6 +192,31 @@ function LampButton({ lit, onLight, onHold, pulseKey }: { lit: boolean; onLight:
       </span>
       Light the lamp
     </button>
+  );
+}
+
+/** The lamp as a picture: unlit and lit stacked, a 200 ms crossfade between them (none with reduced motion). */
+function LampPhoto({ lit, className, sizes }: { lit: boolean; className?: string; sizes: string }) {
+  return (
+    <span className={cn("relative block overflow-hidden bg-[#2a211b]", className)}>
+      <Photo src="/demo/lamp-unlit.jpg" alt="" sizes={sizes} />
+      <span className={cn("absolute inset-0 transition-opacity duration-200 ease-out motion-reduce:transition-none", lit ? "opacity-100" : "opacity-0")}>
+        <Photo src="/demo/lamp-lit.jpg" alt="" sizes={sizes} />
+      </span>
+    </span>
+  );
+}
+
+/** Tap the lamp: the big picture, and who lit it today in both homes. */
+function LampSheet({ open, onClose, lit, rows }: { open: boolean; onClose: () => void; lit: boolean; rows: { key: string; who: string; at: string }[] }) {
+  return (
+    <BottomSheet open={open} onClose={onClose} label="The lamp">
+      <div data-ui="lamp-sheet">
+        <LampPhoto lit={lit} sizes="(max-width: 480px) 100vw, 440px" className="mx-auto aspect-square w-full max-w-[360px] rounded-[24px]" />
+        <h3 className="m-0 mt-4 text-[17px] font-semibold">{lit ? "The lamp is lit" : "The lamp is out"}</h3>
+        <SheetList title="Lit today" empty="Nobody has lit it today." rows={rows.map((r) => ({ key: r.key, at: r.at, main: r.who }))} />
+      </div>
+    </BottomSheet>
   );
 }
 
@@ -433,6 +458,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const [welcome, setWelcome] = useState<string | null>(null);
   const [lampNote, setLampNote] = useState<string | null>(null);
   const [pulse, setPulse] = useState(0);
+  const [lampOpen, setLampOpen] = useState(false);
   const data = win.data;
   const farIds = useMemo(() => new Set(data?.far?.ids ?? []), [data?.far?.ids]);
   const atWindow = useMemo(() => (data?.people ?? []).map((p) => members.find((mm) => mm.id === p.id)).filter((mm): mm is Member => Boolean(mm)), [data?.people, members]);
@@ -503,7 +529,12 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     return { glow: Math.max(theirs?.glow ?? 0, mine?.glow ?? 0), last };
   }, [lamp.data, farIds, viewer.id]);
   const lastBy = members.find((mm) => mm.id === pair.last?.litBy);
-  const litLine = lampLine(pair.last, pair.last?.litBy === viewer.id ? "you" : callName(lastBy), now, viewer.tz);
+  const today = lampToday(pair.last, pair.last?.litBy === viewer.id ? "you" : callName(lastBy), now);
+  // Who lit it today, in both homes (the sheet).
+  const litToday = (lamp.data?.lamps ?? [])
+    .filter((l) => l.litAt && l.litBy && dayWord(l.litAt, now, viewer.tz) === "today")
+    .sort((a, b) => (b.litAt ?? "").localeCompare(a.litAt ?? ""))
+    .map((l) => ({ key: `${l.homeKey}-${l.litAt}`, who: l.litBy === viewer.id ? "You" : callName(members.find((mm) => mm.id === l.litBy)) || "Someone", at: clockWord(l.litAt as string, viewer.tz) }));
 
   const checkOf = (id: string): SafetyState | null => {
     const s = stateOf(safety.data?.checkins ?? [], id);
@@ -528,7 +559,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const heartbeat = async () => {
     const to = atWindow[0];
     if (!to) return;
-    setLampNote(`Heartbeat sent · ${callName(to)} will feel it next time they open Aangan`);
+    setLampNote(`Heartbeat sent · ${callName(to)} will feel it next time they open Nearer`);
     let n = 0;
     const iv = window.setInterval(() => {
       setPulse((k) => k + 1);
@@ -612,18 +643,18 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               {/* 1. The lamp, and their latest voice */}
               <section data-ui="window-lamp" className={cn(CARD, "px-4")} style={EDGE} aria-label="The lamp and their latest voice">
                 <div className="flex min-h-[64px] items-center gap-3 py-2">
-                  <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", pair.last && litLine ? "bg-[#ffe9bf] text-[#9a5b00]" : "bg-black/[.06] text-ink-soft")} aria-hidden="true">
-                    <Icon name="lamp" size={18} />
-                  </span>
+                  <button type="button" onClick={() => setLampOpen(true)} aria-label="See the lamp" className="press h-14 w-14 shrink-0 overflow-hidden rounded-2xl">
+                    <LampPhoto lit={today.lit || Boolean(lampNote?.startsWith("You lit"))} sizes="56px" className="h-full w-full" />
+                  </button>
                   <p className="m-0 min-w-0 flex-1 text-[14px] leading-snug" suppressHydrationWarning>
-                    {lampNote ?? litLine ?? (lamp.failed && !lamp.data ? "Couldn't reach the lamp" : lampLoading ? " " : "The lamp is out")}
+                    {lampNote ?? (lamp.failed && !lamp.data ? "Couldn't reach the lamp" : lampLoading ? " " : today.line)}
                   </p>
                   {lamp.failed && !lamp.data ? (
                     <button type="button" onClick={() => void lamp.reload()} className="press h-11 shrink-0 rounded-full bg-ink px-4 text-[14px] font-semibold text-white">
                       Try again
                     </button>
                   ) : (
-                    <LampButton lit={Boolean(litLine)} onLight={() => void light()} onHold={() => void heartbeat()} pulseKey={pulse} />
+                    <LampButton lit={today.lit} onLight={() => void light()} onHold={() => void heartbeat()} pulseKey={pulse} />
                   )}
                 </div>
                 <div className="flex min-h-[64px] items-center gap-3 border-t border-[var(--line)] py-2">
@@ -734,6 +765,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
         onPick={(ids) => talk(ids)}
         onClose={() => setPicking(false)}
       />
+      <LampSheet open={lampOpen} onClose={() => setLampOpen(false)} lit={today.lit || Boolean(lampNote?.startsWith("You lit"))} rows={litToday} />
       <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => void call()} onClose={() => setOpen(null)} />
     </div>
   );

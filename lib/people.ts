@@ -1,10 +1,17 @@
 import { resolveMediaUrl } from "./media-session";
+import { ageOnDay, todayIn } from "./birthday";
 import type { Card, Member } from "./schemas";
 
 /** What the viewer calls this person. displayName is the family's own word (Dadi, Dad, Maa). */
 export function callName(member: Member | undefined | null): string {
   if (!member) return "Family";
   return member.displayName || member.firstName || "Family";
+}
+
+/** Whole years old, or null when the birth year is unknown. The day is the member's own (their zone). */
+export function ageOf(member: { birthday?: string; tz?: string } | undefined | null, now: Date = new Date()): number | null {
+  if (!member?.birthday) return null;
+  return ageOnDay(member.birthday, todayIn(member.tz, now));
 }
 
 export function memberPhoto(member: Member | undefined | null): string | null {

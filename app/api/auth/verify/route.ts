@@ -100,7 +100,7 @@ export async function POST(req: Request): Promise<Response> {
     familyId = here.familyId;
     memberId = here.id;
   } else if (intent.type === "join" && existing) {
-    // Already in one Aangan, joining another (my wife's family, say): the same
+    // Already in one Nearer, joining another (my wife's family, say): the same
     // person gets a place on both sides, linked by personId.
     const invite = await dbFindInvite(intent.inviteCode);
     if (!invite) return Response.json({ error: "invalid-invite" }, { status: 403 });

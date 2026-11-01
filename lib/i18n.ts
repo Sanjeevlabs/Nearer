@@ -105,7 +105,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
   en: {
     tabs: { home: "Home", lane: "Lane", add: "Add", rituals: "Rituals", gather: "Gather" },
     greeting: { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
-    welcomeTo: (name) => `Welcome to ${name}'s Aangan`,
+    welcomeTo: (name) => `Welcome home, ${name}`,
     changeHome: "Change home",
     stepInside: "Step inside",
     addHomeTitle: "Add a photo of the home you miss",
@@ -121,7 +121,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
       sendWish: "Send a wish",
     },
     add: {
-      title: "Add to Aangan",
+      title: "Add to Nearer",
       photos: "Photos",
       voice: "Voice",
       video: "Video",
@@ -148,7 +148,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
     },
     viewingAs: "Demo · Viewing as",
     language: "Language",
-    speakToYou: "How should Aangan speak to you?",
+    speakToYou: "How should Nearer speak to you?",
     heard: { heardThis: "heard this" },
     reactions: { love: "Love", laugh: "Laugh", bless: "Bless", replyVoice: "Reply with voice" },
     player: {
@@ -175,11 +175,11 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
   "hi-latn": {
     tabs: { home: "Home", lane: "Lane", add: "Jodein", rituals: "Rasmein", gather: "Milan" },
     greeting: { morning: "Suprabhat", afternoon: "Namaste", evening: "Shubh sandhya" },
-    welcomeTo: (name) => `${name} ke Aangan mein swagat hai`,
+    welcomeTo: (name) => `${name}, ghar mein swagat hai`,
     changeHome: "Ghar badlein",
     stepInside: "Andar chalein",
     addHomeTitle: "Us ghar ki photo jodein jiski yaad aati hai",
-    addHomeHint: "Aangan, khidki, darwaza — makan number ya gali ka naam na dikhe.",
+    addHomeHint: "Nearer, khidki, darwaza — makan number ya gali ka naam na dikhe.",
     shelves: {
       role: "Aaj ki bhoomika",
       fromElder: (name) => `${name} ki ore se`,
@@ -191,7 +191,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
       sendWish: "Shubhkaamna bhejein",
     },
     add: {
-      title: "Aangan mein jodein",
+      title: "Nearer mein jodein",
       photos: "Photo",
       voice: "Awaaz",
       video: "Video",
@@ -218,7 +218,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
     },
     viewingAs: "Demo · Is roop mein dekhein",
     language: "Bhasha",
-    speakToYou: "Aangan aapse kaise baat kare?",
+    speakToYou: "Nearer aapse kaise baat kare?",
     heard: { heardThis: "ne ye suna" },
     reactions: { love: "Pyaar", laugh: "Hansi", bless: "Aashirvaad", replyVoice: "Awaaz mein jawab dein" },
     player: {
@@ -245,7 +245,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
   "hi-deva": {
     tabs: { home: "होम", lane: "लेन", add: "जोड़ें", rituals: "रस्में", gather: "मिलन" },
     greeting: { morning: "सुप्रभात", afternoon: "नमस्ते", evening: "शुभ संध्या" },
-    welcomeTo: (name) => `${name} के आँगन में स्वागत है`,
+    welcomeTo: (name) => `${name}, घर में स्वागत है`,
     changeHome: "घर बदलें",
     stepInside: "अंदर चलें",
     addHomeTitle: "उस घर की फ़ोटो जोड़ें जिसकी याद आती है",
@@ -261,7 +261,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
       sendWish: "शुभकामना भेजें",
     },
     add: {
-      title: "आँगन में जोड़ें",
+      title: "Nearer में जोड़ें",
       photos: "फ़ोटो",
       voice: "आवाज़",
       video: "वीडियो",
@@ -288,7 +288,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
     },
     viewingAs: "Demo · इस रूप में देखें",
     language: "भाषा",
-    speakToYou: "आँगन आपसे कैसे बात करे?",
+    speakToYou: "Nearer आपसे कैसे बात करे?",
     heard: { heardThis: "ने यह सुना" },
     reactions: { love: "प्यार", laugh: "हँसी", bless: "आशीर्वाद", replyVoice: "आवाज़ में जवाब दें" },
     player: {

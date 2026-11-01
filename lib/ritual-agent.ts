@@ -3,6 +3,7 @@
 // blessing), voice or photo; day 3 -> remind the missing; occasion morning -> assemble the
 // reel for 8am recipient delivery. Also assigns elder daily roles.
 // Festival dates come from the family's holiday calendar (lib/holidays.ts).
+import { mmdd } from "./birthday";
 import { pickLead } from "./festival-week";
 import { ritualRunId } from "./rituals";
 import type { DailyRole, Member, RitualRun, Wish } from "./schemas";
@@ -68,9 +69,9 @@ function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function nextBirthdayDate(mmdd: string, now: Date): Date {
+function nextBirthdayDate(birthday: string, now: Date): Date {
   // `now` is a UTC-midnight day (the celebrant's local day).
-  const [m, d] = mmdd.split("-").map(Number);
+  const [m, d] = mmdd(birthday).split("-").map(Number);
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   let next = new Date(Date.UTC(now.getUTCFullYear(), (m || 1) - 1, d || 1));
   if (next < start) next = new Date(Date.UTC(now.getUTCFullYear() + 1, (m || 1) - 1, d || 1));
@@ -131,7 +132,7 @@ export function planRitualScan(
   }
   const occasions: Occasion[] = [];
   for (const m of members) {
-    if (!m.birthday) continue;
+    if (!mmdd(m.birthday)) continue;
     // Today is the celebrant's own local day, not the server's UTC day.
     const today = localDay(now, m.tz);
     const date = nextBirthdayDate(m.birthday, today);

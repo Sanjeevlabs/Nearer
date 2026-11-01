@@ -8,7 +8,7 @@
  */
 
 /** The custom URL scheme registered in AndroidManifest.xml and Info.plist. */
-export const APP_SCHEME = "app.aangan.family";
+export const APP_SCHEME = "com.sanjeevlabs.nearer";
 
 interface CapacitorGlobal {
   isNativePlatform?: () => boolean;
@@ -54,7 +54,7 @@ export function authRedirectUrl(kind: "oauth" | "email" = "oauth"): string {
 /**
  * Turn a URL the OS opened the app with into an in-app route:
  *   https://<origin>/auth/callback?code=x      -> /auth/callback?code=x
- *   app.aangan.family://auth/callback?code=x   -> /auth/callback?code=x
+ *   com.sanjeevlabs.nearer://auth/callback?code=x   -> /auth/callback?code=x
  * Returns null for anything that is not ours or not parseable.
  */
 export function urlToRoute(raw: string, origin?: string): string | null {
@@ -65,7 +65,7 @@ export function urlToRoute(raw: string, origin?: string): string | null {
     return null;
   }
   if (u.protocol === `${APP_SCHEME}:`) {
-    // The host is the first path segment: app.aangan.family://auth/callback.
+    // The host is the first path segment: com.sanjeevlabs.nearer://auth/callback.
     const path = `/${u.host}${u.pathname === "/" ? "" : u.pathname}`.replace(/\/{2,}/g, "/");
     return `${path}${u.search}${u.hash}`;
   }
@@ -146,7 +146,7 @@ export async function haptic(kind: HapticKind = "light"): Promise<void> {
 }
 
 /**
- * Status bar over the webview with dark text (Aangan's light paper). Pass
+ * Status bar over the webview with dark text (Nearer's light paper). Pass
  * `dark: true` on dark screens for light text. No-op on the web.
  */
 export async function setStatusBar(opts: { dark?: boolean } = {}): Promise<void> {
@@ -184,7 +184,7 @@ export async function registerPush(timeoutMs = 10_000): Promise<string | null> {
       void PushNotifications.register().catch(() => done(null));
     });
     // TODO(push): POST the token to the server (e.g. /api/push/register) once FCM sending exists.
-    if (token) console.info("[aangan] push token ready (server registration is a TODO)");
+    if (token) console.info("[nearer] push token ready (server registration is a TODO)");
     return token;
   } catch {
     return null;

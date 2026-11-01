@@ -11,8 +11,9 @@ import { HeroBox, WindowLoading } from "@/components/window-hero";
 import { DEFAULT_IMAGE, HERO_SIZES } from "@/lib/hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
-import { hasEntered, markEntered } from "@/lib/entered";
+import { hasEntered, isInstalledApp, markEntered } from "@/lib/entered";
 import { isKid } from "@/lib/kids";
+import { Mark } from "@/components/brand";
 
 const DOOR_KEY = "aangan:door";
 
@@ -33,9 +34,12 @@ const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.D
  */
 function CheckingShell() {
   return (
-    <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Aangan">
+    <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Nearer">
       <div className="win-hero mx-auto w-full max-w-[480px]" aria-hidden="true">
         <HeroBox src={DEFAULT_IMAGE} />
+      </div>
+      <div className="checking-mark fixed inset-0 grid place-items-center" aria-hidden="true">
+        <Mark size={72} />
       </div>
       <div className="door-hero mx-auto w-full max-w-[480px] px-5" style={{ paddingTop: "calc(32px + env(safe-area-inset-top))" }} aria-hidden="true">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
@@ -49,7 +53,7 @@ function CheckingShell() {
 // Signed out -> Landing. Signed in -> LITE: the window into the other home.
 // The door opens the family courtyard; it stays open for the session.
 export default function Page() {
-  const { setChromeHidden } = useShell();
+  const { setDockOn } = useShell();
   const { ready, signedIn, viewer } = useViewer();
   const [open, setOpen] = useState<boolean | null>(null);
   const [moving, setMoving] = useState<"opening" | "closing" | null>(null);
@@ -73,18 +77,8 @@ export default function Page() {
     idle(() => void import("@/components/door"));
   }, []);
 
-  // Wide screens see the home page; phones go straight to the app.
-  const [wide, setWide] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 900px)");
-    const on = () => setWide(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-
   const startDemo = useCallback(async () => {
-    const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "arjun" }) });
+    const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "arjun" }) });
     if (res.ok) {
       resetFamilyCards();
       markEntered();
@@ -92,10 +86,18 @@ export default function Page() {
       window.dispatchEvent(new Event("aangan:auth"));
     }
   }, []);
-  // A laptop visitor sees the home page first, even with a session from an
-  // earlier day; one tap on Open Aangan (or any app route) steps inside.
+  // Everyone (phone or laptop) sees the home page first, even with a session from an earlier
+  // day; one tap on Open Nearer (or any app route) steps inside for the rest of the session.
+  // Straight in: the installed app, ?demo=1, and anyone who already stepped inside.
   const [entered, setEntered] = useState<boolean | null>(null);
-  useEffect(() => setEntered(hasEntered()), []);
+  const [direct, setDirect] = useState(false);
+  useEffect(() => {
+    const demo = new URLSearchParams(window.location.search).get("demo") === "1";
+    if (demo) markEntered();
+    const skip = demo || isInstalledApp();
+    setDirect(skip);
+    setEntered(skip || hasEntered());
+  }, []);
 
   // A child never gets the grown-ups' window or courtyard: their first screen is kid-home.
   const gate = !ready || open === null ? "checking" : !signedIn ? "landing" : isKid(viewer) ? "kid" : open ? "family" : "lite";
@@ -109,9 +111,13 @@ export default function Page() {
     if (gate === "landing") void startDemo();
   }, [gate, startDemo]);
 
+  // What is on screen. The dock is off on "/" unless this says it is the courtyard or kid-home.
+  const view = gate === "checking" || entered === null ? "checking" : !signedIn ? (direct ? "landing" : "site") : !entered ? "site" : gate;
+  const dock = view === "family" || view === "kid";
   useEffect(() => {
-    setChromeHidden(gate !== "family" && gate !== "kid");
-  }, [gate, setChromeHidden]);
+    setDockOn(dock);
+    return () => setDockOn(false);
+  }, [dock, setDockOn]);
 
   const settle = useCallback(() => {
     const next = moving === "opening";
@@ -125,23 +131,23 @@ export default function Page() {
     window.scrollTo(0, 0);
   }, [moving]);
 
-  if (gate === "checking" || (wide && entered === null)) return <CheckingShell />;
-  if (gate === "landing") return wide ? <HomeSite onDemo={startDemo} /> : <Landing onDemo={startDemo} />;
-  if (wide && !entered)
+  if (view === "checking") return <CheckingShell />;
+  if (view === "landing") return <Landing onDemo={startDemo} />;
+  if (view === "site")
     return (
       <HomeSite
         onDemo={startDemo}
-        signedIn
+        signedIn={signedIn}
         onEnter={() => {
           markEntered();
           setEntered(true);
         }}
       />
     );
-  if (gate === "kid") return <KidHome />;
+  if (view === "kid") return <KidHome />;
   return (
     <>
-      {gate === "lite" ? <LiteWindow onOpenDoor={() => setMoving("opening")} /> : (
+      {view === "lite" ? <LiteWindow onOpenDoor={() => setMoving("opening")} /> : (
         <CourtyardProvider>
           <Courtyard onCloseDoor={() => setMoving("closing")} />
         </CourtyardProvider>

@@ -169,7 +169,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
           </button>
         ))}
       </div>
-      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Aangan.</p>
+      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Nearer.</p>
       {pickError && (
         <p className="m-0 mt-2 text-[13px] text-[#c2343a]" role="alert">
           {pickError}

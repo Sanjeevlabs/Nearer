@@ -129,9 +129,9 @@ export default function SettingsPage() {
 
   const shareInvite = async () => {
     if (!invite) return;
-    const text = `Join our family on Aangan. Your code: ${invite.code}`;
+    const text = `Join our family on Nearer. Your code: ${invite.code}`;
     try {
-      if (navigator.share) await navigator.share({ title: "Aangan", text, url: window.location.origin });
+      if (navigator.share) await navigator.share({ title: "Nearer", text, url: window.location.origin });
       else {
         await navigator.clipboard.writeText(`${text}\n${window.location.origin}`);
         setCopied(true);

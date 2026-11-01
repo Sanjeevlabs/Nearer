@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <HomeSite
       onDemo={async () => {
-        const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "arjun" }) });
+        const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "arjun" }) });
         if (res.ok) {
           resetFamilyCards();
           window.dispatchEvent(new Event("aangan:auth"));

@@ -4,6 +4,7 @@ import { resolveTakenAt } from "@/lib/dating";
 import { captionCard, sha256Hex } from "@/lib/llm";
 import { serverLedger, serverStore } from "@/lib/llm-server";
 import { dbAddCard, dbListCards, dbListMembers } from "@/lib/db";
+import { isKid } from "@/lib/kids";
 import { eventFromText, fileCard, titleAlbum, type EventKind } from "@/lib/albums";
 import { listDocs, putDoc } from "@/lib/family-docs";
 import { checkRateLimit, requireSession } from "@/lib/auth";
@@ -42,7 +43,22 @@ const MultipartFieldsSchema = z.object({
   /** Where the bytes already went (`storage:<family>/uploads/…`, from /api/media/upload-url). */
   mediaRef: z.string().max(300).default(""),
   takenAtSource: z.enum(["exif", "file", "model", "now"]).default("now"),
+  forMemberId: z.string().max(64).optional(),
 });
+
+/**
+ * "Add to the fridge": the card is marked as a kid's. The kid must be an active kid of this family,
+ * and the one adding must be a grown-up (a child never pins for another child). Returns the id to
+ * store, null when not asked for, or the error response.
+ */
+async function fridgeTarget(familyId: string, authorId: string, forMemberId: string | null | undefined): Promise<string | null | Response> {
+  if (!forMemberId) return null;
+  const members = await dbListMembers(familyId);
+  const kid = members.find((m) => m.id === forMemberId);
+  if (!kid || kid.status === "pending" || !isKid(kid)) return Response.json({ error: "not-a-kid" }, { status: 400 });
+  if (isKid(members.find((m) => m.id === authorId))) return Response.json({ error: "not-allowed" }, { status: 403 });
+  return kid.id;
+}
 
 /** A card may only point at its own family's uploads; anything else is dropped. */
 function ownMediaRef(ref: string, familyId: string): string | null {
@@ -107,11 +123,14 @@ async function postMultipart(req: Request, familyId: string, authorId: string): 
     note: form.get("note") ?? undefined,
     mediaRef: form.get("mediaRef") ?? undefined,
     takenAtSource: form.get("takenAtSource") ?? undefined,
+    forMemberId: form.get("forMemberId") || undefined,
   });
   if (!fields.success) {
     return Response.json({ error: "invalid-card" }, { status: 400 });
   }
   const f = fields.data;
+  const fridge = await fridgeTarget(familyId, authorId, f.forMemberId);
+  if (fridge instanceof Response) return fridge;
   // A retry of an upload that already landed: answer with the card, change nothing.
   const already = await existingOwnCard(familyId, authorId, f.id);
   if (already) return Response.json({ card: already, album: null }, { status: 200 });
@@ -175,6 +194,7 @@ async function postMultipart(req: Request, familyId: string, authorId: string): 
     segments: segments.slice(0, 64) as { start: number; end: number; text: string }[],
     place: f.place,
     note: f.note,
+    forMemberId: fridge,
   });
   const album = await fileIntoAlbum(familyId, card, event);
   return Response.json({ card, album }, { status: 201 });
@@ -199,7 +219,9 @@ async function postHandler(req: Request): Promise<Response> {
   // JSON path: client-supplied caption only — NEVER a model call. An empty
   // caption stays empty (the UI renders its untitled state); video cards that
   // need grounding must use the multipart upload with real bytes.
-  const { id: clientId, ...data } = parsed.data;
+  const { id: clientId, forMemberId, ...data } = parsed.data;
+  const fridge = await fridgeTarget(auth.familyId, auth.memberId, forMemberId);
+  if (fridge instanceof Response) return fridge;
   const already = await existingOwnCard(auth.familyId, auth.memberId, clientId);
   if (already) return Response.json({ card: already, album: null }, { status: 200 });
   const card = await dbAddCard({
@@ -208,6 +230,7 @@ async function postHandler(req: Request): Promise<Response> {
     familyId: auth.familyId,
     summary: "",
     ritualSlug: null,
+    forMemberId: fridge,
     ...data,
   });
   // No model here: sorted from the words the person wrote.

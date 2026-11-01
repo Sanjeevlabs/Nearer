@@ -1,18 +1,22 @@
-# Aangan — the family courtyard
+# Nearer
 
-"Far apart, still together." Most family apps make parents feel cared for; Aangan makes them feel **needed**.
+**The window between two homes.**
 
-Values, in priority order: **Needed** (elders give and have a role) · **Heard** (acknowledgement) · **Present** (together at the same time) · **Remembered** (memories) · **Never watched** (no monitoring, no guilt).
+Nearer opens onto the people you love: their live time, weather and sky, a **Safe & sound** that says they are well (hers to turn on, never a tracker), and a **lamp** you light so they know you are thinking of them. When you want more than a glance you **Sit together** at a venue (a kitchen table, a courtyard, a balcony) and the video room is already there. It is built for families split by distance: two homes, one window, and nothing crosses between them unless someone shares it.
 
-Aangan is calm by design: no stories, status, counts, comments, or infinite feed. **Aangan keeps a family going:** what elders know is passed down, things are done together across continents, and aging parents are cared for without being watched.
+Kids and grandparents get the same window: a child's day reaches a grandparent in words and pictures, and a grandparent can ask the children for the one thing only they can give. **Muse** (Meta's model) is the family agent behind it: it drafts the morning letter, keeps recipes and stories, suggests what to send, and every output is schema-checked, grounded in the family's own data and spend-capped.
+
+Values, in priority order: **Needed** (elders give and have a role) · **Heard** (acknowledgement) · **Present** (together at the same time) · **Remembered** (memories) · **Never watched** (no monitoring, no guilt). Nearer is calm by design: no stories, status, counts, comments, or infinite feed.
 
 The app itself is in English. What the family shares (voices, recipes, questions, care notes) reaches each person in their own language: 29 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic, Chinese and more (`lib/languages.ts`).
 
+Live: https://nearer.sanjeevlabs.com (tap *Try the demo family*, or use the code `NEARER-DEMO`).
+
 ### One hero: the parent far away
 
-**Aangan keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or keeps them **able to give**.
+**Nearer keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or keeps them **able to give**.
 
-The first screen is the window onto the parents' home (safe & sound, a voice note, a video call, send them something). Slide the key and you're in the courtyard; the house in the dock opens the five rooms:
+The first screen is the window onto the parents' home (safe & sound, a voice note, a video call, send them something). Slide the key and you're inside; the house in the dock opens the five rooms:
 
 | Room | Tabs |
 |---|---|
@@ -22,9 +26,9 @@ The first screen is the window onto the parents' home (safe & sound, a voice not
 | **Family** | Family tree · The Book · Advice · Portrait |
 | **Celebrations** | Coming up · Occasions (photos and voices from every birthday, wedding and festival) · Visits · Holidays · Play |
 
-### Two courtyards, one door
+### Two homes, one window
 
-Every family keeps its own Aangan. A married couple and their children belong to **both** sides: Priya opens on the Iyer side, Arjun on the Sharma side, and the children switch between Dadi's side and Nani's. Nothing crosses between Aangans unless someone shares it. *Add my family* creates the other side with only your own home inside it, plus an invite for your parents. In-laws, siblings and cousins get their own circle on the Family page, labelled from the family's own tree (sister-in-law, cousin, nephew).
+Every family keeps its own space. A married couple and their children belong to **both** sides: Priya opens on the Iyer side, Arjun on the Sharma side, and the children switch between Dadi's side and Nani's. Nothing crosses between homes unless someone shares it. *Add my family* creates the other side with only your own home inside it, plus an invite for your parents. In-laws, siblings and cousins get their own circle on the Family page, labelled from the family's own tree (sister-in-law, cousin, nephew).
 
 ## Built during the hackathon
 
@@ -52,7 +56,7 @@ Environment (see `.env.example`; never commit `.env.local`):
 
 Every model called at runtime is a Meta model. Muse is the family's helper, but it is **never a family member**: it writes down, translates, asks and proposes, and it always brings people back to each other. It never chats with lonely parents in place of their children, never posts as a person, and never gives medical advice.
 
-| Meta model | Where it works in Aangan |
+| Meta model | Where it works in Nearer |
 |---|---|
 | `muse-voice-transcribe` | Every voice note, wish, blessing, recipe lesson, story answer and spoken request for help (segment timestamps drive synced lyrics) |
 | `muse-spark-1.3` · structured output | **Recipe scribe**: a spoken recipe → a card in the cook's own measures, grounding-checked so no ingredient is invented (`lib/kitchen.ts`) |
@@ -80,7 +84,7 @@ How it is kept safe and cheap:
 
 - **Tenancy:** every read and write is scoped to the session's `familyId`; Postgres RLS by `family_id`; server routes use the service-role key, which never reaches the browser.
 - **Sessions:** httpOnly, SameSite=Lax, HMAC-signed cookies. Email OTP is rate-limited. Invite codes expire in 7 days and can never open an admin or someone with their own account. The persona switcher only works in the synthetic demo families.
-- **Two sides:** switching is only to an Aangan where the *same person* (server-set `personId`) already has a place. Other members' emails and the `personId` never leave the server.
+- **Two sides:** switching is only to a home where the *same person* (server-set `personId`) already has a place. Other members' emails and the `personId` never leave the server.
 - **Games** are server-authoritative: dice and shuffles use `crypto.randomInt`, every move is checked for turn and move count, and hidden memory cards are masked before they reach the browser.
 - **Sharing** is opt-in, a frozen copy behind a 144-bit token, `noindex`, revocable. Export strips emails, Muse logs and safety locations.
 - **AI:** every Muse output is schema-validated with a grounding check and a safe fallback; spend-capped; logged.
@@ -90,3 +94,7 @@ Privacy: presence is only what a parent chooses to share. The "quiet day" note i
 ## AI-assistance disclosure
 
 This entry was built with AI coding assistants (Claude Code and Muse Code), as the hackathon rules allow; every model the app itself calls at runtime is a Meta model (Muse Spark, Muse Voice Transcribe, Muse Image via the Meta Model API, with Muse Spark Open on Baseten/Modal as failover). With those assistants, scaffolding, UI implementation, the LLM client, ritual/agent logic, tests, and docs were drafted with agents and verified by the human via `lint` + `typecheck` + mock tests + production builds. Demo photos and the fallback courtyard are AI-generated and labelled as such in `public/demo/README.md`. All family data is synthetic; no real family data, no real people, no real events. No health advice anywhere in the app.
+
+## Build notes
+
+Nearer (codename Aangan during development). Internal storage keys, the session cookie, Modal app names and the Cloudflare Worker name keep the codename on purpose, so existing sessions and secrets survive the rename.

@@ -1,5 +1,5 @@
 // "Send something" → the apps a family already uses, by category, for the
-// recipient's home country (data/send-apps.json). Links only: Aangan places
+// recipient's home country (data/send-apps.json). Links only: Nearer places
 // nothing; the app or site takes over. Client-safe.
 import { z } from "zod";
 import raw from "../data/send-apps.json";

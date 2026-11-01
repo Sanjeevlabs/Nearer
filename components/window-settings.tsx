@@ -39,7 +39,7 @@ export function WindowSettings() {
           </button>
         ))}
       </div>
-      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Aangan.</p>
+      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Nearer.</p>
     </div>
   );
 }

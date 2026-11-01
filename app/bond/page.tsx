@@ -19,6 +19,8 @@ import { BottomSheet } from "@/components/share-panel";
 import { can } from "@/lib/permissions";
 import { ZONES, placeFromTz } from "@/lib/zones";
 import { Boundary } from "@/components/ui/boundary";
+import { BirthYearField } from "@/components/birth-year";
+import { birthdayProblem, buildBirthday } from "@/lib/birthday";
 
 const RELATION_WORDS = ["mother", "father", "wife", "husband", "daughter", "son", "sister", "brother"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -34,6 +36,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
   const [tz, setTz] = useState<string>("");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
+  const [year, setYear] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [welcomed, setWelcomed] = useState<string | null>(null);
@@ -42,6 +45,8 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
   const submit = async () => {
     const clean = name.trim();
     if (!clean || busy) return;
+    const problem = birthdayProblem(month, day, year);
+    if (problem) return setError(problem);
     setBusy(true);
     setError(null);
     try {
@@ -53,7 +58,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
           newMemberName: clean,
           relation,
           tz: tz || anchor?.tz || undefined,
-          birthday: month && day ? `${month}-${day}` : undefined,
+          birthday: buildBirthday(month, day, year) || undefined,
         }),
       });
       if (!res.ok) throw new Error(res.status === 409 ? "duplicate" : res.status === 401 ? "signed-out" : "add-failed");
@@ -77,6 +82,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
       setName("");
       setMonth("");
       setDay("");
+      setYear("");
       onAdded();
     } catch (e) {
       const key = e instanceof Error ? e.message : "";
@@ -89,9 +95,9 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
   return (
     <section aria-label="Add someone">
       <h2 className="m-0 mb-1 text-[20px]">Add someone</h2>
-      <p className="m-0 mb-4 text-[15px] text-ink-soft">Tell Aangan how they&rsquo;re related to someone already here.</p>
+      <p className="m-0 mb-4 text-[15px] text-ink-soft">Tell Nearer how they&rsquo;re related to someone already here.</p>
       <p className="m-0 mb-4 rounded-[16px] bg-surface px-4 py-3 text-[14px] text-ink-soft">
-        <span className="font-semibold text-ink">Uncles, aunts and cousins:</span> add them through a parent. &ldquo;Chachu is <em>Papa&rsquo;s brother</em>&rdquo;, &ldquo;Mausi is <em>Maa&rsquo;s sister</em>&rdquo;, then their children as their son or daughter. Aangan works out &ldquo;your uncle&rdquo; or &ldquo;your cousin&rdquo; for everyone.
+        <span className="font-semibold text-ink">Uncles, aunts and cousins:</span> add them through a parent. &ldquo;Chachu is <em>Papa&rsquo;s brother</em>&rdquo;, &ldquo;Mausi is <em>Maa&rsquo;s sister</em>&rdquo;, then their children as their son or daughter. Nearer works out &ldquo;your uncle&rdquo; or &ldquo;your cousin&rdquo; for everyone.
       </p>
       {welcomed && (
         <div className="bond-bloom mb-4 rounded-[22px] bg-surface px-4 py-3" role="status">
@@ -141,8 +147,8 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
           </button>
         ))}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <label className="col-span-2 block">
+      <div className="mt-4 grid grid-cols-[1.4fr_1fr_1fr] gap-2">
+        <label className="col-span-3 block">
           <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Where they live</span>
           <select value={tz || anchor?.tz || ""} onChange={(e) => setTz(e.target.value)} className="h-[52px] w-full appearance-none rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-black/15">
             {Array.from(new Set([anchor?.tz, ...ZONES.map((z) => z.tz)].filter((z): z is string => Boolean(z) && z !== "UTC"))).map((z) => (
@@ -154,7 +160,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Birthday (optional)</span>
-          <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label="Birthday month" className="h-[52px] w-full appearance-none rounded-full bg-surface px-5 text-[16px] outline-none">
+          <select value={month} onChange={(e) => setMonth(e.target.value)} aria-label="Birthday month" className="h-[52px] w-full appearance-none rounded-full bg-surface px-4 text-[16px] outline-none">
             <option value="">Month</option>
             {MONTHS.map((m, i) => (
               <option key={m} value={String(i + 1).padStart(2, "0")}>
@@ -165,7 +171,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[13px] font-medium text-transparent">Day</span>
-          <select value={day} onChange={(e) => setDay(e.target.value)} aria-label="Birthday day" className="h-[52px] w-full appearance-none rounded-full bg-surface px-5 text-[16px] outline-none">
+          <select value={day} onChange={(e) => setDay(e.target.value)} aria-label="Birthday day" className="h-[52px] w-full appearance-none rounded-full bg-surface px-4 text-[16px] outline-none">
             <option value="">Day</option>
             {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
               <option key={d} value={d}>
@@ -174,7 +180,12 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
             ))}
           </select>
         </label>
+        <label className="block">
+          <span className="mb-1.5 block text-[13px] font-medium text-transparent">Year</span>
+          <BirthYearField value={year} onChange={setYear} className="!bg-surface !px-4" />
+        </label>
       </div>
+      <p className="m-0 mt-2 text-[13px] text-ink-soft">The year is optional. With it, Nearer can show their age.</p>
       {error && (
         <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
           {error}

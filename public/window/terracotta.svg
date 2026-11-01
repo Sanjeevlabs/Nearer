@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
   <!-- Old terracotta floor tiles, procedurally: sixteen hand-made tiles, each
        fired a slightly different red, with clay mottle, grit, worn soft edges
-       and lime-mortar joints. Made for Aangan; no third-party image. -->
+       and lime-mortar joints. Made for Nearer; no third-party image. -->
   <defs>
     <filter id="clay" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="4" stitchTiles="stitch" result="m"/>

@@ -162,7 +162,7 @@ export class McpClient {
     const result = await this.request("initialize", {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: "aangan", version: "0.1.0" },
+      clientInfo: { name: "nearer", version: "0.1.0" },
     });
     const parsed = InitializeResultSchema.safeParse(result);
     if (!parsed.success) throw new McpError("protocol", "mcp-bad-initialize");

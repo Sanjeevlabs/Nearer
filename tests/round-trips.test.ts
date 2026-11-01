@@ -115,7 +115,7 @@ const BUDGET = {
   windowState: { calls: 10, depth: 2 },
   window: { calls: 10, depth: 2 },
   courtyard: { calls: 19, depth: 3 },
-  courtyardOneAangan: { calls: 15, depth: 2 },
+  courtyardOne: { calls: 15, depth: 2 },
   festivalWeek: { calls: 6, depth: 2 },
   // The Kids page: members, relationships, cards and the document kinds, all in the wave after the session lookup.
   kids: { calls: 6, depth: 2 },
@@ -131,7 +131,7 @@ beforeEach(async () => {
   // Weather and holiday feeds answer at once (and say "no"): only the database is timed here.
   vi.stubGlobal("fetch", async () => new Response("{}", { status: 503 }));
   h.tables.clear();
-  const res = await session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": `10.1.0.${Math.floor(Math.random() * 250)}` }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "arjun" }) }));
+  const res = await session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": `10.1.0.${Math.floor(Math.random() * 250)}` }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "arjun" }) }));
   expect(res.status).toBe(200);
   ({ familyId, memberId } = (await res.json()) as { familyId: string; memberId: string });
   cookie = (res.headers.get("set-cookie") ?? "").split(";")[0];
@@ -229,14 +229,14 @@ describe("database round trips", () => {
     expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyard.depth);
   });
 
-  it("GET /api/courtyard for someone in one Aangan only", async () => {
-    // Their other Aangans are a second hop (find them, then read each); with none, it is one wave after the auth lookup.
+  it("GET /api/courtyard for someone in one family only", async () => {
+    // Their other homes are a second hop (find them, then read each); with none, it is one wave after the auth lookup.
     for (const r of h.tables.get("members")!) if (r.id === memberId) r.person_id = null;
     const m = await measure(async () => (await courtyard(get("/api/courtyard"))).status);
-    report("GET /api/courtyard (one Aangan)", m);
+    report("GET /api/courtyard (one family)", m);
     expect(m.out).toBe(200);
-    expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.calls);
-    expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.depth);
+    expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyardOne.calls);
+    expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyardOne.depth);
   });
 
   it("GET /api/kids", async () => {

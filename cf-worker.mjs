@@ -7,7 +7,7 @@ import handler from "./.open-next/worker.js";
 export default {
   fetch: handler.fetch,
   async scheduled(_event, env, ctx) {
-    const origin = (env.APP_ORIGIN || "https://aangan.invalid").replace(/\/$/, "");
+    const origin = (env.APP_ORIGIN || "https://nearer.invalid").replace(/\/$/, "");
     const req = new Request(`${origin}/api/ritual-scan`, { headers: { authorization: `Bearer ${env.CRON_SECRET ?? ""}` } });
     const res = await handler.fetch(req, env, ctx);
     console.log(`[cron] ritual-scan ${res.status}`);

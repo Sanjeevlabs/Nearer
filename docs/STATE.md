@@ -1,6 +1,6 @@
 # What the app remembers, and when it forgets
 
-Every badge, dot, notice and status line in Aangan, where it lives, what sets it, what clears it,
+Every badge, dot, notice and status line in Nearer, where it lives, what sets it, what clears it,
 and how long it can be wrong. Written for the next person to check against the code.
 
 How to read the "where" column:
@@ -29,16 +29,14 @@ The numbers are in one place: `TTL` in `lib/purge.ts`.
 | The child's own asks on their screen | Postgres (`kid_ask`) | The child | An answered ask stops showing 3 days after it was answered. A child can have 5 open asks | None |
 | Bedtime prompt, "Tonight's story for Vihaan" (courtyard) | Derived from `bedtime_story` rows (`bedtimePrompt()` in `lib/kids.ts`), only for someone who is a parent or grandparent of a child | The viewer has not recorded a story or said "Not now" yet today (their own day). Picks the child they told least recently | Recording a story, or "Not now" (`POST /api/bedtime`; a "Not now" is a `bedtime_story` row with no voice, `skip-<person>-<day>`). Back the next day | None: read from the rows and the clock |
 | Tonight's story (kid-home) | Postgres (`bedtime_story`) | A parent or grandparent records one for the child | Playable at any hour (bedtime is the suggestion, not a lock). Shown for 7 days, then rests. "Not now" rows are never shown to the child | None (clock) |
-| "From the kids" tile (the window) | Derived (`kidsTile()` in `lib/kids.ts`) from cards whose author is a child (`isKidCard`: access `child`, or a child profile with plain member access), skipping a child's spoken questions | A child's photo, drawing or voice note, newer than the viewer's previous visit (a week back if there was none) | The viewer's next visit moves the line; it taps through to `/lane?from=kids` | Same as the window: until its next read |
-| Fridge strip (courtyard) | Derived: the 6 newest kid cards | A child's photo, voice or video | Time (newer cards push it out). Nothing is stored | None |
-| "Vihaan grew 2 cm since 14 Apr" (courtyard) | Derived from `height_mark` (`recentGrowth()`) | A new mark that is higher than the one before it | 7 days after the mark. A mark that is not higher says nothing | None |
-| Height marks | Postgres (`height_mark`) | A parent or grandparent of the child | The person who added it removes it. Deleted with the child or the adder (leave family) | |
+| "From the kids" tile (the window) | Derived (`kidsTile()` in `lib/kids.ts`) from cards whose author is a kid, or that a grown-up added for a kid (`isKidCard`; `isKid` is the age under 13 when a birth year is known, else access `child` or a child profile with plain member access), skipping a child's spoken questions | A child's photo, drawing or voice note, newer than the viewer's previous visit (a week back if there was none) | The viewer's next visit moves the line; it taps through to `/lane?from=kids` | Same as the window: until its next read |
+| Fridge (courtyard strip and Kids tab) | Derived: the newest kid cards, i.e. cards a kid shared, plus cards a grown-up added "for" a kid (`cards.for_member_id`, set by "Add to the fridge"; the route refuses anyone who is not a kid of this family) | A child's photo, voice or video, or a grown-up's photo of a child's drawing | Time (newer cards push it out off the strip). The card itself is removed like any card; `for_member_id` clears if the child leaves | None |
 | Nudges ("Maa heard your note", "the call is tomorrow") | Postgres (`nudge`) | The routes that cause them (play, bless, share) and the daily scan (occasion, call, letter) | `seenAt` is set by: tapping the tile, `POST /api/nudges/seen`, or playing the card it points at. Stops waiting after 2 days (occasion, call) or 7 days (heard, blessed, shared, letter) from when it was due. Deleted 30 days after delivery (or after being queued, if never delivered) | Not shown before the recipient's 8 AM. Email is sent once at delivery and cannot be unsent |
 | Nudge settings | Postgres (`nudge_settings`) | The person, in Settings | The person | Never stale: it is a setting |
 | Today: "sealed" and "answered" | Postgres (`today_task`) | Each person's answer | Not cleared: the finished task is kept, it is part of the memory book. The "waiting" part clears as above | Never stale: the state is read from the answers |
 | Lamp glow | Derived from `lamp.litAt` and the newest card from that home. Fades to nothing over 72 h | Lighting the lamp, sending a voice, photo or call | Time | None (computed from the clock on every read) |
 | Heartbeats between homes | Postgres (`lamp.beats`) | Holding the lamp | Felt once (`felt`), expire after 2 days on read, trimmed from the row by the daily scan | None |
-| "In Aangan" heartbeat (`presence`, moment `here`) | Postgres (`presence`) | Opening Aangan (at most one every 30 min, only if the person shares visits) | Deleted after 15 days. A heartbeat is the only sign of life for at most 6 h: after that the line reads "quiet since" | Up to 30 min between beats |
+| "In Nearer" heartbeat (`presence`, moment `here`) | Postgres (`presence`) | Opening Nearer (at most one every 30 min, only if the person shares visits) | Deleted after 15 days. A heartbeat is the only sign of life for at most 6 h: after that the line reads "quiet since" | Up to 30 min between beats |
 | Safe & sound state (Active / Quiet / Asleep, the dot) | Derived from the newest sign of life (a moment, a card, a check-in a person closed) and the viewer's quiet-after setting | | | None. Closing a check-in by timeout is not a sign of life |
 | The "Everyone" row, "active 12 min ago" | Derived from the same newest sign of life | | | None |
 | Safety check-in, open or closed | Postgres (`safety_checkin`) | "Heading home", "Travelling", "I need help" | The person closes it, or starts a new one. **Open for 48 h: closed as "no reply"** (`noReply`, location dropped). Closed ones are deleted after 30 days | None: the 48 h rule is applied on every read and stored by the daily scan |
@@ -88,7 +86,7 @@ Knocks past `until` · nudges 30 days after delivery · event dismissals after t
 past `until` · sittings 7 days after they started · open check-ins older than 48 h closed as "no reply" ·
 closed check-ins after 30 days · Muse call logs after 90 days · heartbeats and moments after 15 days ·
 lamp beats after 2 days · pending suggestions withdrawn after 21 days · delivered voice-note schedule
-rows after 7 days · spent order-preview ids after a day. Children's asks, bedtime stories and height marks are not purged by age: they go when a child or the person who made them leaves (`deleteDocsForMember`), or with a demo copy.
+rows after 7 days · spent order-preview ids after a day. Children's asks and bedtime stories are not purged by age: they go when a child or the person who made them leaves (`deleteDocsForMember`), or with a demo copy.
 
 If you add a thing that expires, give it: a clear path when it is acted on or a TTL, a read-time filter,
 a line in `purgeExpired`, a row in the table above, and a test in `tests/purge.test.ts`.
@@ -102,4 +100,6 @@ a line in `purgeExpired`, a row in the table above, and a test in `tests/purge.t
 - The Muse card dismissal is not keyed by family (see the table).
 - Nobody sees the nudge list as a screen: nudges reach people through the "Waiting for you" tile and
   the morning email. `GET /api/nudges` exists for a future list.
-- `supabase/schema.sql` now allows the `preview_used` kind: re-run its constraint statement on the live database. The same goes for `bedtime_story`, `kid_ask` and `height_mark` (children's rituals).
+- `supabase/schema.sql` now allows the `preview_used` kind: re-run its constraint statement on the live database. The same goes for `bedtime_story` and `kid_ask` (children's rituals). `height_mark` is retired (1 Nov): it stays in that list so old rows parse, and nothing reads or writes it.
+- Run before deploy: `alter table cards add column if not exists for_member_id text references members(id) on delete set null;` (in `supabase/schema.sql`). Adding to the fridge fails without it; nothing else does.
+- Birthdays: `members.birthday` stays plain text, now "YYYY-MM-DD" when the year is known and "MM-DD" when not (`lib/birthday.ts`). No SQL needed.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Navigation walk: every room tab, as three demo people, in a real browser.
 
-Signs in to the demo (AANGAN-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
+Signs in to the demo (NEARER-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
 opens the house from the dock, then visits every tab of every room
 (lib/menu.ts). Fails on a page error, an error-level console message, a
 4xx/5xx document or a 5xx API call, a missing page title, or a room tile
@@ -9,7 +9,7 @@ that doesn't open its first tab.
 
 CI runs it against a mock build (.github/workflows/ci.yml). It also works
 against the live site after a deploy:
-    python3 scripts/walk.py --base https://aangan.sanjeevlabs.com
+    python3 scripts/walk.py --base https://nearer.sanjeevlabs.com
 (live, each person gets their own demo copy; the daily cron removes them).
 """
 import argparse
@@ -39,11 +39,83 @@ PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "ch
 IGNORE = re.compile(r"Download the React DevTools|fonts\.g(static|oogleapis)|favicon", re.I)
 
 
+# Every visible button/link whose box touches the dock's box (the dock's own buttons excepted).
+OVERLAP_JS = """() => {
+  const dock = document.querySelector('[data-ui=dock]');
+  if (!dock) return null;
+  const d = dock.getBoundingClientRect();
+  if (d.width === 0 || d.height === 0) return null;
+  const hit = [];
+  for (const el of document.querySelectorAll('button, a[href], [role=button], input, textarea')) {
+    if (dock.contains(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const cs = getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) continue;
+    if (r.left < d.right && r.right > d.left && r.top < d.bottom && r.bottom > d.top) hit.push((el.getAttribute('aria-label') || el.textContent || el.tagName).trim().slice(0, 40));
+  }
+  return hit;
+}"""
+
+
+def dock_overlaps(page, where: str, problems: list[str], person: str) -> None:
+    """No visible button or link may sit under the dock, with the page scrolled to its end (what floats stays put; what scrolls must be able to clear the dock)."""
+    page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+    page.wait_for_timeout(300)
+    hit = page.evaluate(OVERLAP_JS)
+    if hit:
+        problems.append(f"{person} {where}: under the dock: {', '.join(hit)}")
+
+
+def first_screen(base: str, person: str, browser, problems: list[str]) -> None:
+    """The first screen at 390pt: the home page first, then exactly one bottom bar on the window, the dock only behind the open door."""
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base)
+    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
+    if not res.ok:
+        problems.append(f"{person}: first-screen sign-in failed {res.status}")
+        ctx.close()
+        return
+    page = ctx.new_page()
+    page.goto("/", wait_until="load")
+    try:
+        page.get_by_role("button", name="Open Nearer").first.wait_for(timeout=15_000)
+    except Exception:
+        problems.append(f"{person} /: signed in on a phone, the home page has no 'Open Nearer' button")
+        ctx.close()
+        return
+    if page.locator("[data-ui=dock]").count():
+        problems.append(f"{person} /: the dock shows on the home page")
+    page.get_by_role("button", name="Open Nearer").first.click()
+    page.locator("[data-ui=window-lamp]").wait_for(timeout=15_000)
+    page.wait_for_timeout(1200)
+    if page.locator("[data-ui=dock]").count():
+        problems.append(f"{person} /: the dock shows on the closed-door window")
+    bars = page.evaluate(
+        """() => [...document.querySelectorAll('*')].filter((e) => {
+          const r = e.getBoundingClientRect(); const cs = getComputedStyle(e);
+          return (cs.position === 'fixed' || cs.position === 'sticky') && r.width > 100 && r.height > 30 && r.bottom > innerHeight - 140 && r.top > innerHeight / 2 && e.querySelector('button');
+        }).length"""
+    )
+    # One bar: the key slider. (A fixed full-screen container is not a bar: it starts above half the screen.)
+    if bars != 1:
+        problems.append(f"{person} /: {bars} bottom bars on the window, expected 1")
+    dock_overlaps(page, "/ (window)", problems, person)
+    page.evaluate("sessionStorage.setItem('aangan:door','open')")
+    page.reload(wait_until="load")
+    try:
+        page.locator("[data-ui=dock]").wait_for(timeout=15_000)
+        page.wait_for_timeout(800)
+        dock_overlaps(page, "/ (courtyard)", problems, person)
+    except Exception:
+        problems.append(f"{person} /: no dock behind the open door")
+    ctx.close()
+
+
 def walk(base: str, person: str, kind: str, browser) -> list[str]:
     problems: list[str] = []
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base)
     # Behind the door: open straight into the house (app/page.tsx DOOR_KEY).
-    ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open') } catch (e) {}")
+    ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
     page = ctx.new_page()
     where = {"url": "/"}
     page.on("pageerror", lambda e: problems.append(f"{person} {where['url']}: page error: {e}"))
@@ -56,7 +128,7 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
         lambda r: r.status >= 500 and "/api/" in r.url and problems.append(f"{person} {where['url']}: {r.status} {r.url}"),
     )
 
-    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": person}), headers={"content-type": "application/json"})
+    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
     if not res.ok:
         ctx.close()
         return [f"{person}: demo sign-in failed {res.status} {res.text()[:200]}"]
@@ -104,6 +176,7 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
                 problems.append(f"{person} {href}: no page title (h1)")
             if page.get_by_text(re.compile(r"something went wrong|application error", re.I)).count():
                 problems.append(f"{person} {href}: error screen")
+            dock_overlaps(page, href, problems, person)
     ctx.close()
     return problems
 
@@ -111,12 +184,15 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:3100")
+    ap.add_argument("--engine", default="chromium", choices=["chromium", "webkit"], help="webkit is Safari's engine (iPhone)")
     args = ap.parse_args()
     problems: list[str] = []
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = getattr(p, args.engine).launch()
         for person, kind in PEOPLE:
             found = walk(args.base, person, kind, browser)
+            if person == "arjun":
+                first_screen(args.base, person, browser, found)
             print(f"{person:6} {'ok' if not found else f'{len(found)} problem(s)'}")
             problems += found
         browser.close()

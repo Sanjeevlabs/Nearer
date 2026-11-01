@@ -1,12 +1,12 @@
 {
-  "name": "Aangan",
-  "short_name": "Aangan",
-  "description": "Far from home. Never far from them.",
+  "name": "Nearer",
+  "short_name": "Nearer",
+  "description": "The window between two homes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f6f3ee",
+  "background_color": "#FBF8F3",
   "theme_color": "#2f5684",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },

@@ -7,7 +7,6 @@ import { GET as getEvents } from "../gather/events/route";
 import { GET as getGifts } from "../gifts/route";
 import { GET as getBedtime } from "../bedtime/route";
 import { GET as getHabits } from "../habits/route";
-import { GET as getHeight } from "../height/route";
 import { GET as getKidAsk } from "../kid-ask/route";
 import { GET as getKeeper } from "../keeper/route";
 import { GET as getLetters } from "../letters/route";
@@ -28,7 +27,7 @@ import { GET as getTogether } from "../together/route";
 // that fails is left out, and its hook falls back to its own fetch.
 //
 // GET → { sides, safety, events, today, suggestions, letters, presence,
-//         together, sit, festivalWeek, habits, kidAsk, bedtime, height, [gifts, keeper, care] for elders, [stories] for children }
+//         together, sit, festivalWeek, habits, kidAsk, bedtime, [gifts, keeper, care] for elders, [stories] for children }
 
 type Handler = (req: Request) => Promise<Response>;
 
@@ -70,7 +69,6 @@ async function getHandler(req: Request): Promise<Response> {
     ["habits", "/api/habits", getHabits],
     ["kidAsk", "/api/kid-ask", getKidAsk],
     ["bedtime", "/api/bedtime", getBedtime],
-    ["height", "/api/height", getHeight],
   ];
   if (me?.role === "elder") parts.push(["gifts", "/api/gifts", getGifts], ["keeper", "/api/keeper", getKeeper], ["care", "/api/care", getCare]);
   if (me?.role === "child") parts.push(["stories", "/api/stories", getStories]);
