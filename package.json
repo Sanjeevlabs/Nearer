@@ -17,7 +17,7 @@
     "cap:android": "cap open android",
     "cap:ios": "cap open ios",
     "android:apk": "cd android && ./gradlew assembleDebug",
-    "ui:inventory": "python3 scripts/ui-inventory.py --base ${BASE:-http://127.0.0.1:4600}"
+    "ui:inventory": "python3 scripts/ui-inventory.py --serve 4600"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

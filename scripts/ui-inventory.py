@@ -20,16 +20,25 @@ which humans edit; regeneration never writes to it (use --seed-verdicts once to 
 Times, dates, counts, degrees and "N min ago" are stripped to placeholders so two runs
 on the same build give the same bytes.
 
-    python3 scripts/ui-inventory.py --base http://127.0.0.1:4600            # CSV + XLSX
-    python3 scripts/ui-inventory.py --base http://127.0.0.1:4600 --no-xlsx  # CSV only (CI)
-    python3 scripts/ui-inventory.py --base ... --csv /tmp/x.csv --no-xlsx   # elsewhere
+    npm run ui:inventory                                      # fresh server of the mock build on :4600, CSV + XLSX
+    python3 scripts/ui-inventory.py --serve 3200 --no-xlsx    # CSV only (CI)
+    python3 scripts/ui-inventory.py --base URL --csv /tmp/x.csv --no-xlsx   # a server that is already up
+
+Needs a mock build first: MOCK=true NEXT_PUBLIC_MOCK=true npx next build (add --webpack if turbopack is unavailable).
+Use --serve rather than --base for anything you commit: the demo keeps in-memory state (who was seen when,
+caches), so a server that has been browsed already shows slightly different screens.
 """
 import argparse
 import csv
 import json
+import os
 import re
+import subprocess
 import sys
+import time
+import urllib.request
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -205,6 +214,14 @@ def settle(page) -> None:
 
 def capture(page, scr: dict, persona: str, other: str, log: list[str]):
     path = scr["path"].replace("@other", other)
+    # API calls in flight (translations of family words arrive late and swap the text).
+    pending = {"n": 0}
+    page.on("request", lambda r: "/api/" in r.url and pending.update(n=pending["n"] + 1))
+    page.on("requestfinished", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1))
+    page.on("requestfailed", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1))
+    # Twice: the first visit warms the server's caches (translations, festival week), the second is read.
+    page.goto(path, wait_until="load")
+    settle(page)
     page.goto(path, wait_until="load")
     settle(page)
     if path != "/" and persona != "anon" and urlparse(page.url).path.rstrip("/") != path.rstrip("/"):
@@ -218,20 +235,66 @@ def capture(page, scr: dict, persona: str, other: str, log: list[str]):
         page.wait_for_timeout(500)
     elif a in ("house", "add"):
         name = "Open the house" if a == "house" else "Share a photo or video"
-        page.get_by_role("button", name=name).first.click(timeout=10_000)
-        page.locator("[role=dialog]").first.wait_for(timeout=8_000)
+        # A click before hydration does nothing: click again until the sheet is there.
+        for attempt in range(4):
+            page.get_by_role("button", name=name).first.click(timeout=10_000)
+            try:
+                page.locator("[role=dialog]").first.wait_for(timeout=3_000)
+                break
+            except Exception:
+                if attempt == 3:
+                    raise
         page.wait_for_timeout(600)
         root = "[role=dialog]"
-    return page.evaluate(EXTRACT, root)
+    # The shell hides its dock a beat after the window and landing mount.
+    if scr["door"] == "closed":
+        try:
+            page.locator("[data-ui=dock]").first.wait_for(state="hidden", timeout=4_000)
+        except Exception:
+            pass
+    # Wait for the screen to stop changing (enter/exit animations, late data): four equal reads in a row.
+    prev, same = None, 0
+    for _ in range(24):
+        rows = page.evaluate(EXTRACT, root)
+        same = same + 1 if rows == prev and pending["n"] <= 0 else 0
+        if same >= 3:
+            return rows
+        prev = rows
+        page.wait_for_timeout(600)
+    log.append(f"{persona} {scr['screen']}: never settled")
+    return prev
+
+
+def walk_persona(base: str, persona: str, kind: str, state: dict | None) -> tuple[list[tuple], list[str]]:
+    """Every screen for one person, in their own browser. Returns [(group, screen, door, rows)], log."""
+    log: list[str] = []
+    seen: list[tuple] = []
+    other = "arjun" if persona == "dadi" else "dadi"
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        for scr in screens():
+            who = scr["who"]
+            if (who == "app" and persona == "anon") or (who == "anon" and persona != "anon") or (who == "arjun" and persona != "arjun") or scr["skip_kind"] == kind:
+                continue
+            ctx = browser.new_context(viewport=scr["vp"], base_url=base, storage_state=state)
+            ctx.add_init_script(f"try {{ sessionStorage.setItem('aangan:door', '{scr['door']}') }} catch (e) {{}}")
+            page = ctx.new_page()
+            try:
+                rows = capture(page, scr, persona, other, log)
+            except Exception as e:  # keep going; the log says what is missing
+                log.append(f"{persona} {scr['screen']}: {type(e).__name__}: {str(e).splitlines()[0][:120]}")
+                rows = None
+            ctx.close()
+            seen.append((scr["group"], scr["screen"], scr["door"], rows or []))
+        browser.close()
+    return seen, log
 
 
 def run(base: str) -> tuple[list[dict], list[str]]:
-    log: list[str] = []
-    cells: dict[tuple, dict] = {}
+    # One sign-in per person (the endpoint allows 20 per 10 minutes per address).
+    states: dict[str, dict] = {}
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        # One sign-in per person (the endpoint allows 20 per 10 minutes per address).
-        states: dict[str, dict] = {}
         for who, _ in PEOPLE:
             ctx = browser.new_context(base_url=base)
             res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": who}), headers={"content-type": "application/json"})
@@ -239,35 +302,30 @@ def run(base: str) -> tuple[list[dict], list[str]]:
                 raise SystemExit(f"ui-inventory: demo sign-in as {who} failed {res.status} {res.text()[:200]}")
             states[who] = ctx.storage_state()
             ctx.close()
-        todo = screens()
-        for persona, kind in PEOPLE + [("anon", "anon")]:
-            other = "arjun" if persona == "dadi" else "dadi"
-            for scr in todo:
-                who = scr["who"]
-                if (who == "app" and persona == "anon") or (who == "anon" and persona != "anon") or (who == "arjun" and persona != "arjun"):
-                    continue
-                if scr["skip_kind"] == kind:
-                    continue
-                ctx = browser.new_context(viewport=scr["vp"], base_url=base, storage_state=states.get(persona))
-                ctx.add_init_script(f"try {{ sessionStorage.setItem('aangan:door', '{scr['door']}') }} catch (e) {{}}")
-                page = ctx.new_page()
-                try:
-                    rows = capture(page, scr, persona, other, log)
-                except Exception as e:  # keep going; the log says what is missing
-                    log.append(f"{persona} {scr['screen']}: {type(e).__name__}: {str(e).splitlines()[0][:120]}")
-                    rows = None
-                ctx.close()
-                for order, r in enumerate(rows or []):
-                    label = norm(r["label"])
-                    key = (scr["screen"], r["type"], label, norm_href(r["href"]), r["component"])
-                    c = cells.get(key)
-                    if c is None:
-                        c = cells[key] = dict(group=scr["group"], screen=scr["screen"], type=r["type"], label=label, href=norm_href(r["href"]), component=r["component"], order=order, personas=set(), icon_only=False)
-                    c["personas"].add(persona)
-                    c["order"] = min(c["order"], order)
-                    c["icon_only"] = c["icon_only"] or bool(r["iconOnly"])
         browser.close()
-    return list(cells.values()), log
+    people = PEOPLE + [("anon", "anon")]
+    # Four people, four browsers at once; merged below in a fixed order so the result never depends on who finished first.
+    with ProcessPoolExecutor(max_workers=len(people)) as pool:
+        futs = [pool.submit(walk_persona, base, persona, kind, states.get(persona)) for persona, kind in people]
+        results = [f.result() for f in futs]
+    log: list[str] = []
+    cells: dict[tuple, dict] = {}
+    for (persona, _), (seen, plog) in zip(people, results):
+        log += plog
+        for group, screen, door, rows in seen:
+            for order, r in enumerate(rows):
+                # The dock is hidden on the window and the landing (app/page.tsx setChromeHidden); a
+                # frame of it mid-transition is not part of the screen.
+                if door == "closed" and group == "Entry" and r["component"] == "dock":
+                    continue
+                label = norm(r["label"])
+                key = (screen, r["type"], label, norm_href(r["href"]), r["component"])
+                c = cells.get(key)
+                if c is None:
+                    c = cells[key] = dict(group=group, screen=screen, type=r["type"], label=label, href=norm_href(r["href"]), component=r["component"], order=order, personas=set(), icon_only=False)
+                c["personas"].add(persona)
+                c["icon_only"] = c["icon_only"] or bool(r["iconOnly"])
+    return list(cells.values()), sorted(log)
 
 
 # ----------------------------------------------------------------- output
@@ -283,7 +341,7 @@ def finish(rows: list[dict], verdicts: dict) -> list[dict]:
     screens_of: dict[str, set] = defaultdict(set)
     for r in rows:
         if r["label"] and r["type"] not in NOT_A_LABEL:
-            screens_of[r["label"]].add(r["screen"])
+            screens_of[r["label"]].add(r["screen"].split("#")[0])  # a screen's tabs are one screen
     out = []
     for r in rows:
         flags = []
@@ -363,7 +421,7 @@ def write_xlsx(rows: list[dict], path: Path) -> None:
     dup: dict = defaultdict(set)
     for r in rows:
         if "dup" in r["flags"]:
-            dup[r["label"]].add(r["screen"])
+            dup[r["label"]].add(r["screen"].split("#")[0])
     verdicts: dict = defaultdict(int)
     for r in rows:
         verdicts[r["verdict"]] += 1
@@ -380,7 +438,8 @@ def write_xlsx(rows: list[dict], path: Path) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base", default="http://127.0.0.1:4600")
+    ap.add_argument("--base", default="http://127.0.0.1:4600", help="a running mock build (its state, e.g. who was seen when, shapes the screens: prefer --serve)")
+    ap.add_argument("--serve", type=int, metavar="PORT", help="start a fresh `next start` of the existing mock build on PORT for the run, then stop it (the reproducible way)")
     ap.add_argument("--csv", default=str(DOCS / "ui-inventory.csv"))
     ap.add_argument("--xlsx", default=str(DOCS / "ui-inventory.xlsx"))
     ap.add_argument("--verdicts", default=str(DOCS / "ui-inventory.verdicts.json"))
@@ -390,7 +449,31 @@ def main() -> int:
 
     vpath = Path(args.verdicts)
     verdicts = json.loads(vpath.read_text()) if vpath.exists() else {}
-    raw, log = run(args.base)
+    server = None
+    base = args.base
+    if args.serve:
+        # A fresh server per run: the demo's in-memory state (presence, last seen, caches) starts the same every time.
+        env = dict(os.environ, MOCK="true", SESSION_SECRET=os.environ.get("SESSION_SECRET", "ui-inventory-secret-not-a-real-secret-0000"))
+        server = subprocess.Popen(["npx", "next", "start", "-p", str(args.serve)], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        base = f"http://127.0.0.1:{args.serve}"
+        for _ in range(90):
+            try:
+                urllib.request.urlopen(base + "/", timeout=2).read(1)
+                break
+            except Exception:
+                time.sleep(1)
+        else:
+            server.kill()
+            raise SystemExit("ui-inventory: the server did not start (run `npx next build` with MOCK=true NEXT_PUBLIC_MOCK=true first)")
+    try:
+        raw, log = run(base)
+    finally:
+        if server:
+            server.terminate()
+            try:
+                server.wait(10)
+            except Exception:
+                server.kill()
     rows = finish(raw, verdicts)
 
     if args.seed_verdicts:
