@@ -141,7 +141,7 @@ export function TogetherHabit() {
         aria-busy={busy}
         className={cn(
           "press mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full text-[17px] font-semibold disabled:opacity-70",
-          me.joined && me.ticked ? "bg-surface text-ink" : "bg-black text-white",
+          me.joined && me.ticked ? "bg-surface text-ink ring-1 ring-black/10" : "bg-black text-white",
         )}
       >
         {label}
