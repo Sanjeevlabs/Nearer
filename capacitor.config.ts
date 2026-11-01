@@ -1,14 +1,14 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// Aangan's native shell (iOS + Android). Aangan is a Next.js app with API
+// Nearer's native shell (iOS + Android). Nearer is a Next.js app with API
 // routes, so it is not a static export: the shell loads the deployed site.
 // `public/` is copied in only so public/offline.html can be the fallback page.
 //
 // CAP_SERVER_URL MUST be set for every native build (`npm run cap:sync`), e.g.
-//   CAP_SERVER_URL=https://aangan.example npm run cap:sync
+//   CAP_SERVER_URL=https://nearer.example npm run cap:sync
 // Without it, sync/copy/run/build stop with an error, so a build never ships
 // pointing at the wrong origin; the default only lets other tooling load this file.
-const PLACEHOLDER = "https://aangan.sanjeevlabs.com";
+const PLACEHOLDER = "https://nearer.sanjeevlabs.com";
 if (!process.env.CAP_SERVER_URL && /\b(sync|copy|run|build|update)\b/.test(process.argv.join(" "))) {
   throw new Error("Set CAP_SERVER_URL to the production origin, e.g. CAP_SERVER_URL=https://<your-domain> npm run cap:sync");
 }
@@ -16,8 +16,8 @@ const serverUrl = (process.env.CAP_SERVER_URL || PLACEHOLDER).replace(/\/+$/, ""
 const host = new URL(serverUrl).host;
 
 const config: CapacitorConfig = {
-  appId: "app.aangan.family",
-  appName: "Aangan",
+  appId: "com.sanjeevlabs.nearer",
+  appName: "Nearer",
   webDir: "public",
   server: {
     url: serverUrl,
@@ -39,7 +39,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       overlaysWebView: true,
-      // LIGHT = dark text for Aangan's light paper background.
+      // LIGHT = dark text for Nearer's light paper background.
       style: "LIGHT",
       backgroundColor: "#00000000",
     },
