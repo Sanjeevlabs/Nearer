@@ -7,7 +7,7 @@ import { dayRhythm, rhythmLine } from "@/lib/rhythm";
 import { isNightAt, skyGlyph, solarPhase, sunPosition } from "@/lib/sky";
 import { fetchWeather, pickPlace, type Weather } from "@/lib/weather";
 import { DEFAULT_IMAGE as SERVER_DEFAULT, distanceKm, skyOver } from "@/lib/window-server";
-import { badgeParts, checkinEvents, composedLine, dayWord, lampLine } from "@/lib/window-words";
+import { badgeParts, checkinEvents, composedLine, dayWord, lampLine, lampToday } from "@/lib/window-words";
 import { hourIn } from "@/lib/zones";
 
 const AMRITSAR = { lat: 31.63, lon: 74.87 };
@@ -110,6 +110,16 @@ describe("the right city", () => {
     expect(distanceKm(AMRITSAR, BENGALURU)).toBeGreaterThan(2000);
     expect(distanceKm(AMRITSAR, null)).toBeNull();
     expect(distanceKm(null, AMRITSAR)).toBeNull();
+  });
+});
+
+describe("the lamp row (photo + line)", () => {
+  const now = new Date("2026-10-31T06:30:00Z");
+  it("lit within a day: who and how long ago; else not lit yet today", () => {
+    expect(lampToday({ litAt: "2026-10-31T04:10:00Z" }, "Maa", now)).toEqual({ lit: true, line: "Lit by Maa · 2 h ago" });
+    expect(lampToday({ litAt: "2026-10-31T06:10:00Z" }, "Maa", now)).toEqual({ lit: true, line: "Lit by Maa · just now" });
+    expect(lampToday({ litAt: "2026-10-30T04:10:00Z" }, "Maa", now)).toEqual({ lit: false, line: "Not lit yet today" });
+    expect(lampToday(undefined, "Maa", now).lit).toBe(false);
   });
 });
 

@@ -109,6 +109,7 @@ function demoWidths(src: string): number[] | null {
   if (src === "/demo/courtyard.jpg" || /^\/demo\/home-(courtyard|balcony|window)\.jpg$/.test(src)) return [390, 780];
   if (/^\/demo\/venues\/[a-z]+\.jpg$/.test(src)) return [390, 780, 1600];
   if (/^\/demo\/family-[a-z]+\.webp$/.test(src)) return [440, 880];
+  if (/^\/demo\/lamp-(lit|unlit)\.jpg$/.test(src)) return [160, 390];
   if (/^\/demo\/portrait-[a-z]+\.webp$/.test(src)) return [160, 400];
   return null;
 }
