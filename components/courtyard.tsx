@@ -7,11 +7,11 @@ import type { CareSettings, Knock, Presence, Sitting } from "@/lib/kinds";
 import { callName, cardCover, memberPhoto, peopleByRecency, relativeDay } from "@/lib/people";
 import type { Card, Member } from "@/lib/schemas";
 import { useDisplayText } from "@/lib/use-display-text";
+import { useEvents } from "@/lib/gather-client";
 import { useCourtyard } from "@/lib/courtyard-data";
 import { HERO_SIZES } from "@/lib/hero";
 import { useFamilyCards } from "@/lib/use-family";
 import { ago, postJson, useJson } from "@/lib/use-json";
-import { can } from "@/lib/permissions";
 import { isAwake, placeFromTz, timeIn } from "@/lib/zones";
 import { Carousel } from "./carousel";
 import { MyNeeds, MyQuestions, StoryDoor, VisitCountdown, useNextVisit } from "./home-presence";
@@ -100,11 +100,6 @@ function SitSlide() {
           <span className={`h-2 w-2 rounded-full ${knock ? "animate-pulse bg-[#3ccf7a]" : "bg-white/50"}`} />
           {knock ? "Live now" : "Sit together"}
         </p>
-        {can(viewer, "events.plan") && viewer.role !== "child" && (
-          <Link href="/gather" aria-label="Plan a celebration" className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white no-underline">
-            <Icon name="calendar" size={17} />
-          </Link>
-        )}
       </div>
       <div>
         <p className="m-0 text-[22px] font-light leading-tight">{knock ? `${host?.id === viewer.id ? "You're" : `${callName(host)} is`} on a video call` : awake.length > 1 ? `${awake.length} of you are awake now` : "Everyone's asleep somewhere"}</p>
@@ -266,6 +261,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const lampData = { presence: pres.data?.presence ?? [], settings: pres.data?.settings ?? [], cards: cards ?? [] };
   const dayPerson = members.find((mm) => mm.id === dayOfId);
   const muse = useMuseSlot(cards ?? []);
+  const planPrompt = (useEvents().data?.prompts ?? []).some((p) => p.kind === "suggest");
   // Everything under the header appears in one step, once the cards and the one
   // courtyard payload are in, so nothing slides down as the pieces arrive.
   const shared = useCourtyard();
@@ -320,7 +316,8 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
 
       {ready && (
         <>
-          <EventPrompts className="mt-4" />
+          {/* One way to plan: Muse's "Plan" card when it has a prompt, otherwise the quiet Coming up slide below. */}
+          <EventPrompts className="mt-4" kinds={["suggest", "soon", "live"]} />
           <TodayCard />
           <TogetherHabit />
           <CourtyardLetter />
@@ -330,9 +327,9 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
             {story && <StoryDoor story={story} />}
             <SitSlide />
             {visit && <VisitCountdown visit={visit} />}
-            <ComingUpSlide />
+            {!planPrompt && <ComingUpSlide />}
             {yearsAgo && <YearsSlide card={yearsAgo} />}
-            {muse.slot && <MuseSlide slot={muse.slot} onDismiss={muse.dismiss} />}
+            {muse.slot && <MuseSlide slot={muse.slot} />}
           </Carousel>
 
           {elder && (

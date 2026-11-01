@@ -227,18 +227,18 @@ export function FestivalHeader() {
       </h2>
 
       {photos.length > 0 && (
-        <ul className="no-scrollbar -mx-4 m-0 mt-3 flex list-none gap-2.5 overflow-x-auto px-4 pb-1" aria-label={`Your family's ${week.title} photos from other years`}>
-          {photos.map((c) => (
-            <li key={c.id} className="shrink-0">
-              <Link href="/rituals" className="block no-underline" aria-label={`${c.caption || "A photo"}, ${new Date(c.takenAt).getFullYear()}`}>
+        <Link href="/rituals" className="mt-3 block no-underline" aria-label={`See your family's ${week.title} from other years`}>
+          <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2.5 overflow-x-auto px-4 pb-1">
+            {photos.map((c) => (
+              <li key={c.id} className="shrink-0">
                 <span className="relative block h-[84px] w-[72px] overflow-hidden rounded-[14px] bg-surface">
                   <Photo src={cardCover(c, members)} alt="" sizes="144px" position="center 30%" />
                 </span>
                 <span className="tnum mt-1 block text-center text-[11.5px] text-ink-soft">{new Date(c.takenAt).getFullYear()}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </Link>
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">

@@ -16,9 +16,9 @@ const ICON: Record<EventPrompt["kind"], IconName> = { pick: "calendar", soon: "v
  * drafts it). Pass `prompts` from a page that already fetched them, or let
  * it fetch its own (for the window or Kutumb).
  */
-export function EventPrompts({ prompts, onChange, className }: { prompts?: EventPrompt[]; onChange?: () => void; className?: string }) {
+export function EventPrompts({ prompts, onChange, className, kinds }: { prompts?: EventPrompt[]; onChange?: () => void; className?: string; kinds?: EventPrompt["kind"][] }) {
   const own = useEvents(prompts === undefined);
-  const list = prompts ?? own.data?.prompts ?? [];
+  const list = (prompts ?? own.data?.prompts ?? []).filter((p) => !kinds || kinds.includes(p.kind));
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [gone, setGone] = useState<string[]>([]);
@@ -51,8 +51,9 @@ export function EventPrompts({ prompts, onChange, className }: { prompts?: Event
         }
         const o = p.occasion;
         return (
-          <li key={p.id} className={row}>
+          <li key={p.id} className={cn(row, "flex-wrap")}>
             {body}
+            <span className="flex basis-full items-center gap-1 pb-1 pl-[52px]">
             <button
               type="button"
               disabled={busy === p.id}
@@ -68,16 +69,16 @@ export function EventPrompts({ prompts, onChange, className }: { prompts?: Event
             </button>
             <button
               type="button"
-              aria-label="Not now"
               onClick={async () => {
                 setGone((g) => [...g, p.id]);
                 await eventAction({ action: "dismiss", key: p.id });
                 refresh();
               }}
-              className="press grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-faint"
+              className="press h-10 shrink-0 rounded-full px-3 text-[14px] font-semibold text-ink-soft"
             >
-              <Icon name="close" size={18} />
+              Not now
             </button>
+            </span>
           </li>
         );
       })}
