@@ -5,6 +5,7 @@ import { dbGetMember, dbListMembers } from "@/lib/db";
 import { getDoc } from "@/lib/family-docs";
 import { canChange } from "@/lib/permissions";
 import { createShare, listShares, revokeShare } from "@/lib/shares";
+import { isKid } from "@/lib/kids";
 
 // GET    → this family's public links (what's out there, and how often opened)
 // POST   → share one recipe publicly; returns the link
@@ -29,6 +30,8 @@ export async function POST(req: Request): Promise<Response> {
   const recipe = await getDoc(auth.familyId, "recipe", body.data.id);
   if (!recipe) return Response.json({ error: "unknown-recipe" }, { status: 404 });
   const cook = (await dbListMembers(auth.familyId)).find((m) => m.id === recipe.cookId);
+  // Nothing a child made ever goes public.
+  if (isKid(cook)) return Response.json({ error: "not-allowed" }, { status: 403 });
   const share = await createShare({
     familyId: auth.familyId,
     kind: "recipe",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Navigation walk: every room tab, as three demo people, in a real browser.
 
-Signs in to the demo (AANGAN-DEMO) as a parent, an adult child and a child,
+Signs in to the demo (AANGAN-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
 opens the house from the dock, then visits every tab of every room
 (lib/menu.ts). Fails on a page error, an error-level console message, a
 4xx/5xx document or a 5xx API call, a missing page title, or a room tile
@@ -27,7 +27,13 @@ ROOMS = {
     "Family": ["/bond", "/bond/homes", "/book", "/advice", "/portrait"],
     "Celebrations": ["/gather", "/rituals", "/together/visits", "/together/holidays", "/gather/play"],
 }
-PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("aria", "child")]
+# Kid mode (lib/menu.ts roomsFor(..., kid)): a child's house has three rooms, and fewer tabs in them.
+KID_ROOMS = {
+    "Memories": ["/lane", "/stories"],
+    "Celebrations": ["/gather", "/gather/play"],
+    "Family": ["/bond"],
+}
+PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "child")]
 # Console noise that isn't ours (dev tooling, a blocked third-party font).
 IGNORE = re.compile(r"Download the React DevTools|fonts\.g(static|oogleapis)|favicon", re.I)
 
@@ -54,20 +60,35 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
         ctx.close()
         return [f"{person}: demo sign-in failed {res.status} {res.text()[:200]}"]
 
-    # The dock's house opens the five rooms; each tile goes to the room's first tab.
+    rooms = KID_ROOMS if kind == "child" else ROOMS
+    # The dock's house opens the rooms; each tile goes to the room's first tab.
     page.goto("/", wait_until="load")
+    if kind == "child":
+        # A child's first screen is kid-home: Show, Tell, Ask. Never the grown-ups' courtyard or window.
+        where["url"] = "/"
+        try:
+            page.locator("[data-ui=kid-home]").wait_for(timeout=15_000)
+            for big in ("show", "tell", "ask"):
+                if page.locator(f"[data-kid={big}]").count() == 0:
+                    problems.append(f"{person} /: no '{big}' button on kid-home")
+        except Exception:
+            problems.append(f"{person} /: no kid-home")
     page.get_by_role("button", name="Open the house").click(timeout=15_000)
-    for room, tabs in ROOMS.items():
+    for room, tabs in rooms.items():
         tile = page.get_by_role("link", name=re.compile(rf"^{room}\b"))
         if tile.count() == 0:
             tile = page.get_by_role("button", name=re.compile(rf"^{room}\b"))
         if tile.count() == 0:
             problems.append(f"{person}: no '{room}' tile in the house")
-    first = ROOMS["Memories"][0]
+    if kind == "child":
+        for room in ("Kitchen", "Care"):
+            if page.get_by_role("link", name=re.compile(rf"^{room}\b")).count():
+                problems.append(f"{person}: kid mode shows '{room}'")
+    first = rooms["Memories"][0]
     page.get_by_role("link", name=re.compile(r"^Memories\b")).first.click()
     page.wait_for_url(f"**{first}", timeout=15_000)
 
-    for room, tabs in ROOMS.items():
+    for room, tabs in rooms.items():
         for href in tabs:
             if href == "/portrait" and kind == "child":
                 continue  # grown-ups only (lib/muse-portrait canStartPortrait)
