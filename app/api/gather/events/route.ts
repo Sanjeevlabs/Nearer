@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { can, isAdmin } from "@/lib/permissions";
 import { checkRateLimit, requireSession } from "@/lib/auth";
-import { dbGetMember, dbListMembers } from "@/lib/db";
+import { dbListMembers } from "@/lib/db";
+import { memberFor } from "@/lib/request-memo";
 import { EVENT_TYPES, eventTitle, lockedStart, markNone, occasionEventKey, participants, proposeSlots, slotToLock, templateFor, toggleVote, type FamilyEvent } from "@/lib/events";
 import { deleteDoc, newId, putDoc } from "@/lib/family-docs";
 import { draftPlan } from "@/lib/gather-plan";
@@ -41,7 +42,7 @@ function visible(events: FamilyEvent[], now = Date.now()): FamilyEvent[] {
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [members, me, all, dismissed] = await Promise.all([dbListMembers(auth.familyId), dbGetMember(auth.memberId), listEvents(auth.familyId), listDismissed(auth.familyId, auth.memberId)]);
+  const [members, me, all, dismissed] = await Promise.all([dbListMembers(auth.familyId), memberFor(req, auth.memberId), listEvents(auth.familyId), listDismissed(auth.familyId, auth.memberId)]);
   const events = visible(all);
   const occasions = await upcoming(auth.familyId, members);
   const canPlan = Boolean(me && can(me, "events.plan") && me.role !== "child");

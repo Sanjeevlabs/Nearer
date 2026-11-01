@@ -102,6 +102,7 @@ import { GET as courtyard } from "@/app/api/courtyard/route";
 import { GET as festivalWeekRoute } from "@/app/api/festival-week/route";
 import { POST as session } from "@/app/api/session/route";
 import { GET as windowRoute } from "@/app/api/window/route";
+import { requireCan, requireSession } from "@/lib/auth";
 import { readDbStats, resetDbStats } from "@/lib/db-stats";
 import { putDoc } from "@/lib/family-docs";
 import { windowState } from "@/lib/window-server";
@@ -110,8 +111,8 @@ import { windowState } from "@/lib/window-server";
 const BUDGET = {
   windowState: { calls: 16, depth: 5 },
   window: { calls: 17, depth: 6 },
-  courtyard: { calls: 47, depth: 8 },
-  festivalWeek: { calls: 8, depth: 5 },
+  courtyard: { calls: 33, depth: 6 },
+  festivalWeek: { calls: 7, depth: 5 },
 };
 
 let cookie = "";
@@ -150,6 +151,27 @@ const get = (path: string) => new Request(`http://test${path}`, { headers: { coo
 function report(name: string, m: { calls: number; depth: number; byTable: Record<string, number> }) {
   console.log(`[round-trips] ${name}: calls=${m.calls} depth=${m.depth} ${JSON.stringify(m.byTable)}`);
 }
+
+describe("member memo", () => {
+  it("loads the signed-in member once per request, however many guards ask", async () => {
+    const req = get("/api/x");
+    const m = await measure(async () => {
+      const a = await requireSession(req);
+      const b = await requireSession(req);
+      if (a instanceof Response || b instanceof Response) throw new Error("auth");
+      const me = await requireCan(a, "tree.add", req);
+      return me instanceof Response ? me.status : me.id;
+    });
+    expect(m.out).toBe(memberId);
+    expect(m.byTable.members).toBe(1);
+  });
+
+  it("a second request does not borrow the first one's member", async () => {
+    await requireSession(get("/api/x"));
+    const m = await measure(() => requireSession(get("/api/x")));
+    expect(m.byTable.members).toBe(1);
+  });
+});
 
 describe("database round trips", () => {
   it("windowState", async () => {

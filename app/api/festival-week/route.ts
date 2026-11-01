@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/auth";
-import { dbEnsureRitualRun, dbGetMember, dbListCards, dbListMembers, dbListWishes } from "@/lib/db";
+import { memberFor } from "@/lib/request-memo";
+import { dbEnsureRitualRun, dbListCards, dbListMembers, dbListWishes } from "@/lib/db";
 import { withDemoShelf } from "@/lib/demo";
 import { festivalWeek, type FestivalWeekPayload } from "@/lib/festival-week";
 import { familyHolidays, ritualConfigs } from "@/lib/occasions-server";
@@ -13,7 +14,7 @@ import { guardWrites } from "@/lib/api-guard";
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [members, me] = await Promise.all([dbListMembers(auth.familyId), dbGetMember(auth.memberId)]);
+  const [members, me] = await Promise.all([dbListMembers(auth.familyId), memberFor(req, auth.memberId)]);
   const [fam, stored] = await Promise.all([familyHolidays(auth.familyId, members).catch(() => null), dbListCards(auth.familyId)]);
   if (!fam) return Response.json({ week: null });
   const today = localDay(new Date(), me?.tz).toISOString().slice(0, 10);

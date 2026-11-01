@@ -6,6 +6,7 @@ import type { Member } from "@/lib/schemas";
 import { isAdmin, isGrownUp } from "@/lib/permissions";
 import { recordTeenConsent } from "@/lib/roles";
 import { guardWrites } from "@/lib/api-guard";
+import { memberFor } from "@/lib/request-memo";
 
 // Two courtyards, one door. Each family keeps its own Aangan; a married couple
 // and their children belong to both. Nothing crosses between Aangans: this
@@ -55,7 +56,7 @@ function newPersonId(): string {
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const me = await dbGetMember(auth.memberId);
+  const me = await memberFor(req, auth.memberId);
   if (!me || me.familyId !== auth.familyId) return Response.json({ error: "unknown-member" }, { status: 404 });
   return Response.json({ current: auth.familyId, sides: await sidesOf(me) });
 }

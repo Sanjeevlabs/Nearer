@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/auth";
-import { dbGetMember } from "@/lib/db";
+import { adoptMemo, memberFor } from "@/lib/request-memo";
 import { guardWrites } from "@/lib/api-guard";
 import { GET as getCare } from "../care/route";
 import { GET as getEvents } from "../gather/events/route";
@@ -29,7 +29,10 @@ type Handler = (req: Request) => Promise<Response>;
 
 async function slice(req: Request, path: string, handler: Handler): Promise<unknown> {
   try {
-    const res = await handler(new Request(new URL(path, req.url), { headers: req.headers }));
+    const sub = new Request(new URL(path, req.url), { headers: req.headers });
+    // The sub-handler's requireSession finds the member already loaded for this request.
+    adoptMemo(req, sub);
+    const res = await handler(sub);
     return res.ok ? await res.json() : undefined;
   } catch {
     return undefined;
@@ -39,7 +42,7 @@ async function slice(req: Request, path: string, handler: Handler): Promise<unkn
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const me = await dbGetMember(auth.memberId);
+  const me = await memberFor(req, auth.memberId);
   const parts: [string, string, Handler][] = [
     ["sides", "/api/sides", getSides],
     ["safety", "/api/safety", getSafety],
