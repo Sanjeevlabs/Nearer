@@ -40,6 +40,16 @@ jobs:
           npx next start -p 3100 > next.log 2>&1 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 1; done
           python scripts/walk.py --base http://127.0.0.1:3100
+      - name: UI inventory is current (scripts/ui-inventory.py)
+        # Regenerates docs/ui-inventory.csv from a fresh server of the mock build (its own port, so the
+        # demo state is the same as on a developer's machine) and fails on any difference.
+        run: |
+          python scripts/ui-inventory.py --serve 3200 --no-xlsx
+          if ! git diff --exit-code --stat -- docs/ui-inventory.csv; then
+            echo "::error::UI changed: run npm run ui:inventory and commit docs/ui-inventory.*"
+            git --no-pager diff -U0 -- docs/ui-inventory.csv | head -80
+            exit 1
+          fi
       - name: Bundle budget (shared client JS)
         run: node scripts/perf-budget.mjs
       - name: Vitals (courtyard LCP and CLS, 390px, 4G, 4x CPU)
