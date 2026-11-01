@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Nearer — the window between two homes",
   description: "A live window between two homes: their time, weather and sky, a Safe & sound when they are well, and a lamp that says you are thinking of them.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: [{ url: "/icons/icon-192.png", sizes: "192x192" }, { url: "/icons/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }, { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" }], apple: "/brand/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Nearer", statusBarStyle: "black-translucent" },
   // og:image comes from app/opengraph-image.tsx; APP_ORIGIN (at build time) makes its URL absolute.
   metadataBase: process.env.APP_ORIGIN ? new URL(process.env.APP_ORIGIN) : undefined,

@@ -62,7 +62,7 @@ describe("public recipe links", () => {
 describe("family export", () => {
   it("downloads everything as one file, without emails, Muse logs or safety locations", async () => {
     const res = await exportGet(req("/api/export", "arjun"));
-    expect(res.headers.get("content-disposition")).toMatch(/aangan-sharma-\d{4}-\d{2}-\d{2}\.json/);
+    expect(res.headers.get("content-disposition")).toMatch(/nearer-sharma-\d{4}-\d{2}-\d{2}\.json/);
     const out = (await res.json()) as Record<string, unknown>;
     expect(out.format).toBe("nearer-family-export");
     expect((out.members as unknown[]).length).toBe(12);

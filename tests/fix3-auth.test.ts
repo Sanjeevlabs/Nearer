@@ -26,6 +26,12 @@ describe("session cookies (HMAC)", () => {
     expect(verifySession(expired, KEY)).toBeNull();
   });
 
+  it("the demo code from before the rename still opens the demo", async () => {
+    resetDemo();
+    const res = await exchangePOST(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "leo" }) }));
+    expect(res.status).toBe(200);
+  });
+
   it("exchange accepts the demo bootstrap code and rejects bad codes", async () => {
     resetDemo();
     const ok = await exchangePOST(

@@ -1,5 +1,6 @@
 "use client";
 
+import { Lockup } from "./brand";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -274,9 +275,12 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-white">
       <div className="mx-auto flex min-h-full max-w-[480px] flex-col px-5" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-        <button type="button" onClick={back} aria-label={step === "other-side" || step === "invite" ? t("auth.skip") : t("auth.back")} className="press -ms-2 grid h-11 w-11 place-items-center rounded-full">
-          <Icon name={step === "other-side" || step === "invite" ? "close" : "back"} className="rtl:-scale-x-100" />
-        </button>
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={back} aria-label={step === "other-side" || step === "invite" ? t("auth.skip") : t("auth.back")} className="press -ms-2 grid h-11 w-11 place-items-center rounded-full">
+            <Icon name={step === "other-side" || step === "invite" ? "close" : "back"} className="rtl:-scale-x-100" />
+          </button>
+          <Lockup mark={24} word={72} className="text-ink" />
+        </div>
         <h1 className="m-0 mt-4 text-[32px] leading-[1.08]">{title}</h1>
 
         {step === "details" && (

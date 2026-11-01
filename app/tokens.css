@@ -8,6 +8,12 @@
   --card: #ffffff;
   --surface: #ffffff; /* filled blocks on the paper: cards, chips, inputs (a hairline lifts them) */
   --surface-edge: 0 0 0 1px rgba(60, 42, 24, 0.05), 0 1px 2px rgba(60, 42, 24, 0.04);
+  /* The family: the five petals of the mark. Only for a person's own colour (avatar fallbacks, fridge magnets). */
+  --petal-1: #E8735A;
+  --petal-2: #5FAAA3;
+  --petal-3: #5B7FCC;
+  --petal-4: #8A4F75;
+  --petal-5: #DE9F3E;
   --well: #f1eee9; /* fills inside a white card: icon wells, tracks, inputs */
   --card-shadow: 0 1px 2px rgba(60, 42, 24, 0.05), 0 8px 24px -12px rgba(60, 42, 24, 0.16);
   --ink: rgba(0, 0, 0, 0.88);

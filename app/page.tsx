@@ -13,6 +13,7 @@ import { resetFamilyCards } from "@/lib/use-family";
 
 import { hasEntered, isInstalledApp, markEntered } from "@/lib/entered";
 import { isKid } from "@/lib/kids";
+import { Mark } from "@/components/brand";
 
 const DOOR_KEY = "aangan:door";
 
@@ -36,6 +37,9 @@ function CheckingShell() {
     <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Nearer">
       <div className="win-hero mx-auto w-full max-w-[480px]" aria-hidden="true">
         <HeroBox src={DEFAULT_IMAGE} />
+      </div>
+      <div className="checking-mark fixed inset-0 grid place-items-center" aria-hidden="true">
+        <Mark size={72} />
       </div>
       <div className="door-hero mx-auto w-full max-w-[480px] px-5" style={{ paddingTop: "calc(32px + env(safe-area-inset-top))" }} aria-hidden="true">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
