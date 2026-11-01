@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Core Web Vitals on a phone, without Lighthouse.
 
-Signs in to the demo (AANGAN-DEMO), opens the courtyard (sessionStorage
+Signs in to the demo (NEARER-DEMO), opens the courtyard (sessionStorage
 aangan:door=open) in a cold 390px Chromium with a simulated 4G link
 (1.5 Mbps down, 100 ms RTT) and a 4x CPU slowdown, and reads LCP and CLS from
 the browser's own PerformanceObservers. Fails when:
@@ -52,7 +52,7 @@ READ = """() => new Promise((res) => {
 def sign_in(browser, base: str) -> dict:
     """One demo sign-in (the endpoint allows 20 per 10 minutes per address); returns the cookies to reuse."""
     ctx = browser.new_context(base_url=base)
-    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
+    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
     if not res.ok:
         status, body = res.status, res.text()[:200]
         ctx.close()
@@ -86,7 +86,7 @@ def live_timing(base: str, runs: int) -> int:
     """Wall time per API call against a deployed origin. The first call of each path is the cold one; nothing is asserted."""
     with sync_playwright() as p:
         anon = p.request.new_context(base_url=base)
-        res = anon.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
+        res = anon.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
         if not res.ok:
             print(f"perf-vitals: demo sign-in failed {res.status} {res.text()[:200]}", file=sys.stderr)
             return 1

@@ -38,7 +38,7 @@ def main() -> int:
         # The app's own visit heartbeat (POST /api/presence) is not a setting.
         page.on("request", lambda r: "/api/" in r.url and r.method in WRITES and not (r.method == "POST" and r.url.endswith("/api/presence")) and writes.append(f"{r.method} {r.url.split('/api/')[1].split('?')[0]}"))
         page.on("pageerror", lambda e: problems.append(f"page error: {e}"))
-        res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "AANGAN-DEMO", "memberId": a.person}), headers={"content-type": "application/json"})
+        res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": a.person}), headers={"content-type": "application/json"})
         if not res.ok:
             print("sign-in failed", res.status)
             return 1

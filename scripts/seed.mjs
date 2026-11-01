@@ -1,4 +1,4 @@
-// Aangan demo-family seed script (M6). Generates ONCE into public/demo/.
+// Nearer demo-family seed script (M6). Generates ONCE into public/demo/.
 // Usage: node scripts/seed.mjs
 // The key comes from META_API_KEY in the environment (or .env.local); it is
 // never printed, logged, or written anywhere by this script.

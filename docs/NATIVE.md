@@ -1,6 +1,6 @@
-# Aangan native apps (iOS + Android)
+# Nearer native apps (iOS + Android)
 
-Aangan ships to the stores as a **Capacitor 8** shell around the deployed site.
+Nearer ships to the stores as a **Capacitor 8** shell around the deployed site.
 It is a Next.js 14 app with API routes, so it cannot be a static export: the
 native WebView loads `server.url` (the production origin) and Capacitor's bridge
 gives that page native plugins. `webDir` is `public/` only so that
@@ -30,7 +30,7 @@ CAP_SERVER_URL=https://<production-origin> npm run cap:sync
 
 It sets `server.url`, `allowNavigation`, and (on Android) the App Links host in
 the manifest (`android/app/build.gradle` → `manifestPlaceholders.appLinkHost`, so
-also export it when running Gradle). Production is `https://aangan.sanjeevlabs.com`. Without CAP_SERVER_URL, `cap sync`
+also export it when running Gradle). Production is `https://nearer.sanjeevlabs.com`. Without CAP_SERVER_URL, `cap sync`
 stops with an error. On iOS the Universal Links host is in
 `ios/App/App/App.entitlements` (`applinks:<host>`); edit it to match.
 
@@ -58,7 +58,7 @@ Icons and splash were generated with `npx @capacitor/assets@4.0.0 generate --ass
 4. `npm run cap:android`, pick a device or emulator, press **Run**.
    Or from the command line: `export CAP_SERVER_URL=https://<origin> ANDROID_HOME=~/Android/Sdk && npm run android:apk`, then `adb install android/app/build/outputs/apk/debug/app-debug.apk`.
 5. Push needs `android/app/google-services.json` from a Firebase project with the
-   Android app `app.aangan.family` (ignored by git; Gradle applies the plugin only
+   Android app `com.sanjeevlabs.nearer` (ignored by git; Gradle applies the plugin only
    when the file exists).
 
 ### iOS (Mac with Xcode 16+)
@@ -87,7 +87,7 @@ been built here. Capacitor 8 uses Swift Package Manager, so there is no
 Google blocks OAuth inside embedded WebViews, so in the app sign-in must open in
 the system browser and come back:
 
-- **Custom scheme** `app.aangan.family://auth/callback` (Android intent filter,
+- **Custom scheme** `com.sanjeevlabs.nearer://auth/callback` (Android intent filter,
   iOS `CFBundleURLTypes`). Used for Google OAuth.
 - **App Links / Universal Links** for `https://<origin>/auth/callback`. Used for
   email magic links. Verification needs, on the origin:
@@ -96,7 +96,7 @@ the system browser and come back:
     App Signing shows the release one).
   - `/.well-known/apple-app-site-association` (template; put in the Team ID; served
     as `application/json`, no redirect, no extension).
-- Add `app.aangan.family://auth/callback` to Supabase → Auth → URL configuration →
+- Add `com.sanjeevlabs.nearer://auth/callback` to Supabase → Auth → URL configuration →
   Redirect URLs.
 
 Flow: the web code calls `signInWithOAuth({ options: { redirectTo: authRedirectUrl("oauth"), skipBrowserRedirect: true } })`,
@@ -139,7 +139,7 @@ verifier lives).
 ## Store review notes
 
 - **Apple 4.2 (minimum functionality)**: an app that only loads a website is
-  rejected. Aangan must show native value in the review build: push notifications
+  rejected. Nearer must show native value in the review build: push notifications
   (the knock, the morning letter), the home-screen widget, haptics on the lamp,
   the native share sheet, and deep-link sign-in. Ship the widget before first
   submission if possible; say so in the review notes.
