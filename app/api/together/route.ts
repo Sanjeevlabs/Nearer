@@ -2,7 +2,8 @@ import { z } from "zod";
 import { isGrownUp } from "@/lib/permissions";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { dbGetMember, dbListMembers } from "@/lib/db";
-import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
+import { docsFor } from "@/lib/request-data";
+import { deleteDoc, getDoc, newId, putDoc } from "@/lib/family-docs";
 import type { Project } from "@/lib/kinds";
 import { canChange } from "@/lib/permissions";
 import { TEMPLATES, template } from "@/lib/together-templates";
@@ -33,7 +34,7 @@ const Body = z.discriminatedUnion("action", [
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const projects = (await listDocs(auth.familyId, "project")).filter((p) => p.kind === "visit");
+  const projects = (await docsFor(req, auth.familyId, "project")).filter((p) => p.kind === "visit");
   return Response.json({ templates: TEMPLATES, projects });
 }
 

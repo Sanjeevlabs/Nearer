@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { docsFor } from "@/lib/request-data";
 import { dbAddAgentRun, dbGetMember, dbListCards, dbListMembers } from "@/lib/db";
-import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
+import { deleteDoc, getDoc, newId, putDoc } from "@/lib/family-docs";
 import { AdviceCategoryId, adviceCategory } from "@/lib/advice";
 import { can } from "@/lib/permissions";
 import { askWeeklyQuestions } from "@/lib/keeper";
@@ -21,7 +22,7 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   // Every advice/blessing question carries its shelf: stored if present, else the deterministic fallback.
-  const questions = (await listDocs(auth.familyId, "question")).map((q) => {
+  const questions = (await docsFor(req, auth.familyId, "question")).map((q) => {
     const stored = (q as { category?: string | null }).category;
     return q.topic === "wisdom" || q.topic === "blessing" ? { ...q, category: adviceCategory({ text: q.text, topic: q.topic, category: stored }) } : q;
   });

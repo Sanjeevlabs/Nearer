@@ -7,9 +7,9 @@
 import { dbGetMember } from "./db";
 import type { Member } from "./schemas";
 
-const memos = new WeakMap<Request, Map<string, Promise<Member | undefined>>>();
+const memos = new WeakMap<Request, Map<string, Promise<unknown>>>();
 
-function memoOf(req: Request): Map<string, Promise<Member | undefined>> {
+function memoOf(req: Request): Map<string, Promise<unknown>> {
   let m = memos.get(req);
   if (!m) {
     m = new Map();
@@ -20,13 +20,23 @@ function memoOf(req: Request): Map<string, Promise<Member | undefined>> {
 
 /** dbGetMember, once per (request, id). Concurrent callers share the one in-flight lookup. */
 export function memberFor(req: Request, id: string): Promise<Member | undefined> {
+  return once(req, `member:${id}`, () => dbGetMember(id));
+}
+
+/** Run `make` the first time `key` is asked for on this request; every later ask (concurrent or not) gets the same promise. */
+export function once<T>(req: Request, key: string, make: () => Promise<T>): Promise<T> {
   const memo = memoOf(req);
-  let p = memo.get(id);
+  let p = memo.get(key) as Promise<T> | undefined;
   if (!p) {
-    p = dbGetMember(id);
-    memo.set(id, p);
+    p = make();
+    memo.set(key, p);
   }
   return p;
+}
+
+/** Has `key` been asked for already on this request? */
+export function has(req: Request, key: string): boolean {
+  return memoOf(req).has(key);
 }
 
 /** Let `child` (a sub-request built from `parent`) reuse everything `parent` has already loaded. */

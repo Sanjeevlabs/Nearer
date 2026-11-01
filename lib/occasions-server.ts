@@ -98,7 +98,7 @@ export function nextOccasion(members: Member[], now = new Date(), within = 30, h
 }
 
 /** nextOccasion with the family's own calendar looked up. */
-export async function nextOccasionFor(familyId: string, members: Member[], now = new Date(), within = 30): Promise<Occasion | null> {
-  const { visible } = await familyHolidays(familyId, members).catch(() => ({ visible: [] as HolidayItem[] }));
+export async function nextOccasionFor(familyId: string, members: Member[], now = new Date(), within = 30, holidays?: Promise<Pick<FamilyHolidays, "visible">>): Promise<Occasion | null> {
+  const { visible } = await (holidays ?? familyHolidays(familyId, members)).catch(() => ({ visible: [] as HolidayItem[] }));
   return nextOccasion(members, now, within, visible);
 }

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { docsFor } from "@/lib/request-data";
 import { dbDeleteCard, dbGetMember, dbListCards, dbListMembers } from "@/lib/db";
-import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
+import { deleteDoc, getDoc, newId, putDoc } from "@/lib/family-docs";
 import { STORY_AGES, STORY_THEMES } from "@/lib/kinds";
 import { canChange } from "@/lib/permissions";
 import { labelStory } from "@/lib/stories";
@@ -26,7 +27,7 @@ const Body = z.discriminatedUnion("action", [
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [stories, questions] = await Promise.all([listDocs(auth.familyId, "story"), listDocs(auth.familyId, "question")]);
+  const [stories, questions] = await Promise.all([docsFor(req, auth.familyId, "story"), docsFor(req, auth.familyId, "question")]);
   // A known tale to retell in your own voice, quietly picked for the day.
   const idea = ideaFor(new Date().toISOString().slice(0, 10), stories.map((s) => s.title));
   return Response.json({ stories, requests: questions.filter((q) => q.topic === "story" && q.askedBy && !q.answeredCardId), idea });

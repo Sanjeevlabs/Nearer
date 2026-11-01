@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
+import { docsFor } from "@/lib/request-data";
 import { dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { SITTING_REASONS } from "@/lib/kinds";
@@ -27,7 +28,7 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const now = Date.now();
-  const [sittings, knocks] = await Promise.all([listDocs(auth.familyId, "sitting"), listDocs(auth.familyId, "knock")]);
+  const [sittings, knocks] = await Promise.all([docsFor(req, auth.familyId, "sitting"), docsFor(req, auth.familyId, "knock")]);
   return Response.json({
     // Keep sittings visible until 3 hours after they start (so "Join" works late).
     sittings: sittings.filter((s) => Date.parse(s.startsAt) > now - 3 * 3_600_000).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),

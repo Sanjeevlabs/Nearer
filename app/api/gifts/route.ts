@@ -1,7 +1,7 @@
 import { requireSession } from "@/lib/auth";
-import { dbListCards, dbListPlays } from "@/lib/db";
+import { dbListPlays } from "@/lib/db";
+import { cardsFor, docsFor } from "@/lib/request-data";
 import { DEMO_SHELF_CARDS } from "@/lib/demo";
-import { listDocs } from "@/lib/family-docs";
 import { giftsFor } from "@/lib/gifts";
 
 // GET → what the signed-in person's gifts did this week (their recipes cooked,
@@ -9,14 +9,14 @@ import { giftsFor } from "@/lib/gifts";
 export async function GET(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const live = await dbListCards(auth.familyId);
-  const cards = [...live, ...DEMO_SHELF_CARDS.filter((d) => d.familyId === auth.familyId && !live.some((c) => c.id === d.id))];
-  const [plays, recipes, attempts, stories, questions] = await Promise.all([
+  const [live, plays, recipes, attempts, stories, questions] = await Promise.all([
+    cardsFor(req, auth.familyId),
     dbListPlays(undefined, auth.familyId),
-    listDocs(auth.familyId, "recipe"),
-    listDocs(auth.familyId, "attempt"),
-    listDocs(auth.familyId, "story"),
-    listDocs(auth.familyId, "question"),
+    docsFor(req, auth.familyId, "recipe"),
+    docsFor(req, auth.familyId, "attempt"),
+    docsFor(req, auth.familyId, "story"),
+    docsFor(req, auth.familyId, "question"),
   ]);
+  const cards = [...live, ...DEMO_SHELF_CARDS.filter((d) => d.familyId === auth.familyId && !live.some((c) => c.id === d.id))];
   return Response.json({ gifts: giftsFor(auth.memberId, { cards, plays, recipes, attempts, stories, questions }) });
 }

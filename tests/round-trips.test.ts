@@ -111,8 +111,9 @@ import { windowState } from "@/lib/window-server";
 const BUDGET = {
   windowState: { calls: 8, depth: 2 },
   window: { calls: 9, depth: 2 },
-  courtyard: { calls: 33, depth: 6 },
-  festivalWeek: { calls: 7, depth: 5 },
+  courtyard: { calls: 17, depth: 3 },
+  courtyardOneAangan: { calls: 13, depth: 2 },
+  festivalWeek: { calls: 6, depth: 2 },
 };
 
 let cookie = "";
@@ -148,8 +149,9 @@ async function measure<T>(run: () => Promise<T>): Promise<{ out: T; calls: numbe
 
 const get = (path: string) => new Request(`http://test${path}`, { headers: { cookie } });
 
-function report(name: string, m: { calls: number; depth: number; byTable: Record<string, number> }) {
+function report(name: string, m: { calls: number; depth: number; byTable: Record<string, number>; log?: string[] }) {
   console.log(`[round-trips] ${name}: calls=${m.calls} depth=${m.depth} ${JSON.stringify(m.byTable)}`);
+  if (process.env.WAVES) console.log((m as { log?: string[] }).log?.join("\n"));
 }
 
 describe("member memo", () => {
@@ -222,7 +224,18 @@ describe("database round trips", () => {
     expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyard.depth);
   });
 
+  it("GET /api/courtyard for someone in one Aangan only", async () => {
+    // Their other Aangans are a second hop (find them, then read each); with none, it is one wave after the auth lookup.
+    for (const r of h.tables.get("members")!) if (r.id === memberId) r.person_id = null;
+    const m = await measure(async () => (await courtyard(get("/api/courtyard"))).status);
+    report("GET /api/courtyard (one Aangan)", m);
+    expect(m.out).toBe(200);
+    expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.calls);
+    expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.depth);
+  });
+
   it("GET /api/festival-week", async () => {
+    await festivalWeekRoute(get("/api/festival-week")); // the first look of the festival creates its run; this is the steady state
     const m = await measure(async () => (await festivalWeekRoute(get("/api/festival-week"))).status);
     report("GET /api/festival-week", m);
     expect(m.out).toBe(200);

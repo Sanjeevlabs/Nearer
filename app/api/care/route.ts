@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { docsFor } from "@/lib/request-data";
 import { needFromVoice, noteForParent } from "@/lib/care";
 import { dbAddAgentRun, dbListCards, dbListMembers, dbListRelationships } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
@@ -75,7 +76,7 @@ function rankedNearby(helpers: Helper[], homeIds: Set<string>): Helper[] {
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [needs, helpers] = await Promise.all([listDocs(auth.familyId, "need"), listDocs(auth.familyId, "helper")]);
+  const [needs, helpers] = await Promise.all([docsFor(req, auth.familyId, "need"), docsFor(req, auth.familyId, "helper")]);
   // Oldest first, so the trusted-nearby rank (#1 = earliest) reads straight off the list.
   return Response.json({ needs, helpers: rankNearby(helpers) });
 }

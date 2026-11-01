@@ -1,5 +1,6 @@
-import { requireSession } from "@/lib/auth";
+import { requireSession, sessionFromRequest } from "@/lib/auth";
 import { adoptMemo, memberFor } from "@/lib/request-memo";
+import { CHILD_KINDS, ELDER_KINDS, prefetchDocs, preloadCourtyard } from "@/lib/request-data";
 import { guardWrites } from "@/lib/api-guard";
 import { GET as getCare } from "../care/route";
 import { GET as getEvents } from "../gather/events/route";
@@ -40,9 +41,17 @@ async function slice(req: Request, path: string, handler: Handler): Promise<unkn
 }
 
 async function getHandler(req: Request): Promise<Response> {
+  // Everything the slices share (members, cards, calendar settings, the common
+  // document kinds) starts now, in the same wave as the auth lookup; the slices
+  // then find it already read (lib/request-data.ts).
+  const claimed = sessionFromRequest(req);
+  if (claimed) preloadCourtyard(req, claimed.familyId);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const me = await memberFor(req, auth.memberId);
+  // The role's own kinds, in one query, before the slices that read them.
+  if (me?.role === "elder") prefetchDocs(req, auth.familyId, ELDER_KINDS);
+  if (me?.role === "child") prefetchDocs(req, auth.familyId, CHILD_KINDS);
   const parts: [string, string, Handler][] = [
     ["sides", "/api/sides", getSides],
     ["safety", "/api/safety", getSafety],
