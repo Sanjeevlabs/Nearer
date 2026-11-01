@@ -7,7 +7,8 @@ import { CourtyardProvider } from "@/lib/courtyard-data";
 import { useShell } from "@/components/shell";
 import { useViewer } from "@/components/viewer";
 import { Photo } from "@/components/ui/kit";
-import { HERO_SIZES } from "@/lib/hero";
+import { HeroBox, WindowLoading } from "@/components/window-hero";
+import { DEFAULT_IMAGE, HERO_SIZES } from "@/lib/hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
 import { hasEntered, markEntered } from "@/lib/entered";
@@ -17,7 +18,7 @@ const DOOR_KEY = "aangan:door";
 // Each person needs one of these four: the window (signed in, door closed), the courtyard
 // (above, door open), the landing (signed out) or the door itself (only when it swings).
 // The others stay out of the first download; the likely next one is fetched while idle.
-const LiteWindow = dynamic(() => import("@/components/window").then((x) => x.LiteWindow), { ssr: false, loading: () => <div className="lite-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Aangan" /> });
+const LiteWindow = dynamic(() => import("@/components/window").then((x) => x.LiteWindow), { ssr: false, loading: () => <WindowLoading /> });
 const Landing = dynamic(() => import("@/components/welcome").then((x) => x.Landing), { ssr: false });
 const HomeSite = dynamic(() => import("@/components/home-site").then((x) => x.HomeSite), { ssr: false });
 const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.DoorTransition), { ssr: false });
@@ -31,6 +32,9 @@ const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.D
 function CheckingShell() {
   return (
     <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Aangan">
+      <div className="win-hero mx-auto w-full max-w-[480px]" aria-hidden="true">
+        <HeroBox src={DEFAULT_IMAGE} />
+      </div>
       <div className="door-hero mx-auto w-full max-w-[480px] px-5" style={{ paddingTop: "calc(32px + env(safe-area-inset-top))" }} aria-hidden="true">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
           <Photo src="/demo/courtyard.jpg" alt="" sizes={HERO_SIZES} position="center 55%" />
