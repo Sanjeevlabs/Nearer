@@ -166,6 +166,7 @@ const CARD_WINDOW_DAYS = 60;
 const CARD_WINDOW_LIMIT = 200;
 /** A slow sky never holds the window: past this the weather badge just hides. */
 export const WEATHER_DEADLINE_MS = 1500;
+const HOLIDAYS_DEADLINE_MS = 1500;
 
 type WindowDocs = Awaited<ReturnType<typeof listDocsMany<typeof WINDOW_KINDS>>>;
 
@@ -193,7 +194,11 @@ export function readWindow(familyId: string, now: Date = new Date()): Promise<Wi
   const membersP = dbListMembers(familyId);
   const since = new Date(now.getTime() - CARD_WINDOW_DAYS * 86_400_000).toISOString();
   // Holidays need the members' zones for the country, but the settings read does not wait for them.
-  const holidays = membersP.then((ms) => familyHolidays(familyId, ms, {}, { settings }).then((h) => h.visible)).catch((): CalHoliday[] => []);
+  // The live calendar feed is a network fetch; if it is slow the bundled calendar (what a failed fetch uses anyway) stands in.
+  const bundled = () => membersP.then((ms) => familyHolidays(familyId, ms, { fetchText: () => Promise.reject(new Error("slow")) }, { settings }).then((h) => h.visible));
+  const holidays = withDeadline(membersP.then((ms) => familyHolidays(familyId, ms, {}, { settings }).then((h) => h.visible)), HOLIDAYS_DEADLINE_MS, null)
+    .then((visible) => visible ?? bundled())
+    .catch((): CalHoliday[] => []);
   return Promise.all([
     membersP,
     dbListRelationships(familyId),

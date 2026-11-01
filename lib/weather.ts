@@ -3,6 +3,8 @@
 // plus a server fetch from Open-Meteo (free, no key). Only a city name ever
 // leaves the server; nobody's location is tracked.
 
+import { edgeGet, edgePut } from "./edge-cache";
+
 export type SkyKind = "clear" | "clouds" | "fog" | "rain" | "storm" | "snow";
 export type DayPhase = "dawn" | "day" | "dusk" | "night";
 
@@ -99,48 +101,80 @@ export function pickPlace(results: GeoResult[] | undefined, hint: PlaceHint): Ge
 
 const CACHE = new Map<string, { at: number; w: Weather }>();
 const GEO = new Map<string, { at: number; p: { lat: number; lon: number } | null }>();
-const TTL = 30 * 60_000;
-const GEO_TTL = 24 * 3_600_000;
+// Two cache levels. This isolate's memory is checked first; behind it the data
+// centre's Cache API (lib/edge-cache.ts) lets one isolate's fetch serve the
+// others, which matters because most requests land on a cold isolate.
+const TTL = 20 * 60_000;
+const GEO_TTL = 30 * 24 * 3_600_000;
 const GEO_MISS_TTL = 10 * 60_000;
 const keyOf = (city: string, hint: PlaceHint) => `${city.trim().toLowerCase()}|${(hint.country ?? "").toUpperCase()}|${hint.country ? "" : (hint.tz ?? "")}`;
+// The same lookup asked twice at once (the weather and the distance both want the city) is one fetch.
+const GEO_FLIGHT = new Map<string, Promise<{ lat: number; lon: number } | null>>();
+const WX_FLIGHT = new Map<string, Promise<Weather | null>>();
 
-/** Server only. Coordinates of a city in the member's country, cached per city + country. */
+function inFlight<T>(flights: Map<string, Promise<T>>, key: string, run: () => Promise<T>): Promise<T> {
+  const open = flights.get(key);
+  if (open) return open;
+  const p = run().finally(() => flights.delete(key));
+  flights.set(key, p);
+  return p;
+}
+
+/** Server only. Coordinates of a city in the member's country, cached per city + country (30 days, shared across isolates). */
 export async function geocode(city: string, hint: PlaceHint = {}, fetcher: typeof fetch = fetch): Promise<{ lat: number; lon: number } | null> {
   if (!city.trim()) return null;
   const key = keyOf(city, hint);
   const hit = GEO.get(key);
   if (hit && Date.now() - hit.at < (hit.p ? GEO_TTL : GEO_MISS_TTL)) return hit.p;
-  try {
-    const geo = await fetcher(`https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name=${encodeURIComponent(nameOf(city))}`, { signal: AbortSignal.timeout(4000) });
-    if (!geo.ok) return null;
-    const g = (await geo.json()) as { results?: GeoResult[] };
-    const place = pickPlace(g.results, hint);
-    const p = place ? { lat: place.latitude, lon: place.longitude } : null;
-    GEO.set(key, { at: Date.now(), p });
-    return p;
-  } catch {
-    return null;
-  }
+  return inFlight(GEO_FLIGHT, key, async () => {
+    const shared = await edgeGet<{ lat: number; lon: number }>(`geo:${key}`);
+    if (shared) {
+      GEO.set(key, { at: Date.now(), p: shared });
+      return shared;
+    }
+    try {
+      const geo = await fetcher(`https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name=${encodeURIComponent(nameOf(city))}`, { signal: AbortSignal.timeout(4000) });
+      if (!geo.ok) return null;
+      const g = (await geo.json()) as { results?: GeoResult[] };
+      const place = pickPlace(g.results, hint);
+      const p = place ? { lat: place.latitude, lon: place.longitude } : null;
+      GEO.set(key, { at: Date.now(), p });
+      if (p) await edgePut(`geo:${key}`, p, GEO_TTL / 1000);
+      return p;
+    } catch {
+      return null;
+    }
+  });
 }
 
-/** Server only. Geocode the city (in the right country), read current weather, cache 30 min. */
+/** Server only. Geocode the city (in the right country), read current weather, cache 20 min (shared across isolates). */
 export async function fetchWeather(city: string, hint: PlaceHint = {}, fetcher: typeof fetch = fetch): Promise<Weather | null> {
   const key = keyOf(city, hint);
   const hit = CACHE.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.w;
-  try {
-    const place = await geocode(city, hint, fetcher);
-    if (!place) return null;
-    const res = await fetcher(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code`, { signal: AbortSignal.timeout(4000) });
-    if (!res.ok) return null;
-    const d = (await res.json()) as { current?: { temperature_2m?: number; weather_code?: number } };
-    if (typeof d.current?.temperature_2m !== "number" || typeof d.current.weather_code !== "number") return null;
-    const w: Weather = { city, tempC: Math.round(d.current.temperature_2m), ...skyFromWmo(d.current.weather_code), source: "open-meteo", at: new Date().toISOString(), lat: place.lat, lon: place.lon };
-    CACHE.set(key, { at: Date.now(), w });
-    return w;
-  } catch {
-    return null;
-  }
+  return inFlight(WX_FLIGHT, key, async () => {
+    const shared = await edgeGet<Weather>(`wx:${key}`);
+    // The cached reading carries the name it was first asked under; this caller's own spelling wins.
+    if (shared && Date.now() - Date.parse(shared.at) < TTL) {
+      const w = { ...shared, city };
+      CACHE.set(key, { at: Date.parse(shared.at), w });
+      return w;
+    }
+    try {
+      const place = await geocode(city, hint, fetcher);
+      if (!place) return null;
+      const res = await fetcher(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code`, { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) return null;
+      const d = (await res.json()) as { current?: { temperature_2m?: number; weather_code?: number } };
+      if (typeof d.current?.temperature_2m !== "number" || typeof d.current.weather_code !== "number") return null;
+      const w: Weather = { city, tempC: Math.round(d.current.temperature_2m), ...skyFromWmo(d.current.weather_code), source: "open-meteo", at: new Date().toISOString(), lat: place.lat, lon: place.lon };
+      CACHE.set(key, { at: Date.now(), w });
+      await edgePut(`wx:${key}`, w, TTL / 1000);
+      return w;
+    } catch {
+      return null;
+    }
+  });
 }
 
 /** Coordinates for the demo and tests (no network); null for a city we don't know. */
