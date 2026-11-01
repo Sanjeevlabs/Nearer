@@ -25,6 +25,7 @@ import { SideSwitch, useSides } from "./sides";
 import { GiftsShelf } from "./gifts-shelf";
 import { EventPrompts } from "./event-prompts";
 import { TodayCard, useToday } from "./today";
+import { TogetherHabit } from "./together-habit";
 import { CourtyardLetter } from "./courtyard-letter";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Icon, Monogram, Photo } from "./ui/kit";
@@ -321,6 +322,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
         <>
           <EventPrompts className="mt-4" />
           <TodayCard />
+          <TogetherHabit />
           <CourtyardLetter />
 
           <Carousel label="Now in the family" className="mt-5">
