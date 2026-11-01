@@ -47,6 +47,31 @@ for (const f of files(ROOT)) {
   }
 }
 
+// Hackathon rule: every model the app calls at runtime is a Meta model. Runtime
+// code (lib/, app/, components/) may not talk to any other model vendor, and
+// package.json may not depend on their SDKs. Comments mentioning the
+// OpenAI-compatible protocol are fine; hosts and imports are not.
+const NON_META_HOSTS = /\b(api\.openai\.com|api\.anthropic\.com|generativelanguage\.googleapis\.com|aiplatform\.googleapis\.com|api\.mistral\.ai|api\.cohere\.(ai|com)|api-inference\.huggingface\.co|api\.replicate\.com|openrouter\.ai|api\.groq\.com|api\.together\.xyz|api\.x\.ai|api\.deepseek\.com|api\.perplexity\.ai)\b/i;
+const NON_META_IMPORTS = /from\s+["'](openai|@anthropic-ai\/[a-z-]+|@google\/generative-ai|@google\/genai|@mistralai\/[a-z-]+|cohere-ai|replicate|groq-sdk|together-ai|@huggingface\/inference)["']/;
+for (const f of files(ROOT)) {
+  const rel = f.replace(ROOT, "").replace(/^[\\/]/, "").replace(/\\/g, "/");
+  if (!/^(lib|app|components)\//.test(rel)) continue;
+  const text = readFileSync(f, "utf8");
+  if (NON_META_HOSTS.test(text) || NON_META_IMPORTS.test(text)) {
+    console.error(`${rel}: runtime code talks to a non-Meta model vendor (hackathon rule: every runtime model is a Meta model)`);
+    failures++;
+  }
+}
+{
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
+  const bad = deps.filter((d) => /^(openai|@anthropic-ai\/|@google\/generative-ai|@google\/genai|@mistralai\/|cohere-ai|replicate|groq-sdk|together-ai|@huggingface\/inference)/.test(d));
+  if (bad.length) {
+    console.error(`package.json depends on non-Meta model SDKs: ${bad.join(", ")}`);
+    failures++;
+  }
+}
+
 // Public repo: no business strategy, money plans or competitor talk in tracked files.
 // (The private spec lives outside the repo; docs/private/ is gitignored.)
 const PRIVATE_TOPICS = /\b(commission|revenue|monetis|monetiz|competitor|investor|paywall|unit economics|go-to-market|family plus)\b|[₹$]\s?\d[\d,.]*\s?(\/|per |a )(month|year|mo|yr)\b/i;
@@ -78,4 +103,4 @@ if (failures > 0) {
   console.error(`${failures} lint failure(s)`);
   process.exit(1);
 }
-console.log("lint ok: no secrets, no hard-coded festivals in app logic, dependencies on the allowlist, no private topics");
+console.log("lint ok: no secrets, no hard-coded festivals in app logic, dependencies on the allowlist, no private topics, Meta-only runtime models");
