@@ -20,3 +20,6 @@ export const SAFETY_KINDS = ["home-safe", "heading", "journey", "out-late", "hel
 export const PET_SPECIES = ["dog", "cat", "bird", "fish", "rabbit", "other"] as const;
 export const HELPER_ROLES = ["groceries", "house help", "driver", "cook", "gas booking", "repairs", "plumber", "electrician", "neighbour", "caregiver", "doctor's clinic", "pet care", "friend", "warden", "landlord", "colleague", "relative nearby", "other"] as const;
 export const SITTING_REASONS = ["chai", "cook", "story", "festival", "birthday", "music", "just-sit"] as const;
+/** Where a sitting happens: the virtual place the family sits (lib/venues.ts has the photos and seats). */
+export const VENUE_IDS = ["courtyard", "terrace", "pergola", "deck", "lounge", "patio"] as const;
+export type VenueId = (typeof VENUE_IDS)[number];

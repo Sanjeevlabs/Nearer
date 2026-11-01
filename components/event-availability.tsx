@@ -7,8 +7,10 @@ import { callName } from "@/lib/people";
 import type { Member } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { placeFromTz } from "@/lib/zones";
+import { DEFAULT_VENUE, type VenueId } from "@/lib/venues";
 import { AvatarStack } from "./event-card";
 import { Icon } from "./ui/kit";
+import { VenuePicker } from "./venue-scene";
 
 /**
  * Three times that work in every home (8 AM–10 PM local). One tap each:
@@ -16,6 +18,7 @@ import { Icon } from "./ui/kit";
  */
 export function AvailabilityPicker({ e, members, viewer, onChange }: { e: FamilyEvent; members: Member[]; viewer: Member; onChange: (next: FamilyEvent) => void }) {
   const [busy, setBusy] = useState<string | null>(null);
+  const [venue, setVenue] = useState<VenueId>(DEFAULT_VENUE);
   const isHost = e.hostId === viewer.id;
   const total = participants(e).length;
   const best = bestSlot(e);
@@ -34,6 +37,12 @@ export function AvailabilityPicker({ e, members, viewer, onChange }: { e: Family
   const pickedNone = e.answered.includes(viewer.id) && !Object.values(e.votes).some((v) => v.includes(viewer.id));
   return (
     <section id="times" aria-label="Pick the times that work for you">
+      {isHost && (
+        <div className="mb-3 rounded-[22px] bg-[#1c1b1a] p-3 text-white">
+          <p className="m-0 mb-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/55">Where shall we sit?</p>
+          <VenuePicker value={venue} onChange={setVenue} />
+        </div>
+      )}
       <ul className="m-0 list-none space-y-2 p-0">
         {e.slots.map((s) => {
           const voters = e.votes[s.id] ?? [];
@@ -41,7 +50,7 @@ export function AvailabilityPicker({ e, members, viewer, onChange }: { e: Family
           const lead = best?.slot.id === s.id && best.count > 0;
           return (
             <li key={s.id} className={cn("flex items-center gap-2 rounded-[22px] p-1.5 pr-2 transition-colors", mine ? "bg-[#1c1b1a] text-white" : "bg-black/[.04]")}>
-              <button type="button" aria-pressed={mine} disabled={busy !== null} onClick={() => void act({ action: "vote", slotId: s.id }, s.id)} className="press flex min-w-0 flex-1 items-center gap-3 rounded-[18px] px-3 py-2.5 text-left disabled:opacity-60">
+              <button type="button" aria-pressed={mine} disabled={busy !== null} onClick={() => void act({ action: "vote", slotId: s.id, ...(isHost ? { venue } : {}) }, s.id)} className="press flex min-w-0 flex-1 items-center gap-3 rounded-[18px] px-3 py-2.5 text-left disabled:opacity-60">
                 <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full border", mine ? "border-white bg-white text-[#1c1b1a]" : "border-black/20")} aria-hidden="true">
                   {mine && <Icon name="check" size={18} strokeWidth={2.5} />}
                 </span>
@@ -62,7 +71,7 @@ export function AvailabilityPicker({ e, members, viewer, onChange }: { e: Family
                 </span>
               </span>
               {isHost && voters.length > 0 && (
-                <button type="button" aria-label="Lock this time" disabled={busy !== null} onClick={() => void act({ action: "lock", slotId: s.id }, `lock-${s.id}`)} className={cn("press grid h-10 w-10 shrink-0 place-items-center rounded-full", mine ? "bg-white/15 text-white" : "bg-white text-ink")}>
+                <button type="button" aria-label="Lock this time" disabled={busy !== null} onClick={() => void act({ action: "lock", slotId: s.id, venue }, `lock-${s.id}`)} className={cn("press grid h-10 w-10 shrink-0 place-items-center rounded-full", mine ? "bg-white/15 text-white" : "bg-white text-ink")}>
                   <Icon name="key" size={18} />
                 </button>
               )}
