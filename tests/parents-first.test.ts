@@ -42,8 +42,9 @@ describe("parents first", () => {
     const kid = roomsFor(false);
     expect(kid.map((r) => r.title)).toEqual(["Memories", "Kitchen", "Care", "Family", "Celebrations"]);
     const hrefs = kid.flatMap((r) => r.tabs.map((t) => t.href));
-    for (const h of ["/care", "/care/helpers", "/nearby", "/kitchen", "/stories", "/advice", "/bond", "/lane", "/rituals", "/book", "/send", "/portrait", "/together/visits", "/together/holidays", "/gather", "/gather/play"]) expect(hrefs).toContain(h);
+    for (const h of ["/care", "/care/helpers", "/nearby", "/kitchen", "/stories", "/advice", "/bond", "/lane", "/rituals", "/book", "/portrait", "/together/visits", "/together/holidays", "/gather", "/gather/play"]) expect(hrefs).toContain(h);
     expect(hrefs).not.toContain("/ask");
+    expect(hrefs).not.toContain("/send");
     expect(hrefs).not.toContain("/around");
     expect(hrefs).not.toContain("/safe");
     expect(kid.find((r) => r.id === "kitchen")?.tabs.map((t) => t.href)).toEqual(["/kitchen"]);
