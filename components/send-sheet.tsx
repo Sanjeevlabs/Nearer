@@ -54,6 +54,7 @@ type Result =
 type Step =
   | { s: "loading" }
   | { s: "error" }
+  | { s: "none" }
   | { s: "list"; items: SuggestionView[]; sample: boolean; refused?: string }
   | { s: "previewing"; items: SuggestionView[]; sample: boolean; picked: SuggestionView }
   | { s: "preview"; items: SuggestionView[]; sample: boolean; picked: SuggestionView; preview: PreviewView; busy?: boolean }
@@ -111,8 +112,10 @@ export function SendSheet({
     setStep({ s: "loading" });
     const body: Record<string, string> = { forMemberId };
     if (context?.title) body[context.kind] = context.title;
-    const res = await postJson<{ suggestions: SuggestionView[]; sample: boolean; refused?: string }>("/api/partners/suggest", body);
+    const res = await postJson<{ eligible?: boolean; suggestions: SuggestionView[]; sample: boolean; refused?: string }>("/api/partners/suggest", body);
     if (!res) return setStep({ s: "error" });
+    // No partner serves their country: the section is left out (the page keeps its app links).
+    if (res.eligible === false) return setStep({ s: "none" });
     setStep({ s: "list", items: res.suggestions, sample: res.sample, refused: res.refused });
   }, [forMemberId, context?.kind, context?.title]);
 
@@ -148,6 +151,8 @@ export function SendSheet({
   };
 
   const back = step.s === "preview" || step.s === "connect" ? () => setStep({ s: "list", items: step.items, sample: step.sample }) : null;
+
+  if (step.s === "none") return null;
 
   if (inline)
     return (
@@ -214,6 +219,7 @@ function Body({
   onRetry: () => void;
   onClose: () => void;
 }) {
+  if (step.s === "none") return null;
   if (step.s === "loading")
     return (
       <div className="mt-3 space-y-3" aria-busy="true" aria-label="Finding things to send">

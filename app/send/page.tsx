@@ -7,7 +7,7 @@ import { Avatar, Icon, RoomHeader, type IconName } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import { sendOrder } from "@/lib/households";
 import { callName, memberPhoto } from "@/lib/people";
-import { appsFor, countryForTz } from "@/lib/send-apps";
+import { appsFor, sendCountry } from "@/lib/send-apps";
 import { cn } from "@/lib/utils";
 import { Boundary } from "@/components/ui/boundary";
 
@@ -25,7 +25,7 @@ function host(url: string): string {
 }
 
 function AppCategories({ tz, name }: { tz: string | null | undefined; name: string }) {
-  const set = useMemo(() => appsFor(countryForTz(tz)), [tz]);
+  const set = useMemo(() => appsFor(sendCountry(tz)), [tz]);
   return (
     <section aria-label="Their apps" className="mb-8">
       <h2 className="m-0 text-title">In their apps</h2>

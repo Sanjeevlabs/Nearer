@@ -42,6 +42,58 @@
         "rides": [{ "name": "Uber", "url": "https://www.uber.com" }]
       }
     },
+    "CA": {
+      "name": "Canada",
+      "apps": {
+        "groceries": [{ "name": "Instacart", "url": "https://www.instacart.ca" }],
+        "sweets": [{ "name": "Uber Eats", "url": "https://www.ubereats.com" }],
+        "medicines": [{ "name": "Shoppers Drug Mart", "url": "https://www.shoppersdrugmart.ca" }],
+        "house-help": [{ "name": "HomeStars", "url": "https://homestars.com" }],
+        "rides": [{ "name": "Uber", "url": "https://www.uber.com" }]
+      }
+    },
+    "AU": {
+      "name": "Australia",
+      "apps": {
+        "groceries": [{ "name": "Woolworths", "url": "https://www.woolworths.com.au" }],
+        "sweets": [{ "name": "Menulog", "url": "https://www.menulog.com.au" }],
+        "medicines": [{ "name": "Chemist Warehouse", "url": "https://www.chemistwarehouse.com.au" }],
+        "house-help": [{ "name": "Airtasker", "url": "https://www.airtasker.com" }],
+        "flowers": [{ "name": "Interflora", "url": "https://www.interflora.com.au" }],
+        "rides": [{ "name": "Uber", "url": "https://www.uber.com" }]
+      }
+    },
+    "AE": {
+      "name": "the UAE",
+      "apps": {
+        "groceries": [{ "name": "Carrefour", "url": "https://www.carrefouruae.com" }],
+        "sweets": [{ "name": "Talabat", "url": "https://www.talabat.com" }],
+        "medicines": [{ "name": "Life Pharmacy", "url": "https://www.lifepharmacy.com" }],
+        "house-help": [{ "name": "Justlife", "url": "https://www.justlife.com" }],
+        "flowers": [{ "name": "Floward", "url": "https://floward.com" }],
+        "rides": [{ "name": "Careem", "url": "https://www.careem.com" }]
+      }
+    },
+    "SG": {
+      "name": "Singapore",
+      "apps": {
+        "groceries": [{ "name": "FairPrice", "url": "https://www.fairprice.com.sg" }],
+        "sweets": [{ "name": "Grab", "url": "https://www.grab.com" }],
+        "medicines": [{ "name": "Guardian", "url": "https://www.guardian.com.sg" }],
+        "rides": [{ "name": "Grab", "url": "https://www.grab.com" }]
+      }
+    },
+    "DE": {
+      "name": "Germany",
+      "apps": {
+        "groceries": [{ "name": "REWE", "url": "https://www.rewe.de" }],
+        "sweets": [{ "name": "Lieferando", "url": "https://www.lieferando.de" }],
+        "medicines": [{ "name": "DocMorris", "url": "https://www.docmorris.de" }],
+        "house-help": [{ "name": "Helpling", "url": "https://www.helpling.de" }],
+        "flowers": [{ "name": "Fleurop", "url": "https://www.fleurop.de" }],
+        "rides": [{ "name": "FREE NOW", "url": "https://www.free-now.com" }]
+      }
+    },
     "*": {
       "name": "their country",
       "apps": {
