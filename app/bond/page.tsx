@@ -13,10 +13,9 @@ import { callName, memberPhoto } from "@/lib/people";
 import { cn } from "@/lib/utils";
 import { useViewer } from "@/components/viewer";
 import { FamilyTree } from "@/components/family-tree";
-import { PetsSection } from "@/components/pets";
 import { BothSides } from "@/components/sides";
 import { InviteSheet } from "@/components/invite-sheet";
-import { FamilyCircles, FamilyHomes } from "@/components/family-homes";
+import { BottomSheet } from "@/components/share-panel";
 import { can } from "@/lib/permissions";
 import { ZONES, placeFromTz } from "@/lib/zones";
 import { Boundary } from "@/components/ui/boundary";
@@ -88,7 +87,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
   };
 
   return (
-    <section id="add" aria-label="Add someone" className="mt-10 scroll-mt-6">
+    <section aria-label="Add someone">
       <h2 className="m-0 mb-1 text-[20px]">Add someone</h2>
       <p className="m-0 mb-4 text-[15px] text-ink-soft">Tell Aangan how they&rsquo;re related to someone already here.</p>
       <p className="m-0 mb-4 rounded-[16px] bg-surface px-4 py-3 text-[14px] text-ink-soft">
@@ -227,6 +226,7 @@ export default function BondPage() {
   const [relationships, setRelationships] = useState<Relationship[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [anchor, setAnchor] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -248,9 +248,22 @@ export default function BondPage() {
   }, [load]);
 
 
+  const mayAdd = can(viewer, "tree.add");
+  const mayInvite = can(viewer, "invite.create");
   return (
     <div>
-      <RoomHeader title="Family tree" subtitle="Every generation, both sides, home by home" action={members && canShareTree(viewer) ? <TreeShare members={members} relationships={relationships ?? []} /> : undefined} />
+      <RoomHeader
+        title="Family tree"
+        subtitle="Every generation, both sides"
+        action={
+          mayInvite ? (
+            <button type="button" onClick={() => setInviting(true)} className="press flex h-11 items-center gap-1.5 rounded-full bg-card px-4 text-[15px] font-semibold shadow-card">
+              <Icon name="plus" size={16} />
+              Invite
+            </button>
+          ) : undefined
+        }
+      />
       {failed && <EmptyLine>Couldn&rsquo;t load the family. Try again in a moment.</EmptyLine>}
       {members === null && !failed && <div key="loading" className="skeleton h-[420px] rounded-card" aria-busy="true" aria-label="Loading family" />}
       {members && (
@@ -261,43 +274,36 @@ export default function BondPage() {
               relationships={relationships ?? []}
               viewerId={viewer.id}
               onAdd={
-                can(viewer, "tree.add")
+                mayAdd
                   ? (id) => {
                       setAnchor(id);
-                      requestAnimationFrame(() => document.getElementById("add")?.scrollIntoView({ behavior: "smooth" }));
+                      setAdding(true);
                     }
                   : undefined
               }
             />
           </section></Boundary>
-          <BothSides />
-          <div className="mt-10">
-            <FamilyHomes members={members} relationships={relationships ?? []} />
+          <div className="mt-4 flex items-center gap-2">
+            {mayAdd ? (
+              <Button className="flex-1" onClick={() => { setAnchor(null); setAdding(true); }}>
+                Add someone
+              </Button>
+            ) : (
+              <p className="m-0 flex-1 text-[14px] text-ink-soft">Ask a grown-up in the family to add people.</p>
+            )}
+            {canShareTree(viewer) && <TreeShare members={members} relationships={relationships ?? []} />}
           </div>
-          <FamilyCircles members={members} relationships={relationships ?? []} />
-          <PetsSection />
-          {can(viewer, "tree.add") ? (
-          <GuidedAdd
-            anchor={anchor}
-            onAdded={() => {
-              void load();
-              void refreshMembers();
-            }}
-          />
-          ) : (
-            <p className="m-0 mt-8 text-center text-[14px] text-ink-soft">Ask a grown-up in the family to add people.</p>
-          )}
-          {can(viewer, "invite.create") && (
-            <button type="button" onClick={() => setInviting(true)} className="press mt-6 flex w-full items-center gap-3 rounded-card bg-card px-4 py-3 text-left text-ink shadow-card">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-well" aria-hidden="true">
-                <Icon name="plus" size={18} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold">Invite family</span>
-                <span className="block text-[13px] text-ink-soft">A sibling, a cousin, your in-laws</span>
-              </span>
-              <Icon name="chevron" size={17} className="text-ink-faint" />
-            </button>
+          <BothSides />
+          {mayAdd && (
+            <BottomSheet open={adding} onClose={() => setAdding(false)} label="Add someone">
+              <GuidedAdd
+                anchor={anchor}
+                onAdded={() => {
+                  void load();
+                  void refreshMembers();
+                }}
+              />
+            </BottomSheet>
           )}
           <InviteSheet open={inviting} onClose={() => setInviting(false)} />
         </>

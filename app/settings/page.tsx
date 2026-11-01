@@ -339,7 +339,7 @@ function NudgeSettingsSection({ onMessage }: { onMessage: (m: string) => void })
       <div className="mt-3 rounded-[22px] bg-surface px-4 py-4">
         <span className="block text-[16px] font-medium">Nudges</span>
         <span className="block text-[13px] text-ink-soft">Small notes like &ldquo;Maa heard your voice note&rdquo;. Never more than three a week.</span>
-        <div role="group" aria-label="Nudges" className="mt-3 grid grid-cols-3 gap-1 rounded-full bg-black/[.05] p-1">
+        <div role="group" aria-label="Nudges" className="mt-3 grid grid-cols-4 gap-1 rounded-full bg-black/[.05] p-1">
           {choices.map(([label, n]) => (
             <button key={label} type="button" aria-pressed={current === n} disabled={data === null || busy} onClick={() => void save({ maxPerWeek: n })} className={cn("press h-11 rounded-full text-[15px] font-semibold", current === n ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
               {label}
@@ -362,7 +362,8 @@ function Group({ title, id, children }: { title: string; id?: string; children: 
 
 const TABS = [
   ["you", "You"],
-  ["family", "People & invites"],
+  ["window", "Window"],
+  ["family", "People"],
   ["privacy", "Privacy"],
 ] as const;
 
@@ -378,11 +379,12 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const portraitRef = useRef<HTMLInputElement>(null);
   const homeRef = useRef<HTMLInputElement>(null);
-  const [tab, setTab] = useState<"you" | "family" | "privacy">("you");
+  const [tab, setTab] = useState<"you" | "window" | "family" | "privacy">("you");
   useEffect(() => {
     const h = window.location.hash;
     if (h === "#invite" || h === "#roles") setTab("family");
     if (h === "#privacy") setTab("privacy");
+    if (h === "#window" || h === "#connected-apps") setTab("window");
   }, []);
 
   useEffect(() => {
@@ -518,7 +520,7 @@ export default function SettingsPage() {
         <input ref={portraitRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && void uploadImage(e.target.files[0], "portrait")} />
       </div>
 
-      <nav aria-label="Settings sections" className="mt-7 grid grid-cols-3 gap-1 rounded-full bg-surface p-1">
+      <nav aria-label="Settings sections" className="mt-7 grid grid-cols-4 gap-1 rounded-full bg-surface p-1">
         {TABS.map(([id, label]) => (
           <button key={id} type="button" aria-pressed={tab === id} onClick={() => setTab(id)} className={cn("press h-10 rounded-full text-[15px] font-semibold", tab === id ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
             {label}
@@ -526,7 +528,7 @@ export default function SettingsPage() {
         ))}
       </nav>
 
-      {tab === "you" && (
+      {tab === "window" && (
         <>
       <Group title="Your first screen" id="window">
         <WindowOptions />
@@ -535,6 +537,11 @@ export default function SettingsPage() {
       <Group title="Connected apps" id="connected-apps">
         <ConnectedApps />
       </Group>
+        </>
+      )}
+
+      {tab === "you" && (
+        <>
       <LanguageSection value={displayLang} onPick={(code) => void setDisplayLang(code)} onMessage={flash} />
 
       <Group title="Reading">
