@@ -152,11 +152,25 @@ function scoped<T extends { familyId?: string | null }>(rows: T[], familyId: str
   return familyId ? rows.filter((r) => (r.familyId ?? DEMO_FAMILY) === familyId) : rows;
 }
 
-export async function dbListCards(familyId: string): Promise<Card[]> {
+/** Bounds for a screen that only needs the recent shelf (the window): cards taken at/after `since`, newest first, at most `limit`. */
+export interface ListCardsOptions {
+  limit?: number;
+  since?: string;
+}
+
+export async function dbListCards(familyId: string, opts: ListCardsOptions = {}): Promise<Card[]> {
+  const bound = (rows: Card[]): Card[] => {
+    const kept = opts.since ? rows.filter((c) => c.takenAt >= (opts.since as string)) : rows;
+    return opts.limit !== undefined ? [...kept].sort((a, b) => b.takenAt.localeCompare(a.takenAt)).slice(0, opts.limit) : kept;
+  };
   const sb = dbFor(familyId);
-  if (!sb) return scoped(memListCards(), familyId);
-  const { data, error } = await sb.from("cards").select("*").eq("family_id", familyId).order("taken_at", { ascending: false });
-  if (error || !data) return scoped(memListCards(), familyId);
+  if (!sb) return bound(scoped(memListCards(), familyId));
+  let q = sb.from("cards").select("*").eq("family_id", familyId);
+  if (opts.since) q = q.gte("taken_at", opts.since);
+  q = q.order("taken_at", { ascending: false });
+  if (opts.limit !== undefined) q = q.limit(opts.limit);
+  const { data, error } = await q;
+  if (error || !data) return bound(scoped(memListCards(), familyId));
   // One malformed row must never blank the whole feed: skip it and log the id.
   const cards: Card[] = [];
   for (const row of data) {

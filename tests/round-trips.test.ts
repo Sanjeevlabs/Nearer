@@ -104,7 +104,7 @@ import { POST as session } from "@/app/api/session/route";
 import { GET as windowRoute } from "@/app/api/window/route";
 import { requireCan, requireSession } from "@/lib/auth";
 import { readDbStats, resetDbStats } from "@/lib/db-stats";
-import { putDoc } from "@/lib/family-docs";
+import { listDocs, listDocsMany, putDoc } from "@/lib/family-docs";
 import { windowState } from "@/lib/window-server";
 
 /** Ceilings per endpoint: { calls: from() count, depth: sequential waves }. Tightened as the work lands. */
@@ -170,6 +170,27 @@ describe("member memo", () => {
     await requireSession(get("/api/x"));
     const m = await measure(() => requireSession(get("/api/x")));
     expect(m.byTable.members).toBe(1);
+  });
+});
+
+describe("listDocsMany", () => {
+  const kinds = ["presence", "safety_checkin", "care_settings", "question", "today_task", "need"] as const;
+
+  it("is one round trip and equals the separate lists", async () => {
+    const m = await measure(() => listDocsMany(familyId, kinds));
+    expect(m.calls).toBe(1);
+    expect(m.depth).toBe(1);
+    expect(m.out.presence.length).toBeGreaterThanOrEqual(2);
+    for (const k of kinds) expect(m.out[k]).toEqual(await listDocs(familyId, k));
+  });
+
+  it("falls back to one query per kind when the single query comes back full", async () => {
+    // A chatty kind fills the combined limit, so another kind could have been crowded out.
+    const rows = h.tables.get("family_docs")!;
+    for (let i = 0; i < 3000; i++) rows.push({ id: `${familyId}:flood${i}`, family_id: familyId, kind: "presence", data: { id: `flood${i}`, memberId: memberId, moment: "chai", note: "", at: new Date(Date.now() - 1e6 - i).toISOString() }, created_at: new Date().toISOString() });
+    const m = await measure(() => listDocsMany(familyId, kinds));
+    expect(m.calls).toBe(1 + kinds.length);
+    for (const k of kinds) expect(m.out[k]).toEqual(await listDocs(familyId, k));
   });
 });
 

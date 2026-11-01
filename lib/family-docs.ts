@@ -48,6 +48,36 @@ export async function listDocs<K extends DocKind>(familyId: string, kind: K): Pr
   return newest(rows);
 }
 
+/**
+ * Several kinds for one family in ONE round trip (`kind in (...)`), split by
+ * kind and validated per kind exactly as listDocs does. Each kind keeps the
+ * newest-500 rule: the single query asks for 500 per kind, and if it comes back
+ * full (one chatty kind could have crowded another out) it falls back to one
+ * listDocs per kind, so the answer never differs from separate calls.
+ */
+export async function listDocsMany<const Ks extends readonly DocKind[]>(familyId: string, kinds: Ks): Promise<{ [K in Ks[number]]: DocOf<K>[] }> {
+  const out = {} as { [K in Ks[number]]: DocOf<K>[] };
+  const unique = Array.from(new Set(kinds)) as Ks[number][];
+  const sb = dbFor(familyId);
+  const separately = async () => {
+    const lists = await Promise.all(unique.map((k) => listDocs(familyId, k)));
+    unique.forEach((k, i) => ((out as Record<string, unknown>)[k] = lists[i]));
+    return out;
+  };
+  if (!sb) return separately();
+  const limit = 500 * unique.length;
+  const { data, error } = await sb.from("family_docs").select("kind, data").eq("family_id", familyId).in("kind", unique).order("created_at", { ascending: false }).limit(limit);
+  if (error || !data || data.length >= limit) return separately();
+  const by = new Map<string, unknown[]>(unique.map((k) => [k, []]));
+  for (const r of data as { kind: string; data: unknown }[]) by.get(r.kind)?.push(r.data);
+  for (const k of unique) {
+    // Rows that are in the database are the answer; memory only stands in on error (as listDocs).
+    const rows = (by.get(k) ?? []).slice(0, 500).map((d) => parse(k, d)).filter((d): d is DocOf<typeof k> => d !== null);
+    (out as Record<string, unknown>)[k] = newest(rows);
+  }
+  return out;
+}
+
 export async function getDoc<K extends DocKind>(familyId: string, kind: K, id: string): Promise<DocOf<K> | undefined> {
   const sb = dbFor(familyId);
   if (!sb) return memList(familyId, kind).find((d) => (d as { id: string }).id === id);
