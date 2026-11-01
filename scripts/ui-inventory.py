@@ -219,10 +219,10 @@ def settle(page) -> None:
 def capture(page, scr: dict, persona: str, other: str, log: list[str]):
     path = scr["path"].replace("@other", other)
     # API calls in flight (translations of family words arrive late and swap the text).
-    pending = {"n": 0, "failed": 0}
-    page.on("request", lambda r: "/api/" in r.url and pending.update(n=pending["n"] + 1))
-    page.on("requestfinished", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1))
-    page.on("requestfailed", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1, failed=pending["failed"] + 1))
+    pending = {"n": 0, "failed": 0, "last": time.monotonic()}
+    page.on("request", lambda r: "/api/" in r.url and pending.update(n=pending["n"] + 1, last=time.monotonic()))
+    page.on("requestfinished", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1, last=time.monotonic()))
+    page.on("requestfailed", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1, failed=pending["failed"] + 1, last=time.monotonic()))
     # Twice: the first visit warms the server's caches (translations, festival week), the second is read.
     page.goto(path, wait_until="load")
     settle(page)
@@ -263,11 +263,14 @@ def capture(page, scr: dict, persona: str, other: str, log: list[str]):
             page.locator("[data-ui=dock]").first.wait_for(state="hidden", timeout=4_000)
         except Exception:
             pass
-    # Wait for the screen to stop changing (enter/exit animations, late data): four equal reads in a row.
+    # Wait for the screen to stop changing (enter/exit animations, late data): four equal reads in a row,
+    # with no API call in flight and none started or finished in the last 1.5 s (a slow runner mounts
+    # a section's fetch late; reading before it starts would drop the whole section).
     prev, same = None, 0
-    for _ in range(24):
+    for _ in range(30):
         rows = page.evaluate(EXTRACT, root)
-        same = same + 1 if rows == prev and pending["n"] <= 0 else 0
+        quiet = pending["n"] <= 0 and time.monotonic() - pending["last"] > 1.5
+        same = same + 1 if rows == prev and quiet else 0
         if same >= 3:
             return rows
         prev = rows
