@@ -58,10 +58,11 @@ export function roomsFor(isParent: boolean, canPortrait = true): Room[] {
     {
       id: "family",
       title: "Family",
-      note: canPortrait ? "Tree, the Book, advice, a portrait" : "Tree, the Book, advice",
+      note: canPortrait ? "Tree, homes, the Book, advice, a portrait" : "Tree, homes, the Book, advice",
       icon: "tree",
       tabs: [
         { href: "/bond", label: "Family tree" },
+        { href: "/bond/homes", label: "Homes" },
         { href: "/book", label: "The Book" },
         { href: "/advice", label: "Advice" },
         { href: "/portrait", label: "Portrait" },

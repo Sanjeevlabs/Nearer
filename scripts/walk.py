@@ -24,7 +24,7 @@ ROOMS = {
     "Memories": ["/lane", "/stories"],
     "Kitchen": ["/kitchen"],
     "Care": ["/send", "/care", "/care/helpers", "/nearby"],
-    "Family": ["/bond", "/book", "/advice", "/portrait"],
+    "Family": ["/bond", "/bond/homes", "/book", "/advice", "/portrait"],
     "Celebrations": ["/gather", "/rituals", "/together/visits", "/together/holidays", "/gather/play"],
 }
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("aria", "child")]
