@@ -12,6 +12,7 @@ import { useFamilyCards } from "@/lib/use-family";
 import { useLargeText } from "@/lib/use-large-text";
 import { roomHref, roomsFor } from "@/lib/menu";
 import { canStartPortrait } from "@/lib/muse-portrait";
+import { isKid } from "@/lib/kids";
 import dynamic from "next/dynamic";
 import type { AddTab, ReplyContribution } from "./add-sheet";
 
@@ -64,8 +65,8 @@ export function useShell(): ShellState {
 
 /** The rooms of the house: five tiles, nothing nested. A tile opens the room on its first page; inside, the tab row moves sideways. */
 function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { viewer } = useViewer();
-  const all = roomsFor(viewer.role === "elder", canStartPortrait(viewer));
+  const { viewer, members } = useViewer();
+  const all = roomsFor(viewer.role === "elder", canStartPortrait(viewer), isKid(viewer), members.some((m) => isKid(m)));
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

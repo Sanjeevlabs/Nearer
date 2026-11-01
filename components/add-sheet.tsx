@@ -32,9 +32,18 @@ export type ReplyContribution =
   | { kind: "answer"; questionId: string; prompt: string }
   | { kind: "need"; forMemberId?: string }
   | { kind: "story"; questionId?: string; prompt?: string }
-  | { kind: "today"; taskId: string; prompt: string };
+  | { kind: "today"; taskId: string; prompt: string }
+  /** A child asks by voice (an ask for a grandparent or parent; lib/kids.ts). */
+  | { kind: "kid_ask"; topic?: "question" | "story"; toMemberId?: string }
+  /** A grown-up answers a child's ask by voice; it also lands in Stories. */
+  | { kind: "kid_answer"; askId: string; prompt?: string }
+  /** A bedtime story for one child. */
+  | { kind: "bedtime"; forMemberId: string };
 
-const PURPOSE: Record<"recipe" | "answer" | "need" | "story" | "today", { title: string; hint: string; cta: string }> = {
+const PURPOSE: Record<Exclude<ReplyContribution["kind"], "wish" | "blessing">, { title: string; hint: string; cta: string }> = {
+  kid_ask: { title: "Ask a question", hint: "Say it out loud. They will hear it and answer in their own voice.", cta: "Send my question" },
+  kid_answer: { title: "Your answer", hint: "Answer the way you would at the table. It is kept in Stories too.", cta: "Send my answer" },
+  bedtime: { title: "A story for tonight", hint: "A few minutes, a quiet voice. It waits on their screen for tonight.", cta: "Send the story" },
   story: {
     title: "Tell a story",
     hint: "Tell it the way you would at bedtime. Take your time; the children will hear your voice, with the words along.",
@@ -352,6 +361,9 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       else if (contribution?.kind === "today") steps.push({ url: "/api/today", body: { action: "answer", taskId: contribution.taskId, cardId } });
       else if (contribution?.kind === "answer") steps.push({ url: "/api/keeper", body: { action: "answer", questionId: contribution.questionId, cardId } });
       else if (contribution?.kind === "need") steps.push({ url: "/api/care", body: { action: "need-from-voice", cardId, forMemberId: contribution.forMemberId ?? viewer.id } });
+      else if (contribution?.kind === "kid_ask") steps.push({ url: "/api/kid-ask", body: { action: "ask", topic: contribution.topic ?? "question", cardId, toMemberId: contribution.toMemberId ?? null } });
+      else if (contribution?.kind === "kid_answer") steps.push({ url: "/api/kid-ask", body: { action: "answer", askId: contribution.askId, cardId } });
+      else if (contribution?.kind === "bedtime") steps.push({ url: "/api/bedtime", body: { action: "create", forMemberId: contribution.forMemberId, cardId } });
       return steps;
     };
     const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), after });
@@ -391,6 +403,12 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         window.dispatchEvent(new Event("aangan:today"));
       } else if (contribution.kind === "answer") {
         await json("/api/keeper", { action: "answer", questionId: contribution.questionId, cardId: posted.id });
+      } else if (contribution.kind === "kid_ask") {
+        await json("/api/kid-ask", { action: "ask", topic: contribution.topic ?? "question", cardId: posted.id, toMemberId: contribution.toMemberId ?? null });
+      } else if (contribution.kind === "kid_answer") {
+        await json("/api/kid-ask", { action: "answer", askId: contribution.askId, cardId: posted.id });
+      } else if (contribution.kind === "bedtime") {
+        await json("/api/bedtime", { action: "create", forMemberId: contribution.forMemberId, cardId: posted.id });
       } else if (contribution.kind === "need") {
         await json("/api/care", { action: "need-from-voice", cardId: posted.id, forMemberId: contribution.forMemberId ?? viewer.id });
         onDone();

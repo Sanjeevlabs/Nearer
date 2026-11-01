@@ -48,6 +48,10 @@ import * as native from "@/lib/native";
 
 const g = globalThis as unknown as { window?: unknown; navigator?: unknown };
 const tick = () => new Promise((r) => setTimeout(r, 5));
+/** Wait (up to ~1 s) for a condition that follows a dynamic import, whose timing a busy runner stretches. */
+async function until(cond: () => boolean): Promise<void> {
+  for (let i = 0; i < 200 && !cond(); i++) await tick();
+}
 
 function fakeWindow(nativeApp: boolean, platform = "android") {
   g.window = {
@@ -130,11 +134,11 @@ describe("in the native app", () => {
     await tick();
     appUrlListener?.({ url: "app.aangan.family://auth/callback?code=z" });
     appUrlListener?.({ url: "https://elsewhere.example/" });
-    await tick();
+    await until(() => calls.includes("close"));
     expect(routes).toEqual(["/auth/callback?code=z"]);
     expect(calls).toContain("close");
     off();
-    await tick();
+    await until(() => calls.includes("removed"));
     expect(calls).toContain("removed");
   });
   it("asks permission and returns the push token", async () => {

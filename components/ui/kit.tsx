@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { roomOf, tabsFor } from "@/lib/spaces";
 import { canStartPortrait } from "@/lib/muse-portrait";
+import { isKid } from "@/lib/kids";
 import { useViewer } from "@/components/viewer";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -320,8 +321,8 @@ function RoomName({ override }: { override?: string }) {
 /** The pages of the current room, as one quiet row. Only on a room's own tab page. */
 function SpaceTabs() {
   const pathname = usePathname();
-  const { viewer } = useViewer();
-  const at = tabsFor(pathname, canStartPortrait(viewer));
+  const { viewer, members } = useViewer();
+  const at = tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), members.some((m) => isKid(m)));
   const active = useRef<HTMLAnchorElement>(null);
   // The last tabs (Play, Nearby) sit past the screen edge: bring the open one into view, without animating.
   // Measured in the row's own pixels (not scrollIntoView), so it is right under the elders' larger text zoom too.

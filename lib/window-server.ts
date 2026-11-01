@@ -28,6 +28,7 @@ import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
 import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
+import { askCardIds, guardianMap, kidsTile } from "./kids";
 import { renderNudgeText, unseenFor } from "./nudges";
 import { listEvents } from "./gather-store";
 import type { FamilyEvent } from "./events";
@@ -162,7 +163,7 @@ function localDay(iso: string, tz: string): string {
 }
 
 /** The family-wide reads the window needs, all started at once (one wave of round trips). */
-const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call"] as const;
+const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask"] as const;
 /** The rhythm looks back 15 days: a time window, not the newest 500 (heartbeats pile up). */
 const PRESENCE_WINDOW_MS = 16 * 86_400_000;
 /** The window needs the recent shelf (latest voice, last signs, what waits), never the whole lane. */
@@ -348,7 +349,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Aangan (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance: glanceFrom({ viewerId, members, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol }),
+    glance: glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous }),
     homePhoto: own.homePhoto,
   };
 }
@@ -361,13 +362,16 @@ export async function windowState(familyId: string, viewerId: string, now = new 
 function glanceFrom(i: {
   viewerId: string;
   members: Member[];
+  relationships: Relationship[];
+  /** The visit before this one: "new from the kids" counts from here. */
+  previousVisit: string | null;
   theirTz: string | null;
   /** Already includes the demo shelf. */
   cards: Card[];
   now: Date;
   lastSeen: (id: string) => string | null;
   plays: Play[];
-  docs: Pick<WindowDocs, "question" | "today_task" | "need" | "weekly_call">;
+  docs: Pick<WindowDocs, "question" | "today_task" | "need" | "weekly_call" | "kid_ask">;
   nudges: { id: string; kind: string; text: string; href: string; at: string }[];
   events: FamilyEvent[];
   holidays: CalHoliday[];
@@ -380,7 +384,8 @@ function glanceFrom(i: {
   return {
     awake: awakeNow(members, viewerId, now, i.lastSeen),
     // The same list the dock dot reads (GET /api/waiting), from reads already in hand.
-    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need, nudges: i.nudges }),
+    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need, nudges: i.nudges, kidAsks: i.docs.kid_ask, guardians: guardianMap(members, i.relationships) }),
+    kids: kidsTile(i.cards, members, viewerId, i.previousVisit, now, askCardIds(i.docs.kid_ask)),
     next: nextUp({
       today,
       now,

@@ -29,6 +29,7 @@ import { EventPrompts } from "./event-prompts";
 import { TodayCard, useToday } from "./today";
 import { TogetherHabit } from "./together-habit";
 import { CourtyardLetter } from "./courtyard-letter";
+import { KidsCourtyard } from "./kids-courtyard";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Icon, Monogram, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
@@ -333,6 +334,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
           <TodayCard />
           <TogetherHabit />
           <CourtyardLetter />
+          <KidsCourtyard />
 
           <Carousel label="Now in the family" className="mt-5">
             {voice && <VoiceSlide card={voice} />}

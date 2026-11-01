@@ -99,6 +99,7 @@ const h = vi.hoisted(() => {
 vi.mock("@/lib/supabase", () => ({ isDbLive: () => true, supabaseServer: () => h.fake }));
 
 import { GET as courtyard } from "@/app/api/courtyard/route";
+import { GET as kidsRoute } from "@/app/api/kids/route";
 import { GET as festivalWeekRoute } from "@/app/api/festival-week/route";
 import { POST as session } from "@/app/api/session/route";
 import { GET as windowRoute } from "@/app/api/window/route";
@@ -116,6 +117,8 @@ const BUDGET = {
   courtyard: { calls: 19, depth: 3 },
   courtyardOneAangan: { calls: 15, depth: 2 },
   festivalWeek: { calls: 6, depth: 2 },
+  // The Kids page: members, relationships, cards and the document kinds, all in the wave after the session lookup.
+  kids: { calls: 6, depth: 2 },
 };
 
 let cookie = "";
@@ -234,6 +237,14 @@ describe("database round trips", () => {
     expect(m.out).toBe(200);
     expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.calls);
     expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.depth);
+  });
+
+  it("GET /api/kids", async () => {
+    const m = await measure(async () => (await kidsRoute(get("/api/kids"))).status);
+    report("GET /api/kids", m);
+    expect(m.out).toBe(200);
+    expect(m.calls).toBeLessThanOrEqual(BUDGET.kids.calls);
+    expect(m.depth).toBeLessThanOrEqual(BUDGET.kids.depth);
   });
 
   it("GET /api/festival-week", async () => {

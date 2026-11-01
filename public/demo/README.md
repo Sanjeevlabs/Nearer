@@ -25,3 +25,7 @@ inside real memory cards, which must only show the family's own uploads.
 
 
 portrait-*.webp are square crops of the AI-generated family photos above (same synthetic people), used as each person's album portrait.
+
+- `drawing-leo.webp` (1 Nov 2026): a child's crayon drawing of a house, a sun and
+  three stick people, drawn with simple shapes by `Pillow` (not a model, no real
+  child's work). It is the demo "Show" card from Leo on the kids' fridge strip.
