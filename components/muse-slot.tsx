@@ -12,7 +12,7 @@ import { Icon, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
 
 // "Muse made this for you": one card at most in "Now in the family", rotating
-// weekly. Tap to make it real; the ✕ hides it for two weeks. Never nags.
+// weekly. Tap to make it real. It rotates weekly, so there is nothing to dismiss.
 
 function readDismissed(): string | null {
   try {
@@ -48,15 +48,9 @@ export function useMuseSlot(cards: Card[]): { slot: MuseSlot | null; dismiss: ()
   return { slot, dismiss };
 }
 
-export function MuseSlide({ slot, onDismiss }: { slot: MuseSlot; onDismiss: () => void }) {
+export function MuseSlide({ slot }: { slot: MuseSlot }) {
   const { viewer, members, relationships } = useViewer();
   const faces = members.filter((m) => memberPhoto(m) && canInclude(viewer, m, members, relationships));
-  const dismiss = onDismiss;
-  const close = (
-    <button type="button" onClick={dismiss} aria-label="Not now (hides this for two weeks)" className="press glass absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full text-white">
-      <Icon name="close" size={16} />
-    </button>
-  );
 
   if (slot.kind === "portrait") {
     return (
@@ -69,7 +63,6 @@ export function MuseSlide({ slot, onDismiss }: { slot: MuseSlot; onDismiss: () =
           ))}
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" aria-hidden="true" />
-        {close}
         <Link href="/portrait" className="absolute inset-x-4 bottom-4 flex items-end gap-3 text-white no-underline">
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] text-white/75">
@@ -90,7 +83,6 @@ export function MuseSlide({ slot, onDismiss }: { slot: MuseSlot; onDismiss: () =
     <article className="relative h-[236px] overflow-hidden rounded-[26px] bg-surface" aria-label="Muse found this for you">
       <Photo src={cardCover(slot.card, members)} alt="" sizes="440px" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/75" aria-hidden="true" />
-      {close}
       <Link href="/lane" className="absolute inset-x-4 bottom-4 block text-white no-underline">
         <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] text-white/75">
           <Icon name="sparkle" size={13} />

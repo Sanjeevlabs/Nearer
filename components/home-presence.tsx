@@ -266,7 +266,7 @@ function QuestionLine({ q }: { q: Question }) {
 export function MyQuestions() {
   const { viewer, members } = useViewer();
   const { openAdd } = useShell();
-  const { data, reload } = useJson<{ questions: Question[] }>("/api/keeper");
+  const { data } = useJson<{ questions: Question[] }>("/api/keeper");
   // Only what someone in the family asked (the weekly question now lives in Today).
   const open = (data?.questions ?? [])
     .filter((q) => q.toMemberId === viewer.id && !q.answeredCardId && Boolean(q.askedBy))
@@ -298,11 +298,6 @@ export function MyQuestions() {
               >
                 <Icon name="mic" size={16} />
                 {q.topic === "story" && q.askedBy ? "Tell it" : q.topic === "recipe" && q.askedBy ? "Teach it" : q.topic === "blessing" ? "Bless" : "Answer"}
-              </button>
-            </div>
-            <div className="mt-1 text-right">
-              <button type="button" className="h-9 text-[13px] font-medium text-[#8a4b00]" onClick={async () => { await postJson("/api/keeper", { action: "remove", questionId: q.id }); await reload(); }}>
-                {by ? "Not now" : "Skip this one"}
               </button>
             </div>
           </section>

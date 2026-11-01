@@ -167,7 +167,7 @@ EXTRACT = r"""(rootSel) => {
   return rows;
 }"""
 
-TIME = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\s?(?:[AaPp]\.?[Mm]\.?)?")
+TIME = re.compile(r"\b\d{1,2}(?::\d{2}(?::\d{2})?\s?(?:[AaPp]\.?[Mm]\.?)?|\s?[AaPp]\.?[Mm]\.?\b)")
 AGO = re.compile(r"\b\d+\s*(?:s|sec|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?|d|days?|w|weeks?|mo|months?|y|yrs?|years?)\s+ago\b|\b(?:just now|an? (?:minute|hour|day|week|month|year) ago)\b", re.I)
 MONTHS = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
 DATE = re.compile(
