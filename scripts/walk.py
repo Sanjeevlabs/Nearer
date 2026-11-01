@@ -9,7 +9,7 @@ that doesn't open its first tab.
 
 CI runs it against a mock build (.github/workflows/ci.yml). It also works
 against the live site after a deploy:
-    python3 scripts/walk.py --base https://nearer.sanjeevlabs.com
+    python3 scripts/walk.py --base https://nearer.site
 (live, each person gets their own demo copy; the daily cron removes them).
 """
 import argparse

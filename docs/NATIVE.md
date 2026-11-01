@@ -30,7 +30,7 @@ CAP_SERVER_URL=https://<production-origin> npm run cap:sync
 
 It sets `server.url`, `allowNavigation`, and (on Android) the App Links host in
 the manifest (`android/app/build.gradle` → `manifestPlaceholders.appLinkHost`, so
-also export it when running Gradle). Production is `https://nearer.sanjeevlabs.com`. Without CAP_SERVER_URL, `cap sync`
+also export it when running Gradle). Production is `https://nearer.site`. Without CAP_SERVER_URL, `cap sync`
 stops with an error. On iOS the Universal Links host is in
 `ios/App/App/App.entitlements` (`applinks:<host>`); edit it to match.
 

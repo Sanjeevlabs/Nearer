@@ -16,5 +16,9 @@
   "triggers": { "crons": ["0 9 * * *"] },
   "observability": { "enabled": true },
   // Production origin (DNS on Cloudflare). Must match APP_ORIGIN and CAP_SERVER_URL.
-  "routes": [{ "pattern": "nearer.sanjeevlabs.com", "custom_domain": true }]
+  "routes": [
+    { "pattern": "nearer.site", "custom_domain": true },
+    { "pattern": "www.nearer.site", "custom_domain": true },
+    { "pattern": "nearer.sanjeevlabs.com", "custom_domain": true }
+  ]
 }
