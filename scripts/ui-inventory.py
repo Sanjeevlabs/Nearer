@@ -179,6 +179,8 @@ DEG = re.compile(r"\d+\s*(?:°\s*[CF]?|degrees(?: celsius)?)", re.I)
 NUM = re.compile(r"\d+")
 # Who has opened the app so far this run changes these; they are not the interface.
 PRESENCE = re.compile(r",? lamp lit today", re.I)
+# The demo's "door is open" note is picked by the hour of day (lib/demo-rooms.ts); keep the control, drop the note.
+KNOCK = re.compile(r"(door is open)\b.*$", re.I)
 ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{12,}")
 
 
@@ -191,6 +193,7 @@ def norm(s: str, limit: int = 80) -> str:
     s = WEEKDAY.sub("<day>", s)
     s = ID.sub("<id>", s)
     s = PRESENCE.sub("", s)
+    s = KNOCK.sub(r"\1", s)
     s = NUM.sub("N", s)
     s = re.sub(r"\s+", " ", s).strip()
     return s if len(s) <= limit else s[: limit - 1].rstrip() + "…"

@@ -557,7 +557,7 @@ Rooms,/gather/play,4,tab,Occasions,/rituals,room-tabs,arjun dadi aria,,keep,
 Rooms,/gather/play,5,tab,Visits,/together/visits,room-tabs,arjun dadi aria,,keep,
 Rooms,/gather/play,6,tab,Holidays,/together/holidays,room-tabs,arjun dadi aria,,keep,
 Rooms,/gather/play,7,tab,Play,/gather/play,room-tabs,arjun dadi aria,,keep,
-Rooms,/gather/play,8,button,Maa Maa ’s door is open Shelling peas. Come sit with me?,,,arjun aria,,keep,
+Rooms,/gather/play,8,button,Maa Maa ’s door is open,,,arjun aria,,keep,
 Rooms,/gather/play,9,image,Maa,,,arjun aria,,review,icon-only control: its name is only an aria-label
 Rooms,/gather/play,10,button,"Tea and catch-up A cup each, wherever you are. Just talk. Start",,,arjun dadi aria,,keep,
 Rooms,/gather/play,11,button,"Story night A grandparent tells one, the children listen. Start",,,arjun dadi aria,,keep,
