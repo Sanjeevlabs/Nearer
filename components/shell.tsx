@@ -18,6 +18,7 @@ import type { AddTab, ReplyContribution } from "./add-sheet";
 
 import { PlayerProvider, usePlayer } from "./player";
 import { Icon, type IconName } from "./ui/kit";
+import { ForYouGlyph, HouseGlyph } from "./ui/glyphs";
 import { ViewerProvider, useViewer } from "./viewer";
 import { DocumentLangOnly } from "@/lib/use-t";
 import { onAppUrlOpen, setStatusBar } from "@/lib/native";
@@ -173,14 +174,14 @@ function Dock() {
                 </button>
               )}
               <Link href="/inbox" aria-label={waitingList.length ? `For you, ${waitingList.length} waiting: ${waitingList[0].text}` : "For you"} className="press relative grid h-12 w-12 place-items-center rounded-full text-ink">
-                <Icon name="inbox" size={23} strokeWidth={1.9} />
+                <ForYouGlyph size={26} />
                 {waitingList.length > 0 && <span className="absolute right-1.5 top-1.5 h-3 w-3 rounded-full bg-marigold ring-2 ring-white" aria-hidden="true" />}
               </Link>
-              <button type="button" onClick={() => openAdd("photos")} aria-label="Share a photo or video" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
+              <button type="button" onClick={() => openAdd("photos")} aria-label="Photo" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
                 <Icon name="camera" size={23} strokeWidth={1.9} />
               </button>
               <button type="button" onClick={openRooms} aria-label="Open the house" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
-                <Icon name="rooms" size={23} strokeWidth={1.9} />
+                <HouseGlyph size={26} />
               </button>
             </div>
           </m.div>

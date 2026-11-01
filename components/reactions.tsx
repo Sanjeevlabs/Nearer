@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { strings } from "@/lib/i18n";
-import { REACTION_EMOJI, REACTION_ORDER, REACTION_WORD, toggleReaction } from "@/lib/reaction-names";
+import { REACTION_ORDER, REACTION_WORD, toggleReaction } from "@/lib/reaction-names";
 import { memberPhoto } from "@/lib/people";
 import { Avatar, Icon } from "./ui/kit";
+import { ReactionGlyph } from "./ui/glyphs";
 import type { Member, Play, Reaction } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { useViewer } from "./viewer";
@@ -60,7 +61,7 @@ export function HeardChip({ cardId }: { cardId: string }) {
   return <p className="m-0 text-caption text-ink-soft">{line}</p>;
 }
 
-const KINDS = ["love", "laugh", "bless"] as const;
+const KINDS = REACTION_ORDER;
 
 /** Send a blessing on a card (the "bless" reaction). True when it landed. */
 export async function sendBlessing(cardId: string, memberId: string): Promise<boolean> {
@@ -123,7 +124,6 @@ export function ReactionBar({ cardId, tone = "light", onReply }: { cardId: strin
 
   const mine = reactions?.find((r) => r.memberId === viewer.id)?.kind;
   const glass = tone === "glass";
-  const icon = { love: "heart", laugh: "laugh", bless: "bless" } as const;
 
   return (
     <div>
@@ -146,7 +146,7 @@ export function ReactionBar({ cardId, tone = "light", onReply }: { cardId: strin
                 on ? (glass ? "bg-white text-black" : "bg-black text-white") : glass ? "text-white" : "text-ink",
               )}
             >
-              <Icon name={icon[kind]} size={18} />
+              <ReactionGlyph kind={kind} selected={on} size={22} />
               {labelFor(kind)}
             </button>
           );
@@ -223,9 +223,7 @@ export function ReactorsLine({ reactions, className }: { reactions: Reaction[]; 
           )}
           <Avatar src={memberPhoto(m)} name={name} size={24} />
           <span>{name}</span>
-          <span role="img" aria-label={REACTION_WORD[r.kind]}>
-            {REACTION_EMOJI[r.kind]}
-          </span>
+          <ReactionGlyph kind={r.kind} selected size={22} label />
         </li>
       ))}
     </ul>
@@ -247,7 +245,7 @@ export function ReactButtons({ mine, onToggle, className }: { mine: Reaction["ki
             onClick={() => onToggle(kind)}
             className={cn("press grid h-12 w-12 shrink-0 place-items-center rounded-full text-title transition-colors", on ? "bg-white shadow-[0_0_0_2px_rgba(255,255,255,.9)]" : "bg-white/15 backdrop-blur")}
           >
-            <span aria-hidden="true">{REACTION_EMOJI[kind]}</span>
+            <ReactionGlyph kind={kind} selected={on} size={26} className={on ? "text-black" : "text-white"} />
           </button>
         );
       })}

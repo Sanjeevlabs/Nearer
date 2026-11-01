@@ -150,7 +150,7 @@ const STRINGS: Partial<Record<SupportedLang, Strings>> & { en: Strings } = {
     language: "Language",
     speakToYou: "How should Nearer speak to you?",
     heard: { heardThis: "heard this" },
-    reactions: { love: "Love", laugh: "Laugh", bless: "Bless", replyVoice: "Reply with voice" },
+    reactions: { love: "Love", laugh: "Smile", bless: "Blessing", replyVoice: "Reply with voice" },
     player: {
       nowPlaying: "Now playing",
       play: "Play",
