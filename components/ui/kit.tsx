@@ -19,6 +19,7 @@ const ICONS = {
   pause: L.Pause,
   stop: L.Square,
   mic: L.Mic,
+  inbox: L.Bell,
   camera: L.Camera,
   image: L.Image,
   more: L.Ellipsis,

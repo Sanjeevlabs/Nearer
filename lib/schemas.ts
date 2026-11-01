@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { EVENT_KINDS } from "./kind-values";
-import { CARD_NOTE_MAX, CARD_PLACE_MAX } from "./card-limits";
+import { ADDRESSED_TO_MAX, CARD_NOTE_MAX, CARD_PLACE_MAX } from "./card-limits";
 import { LANG_CODES } from "./languages";
 import { BIRTHDAY_RE, validBirthday } from "./birthday";
 
@@ -114,8 +114,8 @@ export const CardSchema = z.object({
   authorId: z.string().nullable().default(null),
   /** Optional album art for a voice note (a photo ref). */
   coverRef: z.string().nullable().default(null),
-  /** Who a voice note was spoken to (member id). Null = the whole family. */
-  addressedTo: z.string().nullable().default(null),
+  /** Who a voice note was spoken to: member ids, comma-joined (one person, a home, or a mix). Null = the whole family. */
+  addressedTo: z.string().max(ADDRESSED_TO_MAX).nullable().default(null),
   /** Where it was taken, as the sharer wrote it ("Amritsar"). Optional. */
   place: z.string().max(CARD_PLACE_MAX).default(""),
   /** A short handwritten-style note under the print. Optional; falls back to the caption. */
@@ -186,7 +186,8 @@ export const CreateCardRequestSchema = z.object({
   transcript: z.string().max(2000).default(""),
   transcriptLang: z.string().min(2).max(8).default("en"),
   segments: z.array(TranscriptSegmentSchema).max(64).default([]),
-  addressedTo: z.string().max(64).nullable().default(null),
+  /** Comma-joined member ids (a whole family of any size); null = everyone. */
+  addressedTo: z.string().max(ADDRESSED_TO_MAX).nullable().default(null),
   place: z.string().trim().max(CARD_PLACE_MAX).default(""),
   note: z.string().trim().max(CARD_NOTE_MAX).default(""),
   /** "Add to the fridge": the kid it is for. The route checks they are a kid of this family. */

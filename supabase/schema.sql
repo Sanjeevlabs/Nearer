@@ -137,7 +137,10 @@ alter table cards add column if not exists transcript_lang text default 'en';
 alter table cards add column if not exists segments jsonb default '[]';
 alter table cards add column if not exists author_id text references members(id) on delete set null;
 alter table cards add column if not exists cover_ref text;
-alter table cards add column if not exists addressed_to text references members(id) on delete set null;
+alter table cards add column if not exists addressed_to text;
+-- A voice note can be addressed to several people ("a,b,c"), so this is a plain list of
+-- member ids, not a foreign key to one member. Idempotent: drops the old FK if it is there.
+alter table cards drop constraint if exists cards_addressed_to_fkey;
 -- The printed-photo frame: where it was taken and a short note (both optional).
 alter table cards add column if not exists place text not null default '';
 alter table cards add column if not exists note text not null default '';
