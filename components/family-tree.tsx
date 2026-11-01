@@ -30,10 +30,10 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
 
   return (
     <div data-ui="family-tree">
-      <p className="m-0 mb-3 text-[14px] text-ink-soft">
+      <p className="m-0 mb-3 text-callout text-ink-soft">
         {members.length} people · {gens} generation{gens === 1 ? "" : "s"} · {cities} {cities === 1 ? "city" : "cities"}
       </p>
-      <div ref={box} className="no-scrollbar -mx-5 overflow-x-auto rounded-[28px] bg-[#faf7f2] ring-1 ring-black/[.05]" style={{ scrollBehavior: "smooth" }}>
+      <div ref={box} className="no-scrollbar -mx-4 overflow-x-auto rounded-[28px] bg-[#faf7f2] ring-1 ring-black/[.05]" style={{ scrollBehavior: "smooth" }}>
         <div className="relative" style={{ width: W, height: H }}>
           <svg className="absolute inset-0" width={W} height={H} aria-hidden="true">
             <g transform={`translate(${PAD},${PAD / 2})`} fill="none" stroke="#c9b9a3" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -60,8 +60,8 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
                     {photo ? <Photo src={photo} alt="" sizes="128px" position="center 30%" /> : <Monogram name={callName(m)} size={NODE} />}
                   </span>
                 </Link>
-                <span className="mt-1.5 max-w-full truncate text-center text-[13.5px] font-semibold leading-tight text-ink">{you ? "You" : callName(m)}</span>
-                <span className="max-w-full truncate text-center text-[11.5px] leading-tight text-ink-soft">{m.city || placeFromTz(m.tz)}</span>
+                <span className="mt-1.5 max-w-full truncate text-center text-footnote font-semibold leading-tight text-ink">{you ? "You" : callName(m)}</span>
+                <span className="max-w-full truncate text-center text-caption leading-tight text-ink-soft">{m.city || placeFromTz(m.tz)}</span>
                 {onAdd && (
                   <button type="button" onClick={() => onAdd(m.id)} aria-label={`Add someone related to ${callName(m)}`} className="press absolute -right-0 top-[40px] grid h-7 w-7 place-items-center rounded-full bg-white text-ink-soft shadow ring-1 ring-black/10">
                     <Icon name="plus" size={14} strokeWidth={2.4} />
@@ -73,7 +73,7 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
         </div>
       </div>
       {t.loose.length > 0 && (
-        <p className="m-0 mt-3 text-[13px] text-ink-soft">
+        <p className="m-0 mt-3 text-footnote text-ink-soft">
           Not linked yet: {t.loose.map((id) => callName(byId.get(id))).join(", ")}. Add how they&rsquo;re related to place them.
         </p>
       )}

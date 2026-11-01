@@ -38,14 +38,14 @@ function errorText(t: T, code: string): string {
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
     <label className="mt-4 block">
-      <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">{label}</span>
+      <span className="mb-1.5 block text-footnote font-medium text-ink-soft">{label}</span>
       {children}
-      {hint && <span className="mt-1.5 block text-[13px] text-ink-faint">{hint}</span>}
+      {hint && <span className="mt-1.5 block text-footnote text-ink-faint">{hint}</span>}
     </label>
   );
 }
 
-const input = "h-[52px] w-full rounded-full bg-surface px-5 text-[16px] outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-black/15";
+const input = "h-12 w-full rounded-full bg-surface px-5 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-black/15";
 
 interface Peek {
   family: string;
@@ -196,7 +196,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     setBusy(true);
     saveIntent();
     // Google blocks sign-in inside app webviews: in the native app it opens in the system browser
-    // and comes back through the com.sanjeevlabs.nearer:// deep link.
+    // and comes back through the site.nearer.app:// deep link.
     const native = isNative();
     const { data, error: err } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: authRedirectUrl("oauth"), skipBrowserRedirect: native } });
     if (!err && native && data?.url) await openExternal(data.url);
@@ -274,14 +274,14 @@ export function AuthFlow({ mode }: { mode: Mode }) {
 
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-white">
-      <div className="mx-auto flex min-h-full max-w-[480px] flex-col px-5" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+      <div className="mx-auto flex min-h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
         <div className="flex items-center justify-between">
           <button type="button" onClick={back} aria-label={step === "other-side" || step === "invite" ? t("auth.skip") : t("auth.back")} className="press -ms-2 grid h-11 w-11 place-items-center rounded-full">
             <Icon name={step === "other-side" || step === "invite" ? "close" : "back"} className="rtl:-scale-x-100" />
           </button>
           <Lockup mark={24} word={72} className="text-ink" />
         </div>
-        <h1 className="m-0 mt-4 text-[32px] leading-[1.08]">{title}</h1>
+        <h1 data-display className="m-0 mt-4 text-display leading-[1.08]">{title}</h1>
 
         {step === "details" && (
           <form
@@ -291,7 +291,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               if (detailsValid) setStep("email");
             }}
           >
-            <p className="m-0 mt-2 text-[16px] text-ink-soft">{mode === "create" ? t("landing.sub") : t("auth.joinSub")}</p>
+            <p className="m-0 mt-2 text-body text-ink-soft">{mode === "create" ? t("landing.sub") : t("auth.joinSub")}</p>
             {mode === "create" ? (
               <Field label={t("auth.familyName")}>
                 <input className={input} value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t("auth.familyNamePh")} maxLength={40} autoFocus />
@@ -303,14 +303,14 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             )}
             {mode === "join" && peek && peek.places.length > 0 && (
               <div className="mt-4">
-                <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">{t("auth.whichYou")}</span>
-                <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="radiogroup" aria-label={t("auth.whichYou")}>
+                <span className="mb-1.5 block text-footnote font-medium text-ink-soft">{t("auth.whichYou")}</span>
+                <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="radiogroup" aria-label={t("auth.whichYou")}>
                   {peek.places.map((p) => (
-                    <button key={p.id} type="button" role="radio" aria-checked={claim === p.id} onClick={() => setClaim(claim === p.id ? null : p.id)} className={cn("press h-11 shrink-0 rounded-full px-5 text-[15px] font-semibold", claim === p.id ? "bg-ink text-white" : "bg-surface")}>
+                    <button key={p.id} type="button" role="radio" aria-checked={claim === p.id} onClick={() => setClaim(claim === p.id ? null : p.id)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-semibold", claim === p.id ? "bg-ink text-white" : "bg-surface")}>
                       {t("auth.imName", { name: p.callName })}
                     </button>
                   ))}
-                  <button type="button" role="radio" aria-checked={claim === null} onClick={() => setClaim(null)} className={cn("press h-11 shrink-0 rounded-full px-5 text-[15px] font-medium", claim === null ? "bg-ink text-white" : "bg-surface")}>
+                  <button type="button" role="radio" aria-checked={claim === null} onClick={() => setClaim(null)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-medium", claim === null ? "bg-ink text-white" : "bg-surface")}>
                     {t("auth.someoneElse")}
                   </button>
                 </div>
@@ -366,13 +366,13 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               void sendCode();
             }}
           >
-            <p className="m-0 mt-2 text-[16px] text-ink-soft">
+            <p className="m-0 mt-2 text-body text-ink-soft">
               {t("auth.emailSub")}
               {mode === "join" ? ` ${t("auth.emailSubJoin")}` : ""}
             </p>
             {ways.google && (
               <>
-                <button type="button" onClick={() => void google()} disabled={busy} className="press mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-full border border-[var(--line)] bg-white text-[16px] font-semibold text-ink">
+                <button type="button" onClick={() => void google()} disabled={busy} className="press mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[var(--line)] bg-white text-body font-semibold text-ink">
                   <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
                     <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13.4 17.7 9.5 24 9.5z" />
                     <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17.5z" />
@@ -381,7 +381,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
                   </svg>
                   {t("auth.google")}
                 </button>
-                <p className="m-0 mt-4 text-center text-[13px] text-ink-soft">{t("auth.or")}</p>
+                <p className="m-0 mt-4 text-center text-footnote text-ink-soft">{t("auth.or")}</p>
               </>
             )}
             {byPhone ? (
@@ -394,13 +394,13 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               </Field>
             )}
             {ways.phone && (
-              <button type="button" onClick={() => setByPhone((v) => !v)} className="mt-3 self-start text-[14px] font-medium text-ink-soft underline-offset-2 hover:underline">
+              <button type="button" onClick={() => setByPhone((v) => !v)} className="mt-3 self-start text-callout font-medium text-ink-soft underline-offset-2 hover:underline">
                 {byPhone ? t("auth.useEmail") : t("auth.usePhone")}
               </button>
             )}
-            {ways.live && !byPhone && <p className="m-0 mt-2 text-[13px] text-ink-faint">{t("auth.magicLink")}</p>}
+            {ways.live && !byPhone && <p className="m-0 mt-2 text-footnote text-ink-faint">{t("auth.magicLink")}</p>}
             {error && (
-              <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
+              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
                 {error}
               </p>
             )}
@@ -409,7 +409,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               {busy ? t("auth.sending") : t("auth.sendCode")}
             </Button>
             {mode === "signin" && (
-              <p className="m-0 mt-4 text-center text-[15px] text-ink-soft">
+              <p className="m-0 mt-4 text-center text-body text-ink-soft">
                 {t("auth.newHere")}{" "}
                 <Link href="/create" className="font-semibold text-ink">
                   {t("landing.create")}
@@ -425,10 +425,10 @@ export function AuthFlow({ mode }: { mode: Mode }) {
 
         {step === "code" && (
           <div className="flex flex-1 flex-col">
-            <p className="m-0 mt-2 text-[16px] text-ink-soft">
+            <p className="m-0 mt-2 text-body text-ink-soft">
               {t.rich("auth.codeSub", { email: <span className="font-semibold text-ink" dir="ltr">{byPhone ? phone : email}</span> })}
             </p>
-            {mock && <p className="m-0 mt-2 rounded-[16px] bg-surface px-4 py-2.5 text-[14px] text-ink-soft">{t("auth.codeMock")}</p>}
+            {mock && <p className="m-0 mt-2 rounded-[16px] bg-surface px-4 py-2.5 text-callout text-ink-soft">{t("auth.codeMock")}</p>}
             <label className="mt-6 block">
               <span className="sr-only">{t("auth.codeLabel")}</span>
               <input
@@ -443,16 +443,16 @@ export function AuthFlow({ mode }: { mode: Mode }) {
                   setCode(v);
                   if (v.length === 6) void verify(v);
                 }}
-                className="tnum h-[64px] w-full rounded-[20px] bg-surface text-center text-[30px] font-bold tracking-[0.5em] outline-none focus:ring-2 focus:ring-black/15"
+                className="tnum h-[64px] w-full rounded-[20px] bg-surface text-center text-display font-bold tracking-[0.5em] outline-none focus:ring-2 focus:ring-black/15"
                 placeholder="······"
               />
             </label>
             {error && (
-              <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
+              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
                 {error}
               </p>
             )}
-            <button type="button" onClick={() => void sendCode()} disabled={busy} className="mt-3 h-11 self-center text-[15px] font-medium text-ink-soft">
+            <button type="button" onClick={() => void sendCode()} disabled={busy} className="mt-3 h-11 self-center text-body font-medium text-ink-soft">
               {t("auth.resend")}
             </button>
             <div className="flex-1" />
@@ -515,10 +515,10 @@ function OtherSide({ onDone, onSkip }: { onDone: (names: string[]) => Promise<vo
         await onDone(out.members.map((m) => m.displayName));
       }}
     >
-      <p className="m-0 mt-2 text-[16px] text-ink-soft">{t("other.sub")}</p>
+      <p className="m-0 mt-2 text-body text-ink-soft">{t("other.sub")}</p>
       <div className="mt-4 flex gap-2" role="radiogroup" aria-label={t("other.theyAre")}>
         {THEY.map((o) => (
-          <button key={o.id} type="button" role="radio" aria-checked={they === o.id} onClick={() => setThey(o.id)} className={cn("press min-h-10 flex-1 rounded-full px-2 py-1.5 text-[14px] font-medium leading-tight", they === o.id ? "bg-ink text-white" : "bg-surface")}>
+          <button key={o.id} type="button" role="radio" aria-checked={they === o.id} onClick={() => setThey(o.id)} className={cn("press min-h-10 flex-1 rounded-full px-2 py-1.5 text-callout font-medium leading-tight", they === o.id ? "bg-ink text-white" : "bg-surface")}>
             {t(o.label)}
           </button>
         ))}
@@ -543,13 +543,13 @@ function OtherSide({ onDone, onSkip }: { onDone: (names: string[]) => Promise<vo
         ))}
       </ul>
       {people.length < 6 && (
-        <button type="button" onClick={() => setPeople((ps) => [...ps, { callName: "", city: "" }])} className="press mt-3 flex h-11 items-center justify-center gap-2 self-start rounded-full bg-surface px-4 text-[15px] font-medium">
+        <button type="button" onClick={() => setPeople((ps) => [...ps, { callName: "", city: "" }])} className="press mt-3 flex h-11 items-center justify-center gap-2 self-start rounded-full bg-surface px-4 text-body font-medium">
           <Icon name="plus" size={18} />
           {t("other.add")}
         </button>
       )}
       {error && (
-        <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
+        <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
           {error}
         </p>
       )}
@@ -573,7 +573,7 @@ function InviteStep({ code, names, from, onDone }: { code: string | null; names:
   if (!code) {
     return (
       <div className="flex flex-1 flex-col">
-        <p className="m-0 mt-2 text-[16px] text-ink-soft">{t("invite.failed")}</p>
+        <p className="m-0 mt-2 text-body text-ink-soft">{t("invite.failed")}</p>
         <div className="flex-1" />
         <Button className="mt-8 w-full" onClick={onDone}>
           {t("invite.openWindow")}
@@ -583,11 +583,11 @@ function InviteStep({ code, names, from, onDone }: { code: string | null; names:
   }
   return (
     <div className="flex flex-1 flex-col">
-      <p className="m-0 mt-2 text-[16px] text-ink-soft">{t("invite.sub")}</p>
-      <p dir="ltr" className="tnum m-0 mt-6 rounded-[22px] bg-surface py-4 text-center text-[28px] font-bold tracking-[0.12em]">{code}</p>
-      <p className="m-0 mt-2 text-center text-[13px] text-ink-faint">{t("invite.valid")}</p>
+      <p className="m-0 mt-2 text-body text-ink-soft">{t("invite.sub")}</p>
+      <p data-display dir="ltr" className="tnum m-0 mt-6 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{code}</p>
+      <p className="m-0 mt-2 text-center text-footnote text-ink-faint">{t("invite.valid")}</p>
       <div className="flex-1" />
-      <a href={whatsappInvite(origin, code, from || undefined)} target="_blank" rel="noopener noreferrer" className="press mt-8 flex h-[52px] items-center justify-center gap-2 rounded-full bg-black text-[16px] font-semibold text-white no-underline">
+      <a href={whatsappInvite(origin, code, from || undefined)} target="_blank" rel="noopener noreferrer" className="press mt-8 flex h-12 items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
         <Icon name="whatsapp" size={20} />
         {t("invite.whatsapp")}
       </a>
@@ -601,7 +601,7 @@ function InviteStep({ code, names, from, onDone }: { code: string | null; names:
             /* no clipboard */
           }
         }}
-        className="press mt-2 flex h-11 items-center justify-center gap-2 rounded-full text-[15px] font-medium text-ink-soft"
+        className="press mt-2 flex h-11 items-center justify-center gap-2 rounded-full text-body font-medium text-ink-soft"
       >
         <Icon name={copied ? "check" : "share"} size={18} />
         {copied ? t("invite.copied") : t("invite.copy")}

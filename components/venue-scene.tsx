@@ -39,7 +39,7 @@ export function VenueScene({ venue, sitters, children }: { venue: Venue; sitters
                 <span className={`grid place-items-center bg-black/35 p-[3px] shadow-[0_6px_14px_rgba(0,0,0,.35)] ring-1 ring-white/40 ${SHAPE[s.kind]}`}>
                   <Avatar src={p.photo} name={p.name} size={p.child ? 30 : 36} />
                 </span>
-                <span className="mt-0.5 max-w-[72px] truncate text-[11px] font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,.7)]">{p.name}</span>
+                <span className="mt-0.5 max-w-[72px] truncate text-caption font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,.7)]">{p.name}</span>
               </li>
             );
           })}
@@ -60,7 +60,7 @@ export function VenuePicker({ value, onChange }: { value: VenueId; onChange: (id
             <span className={`relative block h-[56px] w-full overflow-hidden rounded-[14px] ${on ? "ring-2 ring-white ring-offset-2 ring-offset-[#1c1b1a]" : "opacity-75 ring-1 ring-white/20"}`}>
               <Photo src={v.image} sizes="84px" />
             </span>
-            <span className="mt-1 block truncate text-[12px] font-semibold">{v.name}</span>
+            <span className="mt-1 block truncate text-caption font-semibold">{v.name}</span>
           </button>
         );
       })}

@@ -65,13 +65,13 @@ export function PeopleAndRoles({ onMessage }: { onMessage: (m: string) => void }
               <div className="flex items-center gap-3">
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={40} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[16px] font-semibold">
+                  <span className="block truncate text-body font-semibold">
                     {callName(m)}
                     {m.id === viewer.id ? " (you)" : ""}
                   </span>
-                  <span className="block text-[13px] text-ink-soft">{m.email ? "Has their own account" : "Added by family"}</span>
+                  <span className="block text-footnote text-ink-soft">{m.email ? "Has their own account" : "Added by family"}</span>
                 </span>
-                {options.length === 0 && <span className="rounded-full bg-white px-3 py-1.5 text-[13px] font-semibold">{ACCESS_LABEL[m.access].label}</span>}
+                {options.length === 0 && <span className="rounded-full bg-white px-3 py-1.5 text-footnote font-semibold">{ACCESS_LABEL[m.access].label}</span>}
                 {removable && (
                   <button type="button" aria-label={`Remove ${callName(m)}`} disabled={busy === m.id} onClick={() => remove(m)} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft disabled:opacity-40">
                     <Icon name="trash" size={18} />
@@ -90,7 +90,7 @@ export function PeopleAndRoles({ onMessage }: { onMessage: (m: string) => void }
                         aria-checked={on}
                         disabled={busy === m.id}
                         onClick={() => pick(m, a)}
-                        className={cn("press h-11 shrink-0 rounded-full px-4 text-[13px] font-semibold disabled:opacity-40", on ? "bg-ink text-white" : "bg-white text-ink")}
+                        className={cn("press h-11 shrink-0 rounded-full px-4 text-footnote font-semibold disabled:opacity-40", on ? "bg-ink text-white" : "bg-white text-ink")}
                       >
                         {ACCESS_LABEL[a].label}
                       </button>
@@ -102,7 +102,7 @@ export function PeopleAndRoles({ onMessage }: { onMessage: (m: string) => void }
           );
         })}
       </ul>
-      <ul className="m-0 mt-3 list-none space-y-1 p-0 text-[13px] text-ink-soft">
+      <ul className="m-0 mt-3 list-none space-y-1 p-0 text-footnote text-ink-soft">
         {ACCESS_ORDER.map((a) => (
           <li key={a}>
             <span className="font-semibold text-ink">{ACCESS_LABEL[a].label}</span> · {ACCESS_LABEL[a].note}

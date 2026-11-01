@@ -65,11 +65,11 @@ export function MuseSlide({ slot }: { slot: MuseSlot }) {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" aria-hidden="true" />
         <Link href="/portrait" className="absolute inset-x-4 bottom-4 flex items-end gap-3 text-white no-underline">
           <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] text-white/75">
+            <span className="flex items-center gap-1.5 text-caption uppercase tracking-[0.14em] text-white/75">
               <Icon name="sparkle" size={13} />
               Muse can paint this
             </span>
-            <span className="block text-[19px] font-semibold leading-tight">A portrait of all of you</span>
+            <span className="block text-title font-semibold leading-tight">A portrait of all of you</span>
           </span>
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-black">
             <Icon name="chevron" size={18} />
@@ -84,11 +84,11 @@ export function MuseSlide({ slot }: { slot: MuseSlot }) {
       <Photo src={cardCover(slot.card, members)} alt="" sizes="440px" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/75" aria-hidden="true" />
       <Link href="/lane" className="absolute inset-x-4 bottom-4 block text-white no-underline">
-        <span className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] text-white/75">
+        <span className="flex items-center gap-1.5 text-caption uppercase tracking-[0.14em] text-white/75">
           <Icon name="sparkle" size={13} />
           This day, {slot.years} year{slot.years === 1 ? "" : "s"} ago
         </span>
-        <span className="mt-0.5 line-clamp-2 block text-[17px] font-semibold leading-snug">{thisDayNote(slot.card, slot.years)}</span>
+        <span className="mt-0.5 line-clamp-2 block text-headline font-semibold leading-snug">{thisDayNote(slot.card, slot.years)}</span>
       </Link>
     </article>
   );

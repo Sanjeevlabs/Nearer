@@ -19,6 +19,16 @@ const config: Config = {
         "ink-faint": "var(--ink-faint)",
         marigold: "var(--marigold)",
       },
+      // Semantic type scale (docs/DESIGN.md): mobile-first, fluid where it matters. Never below 12px.
+      fontSize: {
+        display: ["var(--text-display)", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
+        title: ["var(--text-title)", { lineHeight: "1.25", letterSpacing: "-0.01em" }],
+        headline: ["var(--text-headline)", { lineHeight: "1.3" }],
+        body: ["var(--text-body)", { lineHeight: "1.45" }],
+        callout: ["var(--text-callout)", { lineHeight: "1.4" }],
+        footnote: ["var(--text-footnote)", { lineHeight: "1.35" }],
+        caption: ["var(--text-caption)", { lineHeight: "1.3" }],
+      },
       fontFamily: {
         sans: ["var(--font-body)"],
         voice: ["var(--font-voice)"],

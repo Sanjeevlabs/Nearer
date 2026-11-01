@@ -92,7 +92,7 @@ export function ReelPlayer({ runId }: { runId: string }) {
     };
   }, [runId, viewer.id, displayLang]);
 
-  if (failed) return <p className="m-0 py-10 text-center text-[15px] text-ink-soft">Couldn&rsquo;t load the reel. Try again in a moment.</p>;
+  if (failed) return <p className="m-0 py-10 text-center text-body text-ink-soft">Couldn&rsquo;t load the reel. Try again in a moment.</p>;
   if (segments === null || !run) return <div className="skeleton h-[560px] rounded-hero" aria-busy="true" aria-label="Loading reel" />;
 
   const celebrant = celebrantOf(run, members);
@@ -102,8 +102,8 @@ export function ReelPlayer({ runId }: { runId: string }) {
   if (segments.length === 0) {
     return (
       <div className="rounded-hero bg-surface px-6 py-14 text-center">
-        <p className="m-0 text-[20px] font-semibold">Wishes are still arriving</p>
-        <p className="m-0 mt-2 text-[15px] text-ink-soft">Record yours and it joins the reel.</p>
+        <p className="m-0 text-title font-semibold">Wishes are still arriving</p>
+        <p className="m-0 mt-2 text-body text-ink-soft">Record yours and it joins the reel.</p>
       </div>
     );
   }
@@ -116,20 +116,20 @@ export function ReelPlayer({ runId }: { runId: string }) {
         <Photo src={art} alt="" sizes="200px" />
       </div>
       <Petals />
-      <div className="relative flex h-full flex-col p-5">
+      <div className="relative flex h-full flex-col p-4">
         <div className="flex gap-1" aria-label={`Wish ${index + 1} of ${segments.length}`}>
           {segments.map((sg, i) => (
             <span key={sg.wish.id} className="h-[3px] flex-1 rounded-full" style={{ background: i <= index ? "#fff" : "rgba(255,255,255,.3)" }} />
           ))}
         </div>
-        <p className="m-0 mt-5 text-[13px] text-white/70">{reelTitle(celebrantName, kinship)}</p>
+        <p className="m-0 mt-5 text-footnote text-white/70">{reelTitle(celebrantName, kinship)}</p>
         <div className="relative mx-auto mt-4 h-[220px] w-[220px] overflow-hidden rounded-full" style={{ boxShadow: "0 0 0 6px rgba(255,255,255,.12)" }}>
           <Photo src={memberPhoto(current.member) ?? art} alt={current.member?.displayName ?? "Family"} sizes="440px" priority position="center 30%" />
         </div>
-        <p className="m-0 mt-4 text-center text-[17px] font-semibold">
+        <p className="m-0 mt-4 text-center text-headline font-semibold">
           {current.member?.displayName ?? "Family"} · {current.wish.kind === "blessing" ? "a blessing" : "a wish"}
         </p>
-        <p className="voice m-0 mt-3 line-clamp-4 flex-1 text-center text-[22px] leading-snug">
+        <p className="voice m-0 mt-3 line-clamp-4 flex-1 text-center text-title leading-snug">
           {quote ? `“${quote}”` : `A ${current.wish.kind} from ${current.member?.displayName ?? "family"} is on its way.`}
         </p>
         <div className="flex items-center justify-between gap-2">
@@ -148,7 +148,7 @@ export function ReelPlayer({ runId }: { runId: string }) {
         <button
           type="button"
           onClick={() => openAdd("voice", { runId, kind: viewer.role === "elder" ? "blessing" : "wish" }, celebrant?.id ?? null)}
-          className="press glass mt-4 flex h-12 items-center justify-center gap-2 rounded-full text-[15px] font-semibold"
+          className="press glass mt-4 flex h-12 items-center justify-center gap-2 rounded-full text-body font-semibold"
         >
           <Icon name="mic" size={18} />
           {viewer.role === "elder" ? "Add your blessing" : "Add your wish"}

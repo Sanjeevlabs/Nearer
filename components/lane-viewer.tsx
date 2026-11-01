@@ -46,7 +46,7 @@ function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: bo
           <PrintFrame card={card} author={author} src={cover} alt={text || "Family photo"} width={LANE_PRINT_W} signed share sizes="(max-width: 480px) 92vw, 440px" />
         </div>
         {museLabel(card.source) && (
-          <span className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-semibold text-[#1c1b1a]" style={{ marginTop: "calc(64px + env(safe-area-inset-top))" }}>
+          <span className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-caption font-semibold text-[#1c1b1a]" style={{ marginTop: "calc(64px + env(safe-area-inset-top))" }}>
             {museLabel(card.source)}
           </span>
         )}
@@ -65,18 +65,18 @@ function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: bo
             <div className="relative h-[200px] w-[200px] overflow-hidden rounded-[28px] shadow-2xl">
               <Photo src={cover} alt="" sizes="400px" position="center 30%" />
             </div>
-            <p className="m-0 mt-4 text-[15px] font-semibold">{callName(author)}&rsquo;s voice note</p>
+            <p className="m-0 mt-4 text-body font-semibold">{callName(author)}&rsquo;s voice note</p>
             <VoiceControls card={card} queue={queue} onPrev={onPrev} onNext={onNext} className="mt-3 w-full max-w-[360px]" />
           </div>
         </div>
       ) : (
         <Photo src={cover} alt={text || "Family video"} sizes="100vw" className="!object-contain" />
       )}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,.72))] px-5 pt-16" style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}>
-        <p className="m-0 text-[13px] text-white/70">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,.72))] px-4 pt-16" style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}>
+        <p className="m-0 text-footnote text-white/70">
           {callName(author)} · {monthChip(card.takenAt)}
         </p>
-        {text && <p className={cn("m-0 mt-1 line-clamp-3 text-[17px] leading-snug text-white", card.type === "audio" && "voice")}>{text}</p>}
+        {text && <p className={cn("m-0 mt-1 line-clamp-3 text-headline leading-snug text-white", card.type === "audio" && "voice")}>{text}</p>}
       </div>
     </div>
   );
@@ -167,7 +167,7 @@ export function LaneViewer({ cards, start, title, onClose }: { cards: Card[]; st
         <button type="button" onClick={onClose} aria-label="Close" className="press grid h-11 w-11 place-items-center rounded-full bg-white/15 backdrop-blur-md">
           <Icon name="close" />
         </button>
-        <p className="tnum m-0 flex-1 text-center text-[14px] font-medium text-white/80">
+        <p className="tnum m-0 flex-1 text-center text-callout font-medium text-white/80">
           {title} · {index + 1} of {cards.length}
         </p>
         <div className="rounded-full bg-white/15 backdrop-blur-md">

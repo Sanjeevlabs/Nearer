@@ -1,4 +1,4 @@
-package com.sanjeevlabs.nearer;
+package site.nearer.app;
 
 import com.getcapacitor.BridgeActivity;
 

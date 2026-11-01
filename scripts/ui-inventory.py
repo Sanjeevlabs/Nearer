@@ -17,8 +17,14 @@ Writes:
 which humans edit; regeneration never writes to it (use --seed-verdicts once to add
 "review" entries for flagged labels that have none yet).
 
-Times, dates, counts, degrees and "N min ago" are stripped to placeholders so two runs
-on the same build give the same bytes.
+FIXED CLOCK (the primary control): the demo depends on the date and hour (festival week, birthdays,
+"Wish ahead", door notes), so the run pins time to NOW below, on the server (AANGAN_FIXED_NOW, honoured
+by instrumentation.ts / lib/fixed-clock.ts when MOCK=true) and in every browser context
+(an init script shifting Date to start at NOW, + timezone UTC; see CLOCK_JS for why not Playwright's clock API). The CSV is then a pure function of the code.
+NOW = a Monday morning with Diwali week and a birthday coming up, so the demo shows its richest state.
+Override with --now ISO (then the committed CSV will differ; use only to inspect other dates).
+Times, dates, counts, degrees and "N min ago" are also stripped to placeholders (norm(), secondary
+safety net: it cannot hide a section that appears or disappears by date, the fixed clock does).
 
     npm run ui:inventory                                      # fresh server of the mock build on :4600, CSV + XLSX
     python3 scripts/ui-inventory.py --serve 3200 --no-xlsx    # CSV only (CI)
@@ -38,6 +44,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from datetime import datetime
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -45,6 +52,8 @@ from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
 
+NOW = "2026-11-02T06:30:00Z"  # the fixed instant, see the docstring
+TZ = "UTC"
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("aria", "child")]
@@ -186,6 +195,7 @@ KNOCK = re.compile(r"(door is open)\b.*$", re.I)
 ID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{12,}")
 
 
+# Secondary: the fixed clock (NOW) is the primary control; these only tidy leftovers.
 def norm(s: str, limit: int = 80) -> str:
     """Drop everything that changes with the clock or the demo data's counts."""
     s = TIME.sub("<time>", s)
@@ -281,7 +291,29 @@ def capture(page, scr: dict, persona: str, other: str, log: list[str]):
     return prev
 
 
-def walk_persona(base: str, persona: str, kind: str, state: dict | None) -> tuple[list[tuple], list[str]]:
+# Date only, shifted so a page starts at NOW and then ticks in real time. Playwright's clock API is not
+# used: set_fixed_time freezes Date and install() fakes timers/rAF; both leave framer-motion animations
+# (the dock) stuck mid-flight under load. performance.now and timers stay real here.
+CLOCK_JS = """(() => {
+  const R = Date, off = %d - R.now();
+  const S = new Proxy(R, {
+    construct(t, a, nt) { return Reflect.construct(t, a.length ? a : [R.now() + off], nt === S ? t : nt); },
+    apply() { return new R(R.now() + off).toString(); },
+    get(t, p, r) { return p === "now" ? () => R.now() + off : Reflect.get(t, p, r === S ? t : r); },
+  });
+  globalThis.Date = S;
+})();"""
+
+
+def new_ctx(browser, now: str, **kw):
+    """A browser context whose Date starts at NOW (every page load) in a fixed timezone."""
+    ctx = browser.new_context(timezone_id=TZ, locale="en-US", **kw)
+    ms = int(datetime.fromisoformat(now.replace("Z", "+00:00")).timestamp() * 1000)
+    ctx.add_init_script(CLOCK_JS % ms)
+    return ctx
+
+
+def walk_persona(base: str, persona: str, kind: str, state: dict | None, now: str) -> tuple[list[tuple], list[str]]:
     """Every screen for one person, in their own browser. Returns [(group, screen, door, rows)], log."""
     log: list[str] = []
     seen: list[tuple] = []
@@ -292,7 +324,7 @@ def walk_persona(base: str, persona: str, kind: str, state: dict | None) -> tupl
             who = scr["who"]
             if (who == "app" and persona == "anon") or (who == "anon" and persona != "anon") or (who == "arjun" and persona != "arjun") or scr["skip_kind"] == kind:
                 continue
-            ctx = browser.new_context(viewport=scr["vp"], base_url=base, storage_state=state)
+            ctx = new_ctx(browser, now, viewport=scr["vp"], base_url=base, storage_state=state)
             ctx.add_init_script(f"try {{ sessionStorage.setItem('aangan:door', '{scr['door']}') }} catch (e) {{}}")
             if scr["entered"]:
                 ctx.add_init_script("try { sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
@@ -308,13 +340,13 @@ def walk_persona(base: str, persona: str, kind: str, state: dict | None) -> tupl
     return seen, log
 
 
-def run(base: str) -> tuple[list[dict], list[str]]:
+def run(base: str, now: str) -> tuple[list[dict], list[str]]:
     # One sign-in per person (the endpoint allows 20 per 10 minutes per address).
     states: dict[str, dict] = {}
     with sync_playwright() as p:
         browser = p.chromium.launch()
         for who, _ in PEOPLE:
-            ctx = browser.new_context(base_url=base)
+            ctx = new_ctx(browser, now, base_url=base)
             res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": who}), headers={"content-type": "application/json"})
             if not res.ok:
                 raise SystemExit(f"ui-inventory: demo sign-in as {who} failed {res.status} {res.text()[:200]}")
@@ -324,7 +356,7 @@ def run(base: str) -> tuple[list[dict], list[str]]:
     people = PEOPLE + [("anon", "anon")]
     # Four people, four browsers at once; merged below in a fixed order so the result never depends on who finished first.
     with ProcessPoolExecutor(max_workers=len(people)) as pool:
-        futs = [pool.submit(walk_persona, base, persona, kind, states.get(persona)) for persona, kind in people]
+        futs = [pool.submit(walk_persona, base, persona, kind, states.get(persona), now) for persona, kind in people]
         results = [f.result() for f in futs]
     log: list[str] = []
     cells: dict[tuple, dict] = {}
@@ -458,6 +490,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:4600", help="a running mock build (its state, e.g. who was seen when, shapes the screens: prefer --serve)")
     ap.add_argument("--serve", type=int, metavar="PORT", help="start a fresh `next start` of the existing mock build on PORT for the run, then stop it (the reproducible way)")
+    ap.add_argument("--now", default=NOW, help="ISO instant for the fixed clock (server and browser); default is the committed one")
     ap.add_argument("--csv", default=str(DOCS / "ui-inventory.csv"))
     ap.add_argument("--xlsx", default=str(DOCS / "ui-inventory.xlsx"))
     ap.add_argument("--verdicts", default=str(DOCS / "ui-inventory.verdicts.json"))
@@ -471,7 +504,7 @@ def main() -> int:
     base = args.base
     if args.serve:
         # A fresh server per run: the demo's in-memory state (presence, last seen, caches) starts the same every time.
-        env = dict(os.environ, MOCK="true", SESSION_SECRET=os.environ.get("SESSION_SECRET", "ui-inventory-secret-not-a-real-secret-0000"))
+        env = dict(os.environ, MOCK="true", AANGAN_FIXED_NOW=args.now, SESSION_SECRET=os.environ.get("SESSION_SECRET", "ui-inventory-secret-not-a-real-secret-0000"))
         server = subprocess.Popen(["npx", "next", "start", "-p", str(args.serve)], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         base = f"http://127.0.0.1:{args.serve}"
         for _ in range(90):
@@ -484,7 +517,7 @@ def main() -> int:
             os.killpg(server.pid, signal.SIGTERM)
             raise SystemExit("ui-inventory: the server did not start (run `npx next build` with MOCK=true NEXT_PUBLIC_MOCK=true first)")
     try:
-        raw, log = run(base)
+        raw, log = run(base, args.now)
     finally:
         if server:
             # npx forks next-server: stop the whole group, or the port stays taken and the next run reads a stale server.

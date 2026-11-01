@@ -41,7 +41,7 @@ function CheckingShell() {
       <div className="checking-mark fixed inset-0 grid place-items-center" aria-hidden="true">
         <Mark size={72} />
       </div>
-      <div className="door-hero mx-auto w-full max-w-[480px] px-5" style={{ paddingTop: "calc(32px + env(safe-area-inset-top))" }} aria-hidden="true">
+      <div className="door-hero mx-auto w-full max-w-[480px] px-4" style={{ paddingTop: "calc(32px + env(safe-area-inset-top))" }} aria-hidden="true">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
           <Photo src="/demo/courtyard.jpg" alt="" sizes={HERO_SIZES} position="center 55%" />
         </div>

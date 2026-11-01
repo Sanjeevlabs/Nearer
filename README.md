@@ -10,7 +10,7 @@ Values, in priority order: **Needed** (elders give and have a role) · **Heard**
 
 The app itself is in English. What the family shares (voices, recipes, questions, care notes) reaches each person in their own language: 29 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic, Chinese and more (`lib/languages.ts`).
 
-Live: https://nearer.sanjeevlabs.com (tap *Try the demo family*, or use the code `NEARER-DEMO`).
+Live: https://nearer.site (tap *Try the demo family*, or use the code `NEARER-DEMO`).
 
 ### One hero: the parent far away
 

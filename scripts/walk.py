@@ -3,13 +3,13 @@
 
 Signs in to the demo (NEARER-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
 opens the house from the dock, then visits every tab of every room
-(lib/menu.ts). Fails on a page error, an error-level console message, a
+(lib/menu.ts). At 360x740 and 390x844 it also fails on sideways overflow, display-size text without data-display, and text under 12px. Fails on a page error, an error-level console message, a
 4xx/5xx document or a 5xx API call, a missing page title, or a room tile
 that doesn't open its first tab.
 
 CI runs it against a mock build (.github/workflows/ci.yml). It also works
 against the live site after a deploy:
-    python3 scripts/walk.py --base https://nearer.sanjeevlabs.com
+    python3 scripts/walk.py --base https://nearer.site
 (live, each person gets their own demo copy; the daily cron removes them).
 """
 import argparse
@@ -58,6 +58,41 @@ OVERLAP_JS = """() => {
 }"""
 
 
+# The fit check (mobile first): no horizontal overflow, nothing display-sized but what is marked data-display, nothing under 12px.
+FIT_JS = """() => {
+  const out = { overflow: document.documentElement.scrollWidth - innerWidth, big: [], small: [] };
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const seen = new Set();
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    if (!n.nodeValue.trim()) continue;
+    const el = n.parentElement;
+    if (!el || seen.has(el) || el.closest('svg, script, style, noscript, .sr-only')) continue;
+    seen.add(el);
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const fs = parseFloat(cs.fontSize);
+    const label = (el.tagName.toLowerCase() + ' "' + n.nodeValue.trim().slice(0, 28) + '" ' + fs + 'px');
+    if (fs > 34 && !el.closest('[data-display]')) out.big.push(label);
+    if (fs < 12) out.small.push(label);
+  }
+  return out;
+}"""
+FIT_SIZES = [(360, 740), (390, 844)]
+
+
+def fit_check(page, where: str, problems: list[str], person: str) -> None:
+    page.evaluate("window.scrollTo(0, 0)")
+    r = page.evaluate(FIT_JS)
+    vw = page.viewport_size["width"]
+    if r["overflow"] > 0:
+        problems.append(f"{person} {where} @{vw}: sideways overflow by {r['overflow']}px")
+    for kind, what in (("big", "text over 34px without data-display"), ("small", "text under 12px")):
+        if r[kind]:
+            problems.append(f"{person} {where} @{vw}: {what}: {'; '.join(r[kind][:4])}")
+
+
 def dock_overlaps(page, where: str, problems: list[str], person: str) -> None:
     """No visible button or link may sit under the dock, with the page scrolled to its end (what floats stays put; what scrolls must be able to clear the dock)."""
     page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
@@ -67,9 +102,9 @@ def dock_overlaps(page, where: str, problems: list[str], person: str) -> None:
         problems.append(f"{person} {where}: under the dock: {', '.join(hit)}")
 
 
-def first_screen(base: str, person: str, browser, problems: list[str]) -> None:
+def first_screen(base: str, person: str, browser, problems: list[str], size=(390, 844)) -> None:
     """The first screen at 390pt: the home page first, then exactly one bottom bar on the window, the dock only behind the open door."""
-    ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base)
+    ctx = browser.new_context(viewport={"width": size[0], "height": size[1]}, base_url=base)
     res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
     if not res.ok:
         problems.append(f"{person}: first-screen sign-in failed {res.status}")
@@ -83,11 +118,13 @@ def first_screen(base: str, person: str, browser, problems: list[str]) -> None:
         problems.append(f"{person} /: signed in on a phone, the home page has no 'Open Nearer' button")
         ctx.close()
         return
+    fit_check(page, "/ (home)", problems, person)
     if page.locator("[data-ui=dock]").count():
         problems.append(f"{person} /: the dock shows on the home page")
     page.get_by_role("button", name="Open Nearer").first.click()
     page.locator("[data-ui=window-lamp]").wait_for(timeout=15_000)
     page.wait_for_timeout(1200)
+    fit_check(page, "/ (window)", problems, person)
     if page.locator("[data-ui=dock]").count():
         problems.append(f"{person} /: the dock shows on the closed-door window")
     bars = page.evaluate(
@@ -105,15 +142,16 @@ def first_screen(base: str, person: str, browser, problems: list[str]) -> None:
     try:
         page.locator("[data-ui=dock]").wait_for(timeout=15_000)
         page.wait_for_timeout(800)
+        fit_check(page, "/ (courtyard)", problems, person)
         dock_overlaps(page, "/ (courtyard)", problems, person)
     except Exception:
         problems.append(f"{person} /: no dock behind the open door")
     ctx.close()
 
 
-def walk(base: str, person: str, kind: str, browser) -> list[str]:
+def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[str]:
     problems: list[str] = []
-    ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base)
+    ctx = browser.new_context(viewport={"width": size[0], "height": size[1]}, base_url=base)
     # Behind the door: open straight into the house (app/page.tsx DOOR_KEY).
     ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
     page = ctx.new_page()
@@ -146,6 +184,7 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
                     problems.append(f"{person} /: no '{big}' button on kid-home")
         except Exception:
             problems.append(f"{person} /: no kid-home")
+        fit_check(page, "/ (kid-home)", problems, person)
     page.get_by_role("button", name="Open the house").click(timeout=15_000)
     for room, tabs in rooms.items():
         tile = page.get_by_role("link", name=re.compile(rf"^{room}\b"))
@@ -176,6 +215,8 @@ def walk(base: str, person: str, kind: str, browser) -> list[str]:
                 problems.append(f"{person} {href}: no page title (h1)")
             if page.get_by_text(re.compile(r"something went wrong|application error", re.I)).count():
                 problems.append(f"{person} {href}: error screen")
+            page.wait_for_timeout(400)
+            fit_check(page, href, problems, person)
             dock_overlaps(page, href, problems, person)
     ctx.close()
     return problems
@@ -190,11 +231,12 @@ def main() -> int:
     with sync_playwright() as p:
         browser = getattr(p, args.engine).launch()
         for person, kind in PEOPLE:
-            found = walk(args.base, person, kind, browser)
-            if person == "arjun":
-                first_screen(args.base, person, browser, found)
-            print(f"{person:6} {'ok' if not found else f'{len(found)} problem(s)'}")
-            problems += found
+            for size in FIT_SIZES:
+                found = walk(args.base, person, kind, browser, size)
+                if person == "arjun":
+                    first_screen(args.base, person, browser, found, size)
+                print(f"{person:6} {size[0]}x{size[1]} {'ok' if not found else f'{len(found)} problem(s)'}")
+                problems += found
         browser.close()
     for line in problems:
         print("  " + line)

@@ -59,7 +59,7 @@ export function SideSwitch() {
             setBusy(s.familyId);
             void openSide(s.familyId);
           }}
-          className={cn("press h-9 rounded-full px-4 text-[14px] font-semibold", s.familyId === current ? "bg-white text-ink shadow-sm" : "text-ink-soft")}
+          className={cn("press h-9 rounded-full px-4 text-callout font-semibold", s.familyId === current ? "bg-white text-ink shadow-sm" : "text-ink-soft")}
         >
           {busy === s.familyId ? "Opening…" : `${s.name} side`}
         </button>
@@ -94,7 +94,7 @@ export function BothSides() {
   return (
     <section aria-label="Your families" className="mt-10">
       <div className="flex items-baseline justify-between">
-        <h2 className="m-0 text-[20px]">{n > 1 ? `You're in ${n} families` : "Your family"}</h2>
+        <h2 className="m-0 text-title">{n > 1 ? `You're in ${n} families` : "Your family"}</h2>
         {grownUp && !demo && n < 4 && (
           <div className="flex gap-1">
             <a href="/join" aria-label="Join another family with a code" className="press grid h-10 w-10 place-items-center rounded-full bg-surface text-ink no-underline">
@@ -106,15 +106,15 @@ export function BothSides() {
           </div>
         )}
       </div>
-      <p className="m-0 mb-3 mt-1 min-h-[42px] text-[14px] text-ink-soft">{n > 1 ? "Each family keeps its own tree. Switch to see theirs." : "Married into another family? Join theirs with their code and the same email."}</p>
+      <p className="m-0 mb-3 mt-1 min-h-[42px] text-callout text-ink-soft">{n > 1 ? "Each family keeps its own tree. Switch to see theirs." : "Married into another family? Join theirs with their code and the same email."}</p>
       {loading && <div className="skeleton h-[68px] rounded-card" aria-busy="true" aria-label="Loading families" />}
       {failed && (
-        <button type="button" onClick={() => void reload()} className="press h-11 w-full rounded-full bg-surface text-[14px] text-ink-soft">
+        <button type="button" onClick={() => void reload()} className="press h-11 w-full rounded-full bg-surface text-callout text-ink-soft">
           Couldn&rsquo;t load your families. Tap to retry.
         </button>
       )}
       {n > 0 && (
-        <ul className="no-scrollbar -mx-5 m-0 flex list-none snap-x gap-2 overflow-x-auto px-5 p-0">
+        <ul className="no-scrollbar -mx-4 m-0 flex list-none snap-x gap-2 overflow-x-auto px-4 p-0">
           {sides.map((s) => {
             const here = s.familyId === current;
             return (
@@ -129,13 +129,13 @@ export function BothSides() {
                   }}
                   className={cn("press flex w-full items-center gap-3 rounded-card p-3 text-left", here ? "bg-ink text-white" : "bg-surface")}
                 >
-                  <span className={cn("relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-[17px] font-bold", here ? "bg-white/15" : "bg-white")}>
+                  <span className={cn("relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-headline font-bold", here ? "bg-white/15" : "bg-white")}>
                     {s.name.slice(0, 1)}
-                    {!here && (s.fresh ?? 0) > 0 && <span className="tnum absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[11px] font-semibold text-white">{s.fresh}</span>}
+                    {!here && (s.fresh ?? 0) > 0 && <span className="tnum absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-caption font-semibold text-white">{s.fresh}</span>}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold">{s.name}</span>
-                    <span className={cn("block truncate text-[12.5px]", here ? "text-white/70" : "text-ink-soft")}>
+                    <span className="block truncate text-body font-semibold">{s.name}</span>
+                    <span className={cn("block truncate text-caption", here ? "text-white/70" : "text-ink-soft")}>
                       {busy === s.familyId ? "Opening…" : here ? "You're here" : s.addedBy ? `Added by ${s.addedBy}` : `${s.people} people`}
                     </span>
                   </span>
@@ -146,7 +146,7 @@ export function BothSides() {
           })}
         </ul>
       )}
-      {grownUp && demo && <p className="m-0 mt-2 text-[13px] text-ink-faint">In your own family, you can join or start another family here.</p>}
+      {grownUp && demo && <p className="m-0 mt-2 text-footnote text-ink-faint">In your own family, you can join or start another family here.</p>}
       {adding && <AddSideSheet home={myHome(viewer.id, members, relationships)} onClose={() => setAdding(false)} />}
     </section>
   );
@@ -161,13 +161,13 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Add your family's side">
       <button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" onClick={onClose} />
-      <div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-5 pt-5 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+      <div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-4 pt-5 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
         {made ? (
           <>
-            <p className="m-0 text-[21px] font-semibold">The {name.trim()} Nearer is ready</p>
-            <p className="m-0 mt-1 text-[15px] text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
-            <p className="tnum m-0 mt-4 rounded-[22px] bg-surface py-4 text-center text-[28px] font-bold tracking-[0.12em]">{made.invite.code}</p>
-            <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-black text-[16px] font-semibold text-white no-underline">
+            <p className="m-0 text-title font-semibold">The {name.trim()} Nearer is ready</p>
+            <p className="m-0 mt-1 text-body text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
+            <p data-display className="tnum m-0 mt-4 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{made.invite.code}</p>
+            <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
               <Icon name="whatsapp" size={20} />
               Send on WhatsApp
             </a>
@@ -184,21 +184,21 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
           </>
         ) : (
           <>
-            <p className="m-0 text-[21px] font-semibold">Add your family&rsquo;s side</p>
-            <p className="m-0 mt-1 text-[15px] text-ink-soft">A separate home for your parents&rsquo; family. Nothing from this side shows there unless you share it.</p>
+            <p className="m-0 text-title font-semibold">Add your family&rsquo;s side</p>
+            <p className="m-0 mt-1 text-body text-ink-soft">A separate home for your parents&rsquo; family. Nothing from this side shows there unless you share it.</p>
             <label className="mt-4 block">
-              <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Family name</span>
-              <input value={name} onChange={(e) => setName(e.target.value.slice(0, 40))} placeholder="Your parents' family name" className="h-[52px] w-full rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-black/15" />
+              <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Family name</span>
+              <input value={name} onChange={(e) => setName(e.target.value.slice(0, 40))} placeholder="Your parents' family name" className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-black/15" />
             </label>
             {home.length > 0 && (
               <>
-                <p className="m-0 mb-2 mt-4 text-[13px] font-medium text-ink-soft">Your home comes with you</p>
+                <p className="m-0 mb-2 mt-4 text-footnote font-medium text-ink-soft">Your home comes with you</p>
                 <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
                   {home.map((m) => {
                     const on = bring.includes(m.id);
                     return (
                       <li key={m.id}>
-                        <button type="button" aria-pressed={on} onClick={() => setBring((b) => (on ? b.filter((x) => x !== m.id) : [...b, m.id]))} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1 pr-4 text-[15px] font-medium", on ? "bg-ink text-white" : "bg-surface")}>
+                        <button type="button" aria-pressed={on} onClick={() => setBring((b) => (on ? b.filter((x) => x !== m.id) : [...b, m.id]))} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-ink text-white" : "bg-surface")}>
                           <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
                           {callName(m)}
                         </button>
@@ -209,7 +209,7 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
               </>
             )}
             {error && (
-              <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
+              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
                 {error}
               </p>
             )}

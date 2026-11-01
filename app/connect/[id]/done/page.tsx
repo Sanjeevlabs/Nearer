@@ -25,9 +25,9 @@ export default async function ConnectDone(
           {status === "ok" ? <path d="M20 6 9 17l-5-5" /> : <path d="M18 6 6 18M6 6l12 12" />}
         </svg>
       </span>
-      <h1 className="m-0 text-[26px]">{title}</h1>
-      <p className="m-0 mt-3 max-w-[300px] text-[15px] text-ink-soft">{line}</p>
-      <Link href="/settings#connected-apps" className="press mt-8 flex h-[52px] items-center justify-center rounded-full bg-black px-8 text-[16px] font-semibold text-white no-underline">
+      <h1 data-display className="m-0 text-display">{title}</h1>
+      <p className="m-0 mt-3 max-w-[300px] text-body text-ink-soft">{line}</p>
+      <Link href="/settings#connected-apps" className="press mt-8 flex h-12 items-center justify-center rounded-full bg-black px-8 text-body font-semibold text-white no-underline">
         Back to Nearer
       </Link>
     </main>

@@ -43,7 +43,7 @@ export function TogetherPlans({ kind }: { kind: TogetherTemplate["id"] }) {
       <RoomHeader title={copy.title} subtitle={copy.subtitle} />
 
       {failed && (
-        <div className="rounded-card bg-card px-5 py-6 text-center shadow-card">
+        <div className="rounded-card bg-card px-4 py-6 text-center shadow-card">
           <EmptyLine>Couldn&rsquo;t load your plans.</EmptyLine>
           <Button variant="secondary" className="mx-auto !bg-well" onClick={() => void reload()}>
             Try again
@@ -79,7 +79,7 @@ export function TogetherPlans({ kind }: { kind: TogetherTemplate["id"] }) {
               {tmpl && (
                 <ul className="m-0 mt-5 grid list-none gap-2 border-t border-[var(--line)] p-0 pt-4" aria-label="On the list">
                   {tmpl.tasks.map((task) => (
-                    <li key={task} className="flex items-center gap-3 text-[15px] text-ink-soft">
+                    <li key={task} className="flex items-center gap-3 text-body text-ink-soft">
                       <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-black/15" aria-hidden="true" />
                       {task}
                     </li>
@@ -92,11 +92,11 @@ export function TogetherPlans({ kind }: { kind: TogetherTemplate["id"] }) {
           {!child && active.length > 0 && (
             <div className="mt-3 grid gap-3">
               {data.templates.map((t) => (
-                <button key={t.id} type="button" onClick={() => setOpen(t)} className="press flex min-h-[64px] w-full items-center gap-3 rounded-card bg-card p-3 pr-4 text-left shadow-card">
+                <button key={t.id} type="button" onClick={() => setOpen(t)} className="press flex min-h-[56px] w-full items-center gap-3 rounded-card bg-card p-3 pr-4 text-left shadow-card">
                   <PlanBadge holiday={t.id === "holiday"} size={44} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[16px] font-semibold leading-tight">{t.title}</span>
-                    <span className="mt-0.5 block text-[14px] text-ink-soft">Plan it</span>
+                    <span className="block text-body font-semibold leading-tight">{t.title}</span>
+                    <span className="mt-0.5 block text-callout text-ink-soft">Plan it</span>
                   </span>
                   <Icon name="plus" size={20} className="text-ink-soft" />
                 </button>
@@ -107,10 +107,10 @@ export function TogetherPlans({ kind }: { kind: TogetherTemplate["id"] }) {
           {done.length > 0 && (
             <section aria-label="Done together">
               <SectionTitle>Been together</SectionTitle>
-              <ul className="no-scrollbar -mx-5 m-0 flex list-none gap-2 overflow-x-auto px-5 p-0">
+              <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2 overflow-x-auto px-4 p-0">
                 {done.map((p) => (
                   <li key={p.id} className="shrink-0">
-                    <Link href={`/together/${p.id}`} className="press flex h-11 items-center gap-2 rounded-full bg-card pl-1.5 pr-4 text-[15px] font-medium text-ink no-underline shadow-card">
+                    <Link href={`/together/${p.id}`} className="press flex h-11 items-center gap-2 rounded-full bg-card pl-1.5 pr-4 text-body font-medium text-ink no-underline shadow-card">
                       <PlanBadge holiday={p.templateId === "holiday"} size={32} />
                       {p.title}
                     </Link>
@@ -136,22 +136,22 @@ function PlanCard({ project }: { project: Project }) {
   const people = [project.visitorId, ...project.hostIds].map((id) => members.find((m) => m.id === id)).filter((m): m is Member => Boolean(m));
   const when = project.dueAt ? new Date(project.dueAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : null;
   return (
-    <Link href={`/together/${project.id}`} className="press flex h-full flex-col rounded-card bg-card p-5 text-ink no-underline shadow-card">
+    <Link href={`/together/${project.id}`} className="press flex h-full flex-col rounded-card bg-card p-4 text-ink no-underline shadow-card">
       <div className="flex items-start justify-between gap-2">
         <span>
-          <span className="tnum block text-[48px] font-bold leading-none tracking-[-0.02em]">{days !== null && days > 0 ? days : days === 0 ? "Today" : "–"}</span>
-          <span className="mt-1 block text-[14px] text-ink-soft">
+          <span data-display className="tnum block text-display font-bold leading-none tracking-[-0.02em]">{days !== null && days > 0 ? days : days === 0 ? "Today" : "–"}</span>
+          <span className="mt-1 block text-callout text-ink-soft">
             {days !== null && days > 0 ? `day${days > 1 ? "s" : ""} to go` : days === 0 ? "it's today" : "no date yet"}
             {when ? ` · ${when}` : ""}
           </span>
         </span>
         <PlanBadge holiday={project.templateId === "holiday"} size={44} />
       </div>
-      <span className="mt-4 block text-[18px] font-semibold leading-snug">{project.title}</span>
+      <span className="mt-4 block text-headline font-semibold leading-snug">{project.title}</span>
       {open.length > 0 && (
         <span className="mt-3 grid gap-2 border-t border-[var(--line)] pt-3">
           {open.map((t) => (
-            <span key={t.id} className="flex items-center gap-3 text-[15px] text-ink-soft">
+            <span key={t.id} className="flex items-center gap-3 text-body text-ink-soft">
               <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-black/15" aria-hidden="true" />
               <span className="min-w-0 truncate">{t.text}</span>
             </span>
@@ -168,7 +168,7 @@ function PlanCard({ project }: { project: Project }) {
           <span className="h-1.5 w-full max-w-[120px] overflow-hidden rounded-full bg-well" aria-hidden="true">
             <span className="block h-full rounded-full bg-ink" style={{ width: `${total ? Math.round((done / total) * 100) : 0}%` }} />
           </span>
-          <span className="tnum text-[14px] text-ink-soft" aria-label={`${done} of ${total} done`}>
+          <span className="tnum text-callout text-ink-soft" aria-label={`${done} of ${total} done`}>
             {done}/{total}
           </span>
         </span>
@@ -191,9 +191,9 @@ function PlanSheet({ t, onClose }: { t: TogetherTemplate; onClose: () => void })
   const [error, setError] = useState(false);
   const toggle = (id: string) => setGoing((g) => (g.includes(id) ? g.filter((x) => x !== id) : [...g, id]));
   const chips = (selected: (id: string) => boolean, onTap: (id: string) => void, label: string) => (
-    <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label={label}>
+    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label={label}>
       {members.map((m) => (
-        <button key={m.id} type="button" aria-pressed={selected(m.id)} onClick={() => onTap(m.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-[15px] font-medium", selected(m.id) ? "bg-ink text-white" : "bg-surface")}>
+        <button key={m.id} type="button" aria-pressed={selected(m.id)} onClick={() => onTap(m.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", selected(m.id) ? "bg-ink text-white" : "bg-surface")}>
           <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
           {m.id === viewer.id ? "Me" : callName(m)}
         </button>
@@ -203,37 +203,37 @@ function PlanSheet({ t, onClose }: { t: TogetherTemplate; onClose: () => void })
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t.title}>
       <button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" onClick={onClose} />
-      <div className="frost relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-5 pt-4" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+      <div className="frost relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-4" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
         <div className="flex items-center gap-3">
           <PlanBadge holiday={holiday} />
-          <p className="m-0 min-w-0 flex-1 text-[21px] font-semibold leading-tight">{t.title}</p>
+          <p className="m-0 min-w-0 flex-1 text-title font-semibold leading-tight">{t.title}</p>
           <button type="button" onClick={onClose} aria-label="Close" className="press grid h-10 w-10 place-items-center rounded-full text-ink-soft">
             <Icon name="close" />
           </button>
         </div>
-        <p className="m-0 mt-2 text-[15px] text-ink-soft">{t.blurb}</p>
+        <p className="m-0 mt-2 text-body text-ink-soft">{t.blurb}</p>
         {holiday && (
           <label className="mt-4 block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Where to?</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 60))} placeholder="Goa in December" className="h-[48px] w-full rounded-full bg-surface px-5 text-[16px] outline-none" />
+            <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Where to?</span>
+            <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 60))} placeholder="Goa in December" className="h-[48px] w-full rounded-full bg-surface px-5 text-body outline-none" />
           </label>
         )}
-        <p className="m-0 mb-1.5 mt-4 text-[13px] font-medium text-ink-soft">{t.whoLabel}</p>
+        <p className="m-0 mb-1.5 mt-4 text-footnote font-medium text-ink-soft">{t.whoLabel}</p>
         {holiday
           ? chips((id) => going.includes(id), toggle, t.whoLabel)
           : chips((id) => id === visitor, (id) => { setVisitor(id); setGoing((g) => g.filter((x) => x !== id)); }, t.whoLabel)}
         {!holiday && (
           <>
-            <p className="m-0 mb-1.5 mt-4 text-[13px] font-medium text-ink-soft">Staying with</p>
+            <p className="m-0 mb-1.5 mt-4 text-footnote font-medium text-ink-soft">Staying with</p>
             {chips((id) => going.includes(id), (id) => id !== visitor && toggle(id), "Staying with")}
           </>
         )}
         <label className="mt-4 block">
-          <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">{holiday ? "Leaving on" : "Arriving on"}</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-[48px] w-full rounded-full bg-surface px-5 text-[16px]" />
+          <span className="mb-1.5 block text-footnote font-medium text-ink-soft">{holiday ? "Leaving on" : "Arriving on"}</span>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-[48px] w-full rounded-full bg-surface px-5 text-body" />
         </label>
         {error && (
-          <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
+          <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
             Couldn&rsquo;t save it. Try again.
           </p>
         )}

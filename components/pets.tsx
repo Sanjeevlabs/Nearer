@@ -12,7 +12,7 @@ import { useViewer } from "./viewer";
 
 const SPECIES_LABEL: Record<(typeof PET_SPECIES)[number], string> = { dog: "Dog", cat: "Cat", bird: "Bird", fish: "Fish", rabbit: "Rabbit", other: "Other" };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const field = "h-[48px] w-full rounded-[14px] bg-white px-4 text-[16px] outline-none focus:ring-2 focus:ring-marigold";
+const field = "h-[48px] w-full rounded-[14px] bg-white px-4 text-body outline-none focus:ring-2 focus:ring-marigold";
 
 /** Pets are family: they live in a home, with a person. */
 export function PetsSection() {
@@ -24,7 +24,7 @@ export function PetsSection() {
   return (
     <section aria-label="Pets">
       <SectionTitle>Pets</SectionTitle>
-      {pets.length === 0 && <p className="m-0 text-[15px] text-ink-soft">No pets yet. They&rsquo;re family too.</p>}
+      {pets.length === 0 && <p className="m-0 text-body text-ink-soft">No pets yet. They&rsquo;re family too.</p>}
       <ul className="m-0 list-none space-y-2 p-0">
         {pets.map((p) =>
           editing === p.id ? (
@@ -37,12 +37,12 @@ export function PetsSection() {
                 <Monogram name={p.name} size={48} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[16px] font-semibold">{p.name}</span>
-                <span className="block truncate text-[13px] text-ink-soft">
+                <span className="block text-body font-semibold">{p.name}</span>
+                <span className="block truncate text-footnote text-ink-soft">
                   {SPECIES_LABEL[p.species]} · lives with {callName(members.find((m) => m.id === p.livesWith))}
                   {p.birthday ? ` · ${MONTHS[Number(p.birthday.slice(0, 2)) - 1]} ${Number(p.birthday.slice(3))}` : ""}
                 </span>
-                {p.note && <span className="voice block truncate text-[15px]">{p.note}</span>}
+                {p.note && <span className="voice block truncate text-body">{p.note}</span>}
               </span>
               {mayEdit && (
                 <ActionMenu
@@ -63,7 +63,7 @@ export function PetsSection() {
             <PetForm onDone={async () => { setEditing(null); await reload(); }} />
           </div>
         ) : (
-          <button type="button" onClick={() => setEditing("new")} className="press mt-2 flex h-11 items-center gap-1.5 text-[15px] font-semibold">
+          <button type="button" onClick={() => setEditing("new")} className="press mt-2 flex h-11 items-center gap-1.5 text-body font-semibold">
             <Icon name="plus" size={18} />
             Add a pet
           </button>
@@ -86,7 +86,7 @@ function PetForm({ pet, onDone }: { pet?: Pet; onDone: () => void }) {
       <input className={field} value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="Name (Bruno)" aria-label="Pet's name" />
       <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Kind of pet">
         {PET_SPECIES.map((s) => (
-          <button key={s} type="button" role="radio" aria-checked={species === s} onClick={() => setSpecies(s)} className={cn("press h-9 rounded-full px-3.5 text-[14px] font-medium", species === s ? "bg-black text-white" : "bg-white")}>
+          <button key={s} type="button" role="radio" aria-checked={species === s} onClick={() => setSpecies(s)} className={cn("press h-9 rounded-full px-3.5 text-callout font-medium", species === s ? "bg-black text-white" : "bg-white")}>
             {SPECIES_LABEL[s]}
           </button>
         ))}
@@ -119,7 +119,7 @@ function PetForm({ pet, onDone }: { pet?: Pet; onDone: () => void }) {
       <input className={field} value={note} onChange={(e) => setNote(e.target.value)} maxLength={160} placeholder="Something about them (optional)" aria-label="Note" />
       <div className="flex gap-2">
         <Button
-          className="h-11 flex-1 text-[15px]"
+          className="h-11 flex-1 text-body"
           disabled={busy || !name.trim()}
           onClick={async () => {
             setBusy(true);
@@ -131,7 +131,7 @@ function PetForm({ pet, onDone }: { pet?: Pet; onDone: () => void }) {
         >
           {pet ? "Save" : "Add pet"}
         </Button>
-        <Button variant="secondary" className="h-11 flex-1 !bg-white text-[15px]" onClick={onDone}>
+        <Button variant="secondary" className="h-11 flex-1 !bg-white text-body" onClick={onDone}>
           Cancel
         </Button>
       </div>

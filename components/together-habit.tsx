@@ -23,7 +23,7 @@ const hhmm = (h: number, m: number) => `${String(h).padStart(2, "0")}:${String(m
 
 function Shell({ children, glow = false, label = "Together habit" }: { children: React.ReactNode; glow?: boolean; label?: string }) {
   return (
-    <section id="habit" aria-label={label} className={cn("mt-5 rounded-[26px] bg-card p-5 shadow-card", glow && "ring-1 ring-[#e9b44c]/60")}>
+    <section id="habit" aria-label={label} className={cn("mt-5 rounded-[26px] bg-card p-4 shadow-card", glow && "ring-1 ring-[#e9b44c]/60")}>
       {children}
     </section>
   );
@@ -40,7 +40,7 @@ export function TogetherHabit() {
   if (!data) {
     return failed ? (
       <Shell>
-        <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t load the walk just now.</p>
+        <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load the walk just now.</p>
         <Button variant="secondary" className="mt-3 !h-11" onClick={() => void reload()}>
           Try again
         </Button>
@@ -67,15 +67,15 @@ export function TogetherHabit() {
     if (!data.can.create) return null;
     return (
       <Shell>
-        <p className="m-0 flex items-center gap-2 text-[17px] font-semibold">
+        <p className="m-0 flex items-center gap-2 text-headline font-semibold">
           <Icon name="walk" size={19} /> Walk together in the mornings
         </p>
-        <p className="m-0 mt-1 text-[14.5px] text-ink-soft">One shared habit. Each of you ticks it when you&rsquo;ve done yours, and the family sees it in words.</p>
+        <p className="m-0 mt-1 text-callout text-ink-soft">One shared habit. Each of you ticks it when you&rsquo;ve done yours, and the family sees it in words.</p>
         <Button className="mt-4 w-full" disabled={busy} onClick={() => void run({ action: "create", ...DEFAULT_HABIT })}>
           {busy ? "Starting…" : `Start “${DEFAULT_HABIT.name}” · ${timeLabel(DEFAULT_HABIT.hour, DEFAULT_HABIT.minute)}`}
         </Button>
         {error && (
-          <p role="alert" className="m-0 mt-2 text-[13.5px] text-[#b42318]">
+          <p role="alert" className="m-0 mt-2 text-footnote text-[#b42318]">
             Couldn&rsquo;t start it just now. Try again.
           </p>
         )}
@@ -115,10 +115,10 @@ export function TogetherHabit() {
     <Shell glow={everyone}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="m-0 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-soft">
+          <p className="m-0 flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.1em] text-ink-soft">
             <Icon name="walk" size={14} /> Together
           </p>
-          <h2 className="m-0 mt-1 text-[19px] font-semibold leading-tight">{habitTitle(habit)}</h2>
+          <h2 className="m-0 mt-1 text-title font-semibold leading-tight">{habitTitle(habit)}</h2>
         </div>
         <ActionMenu actions={actions} label="Habit options" className="-mr-2 -mt-1.5" />
       </div>
@@ -140,17 +140,17 @@ export function TogetherHabit() {
         aria-pressed={me.joined ? me.ticked : undefined}
         aria-busy={busy}
         className={cn(
-          "press mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full text-[17px] font-semibold disabled:opacity-70",
+          "press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full text-headline font-semibold disabled:opacity-70",
           me.joined && me.ticked ? "bg-surface text-ink ring-1 ring-black/10" : "bg-black text-white",
         )}
       >
         {label}
       </button>
-      <p className="m-0 mt-3 text-center text-[15px] text-ink-soft" aria-live="polite">
+      <p className="m-0 mt-3 text-center text-body text-ink-soft" aria-live="polite">
         {line}
       </p>
       {error && (
-        <p role="alert" className="m-0 mt-1 text-center text-[13.5px] text-[#b42318]">
+        <p role="alert" className="m-0 mt-1 text-center text-footnote text-[#b42318]">
           Couldn&rsquo;t save just now. Tap to try again.
         </p>
       )}
@@ -176,28 +176,28 @@ function EditSheet({ kind, habit, onClose, onSave }: { kind: "rename" | "time"; 
   };
   return (
     <BottomSheet open onClose={onClose} label={kind === "rename" ? "Rename the habit" : "Change the time"}>
-      <p className="m-0 text-[21px] font-semibold">{kind === "rename" ? "Rename" : "Change the time"}</p>
-      <p className="m-0 mt-1 text-[14.5px] text-ink-soft">{kind === "rename" ? "Everyone in the family sees the new name." : "Each person's own morning: 7 AM is 7 AM wherever they are."}</p>
+      <p className="m-0 text-title font-semibold">{kind === "rename" ? "Rename" : "Change the time"}</p>
+      <p className="m-0 mt-1 text-callout text-ink-soft">{kind === "rename" ? "Everyone in the family sees the new name." : "Each person's own morning: 7 AM is 7 AM wherever they are."}</p>
       {kind === "rename" ? (
         <label className="mt-4 block">
           <span className="sr-only">Name</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={HABIT_NAME_MAX} className="h-12 w-full rounded-[16px] bg-surface px-4 text-[16px] text-ink" />
+          <input value={name} onChange={(e) => setName(e.target.value)} maxLength={HABIT_NAME_MAX} className="h-12 w-full rounded-[16px] bg-surface px-4 text-body text-ink" />
         </label>
       ) : (
         <label className="mt-4 block">
           <span className="sr-only">Time</span>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-12 w-full rounded-[16px] bg-surface px-4 text-[16px] text-ink" />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-12 w-full rounded-[16px] bg-surface px-4 text-body text-ink" />
         </label>
       )}
       {state === "failed" && (
-        <p role="alert" className="m-0 mt-2 text-[13.5px] text-[#b42318]">
+        <p role="alert" className="m-0 mt-2 text-footnote text-[#b42318]">
           Couldn&rsquo;t save. Try again.
         </p>
       )}
       <Button className="mt-4 w-full" disabled={!valid || state === "saving"} onClick={() => void save()}>
         {state === "saving" ? "Saving…" : state === "failed" ? "Retry" : "Save"}
       </Button>
-      <button type="button" onClick={onClose} className="press mt-1 h-11 w-full rounded-full text-[15px] font-semibold text-ink-soft">
+      <button type="button" onClick={onClose} className="press mt-1 h-11 w-full rounded-full text-body font-semibold text-ink-soft">
         Discard
       </button>
     </BottomSheet>

@@ -51,11 +51,11 @@ export function RestoreOffer({ file, onChange }: { file: File; onChange: (r: Res
       <div className="mt-3 flex items-center gap-3 rounded-[18px] bg-surface px-3 py-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={state.url} alt="" className="h-11 w-11 rounded-[10px] object-cover" />
-        <span className="min-w-0 flex-1 text-[14px]">
+        <span className="min-w-0 flex-1 text-callout">
           <span className="block font-semibold">Restored by Muse</span>
-          <span className="block text-[12.5px] text-ink-soft">The original is kept with it.</span>
+          <span className="block text-caption text-ink-soft">The original is kept with it.</span>
         </span>
-        <button type="button" className="press h-11 px-2 text-[14px] font-medium text-ink-soft" onClick={() => { onChange(null); setState({ at: "offer" }); }}>
+        <button type="button" className="press h-11 px-2 text-callout font-medium text-ink-soft" onClick={() => { onChange(null); setState({ at: "offer" }); }}>
           Undo
         </button>
       </div>
@@ -69,19 +69,19 @@ export function RestoreOffer({ file, onChange }: { file: File; onChange: (r: Res
           <figure className="m-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={original ?? ""} alt="Your original photo" className="aspect-[4/5] w-full rounded-[14px] bg-surface object-contain" />
-            <figcaption className="mt-1 text-center text-[12.5px] text-ink-soft">Original</figcaption>
+            <figcaption className="mt-1 text-center text-caption text-ink-soft">Original</figcaption>
           </figure>
           <figure className="m-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={state.url} alt="The photo restored by Muse" className="aspect-[4/5] w-full rounded-[14px] bg-surface object-contain" />
-            <figcaption className="mt-1 text-center text-[12.5px] text-ink-soft">{state.sample ? "Sample: Muse is off" : "Restored by Muse"}</figcaption>
+            <figcaption className="mt-1 text-center text-caption text-ink-soft">{state.sample ? "Sample: Muse is off" : "Restored by Muse"}</figcaption>
           </figure>
         </div>
         <div className="mt-3 flex gap-2">
-          <Button variant="secondary" className="h-12 flex-1 px-3 text-[15px]" onClick={() => { onChange(null); setState({ at: "declined" }); }}>
+          <Button variant="secondary" className="h-12 flex-1 px-3 text-body" onClick={() => { onChange(null); setState({ at: "declined" }); }}>
             Keep original
           </Button>
-          <Button className="h-12 flex-1 px-3 text-[15px]" onClick={() => { onChange({ runId: state.runId, blob: state.blob }); setState({ at: "kept", url: state.url }); }}>
+          <Button className="h-12 flex-1 px-3 text-body" onClick={() => { onChange({ runId: state.runId, blob: state.blob }); setState({ at: "kept", url: state.url }); }}>
             Keep restored
           </Button>
         </div>
@@ -95,8 +95,8 @@ export function RestoreOffer({ file, onChange }: { file: File; onChange: (r: Res
         <button type="button" onClick={() => void restore()} disabled={state.at === "working"} className="press flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3 text-left disabled:opacity-60">
           <Icon name="sparkle" size={20} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-semibold">{state.at === "working" ? "Restoring…" : "Old photo? Let Muse restore it"}</span>
-            <span className="block text-[12.5px] text-ink-soft">Scratches and fading, gently. Faces stay as they are.</span>
+            <span className="block text-body font-semibold">{state.at === "working" ? "Restoring…" : "Old photo? Let Muse restore it"}</span>
+            <span className="block text-caption text-ink-soft">Scratches and fading, gently. Faces stay as they are.</span>
           </span>
         </button>
         {state.at !== "working" && (
@@ -105,7 +105,7 @@ export function RestoreOffer({ file, onChange }: { file: File; onChange: (r: Res
           </button>
         )}
       </div>
-      {error && <p className="m-0 mt-2 text-[13px] text-[#b42318]" role="alert">{error}</p>}
+      {error && <p className="m-0 mt-2 text-footnote text-[#b42318]" role="alert">{error}</p>}
     </div>
   );
 }

@@ -37,8 +37,8 @@ export default function NearbyPage() {
     <div>
       <RoomHeader title="Trusted nearby" subtitle={`For every home, your top ${MAX_NEARBY} people close by, in the order to call them.`} />
       {failed && !data ? (
-        <div className="rounded-card bg-surface px-5 py-8 text-center">
-          <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t load the list right now.</p>
+        <div className="rounded-card bg-surface px-4 py-8 text-center">
+          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load the list right now.</p>
           <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-white" onClick={() => void reload()}>
             Try again
           </Button>
@@ -79,17 +79,17 @@ function HomeNearby({ home, helpers, onChange }: { home: Household; helpers: Hel
           ))}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="m-0 truncate text-[18px]">{mine ? "Around you" : `Around ${householdName(home, callName)}`}</h2>
-          <p className="m-0 text-[13px] text-ink-soft">
+          <h2 className="m-0 truncate text-headline">{mine ? "Around you" : `Around ${householdName(home, callName)}`}</h2>
+          <p className="m-0 text-footnote text-ink-soft">
             {city} · <span className="tnum">{helpers.length}/{MAX_NEARBY}</span>
           </p>
         </div>
-        <a href={`tel:${sos}`} className="press flex h-10 items-center gap-1.5 rounded-full bg-black px-3.5 text-[14px] font-semibold text-white no-underline" aria-label={`Emergency services in ${city}: ${sos}`}>
+        <a href={`tel:${sos}`} className="press flex h-10 items-center gap-1.5 rounded-full bg-black px-3.5 text-callout font-semibold text-white no-underline" aria-label={`Emergency services in ${city}: ${sos}`}>
           <span className="h-2 w-2 rounded-full bg-[#d92d20]" aria-hidden="true" />
           {sos}
         </a>
       </div>
-      <p className="m-0 mb-2 text-[13px] text-ink-soft">{ESCALATION}</p>
+      <p className="m-0 mb-2 text-footnote text-ink-soft">{ESCALATION}</p>
 
       {helpers.length === 0 && !adding ? (
         <EmptyLine>{mine ? "Add the first person near you your family can call." : "No one yet. Ask them who lives close and would come."}</EmptyLine>
@@ -98,12 +98,12 @@ function HomeNearby({ home, helpers, onChange }: { home: Household; helpers: Hel
           {helpers.map((h, i) => (
             <li key={h.id}>
               <div className="flex items-center gap-2 py-2.5 pl-3 pr-1.5">
-                <span className={cn("tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-[14px] font-bold", i === 0 ? "bg-black text-white" : "bg-white text-ink")} aria-label={`Number ${i + 1}`}>
+                <span className={cn("tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-callout font-bold", i === 0 ? "bg-black text-white" : "bg-white text-ink")} aria-label={`Number ${i + 1}`}>
                   {i + 1}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold leading-tight">{h.name}</span>
-                  <span className="block truncate text-[12.5px] text-ink-soft first-letter:uppercase">{[h.role, h.note].filter(Boolean).join(" · ")}</span>
+                  <span className="block truncate text-body font-semibold leading-tight">{h.name}</span>
+                  <span className="block truncate text-caption text-ink-soft first-letter:uppercase">{[h.role, h.note].filter(Boolean).join(" · ")}</span>
                 </span>
                 {h.phone && (
                   <>
@@ -152,9 +152,9 @@ function HomeNearby({ home, helpers, onChange }: { home: Household; helpers: Hel
             <NearbyForm forMemberId={mine ? viewer.id : home.members[0].id} onDone={async () => { setAdding(false); await onChange(); }} />
           </div>
         ) : full ? (
-          <p className="m-0 mt-2 px-1 text-[13px] text-ink-faint">That&rsquo;s your top {MAX_NEARBY}. To add someone, take someone off first.</p>
+          <p className="m-0 mt-2 px-1 text-footnote text-ink-faint">That&rsquo;s your top {MAX_NEARBY}. To add someone, take someone off first.</p>
         ) : (
-          <button type="button" onClick={() => setAdding(true)} className="press mt-2 flex h-11 items-center gap-2 px-1 text-[15px] font-semibold">
+          <button type="button" onClick={() => setAdding(true)} className="press mt-2 flex h-11 items-center gap-2 px-1 text-body font-semibold">
             <Icon name="plus" size={17} /> Add #{helpers.length + 1}
           </button>
         ))}
@@ -171,7 +171,7 @@ function NearbyForm({ helper, forMemberId, onDone }: { helper?: Helper; forMembe
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const phoneOk = isDialable(phone);
-  const input = "h-12 w-full rounded-[14px] bg-white px-4 text-[15px] outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30";
+  const input = "h-12 w-full rounded-[14px] bg-white px-4 text-body outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30";
   const save = async () => {
     setBusy(true);
     const fields = { name: name.trim(), role, phone: phone.trim(), note: note.trim(), emergency: true, consent };
@@ -206,16 +206,16 @@ function NearbyForm({ helper, forMemberId, onDone }: { helper?: Helper; forMembe
         />
       </div>
       <input className={input} placeholder="Where, and anything useful (has a spare key…)" value={note} onChange={(e) => setNote(e.target.value.slice(0, 160))} aria-label="Note" />
-      <label className="flex items-start gap-2.5 px-1 py-1 text-[14px] text-ink-soft">
+      <label className="flex items-start gap-2.5 px-1 py-1 text-callout text-ink-soft">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 h-4 w-4 accent-black" />
         They know they&rsquo;re on this list and are happy for the family to call them.
       </label>
-      {error && <p className="m-0 px-1 text-[13px] text-[#a3271b]" role="alert">{error}</p>}
+      {error && <p className="m-0 px-1 text-footnote text-[#a3271b]" role="alert">{error}</p>}
       <div className="flex gap-2">
-        <Button className="h-11 flex-1 text-[15px]" disabled={busy || !name.trim() || !consent || !phoneOk} onClick={() => void save()}>
+        <Button className="h-11 flex-1 text-body" disabled={busy || !name.trim() || !consent || !phoneOk} onClick={() => void save()}>
           {helper ? "Save" : "Add"}
         </Button>
-        <Button variant="secondary" className="h-11 flex-1 !bg-white text-[15px]" onClick={() => void onDone()}>
+        <Button variant="secondary" className="h-11 flex-1 !bg-white text-body" onClick={() => void onDone()}>
           Cancel
         </Button>
       </div>

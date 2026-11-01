@@ -23,7 +23,7 @@ function peek(body: string): string {
 }
 
 const Label = () => (
-  <p className="m-0 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-soft">
+  <p className="m-0 flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.1em] text-ink-soft">
     <Icon name="sparkle" size={14} /> From the courtyard
   </p>
 );
@@ -53,16 +53,16 @@ export function CourtyardLetter() {
   if (draft && grownUp) {
     const p = draft.payload as Draft;
     return (
-      <section data-ui="courtyard-letter" aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-5">
+      <section data-ui="courtyard-letter" aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-4">
         <Label />
-        <p className="voice m-0 mt-2 text-[20px] leading-snug text-ink">{p.title ?? "A letter from the courtyard"}</p>
-        <p className="m-0 mt-1.5 line-clamp-2 whitespace-pre-line text-[14.5px] leading-snug text-ink-soft">{peek(p.body ?? "")}</p>
-        <p className="m-0 mt-3 text-[15px] font-semibold text-ink">{draft.goal}</p>
+        <p className="voice m-0 mt-2 text-title leading-snug text-ink">{p.title ?? "A letter from the courtyard"}</p>
+        <p className="m-0 mt-1.5 line-clamp-2 whitespace-pre-line text-callout leading-snug text-ink-soft">{peek(p.body ?? "")}</p>
+        <p className="m-0 mt-3 text-body font-semibold text-ink">{draft.goal}</p>
         <div className="mt-2 flex gap-2">
-          <button type="button" disabled={busy} onClick={() => void decide(true)} className="press h-11 rounded-full bg-black px-5 text-[14px] font-semibold text-white disabled:opacity-40">
+          <button type="button" disabled={busy} onClick={() => void decide(true)} className="press h-11 rounded-full bg-black px-5 text-callout font-semibold text-white disabled:opacity-40">
             Do it
           </button>
-          <button type="button" disabled={busy} onClick={() => void decide(false)} className="press h-11 rounded-full px-4 text-[14px] font-semibold text-ink-soft disabled:opacity-40">
+          <button type="button" disabled={busy} onClick={() => void decide(false)} className="press h-11 rounded-full px-4 text-callout font-semibold text-ink-soft disabled:opacity-40">
             Not now
           </button>
         </div>
@@ -72,13 +72,13 @@ export function CourtyardLetter() {
 
   if (!letter?.body) return null;
   return (
-    <section data-ui="courtyard-letter" aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-5">
+    <section data-ui="courtyard-letter" aria-label="A letter from the courtyard" className="mt-5 rounded-[26px] bg-surface p-4">
       <Label />
-      <p className="voice m-0 mt-2 text-[20px] leading-snug text-ink">{letter.title ?? "A letter from the courtyard"}</p>
-      <p className={`m-0 mt-1.5 whitespace-pre-line text-[14.5px] leading-snug text-ink-soft ${open ? "" : "line-clamp-2"}`}>{open ? letter.body : peek(letter.body)}</p>
+      <p className="voice m-0 mt-2 text-title leading-snug text-ink">{letter.title ?? "A letter from the courtyard"}</p>
+      <p className={`m-0 mt-1.5 whitespace-pre-line text-callout leading-snug text-ink-soft ${open ? "" : "line-clamp-2"}`}>{open ? letter.body : peek(letter.body)}</p>
       <div className="mt-2 flex items-center justify-between">
-        <span className="text-[12.5px] text-ink-soft">{relativeDay(letter.deliverAt)}</span>
-        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="press h-11 rounded-full px-4 text-[14px] font-semibold text-ink">
+        <span className="text-caption text-ink-soft">{relativeDay(letter.deliverAt)}</span>
+        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="press h-11 rounded-full px-4 text-callout font-semibold text-ink">
           {open ? "Close" : "Read"}
         </button>
       </div>

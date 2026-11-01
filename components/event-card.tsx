@@ -28,7 +28,7 @@ export function AvatarStack({ ids, members, size = 30, max = 6, tone = "light" }
           <Avatar src={memberPhoto(p)} name={callName(p)} size={size} />
         </span>
       ))}
-      {people.length > max && <span className={cn("ml-1.5 text-[13px] font-semibold", tone === "dark" ? "text-white/70" : "text-ink-soft")}>+{people.length - max}</span>}
+      {people.length > max && <span className={cn("ml-1.5 text-footnote font-semibold", tone === "dark" ? "text-white/70" : "text-ink-soft")}>+{people.length - max}</span>}
     </span>
   );
 }
@@ -40,14 +40,14 @@ export function EventTimes({ at, members, viewer, ids, tone = "light", size = "l
   const soft = tone === "dark" ? "text-white/60" : "text-ink-soft";
   return (
     <div>
-      <p className={cn("tnum m-0 font-light leading-tight tracking-[-0.01em]", size === "lg" ? "text-[30px]" : "text-[18px] font-normal")}>
+      <p data-display className={cn("tnum m-0 font-light leading-tight tracking-[-0.01em]", size === "lg" ? "text-display" : "text-headline font-normal")}>
         {fmtIn(viewer.tz, at, { weekday: "short", day: "numeric", month: "short" })} · {fmtIn(viewer.tz, at, { hour: "numeric", minute: "2-digit" })}
       </p>
       {zones.size === 0 ? (
-        <p className={cn("m-0 mt-0.5 text-[13px]", soft)}>Same time in every home</p>
+        <p className={cn("m-0 mt-0.5 text-footnote", soft)}>Same time in every home</p>
       ) : (
         Array.from(zones.entries()).map(([tz, names]) => (
-          <p key={tz} className={cn("tnum m-0 mt-0.5 text-[13px]", soft)}>
+          <p key={tz} className={cn("tnum m-0 mt-0.5 text-footnote", soft)}>
             {placeFromTz(tz)} · {fmtIn(tz, at, { weekday: "short", hour: "numeric", minute: "2-digit" })}
             <span className="opacity-70"> · {names.slice(0, 2).join(", ")}{names.length > 2 ? ` +${names.length - 2}` : ""}</span>
           </p>
@@ -60,7 +60,7 @@ export function EventTimes({ at, members, viewer, ids, tone = "light", size = "l
 export function JoinButton({ e, className }: { e: FamilyEvent; className?: string }) {
   if (!e.sittingId) return null;
   return (
-    <a href={roomUrl(e.sittingId)} target="_blank" rel="noreferrer" className={cn("press flex h-[52px] items-center justify-center gap-2 rounded-full bg-white px-6 text-[16px] font-semibold text-[#1c1b1a] no-underline", className)}>
+    <a href={roomUrl(e.sittingId)} target="_blank" rel="noreferrer" className={cn("press flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-body font-semibold text-[#1c1b1a] no-underline", className)}>
       <Icon name="video" size={20} />
       Join
     </a>
@@ -74,10 +74,10 @@ export function EventHero({ e, members, viewer, now = new Date() }: { e: FamilyE
   const answered = e.answered.includes(viewer.id);
   const total = participants(e).length;
   return (
-    <article className="relative overflow-hidden rounded-[28px] p-5 text-white" style={{ background: INK }}>
+    <article className="relative overflow-hidden rounded-[28px] p-4 text-white" style={{ background: INK }}>
       {live && <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,184,77,.35), transparent 70%)" }} />}
       <Link href={`/gather/${e.id}`} className="block text-white no-underline">
-        <div className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/55">
+        <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.08em] text-white/55">
           {live ? (
             <>
               <span className="h-2 w-2 rounded-full bg-[#ffb84d]" style={{ boxShadow: "0 0 0 4px rgba(255,184,77,.25)" }} aria-hidden="true" />
@@ -89,12 +89,12 @@ export function EventHero({ e, members, viewer, now = new Date() }: { e: FamilyE
             "Picking a time"
           )}
         </div>
-        <h2 className="m-0 mt-2 text-[24px] font-normal leading-tight">{e.title}</h2>
+        <h2 className="m-0 mt-2 text-title font-normal leading-tight">{e.title}</h2>
         <div className="mt-4">
           {start ? (
             <EventTimes at={start} members={members} viewer={viewer} ids={participants(e)} tone="dark" />
           ) : (
-            <p className="m-0 text-[15px] text-white/70">
+            <p className="m-0 text-body text-white/70">
               {Object.values(e.votes).flat().length ? `${new Set(Object.values(e.votes).flat()).size} of ${total} have picked` : "Nobody has picked yet"}
             </p>
           )}
@@ -105,7 +105,7 @@ export function EventHero({ e, members, viewer, now = new Date() }: { e: FamilyE
         {live ? (
           <JoinButton e={e} />
         ) : !start && !answered ? (
-          <Link href={`/gather/${e.id}#times`} className="press flex h-11 items-center gap-2 rounded-full bg-white px-5 text-[15px] font-semibold text-[#1c1b1a] no-underline">
+          <Link href={`/gather/${e.id}#times`} className="press flex h-11 items-center gap-2 rounded-full bg-white px-5 text-body font-semibold text-[#1c1b1a] no-underline">
             <Icon name="calendar" size={18} />
             Pick a time
           </Link>
@@ -124,8 +124,8 @@ export function EventMini({ e, members, viewer }: { e: FamilyEvent; members: Mem
   const start = lockedStart(e);
   return (
     <Link href={`/gather/${e.id}`} className="block h-full rounded-[22px] bg-black/[.04] p-4 text-ink no-underline">
-      <p className="m-0 truncate text-[16px] font-semibold">{e.title}</p>
-      <p className="tnum m-0 mt-1 text-[13px] text-ink-soft">
+      <p className="m-0 truncate text-body font-semibold">{e.title}</p>
+      <p className="tnum m-0 mt-1 text-footnote text-ink-soft">
         {start ? fmtIn(viewer.tz, start, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : `Around ${new Date(`${e.date}T12:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", timeZone: "UTC" })} · picking a time`}
       </p>
       <div className="mt-3">

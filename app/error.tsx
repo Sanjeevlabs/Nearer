@@ -10,8 +10,8 @@ export default function RootError({ error, reset }: { error: Error & { digest?: 
   }, [error]);
   return (
     <div className="pt-16 text-center" role="alert">
-      <h1 className="m-0 text-[26px]">This page didn&rsquo;t load</h1>
-      <p className="m-0 mx-auto mt-2 max-w-[300px] text-[16px] text-ink-soft">Your memories are safe. Check your connection, then try again.</p>
+      <h1 data-display className="m-0 text-display">This page didn&rsquo;t load</h1>
+      <p className="m-0 mx-auto mt-2 max-w-[300px] text-body text-ink-soft">Your memories are safe. Check your connection, then try again.</p>
       <Button className="mx-auto mt-6" onClick={reset}>
         Try again
       </Button>

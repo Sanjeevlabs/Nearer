@@ -64,19 +64,19 @@ export default function AlbumPage() {
           />
         }
       />
-      <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-soft">{EVENT_LABEL[album.event]}</p>
-      <h1 className="m-0 mt-1 text-[28px] leading-tight">{album.title}</h1>
-      <p className="m-0 mt-1 text-[14px] text-ink-soft">
+      <p className="m-0 text-caption font-semibold uppercase tracking-[0.08em] text-ink-soft">{EVENT_LABEL[album.event]}</p>
+      <h1 data-display className="m-0 mt-1 text-display leading-tight">{album.title}</h1>
+      <p className="m-0 mt-1 text-callout text-ink-soft">
         {albumDates(album)} · {photos.length} {photos.length === 1 ? "photo" : "photos"}
       </p>
       {album.madeBy === "muse" && !album.fixedBy && <MuseMark className="mt-1">sorted and titled by Muse from what&rsquo;s in the photos; rename it anytime</MuseMark>}
 
       {renaming && (
         <div className="mt-3 space-y-2 rounded-card bg-surface p-3">
-          <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} className="h-[48px] w-full rounded-[14px] bg-white px-4 text-[16px] font-semibold outline-none" aria-label="Album name" />
+          <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} className="h-[48px] w-full rounded-[14px] bg-white px-4 text-body font-semibold outline-none" aria-label="Album name" />
           <div className="flex flex-wrap gap-1.5">
             {EVENT_KINDS.map((e) => (
-              <button key={e} type="button" aria-pressed={kind === e} onClick={() => setKind(e)} className={cn("press h-9 rounded-full px-3 text-[13px]", kind === e ? "bg-black text-white" : "bg-white")}>
+              <button key={e} type="button" aria-pressed={kind === e} onClick={() => setKind(e)} className={cn("press h-9 rounded-full px-3 text-footnote", kind === e ? "bg-black text-white" : "bg-white")}>
                 {EVENT_LABEL[e]}
               </button>
             ))}
@@ -93,18 +93,18 @@ export default function AlbumPage() {
       )}
       {merging && (
         <div className="mt-3 rounded-card bg-surface p-3">
-          <p className="m-0 mb-2 text-[14px] font-medium">Merge into…</p>
+          <p className="m-0 mb-2 text-callout font-medium">Merge into…</p>
           <ul className="m-0 list-none space-y-1.5 p-0">
             {others.map((o) => (
               <li key={o.id}>
-                <button type="button" onClick={async () => { await postJson("/api/albums", { action: "merge", albumId: album.id, intoAlbumId: o.id }); router.replace(`/lane/album/${o.id}${home === "/rituals" ? "?from=rituals" : ""}`); }} className="press flex h-11 w-full items-center justify-between rounded-[14px] bg-white px-4 text-left text-[15px]">
+                <button type="button" onClick={async () => { await postJson("/api/albums", { action: "merge", albumId: album.id, intoAlbumId: o.id }); router.replace(`/lane/album/${o.id}${home === "/rituals" ? "?from=rituals" : ""}`); }} className="press flex h-11 w-full items-center justify-between rounded-[14px] bg-white px-4 text-left text-body">
                   {o.title}
-                  <span className="text-[13px] text-ink-faint">{albumDates(o)}</span>
+                  <span className="text-footnote text-ink-faint">{albumDates(o)}</span>
                 </button>
               </li>
             ))}
           </ul>
-          <button type="button" onClick={() => setMerging(false)} className="mt-1 h-10 text-[14px] font-medium text-ink-soft">
+          <button type="button" onClick={() => setMerging(false)} className="mt-1 h-10 text-callout font-medium text-ink-soft">
             Cancel
           </button>
         </div>
@@ -115,14 +115,14 @@ export default function AlbumPage() {
         Play
       </Button>
 
-      <ul className="-mx-5 m-0 mt-4 grid list-none grid-cols-3 gap-0.5 p-0">
+      <ul className="-mx-4 m-0 mt-4 grid list-none grid-cols-3 gap-0.5 p-0">
         {photos.map((c) => {
           const src = cardImage(c);
           return (
             <li key={c.id}>
               <button type="button" onClick={() => setPicked(c)} className="relative block aspect-square w-full overflow-hidden bg-surface" aria-label={c.caption || "Photo"}>
                 {src && <Photo src={src} alt="" sizes="160px" />}
-                {album.coverId === c.id && <span className="absolute left-1.5 top-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-[10.5px] font-semibold text-white">Cover</span>}
+                {album.coverId === c.id && <span className="absolute left-1.5 top-1.5 rounded-full bg-black/55 px-1.5 py-0.5 text-caption font-semibold text-white">Cover</span>}
               </button>
             </li>
           );
@@ -133,9 +133,9 @@ export default function AlbumPage() {
         {picked && (
           <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Photo">
             <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPicked(null)} />
-            <m.div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-5 pt-4 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }} initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", stiffness: 340, damping: 36 }}>
+            <m.div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-4 pt-4 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }} initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", stiffness: 340, damping: 36 }}>
               <div className="relative h-[260px] overflow-hidden rounded-[22px] bg-surface">{cardImage(picked) && <Photo src={cardImage(picked) as string} alt={picked.caption} sizes="440px" />}</div>
-              {picked.caption && <p className="m-0 mt-3 text-[15px]">{picked.caption}</p>}
+              {picked.caption && <p className="m-0 mt-3 text-body">{picked.caption}</p>}
               <div className="mt-3 space-y-2">
                 {album.coverId !== picked.id && (
                   <Button variant="secondary" className="w-full" onClick={async () => { await act({ action: "cover", cardId: picked.id }); setPicked(null); }}>
@@ -152,7 +152,7 @@ export default function AlbumPage() {
                       setPicked(null);
                       await reload();
                     }}
-                    className="h-[52px] w-full rounded-full bg-surface px-5 text-[16px] font-semibold"
+                    className="h-12 w-full rounded-full bg-surface px-5 text-body font-semibold"
                   >
                     <option value="">Move to another album…</option>
                     {others.map((o) => (
@@ -200,9 +200,9 @@ function Slideshow({ photos, title, onClose }: { photos: Card[]; title: string; 
           <span key={p.id} className={cn("h-1 flex-1 rounded-full", n <= i ? "bg-white" : "bg-white/30")} />
         ))}
       </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,.7))] px-5 pb-8 pt-16" style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}>
-        <p className="m-0 text-[13px] text-white/70">{title}</p>
-        {c.caption && <p className="m-0 mt-1 text-[17px]">{c.caption}</p>}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,.7))] px-4 pb-8 pt-16" style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}>
+        <p className="m-0 text-footnote text-white/70">{title}</p>
+        {c.caption && <p className="m-0 mt-1 text-headline">{c.caption}</p>}
       </div>
       <button type="button" onClick={onClose} aria-label="Close slideshow" className="press absolute right-4 grid h-11 w-11 place-items-center rounded-full bg-white/15" style={{ top: "calc(24px + env(safe-area-inset-top))" }}>
         <Icon name="close" />

@@ -19,8 +19,8 @@ import { useViewer } from "./viewer";
 // kids asked, and the fridge strip.
 // Nothing here appears for a child, and nothing appears when the family has no children.
 
-export const Label = ({ children }: { children: React.ReactNode }) => <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-soft">{children}</p>;
-export const pill = "press h-11 rounded-full px-5 text-[14px] font-semibold";
+export const Label = ({ children }: { children: React.ReactNode }) => <p className="m-0 text-caption font-semibold uppercase tracking-[0.1em] text-ink-soft">{children}</p>;
+export const pill = "press h-11 rounded-full px-5 text-callout font-semibold";
 
 /** "Tonight's story for Vihaan": one prompt a day; recording or "Not now" both end it. */
 function BedtimePrompt() {
@@ -37,13 +37,13 @@ function BedtimePrompt() {
     setBusy(false);
   };
   return (
-    <section data-ui="courtyard-bedtime" aria-label={`Tonight's story for ${callName(child)}`} className="mt-5 rounded-[26px] bg-surface p-5">
+    <section data-ui="courtyard-bedtime" aria-label={`Tonight's story for ${callName(child)}`} className="mt-5 rounded-[26px] bg-surface p-4">
       <Label>
         <Icon name="moon" size={13} className="mr-1 inline align-[-2px]" />
         Bedtime
       </Label>
-      <p className="voice m-0 mt-2 text-[20px] leading-snug">Tonight&rsquo;s story for {callName(child)}</p>
-      <p className="m-0 mt-1 text-[14.5px] leading-snug text-ink-soft">A few minutes in your voice. It waits on their screen for tonight.</p>
+      <p className="voice m-0 mt-2 text-title leading-snug">Tonight&rsquo;s story for {callName(child)}</p>
+      <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">A few minutes in your voice. It waits on their screen for tonight.</p>
       <div className="mt-3 flex gap-2">
         <button type="button" disabled={busy} onClick={() => openAdd("voice", { kind: "bedtime", forMemberId: child.id }, [child.id])} className={`${pill} bg-black text-white disabled:opacity-40`}>
           Record a story
@@ -66,7 +66,7 @@ function AskedByKids() {
   const asks = q.data?.asks ?? [];
   if (asks.length === 0) return null;
   return (
-    <section data-ui="courtyard-kid-asks" aria-label="Asked by the kids" className="mt-5 rounded-[26px] bg-surface p-5">
+    <section data-ui="courtyard-kid-asks" aria-label="Asked by the kids" className="mt-5 rounded-[26px] bg-surface p-4">
       <Label>Asked by the kids</Label>
       <ul className="m-0 mt-2 list-none space-y-3 p-0">
         {asks.slice(0, 3).map((a) => {
@@ -76,11 +76,11 @@ function AskedByKids() {
           const words = a.text || card?.transcript || card?.caption || "";
           return (
             <li key={a.id}>
-              <p className="m-0 text-[16px] font-semibold">{a.topic === "story" ? `${callName(kid)} would like a story` : `${callName(kid)} asked you something`}</p>
-              {words && <p className="voice m-0 mt-0.5 line-clamp-2 text-[17px] leading-snug text-ink">&ldquo;{words}&rdquo;</p>}
+              <p className="m-0 text-body font-semibold">{a.topic === "story" ? `${callName(kid)} would like a story` : `${callName(kid)} asked you something`}</p>
+              {words && <p className="voice m-0 mt-0.5 line-clamp-2 text-headline leading-snug text-ink">&ldquo;{words}&rdquo;</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {card && (
-                  <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause" : `Play ${callName(kid)}'s question`} className="press flex h-11 items-center gap-2 rounded-full bg-well px-4 text-[14px] font-semibold">
+                  <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause" : `Play ${callName(kid)}'s question`} className="press flex h-11 items-center gap-2 rounded-full bg-well px-4 text-callout font-semibold">
                     <Icon name={playing ? "pause" : "play"} size={14} />
                     {playing ? "Pause" : "Play"}
                   </button>
@@ -88,7 +88,7 @@ function AskedByKids() {
                 <button type="button" onClick={() => openAdd("voice", { kind: "kid_answer", askId: a.id, prompt: words || undefined }, [a.fromMemberId])} className={`${pill} bg-black text-white`}>
                   Answer by voice
                 </button>
-                <span className="text-[12.5px] text-ink-soft">{relativeDay(a.askedAt)}</span>
+                <span className="text-caption text-ink-soft">{relativeDay(a.askedAt)}</span>
               </div>
             </li>
           );
@@ -126,8 +126,8 @@ export function FridgeBoard({ cards, replyTo, grid = false }: { cards: Card[]; r
                   )}
                 </span>
                 <span className="absolute inset-x-1.5 bottom-1 block leading-tight">
-                  <span className="block truncate text-[12px] font-medium text-ink">{callName(author)}</span>
-                  {pinnerName && <span className="block truncate text-[10px] text-ink-soft">Pinned by {pinnerName}</span>}
+                  <span className="block truncate text-caption font-medium text-ink">{callName(author)}</span>
+                  {pinnerName && <span className="block truncate text-caption text-ink-soft">Pinned by {pinnerName}</span>}
                 </span>
               </button>
             </li>
@@ -161,15 +161,15 @@ function Fridge() {
   const latest = members.find((m) => m.id === fridgeKidId(strip[0]));
   const kids = members.filter((m) => isKid(m) && m.status !== "pending");
   return (
-    <section data-ui="courtyard-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-5" style={{ background: "var(--well)" }}>
+    <section data-ui="courtyard-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-4" style={{ background: "var(--well)" }}>
       <div className="flex items-center justify-between gap-3">
         <Label>Fridge</Label>
         <div className="-mr-2 flex items-center">
-          <button type="button" onClick={() => openAdd("photos", { kind: "fridge", ...(kids.length === 1 ? { forMemberId: kids[0].id } : {}) })} className="press flex h-10 items-center gap-1 px-2 text-[14px] font-semibold text-ink">
+          <button type="button" onClick={() => openAdd("photos", { kind: "fridge", ...(kids.length === 1 ? { forMemberId: kids[0].id } : {}) })} className="press flex h-10 items-center gap-1 px-2 text-callout font-semibold text-ink">
             <Icon name="plus" size={14} />
             Add to the fridge
           </button>
-          <Link href="/bond/kids" className="press flex h-10 items-center px-2 text-[14px] font-semibold text-ink no-underline">
+          <Link href="/bond/kids" className="press flex h-10 items-center px-2 text-callout font-semibold text-ink no-underline">
             All &rarr;
           </Link>
         </div>

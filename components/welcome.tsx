@@ -33,18 +33,18 @@ export function Landing({ onDemo }: { onDemo: () => Promise<void> }) {
   useDocumentLang();
   return (
     <EntryFrame>
-      <h1 className="m-0 text-[30px] leading-[1.1] text-white">{t("landing.tagline")}</h1>
-      <p className="voice m-0 mt-2 text-[18px] leading-snug text-white/85">{t("landing.sub")}</p>
+      <h1 data-display className="m-0 text-display leading-[1.1] text-white">{t("landing.tagline")}</h1>
+      <p className="voice m-0 mt-2 text-headline leading-snug text-white/85">{t("landing.sub")}</p>
       <div className="mt-6 grid grid-cols-2 gap-2.5">
-        <Link href="/create" className="press flex h-[52px] items-center justify-center rounded-full bg-white text-[16px] font-semibold text-black no-underline">
+        <Link href="/create" className="press flex h-12 items-center justify-center rounded-full bg-white text-body font-semibold text-black no-underline">
           {t("landing.create")}
         </Link>
-        <Link href="/join" className="press flex h-[52px] items-center justify-center gap-2 rounded-full bg-white/15 text-[16px] font-semibold text-white no-underline">
+        <Link href="/join" className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 text-body font-semibold text-white no-underline">
           <Icon name="key" size={18} />
           {t("landing.join")}
         </Link>
       </div>
-      <div className="mt-3 flex items-center justify-between px-1 text-[15px]">
+      <div className="mt-3 flex items-center justify-between px-1 text-body">
         <Link href="/signin" className="flex h-11 items-center font-medium text-white no-underline">
           {t("landing.signin")}
         </Link>
@@ -75,9 +75,9 @@ export function Welcome({ onEnter }: { onEnter: () => void }) {
   useDocumentLang();
   return (
     <EntryFrame image={home}>
-      <p className="m-0 text-[15px] text-white/80">{t(`welcome.${greetingForHour(hour)}`)}</p>
-      <h1 className="m-0 mt-1 text-[32px] leading-[1.05] text-white">{t("welcome.title", { name: viewer.firstName })}</h1>
-      {signalLine && <p className="voice m-0 mt-3 text-[18px] leading-snug text-white/90">{signalLine}</p>}
+      <p className="m-0 text-body text-white/80">{t(`welcome.${greetingForHour(hour)}`)}</p>
+      <h1 data-display className="m-0 mt-1 text-display leading-[1.05] text-white">{t("welcome.title", { name: viewer.firstName })}</h1>
+      {signalLine && <p className="voice m-0 mt-3 text-headline leading-snug text-white/90">{signalLine}</p>}
       <Button className="mt-6 w-full !bg-white !text-black" onClick={onEnter}>
         {t("welcome.enter")}
       </Button>

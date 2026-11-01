@@ -127,7 +127,7 @@ function WaveScrubber({
           </div>
         )}
       </div>
-      <div className="mt-1 flex justify-between text-[12px] tabular-nums text-white/60" aria-hidden="true">
+      <div className="mt-1 flex justify-between text-caption tabular-nums text-white/60" aria-hidden="true">
         <span>{formatDuration(currentTime)}</span>
         <span>-{formatDuration(Math.max(0, duration - currentTime))}</span>
       </div>
@@ -171,8 +171,8 @@ function SyncedLyrics({ card, duration, currentTime }: { card: Card; duration: n
             aria-current={i === active ? "true" : undefined}
             className={
               i === active
-                ? "voice mb-3 text-[26px] leading-[1.25] text-white transition-all"
-                : "mb-3 text-[17px] leading-snug text-white/45 transition-all"
+                ? "voice mb-3 text-display leading-[1.25] text-white transition-all"
+                : "mb-3 text-headline leading-snug text-white/45 transition-all"
             }
           >
             {l.text}
@@ -252,8 +252,8 @@ export default function FullPlayer({
 
             <div className="mt-6 flex items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="m-0 truncate text-[24px] font-bold leading-tight">{callName(author)}</p>
-                <p className="m-0 mt-0.5 text-[15px] text-white/65">{translated ? "Translated for you" : "Voice note"}</p>
+                <p className="m-0 truncate text-title font-bold leading-tight">{callName(author)}</p>
+                <p className="m-0 mt-0.5 text-body text-white/65">{translated ? "Translated for you" : "Voice note"}</p>
               </div>
             </div>
 

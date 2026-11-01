@@ -68,7 +68,25 @@
   --motion-slow: 320ms;
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
 
+  /* Type scale (Tailwind: text-display ... text-caption). Values are for 360-430pt phones; they grow gently from 768px. */
+  --text-display: clamp(26px, 6.5vw, 34px); /* page and room titles, the window's home name */
+  --text-title: clamp(19px, 4.8vw, 22px); /* card and section titles */
+  --text-headline: 17px; /* list primary lines */
+  --text-body: 15px;
+  --text-callout: 14px;
+  --text-footnote: 13px;
+  --text-caption: 12px; /* the minimum */
+
   --font-body: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-voice: "Literata", Georgia, serif;
   --font-display: var(--font-body);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --text-headline: 18px;
+    --text-body: 16px;
+    --text-callout: 15px;
+    --text-footnote: 13px;
+  }
 }

@@ -271,8 +271,8 @@ function MiniPlayer() {
             <Photo src={cardCover(current, members)} alt="" sizes="96px" />
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[15px] font-semibold">{callName(author)}</span>
-            <span className="block truncate text-[13px] text-ink-soft">{text ?? "…"}</span>
+            <span className="block truncate text-body font-semibold">{callName(author)}</span>
+            <span className="block truncate text-footnote text-ink-soft">{text ?? "…"}</span>
           </span>
         </button>
         <PlayButton playing={isPlaying} onClick={toggle} size={44} tone="dark" label={isPlaying ? "Pause" : "Play"} />
@@ -393,7 +393,7 @@ export function VoiceControls({
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
-          <div className="-mt-1 flex justify-between text-[13px] tabular-nums text-white/75" aria-hidden="true">
+          <div className="-mt-1 flex justify-between text-footnote tabular-nums text-white/75" aria-hidden="true">
             <span>{formatDuration(now)}</span>
             <span>-{formatDuration(Math.max(0, total - now))}</span>
           </div>
@@ -406,7 +406,7 @@ export function VoiceControls({
         <button type="button" onClick={() => jump(-10)} aria-label="Back 10 seconds" className={btn}>
           <SkipIcon dir="back" />
         </button>
-        <button type="button" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"} className="press grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-white text-black shadow-xl">
+        <button type="button" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"} className="press grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white text-black shadow-xl">
           <Icon name={playing ? "pause" : "play"} size={30} />
         </button>
         <button type="button" onClick={() => jump(10)} aria-label="Forward 10 seconds" className={btn}>

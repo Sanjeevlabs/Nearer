@@ -23,16 +23,16 @@ export function GiftsShelf() {
   if (gifts.length === 0) return null;
   return (
     <section aria-label="This week, your gifts" className="rounded-card bg-surface px-4 pb-1.5 pt-4">
-      <h2 className="m-0 text-[17px] font-semibold">This week, your gifts</h2>
+      <h2 className="m-0 text-headline font-semibold">This week, your gifts</h2>
       <ul className="m-0 mt-1 list-none p-0">
         {gifts.map((g) => {
           const by = members.find((m) => m.id === g.byId);
           if (!by) return null;
           return (
             <li key={g.id}>
-              <Link href={g.href} className="press flex min-h-[52px] items-center gap-3 py-1.5 text-ink no-underline">
+              <Link href={g.href} className="press flex min-h-12 items-center gap-3 py-1.5 text-ink no-underline">
                 <Avatar src={memberPhoto(by)} name={callName(by)} size={36} />
-                <span className="min-w-0 flex-1 text-[15px] leading-snug">
+                <span className="min-w-0 flex-1 text-body leading-snug">
                   <span className="font-semibold">{callName(by)}</span> {g.text}
                   <span className="whitespace-nowrap text-ink-faint">{" "}· {dayName(g.at)}</span>
                 </span>

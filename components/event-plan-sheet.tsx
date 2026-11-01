@@ -105,7 +105,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Plan an event">
           <motion.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.div
-            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-5 pt-3 shadow-frost backdrop-blur-xl"
+            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3 shadow-frost backdrop-blur-xl"
             style={{ background: "rgba(246,243,238,.94)", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -114,7 +114,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
           >
             <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
             <div className="mb-3 flex items-center">
-              <h2 className="m-0 flex-1 text-[22px] font-normal">Plan an event</h2>
+              <h2 className="m-0 flex-1 text-title font-normal">Plan an event</h2>
               <button type="button" onClick={onClose} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
                 <Icon name="close" />
               </button>
@@ -122,7 +122,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
 
             {busy ? (
               <div aria-busy="true" aria-label="Drafting the plan" className="space-y-3 pb-4">
-                <p className="voice m-0 text-[17px] text-ink-soft">Drafting the plan, the tasks and the songs…</p>
+                <p className="voice m-0 text-headline text-ink-soft">Drafting the plan, the tasks and the songs…</p>
                 <div className="skeleton h-16 rounded-[20px]" />
                 <div className="skeleton h-16 rounded-[20px]" />
                 <div className="skeleton h-16 rounded-[20px]" />
@@ -130,14 +130,14 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
             ) : (
               <>
                 <Step n={1} label="What">
-                  <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+                  <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
                     {wishable.map((o) => {
                       const on = what?.kind === "occasion" && what.o.key === o.key;
                       return (
                         <button key={o.key} type="button" aria-pressed={on} onClick={() => choose({ kind: "occasion", o })} className={cn("press flex w-[136px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
                           {o.memberId ? <Avatar src={memberPhoto(members.find((m) => m.id === o.memberId))} name={o.label} size={30} /> : <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-black/[.05]")}><Icon name="lamp" size={16} /></span>}
-                          <span className="mt-2 line-clamp-2 text-[14px] font-semibold leading-tight">{o.label}</span>
-                          <span className={cn("mt-0.5 text-[12px]", on ? "text-white/60" : "text-ink-faint")}>{whenLabel(o.days, o.date)}</span>
+                          <span className="mt-2 line-clamp-2 text-callout font-semibold leading-tight">{o.label}</span>
+                          <span className={cn("mt-0.5 text-caption", on ? "text-white/60" : "text-ink-faint")}>{whenLabel(o.days, o.date)}</span>
                         </button>
                       );
                     })}
@@ -146,24 +146,24 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                       return (
                         <button key={x.type} type="button" aria-pressed={on} onClick={() => choose({ kind: "other", type: x.type })} className={cn("press flex w-[112px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
                           <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-black/[.05]")}><Icon name={x.icon} size={16} /></span>
-                          <span className="mt-2 text-[14px] font-semibold leading-tight">{eventTypeLabel(x.type)}</span>
+                          <span className="mt-2 text-callout font-semibold leading-tight">{eventTypeLabel(x.type)}</span>
                         </button>
                       );
                     })}
                   </div>
                   {what?.kind === "other" && (
-                    <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder={OTHER.find((x) => x.type === what.type)?.placeholder} aria-label="Name it" className="mt-2 h-[52px] w-full rounded-full bg-white px-5 text-[16px] outline-none focus:ring-2 focus:ring-black/20" />
+                    <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} placeholder={OTHER.find((x) => x.type === what.type)?.placeholder} aria-label="Name it" className="mt-2 h-12 w-full rounded-full bg-white px-5 text-body outline-none focus:ring-2 focus:ring-black/20" />
                   )}
                 </Step>
 
                 <Step n={2} label="For whom">
-                  <div className="no-scrollbar -mx-5 flex gap-1 overflow-x-auto px-5" role="radiogroup" aria-label="For whom">
-                    <button type="button" role="radio" aria-checked={forId === null} onClick={() => setForId(null)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-[11px] font-semibold", forId === null ? "bg-[#1c1b1a] text-white" : "")}>
+                  <div className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4" role="radiogroup" aria-label="For whom">
+                    <button type="button" role="radio" aria-checked={forId === null} onClick={() => setForId(null)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-caption font-semibold", forId === null ? "bg-[#1c1b1a] text-white" : "")}>
                       <span className={cn("grid h-11 w-11 place-items-center rounded-full", forId === null ? "bg-white/15" : "bg-white")}><Icon name="gather" size={20} /></span>
                       Everyone
                     </button>
                     {members.map((m) => (
-                      <button key={m.id} type="button" role="radio" aria-checked={forId === m.id} onClick={() => setForId(m.id)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-[11px] font-semibold", forId === m.id ? "bg-[#1c1b1a] text-white" : "")}>
+                      <button key={m.id} type="button" role="radio" aria-checked={forId === m.id} onClick={() => setForId(m.id)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-caption font-semibold", forId === m.id ? "bg-[#1c1b1a] text-white" : "")}>
                         <Avatar src={memberPhoto(m)} name={callName(m)} size={44} />
                         <span className="w-full truncate text-center">{m.id === viewer.id ? "You" : callName(m)}</span>
                       </button>
@@ -185,18 +185,18 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                     ))}
                     <label className="relative">
                       <span className="sr-only">Pick a date</span>
-                      <input type="date" value={date} min={isoToday()} onChange={(e) => e.target.value && setDate(e.target.value)} className="h-10 rounded-full bg-white px-4 text-[14px] font-semibold outline-none" />
+                      <input type="date" value={date} min={isoToday()} onChange={(e) => e.target.value && setDate(e.target.value)} className="h-10 rounded-full bg-white px-4 text-callout font-semibold outline-none" />
                     </label>
                   </div>
                 </Step>
 
                 {mayAddExtras && (
-                  <label className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 text-[15px]">
+                  <label className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 text-body">
                     <input type="checkbox" checked={extras} onChange={(e) => setExtras(e.target.checked)} className="h-5 w-5 accent-[#1c1b1a]" />
                     Also plan a cake, flowers or sweets
                   </label>
                 )}
-                {failed && <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">Couldn&rsquo;t draft it just now. Try again.</p>}
+                {failed && <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">Couldn&rsquo;t draft it just now. Try again.</p>}
                 <Button className="mt-6 w-full" disabled={!ready} onClick={() => void submit()}>
                   <Icon name="sparkle" size={18} />
                   Draft the plan
@@ -213,8 +213,8 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
 function Step({ n, label, children }: { n: number; label: string; children: React.ReactNode }) {
   return (
     <div className="mt-4 first:mt-0">
-      <p className="m-0 mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
-        <span className="tnum grid h-5 w-5 place-items-center rounded-full bg-black/[.06] text-[11px]">{n}</span>
+      <p className="m-0 mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.08em] text-ink-faint">
+        <span className="tnum grid h-5 w-5 place-items-center rounded-full bg-black/[.06] text-caption">{n}</span>
         {label}
       </p>
       {children}
@@ -224,7 +224,7 @@ function Step({ n, label, children }: { n: number; label: string; children: Reac
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" aria-pressed={on} onClick={onClick} className={cn("press h-10 rounded-full px-4 text-[14px] font-semibold", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
+    <button type="button" aria-pressed={on} onClick={onClick} className={cn("press h-10 rounded-full px-4 text-callout font-semibold", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
       {children}
     </button>
   );

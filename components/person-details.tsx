@@ -19,7 +19,7 @@ const ROLES: { value: Member["role"]; label: string }[] = [
   { value: "adult", label: "Parent generation" },
   { value: "child", label: "Child" },
 ];
-const field = "h-[52px] w-full appearance-none rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold";
+const field = "h-12 w-full appearance-none rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold";
 
 /** "Delhi · Age 9 · Birthday 9 Nov": the age only when the birth year is known. */
 function aboutLine(person: Member): string {
@@ -80,31 +80,31 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
   };
 
   return (
-    <section aria-label={`About ${callName(person)}`} className="mt-10 rounded-card bg-surface p-5">
+    <section aria-label={`About ${callName(person)}`} className="mt-10 rounded-card bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="m-0 text-[20px]">About {callName(person)}</h2>
-          <p className="m-0 mt-1 text-[14px] text-ink-soft">{aboutLine(person)}</p>
+          <h2 className="m-0 text-title">About {callName(person)}</h2>
+          <p className="m-0 mt-1 text-callout text-ink-soft">{aboutLine(person)}</p>
         </div>
         {manageable && !editing && (
-          <button type="button" onClick={() => setEditing(true)} className="press h-10 rounded-full bg-white px-4 text-[14px] font-semibold">
+          <button type="button" onClick={() => setEditing(true)} className="press h-10 rounded-full bg-white px-4 text-callout font-semibold">
             Edit
           </button>
         )}
       </div>
 
-      {!manageable && hasAccount && <p className="m-0 mt-3 text-[14px] text-ink-soft">{callName(person)} has their own account, so only they can change these details.</p>}
+      {!manageable && hasAccount && <p className="m-0 mt-3 text-callout text-ink-soft">{callName(person)} has their own account, so only they can change these details.</p>}
 
       {!editing && <Connections person={person} members={members} relationships={relationships} canEdit={can(viewer, "tree.edit")} canAdd={can(viewer, "tree.add")} onChanged={async () => { await refreshMembers(); onChanged(); }} />}
 
       {editing && (
         <div className="mt-4 space-y-3">
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">What the family calls them</span>
+            <span className="mb-1.5 block text-footnote font-medium text-ink-soft">What the family calls them</span>
             <input className={cn(field, "bg-white")} value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Generation</span>
+            <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Generation</span>
             <select className={cn(field, "bg-white")} value={role} onChange={(e) => setRole(e.target.value as Member["role"])}>
               {ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -114,7 +114,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
             </select>
           </label>
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Where they live</span>
+            <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Where they live</span>
             <select className={cn(field, "bg-white")} value={tz} onChange={(e) => setTz(e.target.value)}>
               {Array.from(new Set([tz, ...ZONES.map((z) => z.tz)])).map((z) => (
                 <option key={z} value={z}>
@@ -142,7 +142,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
             </select>
             <BirthYearField value={year} onChange={setYear} className="!px-4" />
           </div>
-          <p className="m-0 text-[13px] text-ink-soft">The year is optional. With it, Nearer can show {callName(person)}&rsquo;s age.</p>
+          <p className="m-0 text-footnote text-ink-soft">The year is optional. With it, Nearer can show {callName(person)}&rsquo;s age.</p>
           <div className="flex gap-2 pt-1">
             <Button className="flex-1" disabled={busy || !name.trim()} onClick={() => void save()}>
               {busy ? "Saving…" : "Save"}
@@ -157,12 +157,12 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
       {removable && !editing && (
         <div className="mt-5 border-t border-[var(--line)] pt-4">
           {!confirm ? (
-            <button type="button" onClick={() => setConfirm(true)} className="h-11 text-[15px] font-medium text-[#b42318]">
+            <button type="button" onClick={() => setConfirm(true)} className="h-11 text-body font-medium text-[#b42318]">
               Remove from the family tree
             </button>
           ) : (
             <div role="alertdialog" aria-label="Confirm removal">
-              <p className="m-0 text-[15px]">
+              <p className="m-0 text-body">
                 Remove {callName(person)}? Their place in the tree and anything saved about them goes too. Voice notes and photos others shared stay.
                 {hasAccount ? " They'll lose access to the family." : ""}
               </p>
@@ -179,7 +179,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
         </div>
       )}
       {error && (
-        <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">
+        <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
           {error}
         </p>
       )}
@@ -205,11 +205,11 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
   const others = members.filter((m) => m.id !== person.id);
   return (
     <div className="mt-4">
-      <p className="m-0 mb-1.5 text-[13px] font-medium text-ink-soft">Connections</p>
-      {mine.length === 0 && <p className="m-0 text-[14px] text-ink-soft">Not connected to anyone yet.</p>}
+      <p className="m-0 mb-1.5 text-footnote font-medium text-ink-soft">Connections</p>
+      {mine.length === 0 && <p className="m-0 text-callout text-ink-soft">Not connected to anyone yet.</p>}
       <ul className="m-0 list-none space-y-1 p-0">
         {mine.map((r) => (
-          <li key={r.id} className="flex items-center justify-between gap-2 rounded-[14px] bg-white px-3 py-2 text-[14px]">
+          <li key={r.id} className="flex items-center justify-between gap-2 rounded-[14px] bg-white px-3 py-2 text-callout">
             <span>{line(r)}</span>
             {canEdit && (
               <button
@@ -228,34 +228,34 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
         ))}
       </ul>
       {canAdd && !adding && (
-        <button type="button" onClick={() => setAdding(true)} className="press mt-2 flex h-10 items-center gap-1.5 text-[14px] font-semibold">
+        <button type="button" onClick={() => setAdding(true)} className="press mt-2 flex h-10 items-center gap-1.5 text-callout font-semibold">
           <Icon name="plus" size={16} />
           Link to someone already here
         </button>
       )}
       {adding && (
         <div className="mt-2 rounded-[16px] bg-white p-3">
-          <p className="m-0 mb-1.5 text-[13px] text-ink-soft">{callName(person)} is the</p>
+          <p className="m-0 mb-1.5 text-footnote text-ink-soft">{callName(person)} is the</p>
           <div className="flex flex-wrap gap-1.5">
             {LINK_WORDS.map((w) => (
-              <button key={w} type="button" aria-pressed={word === w} onClick={() => setWord(w)} className={cn("press h-9 rounded-full px-3 text-[14px] font-medium", word === w ? "bg-black text-white" : "bg-surface")}>
+              <button key={w} type="button" aria-pressed={word === w} onClick={() => setWord(w)} className={cn("press h-9 rounded-full px-3 text-callout font-medium", word === w ? "bg-black text-white" : "bg-surface")}>
                 {w}
               </button>
             ))}
           </div>
-          <p className="m-0 mb-1.5 mt-2.5 text-[13px] text-ink-soft">of</p>
+          <p className="m-0 mb-1.5 mt-2.5 text-footnote text-ink-soft">of</p>
           <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3">
             {others.map((m) => (
-              <button key={m.id} type="button" aria-pressed={other === m.id} onClick={() => setOther(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-[14px] font-medium", other === m.id ? "bg-black text-white" : "bg-surface")}>
+              <button key={m.id} type="button" aria-pressed={other === m.id} onClick={() => setOther(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-callout font-medium", other === m.id ? "bg-black text-white" : "bg-surface")}>
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={30} />
                 {callName(m)}
               </button>
             ))}
           </div>
-          {error && <p className="m-0 mt-2 text-[13px] text-[#b42318]">{error}</p>}
+          {error && <p className="m-0 mt-2 text-footnote text-[#b42318]">{error}</p>}
           <div className="mt-3 flex gap-2">
             <Button
-              className="h-11 flex-1 text-[15px]"
+              className="h-11 flex-1 text-body"
               disabled={!other}
               onClick={async () => {
                 setError(null);
@@ -270,7 +270,7 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
             >
               Link
             </Button>
-            <Button variant="secondary" className="h-11 flex-1 text-[15px]" onClick={() => setAdding(false)}>
+            <Button variant="secondary" className="h-11 flex-1 text-body" onClick={() => setAdding(false)}>
               Cancel
             </Button>
           </div>

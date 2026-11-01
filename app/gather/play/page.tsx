@@ -53,11 +53,11 @@ export default function PlayPage() {
       {open.map((k) => {
         const who = members.find((m) => m.id === k.memberId);
         return (
-          <button key={k.id} type="button" onClick={() => router.push(`/call/${k.id}`)} className="press mb-3 flex min-h-[72px] w-full items-center gap-3 rounded-card bg-[#1c1b1a] p-3 pl-4 text-left text-white shadow-card">
+          <button key={k.id} type="button" onClick={() => router.push(`/call/${k.id}`)} className="press mb-3 flex min-h-[56px] w-full items-center gap-3 rounded-card bg-[#1c1b1a] p-3 pl-4 text-left text-white shadow-card">
             <Avatar src={memberPhoto(who)} name={callName(who)} size={44} />
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold">{callName(who)}&rsquo;s door is open</span>
-              <span className="block truncate text-[15px] text-white/75">{k.note || "Come sit with me"}</span>
+              <span className="block text-body font-semibold">{callName(who)}&rsquo;s door is open</span>
+              <span className="block truncate text-body text-white/75">{k.note || "Come sit with me"}</span>
             </span>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#1c1b1a]">
               <Icon name="video" size={20} />
@@ -74,17 +74,17 @@ export default function PlayPage() {
                 <Icon name={a.icon} size={22} strokeWidth={1.8} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[17px] font-semibold leading-tight">{a.title}</span>
-                <span className="mt-1 block text-[15px] leading-snug text-ink-soft">{a.line}</span>
+                <span className="block text-headline font-semibold leading-tight">{a.title}</span>
+                <span className="mt-1 block text-body leading-snug text-ink-soft">{a.line}</span>
               </span>
-              <span className="flex h-11 shrink-0 items-center rounded-full bg-[#1c1b1a] px-4 text-[15px] font-semibold text-white">{busy === a.id ? "…" : "Start"}</span>
+              <span className="flex h-11 shrink-0 items-center rounded-full bg-[#1c1b1a] px-4 text-body font-semibold text-white">{busy === a.id ? "…" : "Start"}</span>
             </button>
           </li>
         ))}
       </ul>
 
       {error && (
-        <p className="m-0 mt-3 text-center text-[15px] text-[#b42318]" role="alert">
+        <p className="m-0 mt-3 text-center text-body text-[#b42318]" role="alert">
           Couldn&rsquo;t open the call. Try again.
         </p>
       )}
@@ -92,7 +92,7 @@ export default function PlayPage() {
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card">
           <Icon name="door" size={19} strokeWidth={1.8} />
         </span>
-        <p className="m-0 text-[15px] leading-snug text-ink-soft">Starting one opens your door for the family to join.</p>
+        <p className="m-0 text-body leading-snug text-ink-soft">Starting one opens your door for the family to join.</p>
       </div>
     </div>
   );

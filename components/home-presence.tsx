@@ -79,11 +79,11 @@ export function StoryDoor({ story }: { story: StoryLite }) {
   const { members } = useViewer();
   const teller = members.find((m) => m.id === story.tellerId);
   return (
-    <Link href="/stories" className="flex h-full min-h-[236px] flex-col justify-end gap-3 rounded-[26px] bg-[#1c1b1a] p-5 text-white no-underline">
+    <Link href="/stories" className="flex h-full min-h-[236px] flex-col justify-end gap-3 rounded-[26px] bg-[#1c1b1a] p-4 text-white no-underline">
       <Avatar src={memberPhoto(teller)} name={callName(teller)} size={44} ring />
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] text-white/70">A story from {callName(teller)}</span>
-        <span className="block truncate text-[16px] font-semibold">{story.title}</span>
+        <span className="block text-footnote text-white/70">A story from {callName(teller)}</span>
+        <span className="block truncate text-body font-semibold">{story.title}</span>
       </span>
       <Icon name="moon" size={20} className="text-white/70" />
     </Link>
@@ -115,13 +115,13 @@ export function VisitCountdown({ visit }: { visit: Project }) {
   const city = hostPeople.find((m) => m.city)?.city;
   const left = visit.tasks.filter((t) => !t.done && t.assignee === viewer.id).length;
   return (
-    <Link href={`/together/${visit.id}`} className="frost flex h-full min-h-[236px] flex-col justify-between rounded-[26px] p-5 text-ink no-underline">
-      <span className="tnum text-[56px] font-light leading-none tracking-[-0.03em]">{days || "Today"}</span>
+    <Link href={`/together/${visit.id}`} className="frost flex h-full min-h-[236px] flex-col justify-between rounded-[26px] p-4 text-ink no-underline">
+      <span data-display className="tnum text-display font-light leading-none tracking-[-0.03em]">{days || "Today"}</span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold">
+        <span className="block text-body font-semibold">
           {coming ? (days ? `day${days > 1 ? "s" : ""} to your visit${city ? ` to ${city}` : ""}` : `You travel${city ? ` to ${city}` : ""} today`) : days ? `day${days > 1 ? "s" : ""} until ${callName(who)} arrives` : `${callName(who)} arrives today`}
         </span>
-        <span className="block truncate text-[13px] text-ink-soft">
+        <span className="block truncate text-footnote text-ink-soft">
           {visit.title}
           {coming && hosts ? ` · staying with ${hosts}` : ""}
           {left ? ` · ${left} thing${left > 1 ? "s" : ""} on your list` : ""}
@@ -137,13 +137,13 @@ export function KnockBanner({ knock, member }: { knock: Knock; member: Member | 
     <div className="flex items-center gap-3 rounded-card bg-[#fff6e6] p-3.5">
       <Avatar src={memberPhoto(member)} name={callName(member)} size={44} ring />
       <div className="min-w-0 flex-1">
-        <p className="m-0 flex items-center gap-1.5 text-[15px] font-semibold">
+        <p className="m-0 flex items-center gap-1.5 text-body font-semibold">
           <LiveDot />
           {callName(member)}&rsquo;s door is open
         </p>
-        <p className="voice m-0 truncate text-[15px] text-[#8a4b00]">{knock.note || "Come sit with me?"}</p>
+        <p className="voice m-0 truncate text-body text-[#8a4b00]">{knock.note || "Come sit with me?"}</p>
       </div>
-      <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-black px-4 text-[14px] font-semibold text-white no-underline">
+      <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-black px-4 text-callout font-semibold text-white no-underline">
         Come sit
       </a>
     </div>
@@ -178,8 +178,8 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
           ))}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="m-0 truncate text-[16px] font-semibold">{quiet.length ? `A quiet day for ${quiet.map((r) => callName(r.parent)).join(" & ")} so far` : `${name}'s ${dayPartIn(home.tz)}`}</p>
-          <p className="m-0 truncate text-[13px] text-ink-soft">
+          <p className="m-0 truncate text-body font-semibold">{quiet.length ? `A quiet day for ${quiet.map((r) => callName(r.parent)).join(" & ")} so far` : `${name}'s ${dayPartIn(home.tz)}`}</p>
+          <p className="m-0 truncate text-footnote text-ink-soft">
             {timeIn(home.tz)} in {placeFromTz(home.tz)}
           </p>
         </div>
@@ -187,14 +187,14 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
       </Link>
       <ul className="m-0 mt-2.5 list-none space-y-1.5 p-0 pl-1">
         {rows.map(({ parent, shared, visit, fresh }) => (
-          <li key={parent.id} className="flex items-baseline gap-2 text-[14px]">
+          <li key={parent.id} className="flex items-baseline gap-2 text-callout">
             <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rounded-full bg-marigold" aria-hidden="true" />
             <span className="min-w-0 truncate">
               <span className="font-semibold">{callName(parent)}</span>{" "}
               {fresh && shared ? (
                 <>
                   {MOMENT_LABEL[shared.moment].line}
-                  {shared.note ? <span className="voice text-[15px] text-ink-soft"> · {shared.note}</span> : null}
+                  {shared.note ? <span className="voice text-body text-ink-soft"> · {shared.note}</span> : null}
                   <span className="text-ink-faint"> · {ago(shared.at)}</span>
                 </>
               ) : visit && Date.now() - Date.parse(visit.at) < 24 * 3_600_000 ? (
@@ -210,7 +210,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
           </li>
         ))}
         {pets.length > 0 && (
-          <li className="flex items-baseline gap-2 text-[14px] text-ink-soft">
+          <li className="flex items-baseline gap-2 text-callout text-ink-soft">
             <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rounded-full bg-black/20" aria-hidden="true" />
             {pets.map((p) => p.name).join(" & ")} {pets.length > 1 ? "are" : "is"} with them
           </li>
@@ -218,7 +218,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
       </ul>
       {quiet.length > 0 && (
         <div className="mt-3 flex gap-2">
-          <button type="button" onClick={() => openAdd("voice", null, home.members.map((m) => m.id))} className="press h-9 rounded-full bg-black px-3.5 text-[13px] font-semibold text-white">
+          <button type="button" onClick={() => openAdd("voice", null, home.members.map((m) => m.id))} className="press h-9 rounded-full bg-black px-3.5 text-footnote font-semibold text-white">
             Send {name} a voice note
           </button>
         </div>
@@ -243,11 +243,11 @@ export function ShareYourDay() {
   };
   return (
     <section aria-label="Share your day" className="mt-5">
-      <p className="m-0 text-[15px] font-semibold">{sent ? `${names} will see: ${MOMENT_LABEL[sent].label}` : `Let ${names} feel your day`}</p>
-      <p className="m-0 text-[13px] text-ink-soft">{today.length ? `Shared today: ${today.map((p) => MOMENT_LABEL[p.moment].label).join(", ")}` : "The ordinary day is what they miss most."}</p>
-      <div className="no-scrollbar -mx-5 mt-2.5 flex gap-2 overflow-x-auto px-5">
+      <p className="m-0 text-body font-semibold">{sent ? `${names} will see: ${MOMENT_LABEL[sent].label}` : `Let ${names} feel your day`}</p>
+      <p className="m-0 text-footnote text-ink-soft">{today.length ? `Shared today: ${today.map((p) => MOMENT_LABEL[p.moment].label).join(", ")}` : "The ordinary day is what they miss most."}</p>
+      <div className="no-scrollbar -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4">
         {shareableFor(viewer.role).map((mo) => (
-          <button key={mo} type="button" onClick={() => void share(mo)} className={cn("press h-10 shrink-0 rounded-full px-4 text-[14px] font-semibold", sent === mo ? "bg-ink text-white" : "bg-surface")}>
+          <button key={mo} type="button" onClick={() => void share(mo)} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-semibold", sent === mo ? "bg-ink text-white" : "bg-surface")}>
             {MOMENT_LABEL[mo].label}
           </button>
         ))}
@@ -279,8 +279,8 @@ export function MyQuestions() {
         const by = q.askedBy ? members.find((m) => m.id === q.askedBy) : undefined;
         return (
           <section key={q.id} aria-label="A question for you" className="rounded-card bg-[#fff6e6] p-4">
-            <p className="m-0 text-[13px] font-medium text-[#8a4b00]">{by ? `${callName(by)} asked you` : "This week's question"}</p>
-            <p className="voice m-0 mt-1 text-[20px] leading-snug">
+            <p className="m-0 text-footnote font-medium text-[#8a4b00]">{by ? `${callName(by)} asked you` : "This week's question"}</p>
+            <p className="voice m-0 mt-1 text-title leading-snug">
               “<QuestionLine q={q} />”
             </p>
             <div className="mt-3 flex items-center justify-between gap-3">
@@ -294,7 +294,7 @@ export function MyQuestions() {
                       ? openAdd("voice", { kind: "story", questionId: q.id, prompt: q.text })
                       : openAdd("voice", { kind: "answer", questionId: q.id, prompt: q.text })
                 }
-                className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-black px-4 text-[14px] font-semibold text-white"
+                className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-black px-4 text-callout font-semibold text-white"
               >
                 <Icon name="mic" size={16} />
                 {q.topic === "story" && q.askedBy ? "Tell it" : q.topic === "recipe" && q.askedBy ? "Teach it" : q.topic === "blessing" ? "Bless" : "Answer"}
@@ -317,13 +317,13 @@ export function MyNeeds() {
     <section aria-label="Help" className="rounded-card bg-surface p-4">
       {mine.map((n) => (
         <Link key={n.id} href="/care" className="mb-3 block text-ink no-underline">
-          <p className="m-0 text-[15px] font-semibold">
+          <p className="m-0 text-body font-semibold">
             <Translated text={n.title} />
           </p>
-          <p className={cn("m-0 text-[14px]", n.noteForParent ? "voice text-[16px]" : "text-ink-soft")}>{n.noteForParent || "Waiting for someone to pick it up."}</p>
+          <p className={cn("m-0 text-callout", n.noteForParent ? "voice text-body" : "text-ink-soft")}>{n.noteForParent || "Waiting for someone to pick it up."}</p>
         </Link>
       ))}
-      <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: viewer.id })} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-[15px] font-semibold text-white">
+      <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: viewer.id })} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white">
         <Icon name="mic" size={18} />
         Ask the family for help
       </button>

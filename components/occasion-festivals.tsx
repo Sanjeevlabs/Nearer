@@ -96,7 +96,7 @@ export function TraditionsSheet({
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="traditions-title">
           <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <m.div
-            className="frost relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-5 pt-3"
+            className="frost relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3"
             style={{ maxHeight: "86vh", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -104,10 +104,10 @@ export function TraditionsSheet({
             transition={{ type: "spring", stiffness: 420, damping: 38 }}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <h2 id="traditions-title" className="m-0 text-[22px] leading-tight">
+            <h2 id="traditions-title" className="m-0 text-title leading-tight">
               Our traditions
             </h2>
-            <p className="m-0 mt-1.5 text-[14px] text-ink-soft">Which ones does your family celebrate? Used only to show your festivals; change it anytime.</p>
+            <p className="m-0 mt-1.5 text-callout text-ink-soft">Which ones does your family celebrate? Used only to show your festivals; change it anytime.</p>
 
             <div className="mt-4 grid grid-cols-2 gap-2" role="group" aria-label="Traditions">
               {choices.map((c) => {
@@ -120,7 +120,7 @@ export function TraditionsSheet({
                     aria-checked={on}
                     disabled={!canEdit}
                     onClick={() => toggleTradition(c)}
-                    className={cn("press flex h-12 items-center gap-2 rounded-[16px] px-4 text-left text-[16px] font-semibold disabled:opacity-60", on ? "bg-ink text-white" : "bg-white text-ink")}
+                    className={cn("press flex h-12 items-center gap-2 rounded-[16px] px-4 text-left text-body font-semibold disabled:opacity-60", on ? "bg-ink text-white" : "bg-white text-ink")}
                   >
                     <span className="min-w-0 flex-1">{c.label}</span>
                     <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-full", on ? "bg-white text-black" : "ring-1 ring-black/20")} aria-hidden="true">
@@ -131,14 +131,14 @@ export function TraditionsSheet({
               })}
             </div>
 
-            <p className="m-0 mt-4 text-[13px] text-ink-soft">
+            <p className="m-0 mt-4 text-footnote text-ink-soft">
               Birthdays and national days are always on.{" "}
               {shown.filter((h) => h.kind === "festival").length > 0
                 ? `${shown.filter((h) => h.kind === "festival").length} festivals in the coming year.`
                 : "No festivals yet."}
             </p>
 
-            <button type="button" onClick={() => setByHand((b) => !b)} aria-expanded={byHand} className="press mt-2 flex h-11 w-full items-center gap-2 rounded-[14px] bg-white/70 px-4 text-left text-[14px] font-semibold">
+            <button type="button" onClick={() => setByHand((b) => !b)} aria-expanded={byHand} className="press mt-2 flex h-11 w-full items-center gap-2 rounded-[14px] bg-white/70 px-4 text-left text-callout font-semibold">
               <Icon name="calendar" size={18} className="text-ink-soft" />
               <span className="flex-1">Choose festivals one by one</span>
               <Icon name={byHand ? "up" : "down"} size={18} className="text-ink-faint" />
@@ -158,8 +158,8 @@ export function TraditionsSheet({
                         className="press flex min-h-[48px] w-full items-center gap-3 rounded-[14px] bg-white px-4 py-1.5 text-left disabled:opacity-60"
                       >
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[15px] font-semibold">{h.title}</span>
-                          <span className="block text-[12.5px] text-ink-soft">{whenLabel(daysBetween(today, h.date), h.date)}</span>
+                          <span className="block text-body font-semibold">{h.title}</span>
+                          <span className="block text-caption text-ink-soft">{whenLabel(daysBetween(today, h.date), h.date)}</span>
                         </span>
                         <span className={cn("relative h-6 w-10 shrink-0 rounded-full transition-colors", on ? "bg-ink" : "bg-black/15")} aria-hidden="true">
                           <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-[left]", on ? "left-[18px]" : "left-0.5")} />
@@ -168,12 +168,12 @@ export function TraditionsSheet({
                     </li>
                   );
                 })}
-                {nextUp.length === 0 && <li className="py-3 text-center text-[14px] text-ink-soft">No dates found for the coming year.</li>}
+                {nextUp.length === 0 && <li className="py-3 text-center text-callout text-ink-soft">No dates found for the coming year.</li>}
               </ul>
             )}
 
-            <p className="m-0 mt-3 text-[12px] text-ink-faint">{sourceLine}</p>
-            {failed && <p className="m-0 mt-3 text-[14px] text-[#b42318]">Couldn&rsquo;t save. Try again.</p>}
+            <p className="m-0 mt-3 text-caption text-ink-faint">{sourceLine}</p>
+            {failed && <p className="m-0 mt-3 text-callout text-[#b42318]">Couldn&rsquo;t save. Try again.</p>}
             {canEdit ? (
               <Button
                 className="mt-4 w-full"
@@ -190,7 +190,7 @@ export function TraditionsSheet({
                 {busy ? "Saving…" : "Save"}
               </Button>
             ) : (
-              <p className="m-0 mt-4 text-center text-[13px] text-ink-faint">A grown-up in the family can change this.</p>
+              <p className="m-0 mt-4 text-center text-footnote text-ink-faint">A grown-up in the family can change this.</p>
             )}
           </m.div>
         </div>

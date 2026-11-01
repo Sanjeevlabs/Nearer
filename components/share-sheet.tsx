@@ -18,8 +18,8 @@ export function ShareSheet({ open, onClose, target, sticker }: { open: boolean; 
   return (
     <>
       <BottomSheet open={open && !making} onClose={onClose} label={target.title}>
-        <p className="m-0 text-[20px] font-semibold">{target.title}</p>
-        {target.note && <p className="m-0 mb-3 mt-1 text-[14px] text-ink-soft">{target.note}</p>}
+        <p className="m-0 text-title font-semibold">{target.title}</p>
+        {target.note && <p className="m-0 mb-3 mt-1 text-callout text-ink-soft">{target.note}</p>}
         {!target.note && <div className="h-3" />}
         <SharePanel target={target} lead={sticker ? { label: "Make a sticker", icon: "sticker", onClick: () => setMaking(true) } : undefined} />
       </BottomSheet>
@@ -79,7 +79,7 @@ export function ShareButton({
           setBuilt({ t: target(), s: sticker?.() ?? null });
           setOpen(true);
         }}
-        className={cn("press flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full text-[15px] font-semibold", iconOnly ? "w-11" : "px-4", tones[tone], className)}
+        className={cn("press flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full text-body font-semibold", iconOnly ? "w-11" : "px-4", tones[tone], className)}
       >
         <Icon name="share" size={iconOnly ? 18 : 16} />
         {!iconOnly && label}

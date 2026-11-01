@@ -14,8 +14,8 @@ export const WINDOW_SIZES = "(min-width: 480px) 480px, 100vw";
  */
 export const DEFAULT_IMAGE = "/demo/home-courtyard.jpg";
 
-/** Height of the photo: about half the screen, never under 340px. */
-export const WINDOW_PHOTO_HEIGHT = "max(340px, 52vh)";
+/** Height of the photo: under half the screen (44vh, 260-400px), so the name and the lamp row fit above the fold on a phone. */
+export const WINDOW_PHOTO_HEIGHT = "clamp(260px, 44vh, 400px)";
 
 const KEY = "aangan:hero";
 

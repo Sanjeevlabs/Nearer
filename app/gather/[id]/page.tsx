@@ -53,15 +53,15 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
     return (
       <div>
         <RoomHeader title="Celebration" />
-        <div className="rounded-[28px] bg-black/[.04] p-5" role={failed ? "alert" : undefined}>
-          <p className="m-0 text-[17px] font-semibold">{failed ? "Couldn't load this celebration." : "This celebration has ended or was cancelled."}</p>
+        <div className="rounded-[28px] bg-black/[.04] p-4" role={failed ? "alert" : undefined}>
+          <p className="m-0 text-headline font-semibold">{failed ? "Couldn't load this celebration." : "This celebration has ended or was cancelled."}</p>
           <div className="mt-3 flex gap-2">
             {failed && (
               <Button variant="secondary" className="!bg-white" onClick={() => void reload()}>
                 Try again
               </Button>
             )}
-            <Link href="/gather" className="press flex h-[52px] items-center rounded-full px-5 text-[16px] font-semibold text-ink no-underline">
+            <Link href="/gather" className="press flex h-12 items-center rounded-full px-5 text-body font-semibold text-ink no-underline">
               All celebrations
             </Link>
           </div>
@@ -111,19 +111,19 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
       <RoomHeader title={e.title} subtitle={`Set up by ${callName(host)}`} action={actions.length ? <ActionMenu actions={actions} /> : undefined} />
 
       {start ? (
-        <section className="relative overflow-hidden rounded-[28px] p-5 text-white" style={{ background: "#1c1b1a" }} aria-label="When">
-          <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/55">{live ? "Live now" : startsInLabel(start)}</p>
+        <section className="relative overflow-hidden rounded-[28px] p-4 text-white" style={{ background: "#1c1b1a" }} aria-label="When">
+          <p className="m-0 text-caption font-semibold uppercase tracking-[0.08em] text-white/55">{live ? "Live now" : startsInLabel(start)}</p>
           <div className="mt-2">
             <EventTimes at={start} members={members} viewer={viewer} ids={participants(e)} tone="dark" />
           </div>
           <div className="mt-4 flex items-center justify-between gap-3">
             <AvatarStack ids={comingIds(e)} members={members} tone="dark" />
-            {live ? <JoinButton e={e} /> : <span className="flex items-center gap-1.5 text-[13px] text-white/60"><Icon name="video" size={16} />Room opens 15 min before</span>}
+            {live ? <JoinButton e={e} /> : <span className="flex items-center gap-1.5 text-footnote text-white/60"><Icon name="video" size={16} />Room opens 15 min before</span>}
           </div>
         </section>
       ) : invited ? (
         <section aria-label="Pick a time">
-          <p className="m-0 mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-faint">Which times work for you?</p>
+          <p className="m-0 mb-2 text-caption font-semibold uppercase tracking-[0.08em] text-ink-faint">Which times work for you?</p>
           <AvailabilityPicker e={e} members={members} viewer={viewer} onChange={(next) => setLocal(next)} />
         </section>
       ) : null}

@@ -22,11 +22,11 @@ function PublicLinkLine({ recipeId }: { recipeId: string }) {
   const shares = useJson<{ shares: ShareInfo[] }>("/api/share");
   const [stopped, setStopped] = useState(false);
   const existing = shares.data?.shares.find((s) => s.refId === recipeId);
-  if (stopped) return <p className="m-0 mt-3 text-center text-[14px] text-[#3d6b2a]">Stopped sharing. The link no longer works.</p>;
-  if (!existing) return <p className="m-0 mt-3 text-center text-[12.5px] text-ink-faint">Share or Copy link makes a public link to a frozen copy of this recipe. You can stop it any time.</p>;
+  if (stopped) return <p className="m-0 mt-3 text-center text-callout text-[#3d6b2a]">Stopped sharing. The link no longer works.</p>;
+  if (!existing) return <p className="m-0 mt-3 text-center text-caption text-ink-faint">Share or Copy link makes a public link to a frozen copy of this recipe. You can stop it any time.</p>;
   return (
     <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
-      <span className="text-[13px] text-ink-soft">Shared publicly · opened {existing.views}×</span>
+      <span className="text-footnote text-ink-soft">Shared publicly · opened {existing.views}×</span>
       <button
         type="button"
         onClick={async () => {
@@ -34,7 +34,7 @@ function PublicLinkLine({ recipeId }: { recipeId: string }) {
           await shares.reload();
           setStopped(true);
         }}
-        className="h-10 text-[14px] font-semibold text-[#a32418]"
+        className="h-10 text-callout font-semibold text-[#a32418]"
       >
         Stop sharing
       </button>

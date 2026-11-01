@@ -64,8 +64,8 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
       }}
     >
       <div className="flex items-center gap-4">
-        <button type="button" onClick={() => input.current?.click()} disabled={busy} className="press relative h-[76px] w-[76px] shrink-0 rounded-full" aria-label="Change your photo">
-          <Avatar src={src} name={form.draft.firstName || viewer.firstName} size={76} ring />
+        <button type="button" onClick={() => input.current?.click()} disabled={busy} className="press relative h-16 w-16 shrink-0 rounded-full" aria-label="Change your photo">
+          <Avatar src={src} name={form.draft.firstName || viewer.firstName} size={64} ring />
           <span className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full bg-black text-white">
             <Icon name="camera" size={14} />
           </span>
@@ -77,10 +77,10 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
               value={form.draft.firstName}
               onChange={(e) => form.set({ firstName: e.target.value })}
               maxLength={40}
-              className="h-11 w-full rounded-full bg-surface px-4 text-[20px] font-bold outline-none focus:ring-2 focus:ring-marigold"
+              className="h-11 w-full rounded-full bg-surface px-4 text-title font-bold outline-none focus:ring-2 focus:ring-marigold"
             />
           </label>
-          <p className="m-0 mt-1 text-[14px] text-ink-soft">The family calls you {viewer.displayName}</p>
+          <p className="m-0 mt-1 text-callout text-ink-soft">The family calls you {viewer.displayName}</p>
         </div>
         <input
           ref={input}
@@ -96,9 +96,9 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
         />
       </div>
       <div className="mt-4" data-ui="settings-birthday">
-        <p className="m-0 mb-1.5 text-[13px] font-medium text-ink-soft">Your birthday (optional)</p>
+        <p className="m-0 mb-1.5 text-footnote font-medium text-ink-soft">Your birthday (optional)</p>
         <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-2">
-          <select aria-label="Birthday month" value={form.draft.birthMonth} onChange={(e) => form.set({ birthMonth: e.target.value })} className="h-[52px] w-full appearance-none rounded-full bg-surface px-4 text-[16px] outline-none focus:ring-2 focus:ring-marigold">
+          <select aria-label="Birthday month" value={form.draft.birthMonth} onChange={(e) => form.set({ birthMonth: e.target.value })} className="h-12 w-full appearance-none rounded-full bg-surface px-4 text-body outline-none focus:ring-2 focus:ring-marigold">
             <option value="">Month</option>
             {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
               <option key={m} value={String(i + 1).padStart(2, "0")}>
@@ -106,7 +106,7 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
               </option>
             ))}
           </select>
-          <select aria-label="Birthday day" value={form.draft.birthDay} onChange={(e) => form.set({ birthDay: e.target.value })} className="h-[52px] w-full appearance-none rounded-full bg-surface px-4 text-[16px] outline-none focus:ring-2 focus:ring-marigold">
+          <select aria-label="Birthday day" value={form.draft.birthDay} onChange={(e) => form.set({ birthDay: e.target.value })} className="h-12 w-full appearance-none rounded-full bg-surface px-4 text-body outline-none focus:ring-2 focus:ring-marigold">
             <option value="">Day</option>
             {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
               <option key={d} value={d}>
@@ -116,11 +116,11 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
           </select>
           <BirthYearField value={form.draft.birthYear} onChange={(v) => form.set({ birthYear: v })} className="!bg-surface !px-4" />
         </div>
-        <p className="m-0 mt-1.5 text-[13px] text-ink-soft">The year is optional. With it, Nearer can show your age.</p>
+        <p className="m-0 mt-1.5 text-footnote text-ink-soft">The year is optional. With it, Nearer can show your age.</p>
       </div>
-      {busy && <p className="m-0 mt-2 text-[13px] text-ink-soft">Adding your photo…</p>}
+      {busy && <p className="m-0 mt-2 text-footnote text-ink-soft">Adding your photo…</p>}
       {pickError && (
-        <p role="alert" className="m-0 mt-2 text-[13px] text-[#c2343a]">
+        <p role="alert" className="m-0 mt-2 text-footnote text-[#c2343a]">
           {pickError}
         </p>
       )}
@@ -141,10 +141,10 @@ function LanguagePicker({ value, onPick }: { value: SupportedLang; onPick: (code
     <div>
       <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="press flex min-h-[44px] w-full items-center justify-between rounded-[20px] bg-surface px-4 py-3.5 text-start">
         <span>
-          <span className="block text-[17px] font-semibold">{current.native}</span>
-          <span className="block text-[14px] text-ink-soft">{current.name}</span>
+          <span className="block text-headline font-semibold">{current.native}</span>
+          <span className="block text-callout text-ink-soft">{current.name}</span>
         </span>
-        <span className="text-[15px] font-medium text-ink-soft">{open ? t("settings.done") : t("settings.change")}</span>
+        <span className="text-body font-medium text-ink-soft">{open ? t("settings.done") : t("settings.change")}</span>
       </button>
       {open && (
         <div className="mt-2 rounded-[20px] bg-surface p-2">
@@ -153,7 +153,7 @@ function LanguagePicker({ value, onPick }: { value: SupportedLang; onPick: (code
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("settings.search")}
             aria-label={t("settings.search")}
-            className="h-11 w-full rounded-full bg-white px-4 text-[16px] outline-none focus:ring-2 focus:ring-marigold"
+            className="h-11 w-full rounded-full bg-white px-4 text-body outline-none focus:ring-2 focus:ring-marigold"
           />
           <ul role="radiogroup" aria-label={t("settings.language")} className="m-0 mt-2 max-h-[320px] list-none overflow-y-auto p-0">
             {list.map((l) => (
@@ -169,17 +169,17 @@ function LanguagePicker({ value, onPick }: { value: SupportedLang; onPick: (code
                   }}
                   className={cn("press flex h-12 w-full items-center justify-between rounded-[14px] px-3 text-start", l.code === value && "bg-black text-white")}
                 >
-                  <span className="text-[16px] font-medium" dir={"rtl" in l && l.rtl ? "rtl" : undefined}>
+                  <span className="text-body font-medium" dir={"rtl" in l && l.rtl ? "rtl" : undefined}>
                     {l.native}
                   </span>
-                  <span className={cn("flex items-center gap-1.5 text-[13px]", l.code === value ? "text-white/70" : "text-ink-soft")}>
+                  <span className={cn("flex items-center gap-1.5 text-footnote", l.code === value ? "text-white/70" : "text-ink-soft")}>
                     {hasUiCatalogue(l.code) && <Icon name="check" size={13} />}
                     {l.name}
                   </span>
                 </button>
               </li>
             ))}
-            {list.length === 0 && <li className="px-3 py-3 text-[15px] text-ink-soft">{t("settings.noMatch")}</li>}
+            {list.length === 0 && <li className="px-3 py-3 text-body text-ink-soft">{t("settings.noMatch")}</li>}
           </ul>
         </div>
       )}
@@ -212,8 +212,8 @@ export function LanguageSection({ onMessage }: { onMessage: (m: string) => void 
       }}
     >
       <LanguagePicker value={form.draft.lang} onPick={(lang) => form.set({ lang })} />
-      <p className="m-0 mt-2 text-[13px] text-ink-faint">{t("settings.languageNote")}</p>
-      <p className="m-0 mt-1.5 flex items-center gap-1.5 text-[13px] text-ink-faint">
+      <p className="m-0 mt-2 text-footnote text-ink-faint">{t("settings.languageNote")}</p>
+      <p className="m-0 mt-1.5 flex items-center gap-1.5 text-footnote text-ink-faint">
         <Icon name="check" size={13} />
         {t("settings.appSpeaks")}
       </p>
@@ -240,8 +240,8 @@ export function ReadingSection({ onMessage }: { onMessage: (m: string) => void }
     >
       <label className="flex min-h-[44px] items-center justify-between gap-3 rounded-[20px] bg-surface px-4 py-3.5">
         <span>
-          <span className="block text-[17px] font-semibold">Larger text</span>
-          <span className="block text-[14px] text-ink-soft">Bigger words and buttons, easier on the eyes</span>
+          <span className="block text-headline font-semibold">Larger text</span>
+          <span className="block text-callout text-ink-soft">Bigger words and buttons, easier on the eyes</span>
         </span>
         <input type="checkbox" className="h-6 w-6 shrink-0 accent-black" checked={form.draft.large} onChange={(e) => form.set({ large: e.target.checked })} />
       </label>
@@ -272,17 +272,17 @@ function NudgeForm({ initial, hasEmail, reload, onMessage }: { initial: NudgeDra
     >
       <label className="flex min-h-[44px] items-center justify-between gap-3 rounded-[22px] bg-surface px-4 py-4">
         <span>
-          <span className="block text-[16px] font-medium">Mail me a weekly letter</span>
-          <span className="block text-[13px] text-ink-soft">{!hasEmail ? "Add an email to sign in first, then this can reach you." : "One morning email, at 8 where you are."}</span>
+          <span className="block text-body font-medium">Mail me a weekly letter</span>
+          <span className="block text-footnote text-ink-soft">{!hasEmail ? "Add an email to sign in first, then this can reach you." : "One morning email, at 8 where you are."}</span>
         </span>
         <input type="checkbox" className="h-6 w-6 shrink-0 accent-black" checked={d.email} onChange={(e) => form.set({ email: e.target.checked })} />
       </label>
       <div className="mt-3 rounded-[22px] bg-surface px-4 py-4">
-        <span className="block text-[16px] font-medium">Nudges</span>
-        <span className="block text-[13px] text-ink-soft">Small notes like &ldquo;Maa heard your voice note&rdquo;. Never more than three a week.</span>
+        <span className="block text-body font-medium">Nudges</span>
+        <span className="block text-footnote text-ink-soft">Small notes like &ldquo;Maa heard your voice note&rdquo;. Never more than three a week.</span>
         <div role="group" aria-label="Nudges" className="mt-3 grid grid-cols-3 gap-1 rounded-full bg-black/[.05] p-1">
           {NUDGE_CHOICES.map(([label, n]) => (
-            <button key={label} type="button" aria-pressed={d.maxPerWeek === n} onClick={() => form.set({ maxPerWeek: n })} className={cn("press h-11 rounded-full text-[15px] font-semibold", d.maxPerWeek === n ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
+            <button key={label} type="button" aria-pressed={d.maxPerWeek === n} onClick={() => form.set({ maxPerWeek: n })} className={cn("press h-11 rounded-full text-body font-semibold", d.maxPerWeek === n ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
               {label}
             </button>
           ))}
@@ -334,11 +334,11 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
       }}
     >
       <label className="block">
-        <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Time zone, so family sees your local time</span>
+        <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Time zone, so family sees your local time</span>
         <select
           value={form.draft.tz}
           onChange={(e) => form.set({ tz: e.target.value })}
-          className="h-[52px] w-full appearance-none rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold"
+          className="h-12 w-full appearance-none rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold"
         >
           {Array.from(new Set([viewer.tz, form.draft.tz, ...ZONES.map((z) => z.tz)])).map((z) => (
             <option key={z} value={z}>
@@ -348,20 +348,20 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
         </select>
       </label>
       <label className="mt-4 block">
-        <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">Your city, so the other home sees your sky and weather</span>
+        <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Your city, so the other home sees your sky and weather</span>
         <input
           value={form.draft.city}
           onChange={(e) => form.set({ city: e.target.value })}
           placeholder="Bengaluru"
           maxLength={60}
-          className="h-[52px] w-full rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold"
+          className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold"
         />
       </label>
       <div className="relative mt-4 h-[160px] overflow-hidden rounded-card bg-surface">
         <Photo src={home} alt="Your home photo" sizes="440px" />
         <div className="glass absolute inset-x-2.5 bottom-2.5 flex items-center justify-between rounded-[18px] py-1.5 pl-4 pr-1.5">
-          <span className="text-[15px] font-semibold">{form.draft.home ? "A new photo, not saved yet" : "The home you miss"}</span>
-          <button type="button" disabled={busy} onClick={() => input.current?.click()} className="press h-11 rounded-full bg-white px-4 text-[14px] font-semibold text-black">
+          <span className="text-body font-semibold">{form.draft.home ? "A new photo, not saved yet" : "The home you miss"}</span>
+          <button type="button" disabled={busy} onClick={() => input.current?.click()} className="press h-11 rounded-full bg-white px-4 text-callout font-semibold text-black">
             {busy ? "Adding…" : "Change"}
           </button>
         </div>
@@ -379,7 +379,7 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
         />
       </div>
       {pickError && (
-        <p role="alert" className="m-0 mt-2 text-[13px] text-[#c2343a]">
+        <p role="alert" className="m-0 mt-2 text-footnote text-[#c2343a]">
           {pickError}
         </p>
       )}
@@ -407,8 +407,8 @@ function LampForm({ initial, reload, onMessage }: { initial: LampDraft; reload: 
     >
       <label className="mt-4 flex min-h-[44px] items-center justify-between gap-3 rounded-[22px] bg-surface px-4 py-4">
         <span>
-          <span className="block text-[16px] font-medium">Show my lamp and activity to family</span>
-          <span className="block text-[13px] text-ink-soft">When it&rsquo;s off, nobody sees when you were last in Nearer.</span>
+          <span className="block text-body font-medium">Show my lamp and activity to family</span>
+          <span className="block text-footnote text-ink-soft">When it&rsquo;s off, nobody sees when you were last in Nearer.</span>
         </span>
         <input type="checkbox" className="h-6 w-6 shrink-0 accent-black" checked={form.draft.shareVisits} onChange={(e) => form.set({ shareVisits: e.target.checked })} />
       </label>
@@ -437,9 +437,9 @@ function Loading({ title }: { title: string }) {
 
 function LoadFailed({ title, retry }: { title: string; retry: () => Promise<void> }) {
   return (
-    <div role="alert" className="rounded-[22px] bg-surface px-4 py-4 text-[14px] text-ink-soft">
+    <div role="alert" className="rounded-[22px] bg-surface px-4 py-4 text-callout text-ink-soft">
       Couldn&rsquo;t load {title}.
-      <button type="button" onClick={() => void retry()} className="press ml-2 h-11 rounded-full bg-white px-4 text-[14px] font-semibold text-ink">
+      <button type="button" onClick={() => void retry()} className="press ml-2 h-11 rounded-full bg-white px-4 text-callout font-semibold text-ink">
         Retry
       </button>
     </div>

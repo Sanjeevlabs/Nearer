@@ -77,7 +77,7 @@ function Badge({ time, weather, glyph }: { time: string; weather: Weather | null
   const b = badgeParts({ time, weather, glyph });
   const wIcon = b.weather ? WEATHER_ICON[b.weather.kind] : undefined;
   return (
-    <div className="absolute right-4 flex h-[32px] items-center gap-1.5 rounded-full bg-black/35 px-3 text-[13px] font-medium text-white backdrop-blur-md" style={{ top: "calc(10px + env(safe-area-inset-top))" }} aria-label={[b.time, b.weather ? `${b.weather.label}, ${b.weather.tempC} degrees` : ""].filter(Boolean).join(", ")}>
+    <div className="absolute right-4 flex h-[32px] items-center gap-1.5 rounded-full bg-black/35 px-3 text-footnote font-medium text-white backdrop-blur-md" style={{ top: "calc(10px + env(safe-area-inset-top))" }} aria-label={[b.time, b.weather ? `${b.weather.label}, ${b.weather.tempC} degrees` : ""].filter(Boolean).join(", ")}>
       {b.glyph && <Icon name={b.glyph} size={15} strokeWidth={2} />}
       <span className="tnum">{b.time}</span>
       {b.weather && (
@@ -168,7 +168,7 @@ function LampButton({ lit, onLight, onHold, pulseKey }: { lit: boolean; onLight:
       type="button"
       aria-label="Light the lamp. Hold to send a heartbeat"
       title="Tap to light · hold for a heartbeat"
-      className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 text-[14px] font-semibold text-white"
+      className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 text-callout font-semibold text-white"
       onPointerDown={() => {
         held.current = window.setTimeout(() => {
           held.current = "held";
@@ -213,7 +213,7 @@ function LampSheet({ open, onClose, lit, rows }: { open: boolean; onClose: () =>
     <BottomSheet open={open} onClose={onClose} label="The lamp">
       <div data-ui="lamp-sheet">
         <LampPhoto lit={lit} sizes="(max-width: 480px) 100vw, 440px" className="mx-auto aspect-square w-full max-w-[360px] rounded-[24px]" />
-        <h3 className="m-0 mt-4 text-[17px] font-semibold">{lit ? "The lamp is lit" : "The lamp is out"}</h3>
+        <h3 className="m-0 mt-4 text-headline font-semibold">{lit ? "The lamp is lit" : "The lamp is out"}</h3>
         <SheetList title="Lit today" empty="Nobody has lit it today." rows={rows.map((r) => ({ key: r.key, at: r.at, main: r.who }))} />
       </div>
     </BottomSheet>
@@ -241,11 +241,11 @@ function PersonRow({ p, st, check, onOpen }: { p: Member; st: WindowPersonData |
         <span className={cn("absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-[var(--surface,#fff)]", st?.state === "active" && "alive-breathe")} style={{ background: look.dot, color: look.dot }} />
       </span>
       <span className="block min-w-0" suppressHydrationWarning>
-        <span className="block text-[14px] leading-snug text-ink-soft">
+        <span className="block text-callout leading-snug text-ink-soft">
           <b className="font-semibold text-ink">{callName(p)}</b> · {st ? lowerFirst(st.line) : "…"}
         </span>
         {(word || check) && (
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12.5px] leading-snug text-ink-soft">
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-caption leading-snug text-ink-soft">
             {word && (
               <span className="inline-flex items-center gap-1.5" style={{ color: word.ink }}>
                 <span className="h-[7px] w-[7px] rounded-full" style={{ background: look.dot }} aria-hidden="true" />
@@ -279,12 +279,12 @@ function RhythmBar({ rhythm }: { rhythm: DayRhythm }) {
         ))}
         {rhythm.now !== null && <span className="absolute top-[26px] h-[4px] w-[4px] -translate-x-1/2 rounded-full bg-[#c2343a]" style={{ left: `${rhythm.now * 100}%` }} aria-hidden="true" />}
       </div>
-      <div className="mt-0.5 flex justify-between text-[11px] text-ink-faint" aria-hidden="true">
+      <div className="mt-0.5 flex justify-between text-caption text-ink-faint" aria-hidden="true">
         {["6 AM", "12 PM", "6 PM", "12 AM"].map((l) => (
           <span key={l}>{l}</span>
         ))}
       </div>
-      <p className="m-0 mt-1.5 text-[12px] leading-snug text-ink-soft">{usual ? "Dark marks: today. Grey band: their usual day." : "Dark marks: today. Their usual day appears after a few days."}</p>
+      <p className="m-0 mt-1.5 text-caption leading-snug text-ink-soft">{usual ? "Dark marks: today. Grey band: their usual day." : "Dark marks: today. Their usual day appears after a few days."}</p>
     </div>
   );
 }
@@ -292,17 +292,17 @@ function RhythmBar({ rhythm }: { rhythm: DayRhythm }) {
 function SheetList({ title, empty, rows }: { title: string; empty: string; rows: { key: string; at: string; main: string; note?: string }[] }) {
   return (
     <section data-ui="window-section" className="mt-5" aria-label={title}>
-      <h3 className="m-0 text-[13px] font-medium text-ink-soft">{title}</h3>
+      <h3 className="m-0 text-footnote font-medium text-ink-soft">{title}</h3>
       {rows.length === 0 ? (
-        <p className="m-0 mt-1.5 text-[14px] text-ink-soft">{empty}</p>
+        <p className="m-0 mt-1.5 text-callout text-ink-soft">{empty}</p>
       ) : (
         <ul className="m-0 mt-1 list-none p-0">
           {rows.map((r) => (
             <li key={r.key} className="flex min-h-[44px] items-baseline gap-3 border-t border-[var(--line)] py-2.5 first:border-0">
-              <span className="tnum w-[68px] shrink-0 text-[13px] text-ink-soft">{r.at}</span>
-              <span className="min-w-0 text-[15px] leading-snug">
+              <span className="tnum w-[68px] shrink-0 text-footnote text-ink-soft">{r.at}</span>
+              <span className="min-w-0 text-body leading-snug">
                 {r.main}
-                {r.note && <span className="block text-[13px] text-ink-soft">{r.note}</span>}
+                {r.note && <span className="block text-footnote text-ink-soft">{r.note}</span>}
               </span>
             </li>
           ))}
@@ -327,30 +327,30 @@ function PersonSheet({ person, st, onTalk, onCall, onClose }: { person: Member |
         <div>
           <div className="flex items-center gap-3">
             <span className="relative">
-              <Avatar src={memberPhoto(p)} name={callName(p)} size={52} />
+              <Avatar src={memberPhoto(p)} name={callName(p)} size={44} />
               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full ring-2 ring-paper" style={{ background: look.dot }} />
             </span>
             <div className="min-w-0">
-              <p className="m-0 text-[19px] font-semibold">{callName(p)}</p>
-              <p className="m-0 text-[14px] leading-snug text-ink-soft">{s?.line ?? ""}</p>
+              <p className="m-0 text-title font-semibold">{callName(p)}</p>
+              <p className="m-0 text-callout leading-snug text-ink-soft">{s?.line ?? ""}</p>
             </div>
           </div>
           <section data-ui="window-their-day" className="mt-5" aria-label="Their day">
-            <h3 className="m-0 mb-1 text-[13px] font-medium text-ink-soft">Their day</h3>
+            <h3 className="m-0 mb-1 text-footnote font-medium text-ink-soft">Their day</h3>
             {s ? <RhythmBar rhythm={s.rhythm} /> : <div className="skeleton h-[60px]" />}
           </section>
           <SheetList title="Shared today" empty="Nothing shared yet today." rows={(s?.moments ?? []).map((mo, i) => ({ key: `${mo.at}-${i}`, at: clockWord(mo.at, p.tz), main: mo.label, note: mo.note }))} />
           <SheetList title="Check-ins" empty="No check-ins today." rows={(s?.checkins ?? []).map((c, i) => ({ key: `${c.at}-${i}`, at: clockWord(c.at, p.tz), main: c.label }))} />
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button type="button" onClick={onTalk} className="press flex h-[52px] items-center justify-center gap-2 rounded-full bg-black/[.06] text-[15px] font-semibold text-ink">
+            <button type="button" onClick={onTalk} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-black/[.06] text-body font-semibold text-ink">
               <Icon name="mic" size={19} /> Voice note
             </button>
-            <button type="button" onClick={onCall} className="press flex h-[52px] items-center justify-center gap-2 rounded-full bg-ink text-[15px] font-semibold text-white">
+            <button type="button" onClick={onCall} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-ink text-body font-semibold text-white">
               <Icon name="video" size={19} /> Call
             </button>
           </div>
           {s?.state === "quiet" && (
-            <Link href="/nearby" className="mt-2 flex min-h-[44px] items-center justify-center gap-1.5 text-[14px] font-medium text-ink-soft no-underline">
+            <Link href="/nearby" className="mt-2 flex min-h-[44px] items-center justify-center gap-1.5 text-callout font-medium text-ink-soft no-underline">
               <Icon name="gather" size={16} /> Who to call near them
             </Link>
           )}
@@ -368,13 +368,13 @@ const TILE = cn("flex h-[80px] min-w-0 flex-col justify-between px-3 py-2", CARD
 function Tile({ href, label, aria, children, onOpen }: { href: string; label: string; aria: string; children: React.ReactNode; onOpen?: () => void }) {
   return (
     <Link href={href} aria-label={aria} onClick={onOpen} className={cn(TILE, "press text-ink no-underline")} style={EDGE}>
-      <span className="truncate text-[15px] font-medium leading-[1.2] text-ink-soft">{label}</span>
+      <span className="truncate text-body font-medium leading-[1.2] text-ink-soft">{label}</span>
       {children}
     </Link>
   );
 }
 
-const detail = "line-clamp-2 text-[15px] font-semibold leading-[1.2]";
+const detail = "line-clamp-2 text-body font-semibold leading-[1.2]";
 
 function GlanceStrip({ glance, members }: { glance: Glance | null; members: Member[] }) {
   if (!glance)
@@ -399,9 +399,9 @@ function GlanceStrip({ glance, members }: { glance: Glance | null; members: Memb
                   <Avatar src={memberPhoto(m)} name={callName(m)} size={22} />
                 </span>
               ))}
-              {glance.awake.length > faces.length && <span className="ml-1 text-[15px] leading-none text-ink-soft">…</span>}
+              {glance.awake.length > faces.length && <span className="ml-1 text-body leading-none text-ink-soft">…</span>}
             </span>
-            <span className="block truncate text-[15px] font-semibold leading-[1.2]">{cities}</span>
+            <span className="block truncate text-body font-semibold leading-[1.2]">{cities}</span>
           </span>
         ) : (
           <span className={detail}>Everyone&apos;s asleep</span>
@@ -589,12 +589,12 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
         <div className="flex flex-1 flex-col gap-3 px-4 pt-4" style={{ paddingBottom: 12 }}>
           {/* Who, where, and one true line */}
-          <header data-ui="window-header" className="min-h-[58px]">
+          <header data-ui="window-header" className="min-h-[48px]">
             {data ? (
               <>
-                <h1 className="m-0 truncate text-[26px] font-light leading-[1.15] tracking-[-0.01em]">{names || "Your window"}</h1>
+                <h1 data-display className="m-0 truncate text-display font-light leading-[1.15] tracking-[-0.01em]">{names || "Your window"}</h1>
                 {data.far && (
-                  <p className="m-0 mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[14px] text-ink-soft">
+                  <p className="m-0 mt-0.5 flex flex-wrap items-center gap-x-2.5 text-callout text-ink-soft">
                     <span>{data.far.city || "Their home"}</span>
                     <span className="tnum" suppressHydrationWarning>
                       {clock}
@@ -602,13 +602,13 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                     {data.km ? <span>{data.km.toLocaleString("en-US")} km away</span> : null}
                   </p>
                 )}
-                {data.line && <p className="m-0 mt-1.5 text-[14px] leading-snug">{data.line}</p>}
+                {data.line && <p className="m-0 mt-1.5 text-callout leading-snug">{data.line}</p>}
                 {data.sky.bothNight && data.far && (
-                  <p className="m-0 mt-1.5 flex items-center gap-1.5 text-[13px] leading-snug text-ink-soft">
+                  <p className="m-0 mt-1.5 flex items-center gap-1.5 text-footnote leading-snug text-ink-soft">
                     <Icon name="moon" size={14} /> Look up: {names.split(" & ")[0]} can see this same moon tonight, {Math.round(data.sky.moon.illumination * 100)}% full
                   </p>
                 )}
-                {welcome && <p className="voice m-0 mt-1.5 text-[15px]">{welcome}</p>}
+                {welcome && <p className="voice m-0 mt-1.5 text-body">{welcome}</p>}
               </>
             ) : win.failed ? null : (
               <>
@@ -620,9 +620,9 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
           {!data && win.failed && (
             <section className={cn(CARD, "p-4")} style={EDGE} role="alert">
-              <p className="m-0 text-[15px] font-semibold">Couldn&apos;t open the window</p>
-              <p className="m-0 mt-1 text-[14px] text-ink-soft">Check your connection and try again.</p>
-              <button type="button" onClick={() => void win.reload()} className="press mt-3 h-11 rounded-full bg-ink px-5 text-[14px] font-semibold text-white">
+              <p className="m-0 text-body font-semibold">Couldn&apos;t open the window</p>
+              <p className="m-0 mt-1 text-callout text-ink-soft">Check your connection and try again.</p>
+              <button type="button" onClick={() => void win.reload()} className="press mt-3 h-11 rounded-full bg-ink px-5 text-callout font-semibold text-white">
                 Try again
               </button>
             </section>
@@ -642,22 +642,22 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
             <>
               {/* 1. The lamp, and their latest voice */}
               <section data-ui="window-lamp" className={cn(CARD, "px-4")} style={EDGE} aria-label="The lamp and their latest voice">
-                <div className="flex min-h-[64px] items-center gap-3 py-2">
+                <div className="flex min-h-[56px] items-center gap-3 py-2">
                   <button type="button" onClick={() => setLampOpen(true)} aria-label="See the lamp" className="press h-14 w-14 shrink-0 overflow-hidden rounded-2xl">
                     <LampPhoto lit={today.lit || Boolean(lampNote?.startsWith("You lit"))} sizes="56px" className="h-full w-full" />
                   </button>
-                  <p className="m-0 min-w-0 flex-1 text-[14px] leading-snug" suppressHydrationWarning>
+                  <p className="m-0 min-w-0 flex-1 text-callout leading-snug" suppressHydrationWarning>
                     {lampNote ?? (lamp.failed && !lamp.data ? "Couldn't reach the lamp" : lampLoading ? " " : today.line)}
                   </p>
                   {lamp.failed && !lamp.data ? (
-                    <button type="button" onClick={() => void lamp.reload()} className="press h-11 shrink-0 rounded-full bg-ink px-4 text-[14px] font-semibold text-white">
+                    <button type="button" onClick={() => void lamp.reload()} className="press h-11 shrink-0 rounded-full bg-ink px-4 text-callout font-semibold text-white">
                       Try again
                     </button>
                   ) : (
                     <LampButton lit={today.lit} onLight={() => void light()} onHold={() => void heartbeat()} pulseKey={pulse} />
                   )}
                 </div>
-                <div className="flex min-h-[64px] items-center gap-3 border-t border-[var(--line)] py-2">
+                <div className="flex min-h-[56px] items-center gap-3 border-t border-[var(--line)] py-2">
                   {cardsLoading ? (
                     <div className="skeleton h-[44px] w-full" aria-busy="true" aria-label="Looking for their latest voice" />
                   ) : latestVoice ? (
@@ -665,9 +665,9 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                       <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice note`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-white">
                         <Icon name={playing ? "pause" : "play"} size={16} />
                       </button>
-                      <p className="m-0 min-w-0 flex-1 text-[14px] leading-snug">
+                      <p className="m-0 min-w-0 flex-1 text-callout leading-snug">
                         <b className="font-semibold">{callName(voiceBy)}</b> · voice note
-                        <span className="block text-[13px] text-ink-soft" suppressHydrationWarning>
+                        <span className="block text-footnote text-ink-soft" suppressHydrationWarning>
                           {dayWord(latestVoice.takenAt, now, viewer.tz)}, {clockWord(latestVoice.takenAt, viewer.tz)}
                         </span>
                       </p>
@@ -677,7 +677,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[.06] text-ink-soft" aria-hidden="true">
                         <Icon name="mic" size={18} />
                       </span>
-                      <p className="m-0 min-w-0 flex-1 text-[14px] leading-snug text-ink-soft">No voice note from {names.split(" & ")[0] || "them"} yet</p>
+                      <p className="m-0 min-w-0 flex-1 text-callout leading-snug text-ink-soft">No voice note from {names.split(" & ")[0] || "them"} yet</p>
                     </>
                   )}
                 </div>
@@ -686,8 +686,8 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               {/* 2. Safe & sound: tap a person for their day */}
               <section data-ui="window-safe" className={cn(CARD, "px-4 pb-1.5 pt-1")} style={EDGE} aria-label="Safe and sound">
                 <div className="flex min-h-[44px] items-center justify-between gap-3">
-                  <h2 className="m-0 text-[17px] font-semibold leading-tight tracking-[-0.01em]">Safe &amp; sound</h2>
-                  <Link href="/safe" className="-mr-2 flex min-h-[44px] shrink-0 items-center gap-0.5 px-2 text-[13px] font-medium text-ink-soft no-underline">
+                  <h2 className="m-0 text-headline font-semibold leading-tight tracking-[-0.01em]">Safe &amp; sound</h2>
+                  <Link href="/safe" className="-mr-2 flex min-h-[44px] shrink-0 items-center gap-0.5 px-2 text-footnote font-medium text-ink-soft no-underline">
                     See check-ins <Icon name="chevron" size={14} />
                   </Link>
                 </div>
@@ -704,13 +704,13 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               {/* 4. Since you were here */}
               {data.since?.at && data.since.lines.length > 0 && (
                 <section data-ui="window-since" className={cn(CARD, "px-4 py-3")} style={EDGE} aria-label="Since you were here">
-                  <p className="m-0 text-[13px] font-medium text-ink-soft">{sinceLabel(data.since.at, now, viewer.tz)}</p>
+                  <p className="m-0 text-footnote font-medium text-ink-soft">{sinceLabel(data.since.at, now, viewer.tz)}</p>
                   {data.since.line ? (
-                    <p className="m-0 mt-1 text-[14px] leading-snug">{data.since.line}</p>
+                    <p className="m-0 mt-1 text-callout leading-snug">{data.since.line}</p>
                   ) : (
                     <ul className="m-0 mt-1 list-none p-0">
                       {data.since.lines.map((l) => (
-                        <li key={l} className="text-[14px] leading-snug">
+                        <li key={l} className="text-callout leading-snug">
                           {l}
                         </li>
                       ))}
@@ -721,11 +721,11 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
               {/* 5. The call row */}
               <section data-ui="window-call" className={cn(CARD, "flex items-center gap-2.5 px-4 py-3")} style={EDGE} aria-label="Call">
-                <p className="m-0 min-w-0 flex-1 text-[14px] leading-snug">
+                <p className="m-0 min-w-0 flex-1 text-callout leading-snug">
                   {knock ? (
                     <>
                       <b className="font-semibold">{callName(members.find((mm) => mm.id === knock.memberId))} is at the window</b>
-                      <span className="block text-[13px] text-ink-soft">On a video call now</span>
+                      <span className="block text-footnote text-ink-soft">On a video call now</span>
                     </>
                   ) : (
                     <b className={cn("font-semibold", !data.call.good && "font-normal text-ink-soft")}>{data.call.text}</b>
@@ -786,12 +786,12 @@ function WaitingCard({ names }: { names: string }) {
   };
   return (
     <section data-ui="window-waiting" className={cn(CARD, "p-4")} style={EDGE} aria-label="Waiting for them to join">
-      <p className="m-0 flex items-center gap-2 text-[12px] uppercase tracking-[0.16em] text-ink-soft">
+      <p className="m-0 flex items-center gap-2 text-caption uppercase tracking-[0.16em] text-ink-soft">
         <span className="h-2 w-2 animate-pulse rounded-full bg-ink-soft" /> Waiting
       </p>
-      <p className="m-0 mt-2 text-[21px] font-light leading-snug">{names ? `${names} hasn't opened the window yet` : "Add the people on the other side"}</p>
-      <p className="m-0 mt-1 text-[14px] text-ink-soft">When they join, you&apos;ll see their day here and they&apos;ll see yours.</p>
-      <button type="button" onClick={() => void send()} disabled={busy} className="press mt-4 flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-semibold text-white">
+      <p className="m-0 mt-2 text-title font-light leading-snug">{names ? `${names} hasn't opened the window yet` : "Add the people on the other side"}</p>
+      <p className="m-0 mt-1 text-callout text-ink-soft">When they join, you&apos;ll see their day here and they&apos;ll see yours.</p>
+      <button type="button" onClick={() => void send()} disabled={busy} className="press mt-4 flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-body font-semibold text-white">
         <Icon name="send" size={17} /> {busy ? "Opening…" : "Send the invite again"}
       </button>
       <InviteSheet open={sheet} onClose={() => setSheet(false)} />

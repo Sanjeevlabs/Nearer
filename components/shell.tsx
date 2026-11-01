@@ -104,8 +104,8 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
                       <Icon name={g.icon as IconName} size={20} strokeWidth={1.8} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[16.5px] font-semibold leading-tight">{g.title}</span>
-                      <span className="mt-0.5 block truncate text-[13px] text-ink-soft">{g.note}</span>
+                      <span className="block text-body font-semibold leading-tight">{g.title}</span>
+                      <span className="mt-0.5 block truncate text-footnote text-ink-soft">{g.note}</span>
                     </span>
                     <Icon name="chevron" size={17} className="text-ink-faint" />
                   </Link>
@@ -171,14 +171,14 @@ function Dock() {
                   )}
                 </button>
               ) : (
-                <button type="button" onClick={() => setInviting(true)} aria-label="Invite family" className="press grid h-14 w-14 place-items-center rounded-full bg-black text-white">
+                <button type="button" onClick={() => setInviting(true)} aria-label="Invite family" className="press grid h-12 w-12 place-items-center rounded-full bg-black text-white">
                   <Icon name="plus" size={23} />
                 </button>
               )}
-              <button type="button" onClick={() => openAdd("photos")} aria-label="Share a photo or video" className="press grid h-14 w-14 place-items-center rounded-full text-ink">
+              <button type="button" onClick={() => openAdd("photos")} aria-label="Share a photo or video" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
                 <Icon name="camera" size={23} strokeWidth={1.9} />
               </button>
-              <button type="button" onClick={openRooms} aria-label="Open the house" className="press grid h-14 w-14 place-items-center rounded-full text-ink">
+              <button type="button" onClick={openRooms} aria-label="Open the house" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
                 <Icon name="rooms" size={23} strokeWidth={1.9} />
               </button>
             </div>
@@ -277,7 +277,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
     <ShellContext.Provider value={value}>
       <PlayerProvider>
         <main
-          className="relative mx-auto min-h-full w-full max-w-[480px] px-5"
+          className="relative mx-auto min-h-full w-full max-w-[480px] px-4"
           style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(172px + env(safe-area-inset-bottom))", zoom: large ? 1.12 : undefined }}
         >
           {children}

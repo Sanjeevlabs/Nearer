@@ -63,17 +63,17 @@ export default function ProjectPage() {
       <div className="flex items-center gap-3">
         <PlanBadge holiday={holiday} />
         <div className="min-w-0">
-          <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.06em] text-ink-soft">
+          <p className="m-0 text-caption font-semibold uppercase tracking-[0.06em] text-ink-soft">
             {holiday ? "Holiday" : "Visit home"}
             {p.status === "done" ? " · done" : ""}
           </p>
-          <h1 className="m-0 text-[27px] leading-tight">{p.title}</h1>
+          <h1 data-display className="m-0 text-display leading-tight">{p.title}</h1>
         </div>
       </div>
 
-      <div className="mt-4 rounded-hero bg-surface p-5">
-        <p className="tnum m-0 text-[56px] font-bold leading-none">{days === null ? "–" : days > 0 ? days : days === 0 ? "Today" : "✓"}</p>
-        <p className="m-0 mt-1 text-[16px] font-medium">
+      <div className="mt-4 rounded-hero bg-surface p-4">
+        <p data-display className="tnum m-0 text-display font-bold leading-none">{days === null ? "–" : days > 0 ? days : days === 0 ? "Today" : "✓"}</p>
+        <p className="m-0 mt-1 text-body font-medium">
           {days === null
             ? "Pick a date to start the countdown"
             : days > 0
@@ -86,10 +86,10 @@ export default function ProjectPage() {
                   : `${callName(visitor)} arrives today`
                 : "Been together"}
         </p>
-        {p.dueAt && <p className="m-0 mt-1 text-[13px] text-ink-soft">{new Date(p.dueAt).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · both homes see this</p>}
-        <div className="no-scrollbar -mx-5 mt-3 flex items-center gap-1.5 overflow-x-auto px-5">
+        {p.dueAt && <p className="m-0 mt-1 text-footnote text-ink-soft">{new Date(p.dueAt).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · both homes see this</p>}
+        <div className="no-scrollbar -mx-4 mt-3 flex items-center gap-1.5 overflow-x-auto px-4">
           {[...(visitor ? [visitor] : []), ...hosts].map((m) => (
-            <span key={m.id} className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white pl-0.5 pr-3 text-[13px] font-medium">
+            <span key={m.id} className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white pl-0.5 pr-3 text-footnote font-medium">
               <Avatar src={memberPhoto(m)} name={callName(m)} size={32} />
               {m.id === viewer.id ? "Me" : callName(m)}
             </span>
@@ -99,7 +99,7 @@ export default function ProjectPage() {
       {editingPlan && <EditPlan project={p} onClose={() => setEditingPlan(false)} onSave={async (body) => { await act(body); setEditingPlan(false); }} />}
 
       <SectionTitle>
-        To do <span className="text-[15px] font-medium text-ink-faint">· {done}/{p.tasks.length}</span>
+        To do <span className="text-body font-medium text-ink-faint">· {done}/{p.tasks.length}</span>
       </SectionTitle>
       <ul className="m-0 list-none divide-y divide-[var(--line)] rounded-card bg-surface p-0 px-3">
         {p.tasks.map((task) => {
@@ -117,11 +117,11 @@ export default function ProjectPage() {
                     onChange={(e) => setDraft(e.target.value.slice(0, 140))}
                     onBlur={async () => { if (draft.trim() && draft !== task.text) await act({ action: "task-edit", taskId: task.id, text: draft.trim() }); setEditing(null); }}
                     onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                    className="h-10 min-w-0 flex-1 rounded-[12px] bg-white px-3 text-[15px] outline-none"
+                    className="h-10 min-w-0 flex-1 rounded-[12px] bg-white px-3 text-body outline-none"
                     aria-label="Task"
                   />
                 ) : (
-                  <span className={cn("min-w-0 flex-1 text-[15px]", task.done && "text-ink-faint line-through decoration-black/20")}>{task.text}</span>
+                  <span className={cn("min-w-0 flex-1 text-body", task.done && "text-ink-faint line-through decoration-black/20")}>{task.text}</span>
                 )}
                 <button type="button" onClick={() => setAssignFor(assignFor === task.id ? null : task.id)} aria-label={who ? `Assigned to ${callName(who)}. Change` : "Assign"} className="press shrink-0">
                   {who ? <Avatar src={memberPhoto(who)} name={callName(who)} size={30} /> : <span className="grid h-[30px] w-[30px] place-items-center rounded-full border border-dashed border-black/25 text-ink-faint"><Icon name="plus" size={14} /></span>}
@@ -137,7 +137,7 @@ export default function ProjectPage() {
               {assignFor === task.id && (
                 <div className="no-scrollbar -mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 pb-1">
                   {people.map((m) => (
-                    <button key={m.id} type="button" aria-pressed={task.assignee === m.id} onClick={async () => { await act({ action: "task-assign", taskId: task.id, assignee: task.assignee === m.id ? null : m.id }); setAssignFor(null); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-[14px] font-medium", task.assignee === m.id ? "bg-black text-white" : "bg-white")}>
+                    <button key={m.id} type="button" aria-pressed={task.assignee === m.id} onClick={async () => { await act({ action: "task-assign", taskId: task.id, assignee: task.assignee === m.id ? null : m.id }); setAssignFor(null); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-callout font-medium", task.assignee === m.id ? "bg-black text-white" : "bg-white")}>
                       <Avatar src={memberPhoto(m)} name={callName(m)} size={30} />
                       {m.id === viewer.id ? "Me" : callName(m)}
                     </button>
@@ -147,7 +147,7 @@ export default function ProjectPage() {
             </li>
           );
         })}
-        {p.tasks.length === 0 && <li className="py-4 text-center text-[14px] text-ink-soft">Nothing on the list yet.</li>}
+        {p.tasks.length === 0 && <li className="py-4 text-center text-callout text-ink-soft">Nothing on the list yet.</li>}
       </ul>
       <form
         className="mt-2 flex gap-2"
@@ -158,8 +158,8 @@ export default function ProjectPage() {
           setText("");
         }}
       >
-        <input value={text} onChange={(e) => setText(e.target.value.slice(0, 140))} placeholder="Add to the list" className="h-[48px] min-w-0 flex-1 rounded-full bg-surface px-5 text-[15px] outline-none focus:ring-2 focus:ring-black/15" aria-label="New task" />
-        <Button type="submit" className="h-[48px] px-5" disabled={!text.trim()}>
+        <input value={text} onChange={(e) => setText(e.target.value.slice(0, 140))} placeholder="Add to the list" className="h-[48px] min-w-0 flex-1 rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-black/15" aria-label="New task" />
+        <Button type="submit" className="h-[48px] px-4" disabled={!text.trim()}>
           Add
         </Button>
       </form>
@@ -174,8 +174,8 @@ function EditPlan({ project, onClose, onSave }: { project: Project; onClose: () 
   const [date, setDate] = useState(project.dueAt ? project.dueAt.slice(0, 10) : "");
   return (
     <div className="mt-3 space-y-2 rounded-card bg-surface p-3">
-      <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} aria-label="Plan name" className="h-11 w-full rounded-full bg-white px-4 text-[15px] outline-none" />
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" className="h-11 w-full rounded-full bg-white px-4 text-[15px]" />
+      <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} aria-label="Plan name" className="h-11 w-full rounded-full bg-white px-4 text-body outline-none" />
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" className="h-11 w-full rounded-full bg-white px-4 text-body" />
       <div className="flex gap-2">
         <Button variant="quiet" className="flex-1" onClick={onClose}>
           Cancel

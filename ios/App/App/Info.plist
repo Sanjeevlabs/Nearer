@@ -24,10 +24,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.sanjeevlabs.nearer</string>
+			<string>site.nearer.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.sanjeevlabs.nearer</string>
+				<string>site.nearer.app</string>
 			</array>
 		</dict>
 	</array>

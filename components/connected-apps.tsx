@@ -38,8 +38,8 @@ export function ConnectedApps() {
   if (failed)
     return (
       <div id="connected-apps" className="rounded-[22px] bg-surface px-4 py-5 text-center">
-        <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t load your apps.</p>
-        <button type="button" onClick={() => void reload()} className="press mt-2 h-11 rounded-full bg-white px-4 text-[14px] font-semibold">
+        <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load your apps.</p>
+        <button type="button" onClick={() => void reload()} className="press mt-2 h-11 rounded-full bg-white px-4 text-callout font-semibold">
           Try again
         </button>
       </div>
@@ -58,22 +58,22 @@ export function ConnectedApps() {
       <ul className="m-0 list-none divide-y divide-[var(--line)] rounded-[22px] bg-surface p-0 px-4">
         {data.accounts.map((a) => (
           <li key={a.id} className="flex items-center gap-3 py-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[15px] font-semibold text-ink" aria-hidden="true">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-body font-semibold text-ink" aria-hidden="true">
               {a.name.slice(0, 1)}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2 text-[16px] font-semibold">
+              <span className="flex items-center gap-2 text-body font-semibold">
                 {a.name}
                 <Dot on={a.connected} />
               </span>
-              <span className="block truncate text-[13px] text-ink-soft">{a.partners.join(" · ")}<span className="sr-only">{a.connected ? ", connected" : ", not connected"}</span></span>
+              <span className="block truncate text-footnote text-ink-soft">{a.partners.join(" · ")}<span className="sr-only">{a.connected ? ", connected" : ", not connected"}</span></span>
             </span>
             {a.connected ? (
-              <button type="button" disabled={busy === a.id} onClick={() => void disconnect(a)} aria-label={`Disconnect ${a.name}`} className="press h-11 rounded-full bg-white px-4 text-[14px] font-semibold text-ink-soft disabled:opacity-40">
+              <button type="button" disabled={busy === a.id} onClick={() => void disconnect(a)} aria-label={`Disconnect ${a.name}`} className="press h-11 rounded-full bg-white px-4 text-callout font-semibold text-ink-soft disabled:opacity-40">
                 Disconnect
               </button>
             ) : (
-              <a href={`/api/partners/${encodeURIComponent(a.id)}/connect`} className="press flex h-11 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-white no-underline">
+              <a href={`/api/partners/${encodeURIComponent(a.id)}/connect`} className="press flex h-11 items-center rounded-full bg-ink px-4 text-callout font-semibold text-white no-underline">
                 Connect
               </a>
             )}
@@ -85,8 +85,8 @@ export function ConnectedApps() {
               <Icon name={OPEN_ICON[p.kind] ?? "store"} size={19} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[16px] font-semibold">{p.name}</span>
-              <span className="block truncate text-[13px] text-ink-soft">{p.transport === "link" ? "Opens their site" : "No account needed · pay at the store"}</span>
+              <span className="block text-body font-semibold">{p.name}</span>
+              <span className="block truncate text-footnote text-ink-soft">{p.transport === "link" ? "Opens their site" : "No account needed · pay at the store"}</span>
             </span>
             {p.url && (
               <a href={p.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${p.name}`} className="press grid h-10 w-10 place-items-center rounded-full bg-white text-ink-soft">
@@ -96,8 +96,8 @@ export function ConnectedApps() {
           </li>
         ))}
       </ul>
-      <p className="m-0 mt-3 px-1 text-[13px] text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
-      {data.sample && <p className="m-0 mt-1 px-1 text-[12px] text-ink-faint">Sample mode: connections and orders are pretend.</p>}
+      <p className="m-0 mt-3 px-1 text-footnote text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
+      {data.sample && <p className="m-0 mt-1 px-1 text-caption text-ink-faint">Sample mode: connections and orders are pretend.</p>}
     </div>
   );
 }

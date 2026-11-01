@@ -29,7 +29,7 @@ For local `cf:preview`, put runtime values in `.dev.vars` (gitignored, same `KEY
 |---|---|---|---|
 | `SESSION_SECRET` | runtime secret | yes | 32+ random chars. Signs session cookies and seals partner tokens. |
 | `CRON_SECRET` | runtime secret | yes | Long random string. The daily cron and any manual GET of `/api/ritual-scan` send `Authorization: Bearer <CRON_SECRET>`. |
-| `APP_ORIGIN` | runtime var | yes in production | Your public origin, e.g. `https://nearer.sanjeevlabs.com` (no trailing slash). Pins OAuth redirect URIs and is the URL the cron calls. Not hardcoded anywhere. |
+| `APP_ORIGIN` | runtime var | yes in production | Your public origin, e.g. `https://nearer.site` (no trailing slash). Pins OAuth redirect URIs and is the URL the cron calls. Not hardcoded anywhere. |
 | `MOCK` | runtime var | yes | `false` for live Supabase; `true` only for a demo (see per-isolate note below). |
 | `META_API_KEY` | runtime secret | for live AI | Meta model calls. Environment only, never in a file. |
 | `BASETEN_API_KEY` | runtime secret | optional | Muse Spark Open failover on Baseten. |
@@ -56,7 +56,7 @@ npx wrangler secret put SESSION_SECRET
 npx wrangler secret put CRON_SECRET
 npx wrangler secret put META_API_KEY
 npx wrangler secret put SUPABASE_SECRET_KEY
-npx wrangler secret put APP_ORIGIN      # e.g. https://nearer.sanjeevlabs.com
+npx wrangler secret put APP_ORIGIN      # e.g. https://nearer.site
 npx wrangler secret put MOCK            # false
 # build-time values, then deploy
 export NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... NEXT_PUBLIC_AUTH_GOOGLE=true
@@ -71,14 +71,14 @@ npm run cf:deploy
 
 ## 4. Custom domain
 
-Dashboard → Workers & Pages → aangan → Settings → Domains & Routes → Add → Custom domain. The domain's DNS must be on Cloudflare (add the site to your account first). Cloudflare issues the certificate. Then set `APP_ORIGIN` to `https://<that-domain>` (e.g. `https://nearer.sanjeevlabs.com`) and redeploy (or just update the secret).
+Dashboard → Workers & Pages → aangan → Settings → Domains & Routes → Add → Custom domain. The domain's DNS must be on Cloudflare (add the site to your account first). Cloudflare issues the certificate. Then set `APP_ORIGIN` to `https://<that-domain>` (e.g. `https://nearer.site`) and redeploy (or just update the secret).
 
 ## 5. Supabase
 
 Supabase → Authentication → URL Configuration:
 
 - **Site URL**: `https://<your-domain>` (same as `APP_ORIGIN`).
-- **Redirect URLs**: add `https://<your-domain>/auth/callback`, the `https://aangan.<subdomain>.workers.dev/auth/callback` URL if you use it, and the native app's `com.sanjeevlabs.nearer://auth/callback`.
+- **Redirect URLs**: add `https://<your-domain>/auth/callback`, the `https://aangan.<subdomain>.workers.dev/auth/callback` URL if you use it, and the native app's `site.nearer.app://auth/callback`.
 - Google provider: enable under Authentication → Providers (its own redirect URI stays Supabase's).
 
 Native builds: `CAP_SERVER_URL=https://<your-domain> npm run cap:sync` (see docs/NATIVE.md).

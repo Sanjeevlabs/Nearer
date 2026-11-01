@@ -61,21 +61,21 @@ export function SafetyRow({ member, state, viewerTz, compact = false }: { member
       <div className="flex items-center gap-3">
         <Avatar src={memberPhoto(member)} name={callName(member)} size={compact ? 40 : 44} ring />
         <div className="min-w-0 flex-1">
-          <p className="m-0 truncate text-[15px] font-semibold">
+          <p className="m-0 truncate text-body font-semibold">
             {callName(member)} · {state.label}
           </p>
-          <p className={cn("m-0 truncate text-[13px]", t.ink)}>{detail}</p>
+          <p className={cn("m-0 truncate text-footnote", t.ink)}>{detail}</p>
         </div>
         <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", DOT[state.tone])} aria-label={state.label} />
       </div>
       {(state.tone === "help" || state.tone === "overdue") && (
         <div className="mt-3 flex flex-wrap gap-2">
           {loc && (
-            <a href={mapsLink(loc)} target="_blank" rel="noreferrer" className="press flex h-10 items-center rounded-full bg-black px-4 text-[14px] font-semibold text-white no-underline">
+            <a href={mapsLink(loc)} target="_blank" rel="noreferrer" className="press flex h-10 items-center rounded-full bg-black px-4 text-callout font-semibold text-white no-underline">
               See location · sent {ago(loc.at)}
             </a>
           )}
-          <a href={`tel:${sos.number}`} className="press flex h-10 items-center rounded-full bg-white px-4 text-[14px] font-semibold text-ink no-underline">
+          <a href={`tel:${sos.number}`} className="press flex h-10 items-center rounded-full bg-white px-4 text-callout font-semibold text-ink no-underline">
             Emergency in {sos.country}: {sos.number}
           </a>
         </div>
@@ -107,14 +107,14 @@ export function SafetyWatch() {
       {open && (
         <div className="flex items-center gap-3 rounded-card bg-surface p-3.5">
           <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", DOT[open.tone])} aria-hidden="true" />
-          <p className="m-0 min-w-0 flex-1 truncate text-[15px] font-semibold">{open.tone === "help" ? "Your family can see you asked for help" : "On your way. Tell them when you're in."}</p>
+          <p className="m-0 min-w-0 flex-1 truncate text-body font-semibold">{open.tone === "help" ? "Your family can see you asked for help" : "On your way. Tell them when you're in."}</p>
           <button
             type="button"
             onClick={async () => {
               await postJson("/api/safety", { action: "close", checkinId: open.checkin.id });
               await reload();
             }}
-            className="press h-10 shrink-0 rounded-full bg-black px-4 text-[14px] font-semibold text-white"
+            className="press h-10 shrink-0 rounded-full bg-black px-4 text-callout font-semibold text-white"
           >
             {open.checkin.kind === "journey" ? "Landed" : open.tone === "help" ? "I'm okay" : "Home safe"}
           </button>

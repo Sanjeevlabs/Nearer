@@ -33,7 +33,7 @@ function WaitingToJoin({ onMessage }: { onMessage: (m: string) => void }) {
   const { data, failed, reload } = useJson<{ pending: Member[] }>(allowed ? "/api/members" : null);
   const [busy, setBusy] = useState<string | null>(null);
   if (!allowed) return null;
-  if (failed) return <p className="m-0 mt-6 rounded-[22px] bg-surface p-4 text-[14px] text-ink-soft">Couldn&rsquo;t check who&rsquo;s waiting. Pull to try again.</p>;
+  if (failed) return <p className="m-0 mt-6 rounded-[22px] bg-surface p-4 text-callout text-ink-soft">Couldn&rsquo;t check who&rsquo;s waiting. Pull to try again.</p>;
   if (!data) return <div className="mt-6 h-[72px] animate-pulse rounded-[22px] bg-surface" aria-busy="true" aria-label="Checking who's waiting" />;
   if (data.pending.length === 0) return null;
   const decide = async (m: Member, decision: "approve" | "decline") => {
@@ -48,14 +48,14 @@ function WaitingToJoin({ onMessage }: { onMessage: (m: string) => void }) {
   };
   return (
     <section aria-label="Waiting to join" className="mt-9">
-      <h2 className="m-0 mb-3 text-[20px]">Waiting to join</h2>
+      <h2 className="m-0 mb-3 text-title">Waiting to join</h2>
       <ul className="m-0 list-none divide-y divide-[var(--line)] rounded-[22px] bg-surface p-0 px-4">
         {data.pending.map((m) => (
           <li key={m.id} className="flex items-center gap-3 py-3">
             <Avatar src={memberPhoto(m)} name={callName(m)} size={40} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[16px] font-semibold">{callName(m)}</span>
-              <span className="block text-[13px] text-ink-soft">{m.city ? `Joined with a code · ${m.city}` : "Joined with a code"}</span>
+              <span className="block truncate text-body font-semibold">{callName(m)}</span>
+              <span className="block text-footnote text-ink-soft">{m.city ? `Joined with a code · ${m.city}` : "Joined with a code"}</span>
             </span>
             <button type="button" aria-label={`Decline ${callName(m)}`} disabled={busy === m.id} onClick={() => void decide(m, "decline")} className="press grid h-11 w-11 place-items-center rounded-full bg-white text-ink disabled:opacity-40">
               <Icon name="close" size={20} />
@@ -182,7 +182,7 @@ export default function SettingsPage() {
 
       <nav data-ui="settings-tabs" aria-label="Settings sections" className="mt-7 grid grid-cols-4 gap-1 rounded-full bg-surface p-1">
         {TABS.map(([id, label]) => (
-          <button key={id} type="button" aria-pressed={tab === id} onClick={() => go(id)} className={cn("press h-11 rounded-full text-[15px] font-semibold", tab === id ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
+          <button key={id} type="button" aria-pressed={tab === id} onClick={() => go(id)} className={cn("press h-11 rounded-full text-body font-semibold", tab === id ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
             {label}
           </button>
         ))}
@@ -211,18 +211,18 @@ export default function SettingsPage() {
       <WaitingToJoin onMessage={flash} />
       <Group title="Invite family" id="invite">
         {!can(viewer, "invite.create") ? (
-          <p className="m-0 text-[15px] text-ink-soft">Ask a grown-up in the family to invite people.</p>
+          <p className="m-0 text-body text-ink-soft">Ask a grown-up in the family to invite people.</p>
         ) : invite ? (
           <div className="rounded-[22px] bg-surface p-4">
-            <p className="m-0 text-[13px] text-ink-soft">Share this code. It works until {new Date(invite.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}.</p>
-            <p className="tnum m-0 mt-1 text-[28px] font-bold tracking-[0.12em]">{invite.code}</p>
+            <p className="m-0 text-footnote text-ink-soft">Share this code. It works until {new Date(invite.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}.</p>
+            <p data-display className="tnum m-0 mt-1 text-display font-bold tracking-[0.12em]">{invite.code}</p>
             <Button className="mt-3 w-full" onClick={() => void shareInvite()}>
               {copied ? "Copied" : "Share invite"}
             </Button>
             {can(viewer, "invite.revoke") && (
               <button
                 type="button"
-                className="mt-2 h-11 w-full text-[14px] font-medium text-[#b42318]"
+                className="mt-2 h-11 w-full text-callout font-medium text-[#b42318]"
                 onClick={async () => {
                   const res = await fetch("/api/invites", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: invite.code }) });
                   if (res.ok) {
@@ -249,7 +249,7 @@ export default function SettingsPage() {
       {opened.has("privacy") && (
         <div hidden={tab !== "privacy"}>
       <Group title="Privacy" id="privacy">
-        <ul className="m-0 list-none space-y-2 p-0 text-[15px] text-ink-soft">
+        <ul className="m-0 list-none space-y-2 p-0 text-body text-ink-soft">
           <li>Only your family sees what you share. Photos lose their location before upload.</li>
           <li>Voices are never cloned. No face recognition, and no tagging of children.</li>
           <li>Demo mode: Meta&rsquo;s AI models process content to caption, transcribe and translate.</li>
@@ -257,10 +257,10 @@ export default function SettingsPage() {
         <LampSection onMessage={flash} />
         {isGrownUp(viewer) && (
           <div className="mt-4 overflow-hidden rounded-[22px] bg-surface">
-            <a href="/api/export" download className="press flex w-full items-center justify-between px-4 py-4 text-left text-[16px] font-medium text-ink no-underline">
+            <a href="/api/export" download className="press flex w-full items-center justify-between px-4 py-4 text-left text-body font-medium text-ink no-underline">
               <span>
                 <span className="block">Download our family&rsquo;s data</span>
-                <span className="block text-[13px] font-normal text-ink-soft">Everyone, the tree, recipes, care and memories, as one file you own</span>
+                <span className="block text-footnote font-normal text-ink-soft">Everyone, the tree, recipes, care and memories, as one file you own</span>
               </span>
               <Icon name="down" size={18} className="text-ink-faint" />
             </a>
@@ -269,25 +269,25 @@ export default function SettingsPage() {
           </div>
         )}
         <div className="mt-4 overflow-hidden rounded-[22px] bg-surface">
-          <button type="button" onClick={() => { if (window.confirm("Delete your reactions, wishes and listens? This can't be undone.")) void removeMemories(); }} disabled={busy === "remove"} className="press flex w-full items-center justify-between px-4 py-4 text-left text-[16px] font-medium">
+          <button type="button" onClick={() => { if (window.confirm("Delete your reactions, wishes and listens? This can't be undone.")) void removeMemories(); }} disabled={busy === "remove"} className="press flex w-full items-center justify-between px-4 py-4 text-left text-body font-medium">
             Delete my reactions, wishes and listens
             <Icon name="chevron" size={18} className="text-ink-faint" />
           </button>
           <div className="mx-4 h-px bg-[var(--line)]" />
           {confirmLeave ? (
             <div className="px-4 py-4">
-              <p className="m-0 text-[15px]">Leave the family? Your profile and place in the tree are deleted. Shared memories stay with the family.</p>
+              <p className="m-0 text-body">Leave the family? Your profile and place in the tree are deleted. Shared memories stay with the family.</p>
               <div className="mt-3 flex gap-2">
-                <button type="button" onClick={() => setConfirmLeave(false)} className="press h-11 flex-1 rounded-full bg-white text-[14px] font-semibold">
+                <button type="button" onClick={() => setConfirmLeave(false)} className="press h-11 flex-1 rounded-full bg-white text-callout font-semibold">
                   Stay
                 </button>
-                <button type="button" onClick={() => void leave()} disabled={busy === "leave"} className="press h-11 flex-1 rounded-full bg-[#b42318] text-[14px] font-semibold text-white">
+                <button type="button" onClick={() => void leave()} disabled={busy === "leave"} className="press h-11 flex-1 rounded-full bg-[#b42318] text-callout font-semibold text-white">
                   {busy === "leave" ? "Leaving…" : "Leave family"}
                 </button>
               </div>
             </div>
           ) : (
-            <button type="button" onClick={() => setConfirmLeave(true)} className="press flex w-full items-center justify-between px-4 py-4 text-left text-[16px] font-medium text-[#b42318]">
+            <button type="button" onClick={() => setConfirmLeave(true)} className="press flex w-full items-center justify-between px-4 py-4 text-left text-body font-medium text-[#b42318]">
               Leave the family
               <Icon name="chevron" size={18} className="text-ink-faint" />
             </button>
@@ -297,10 +297,10 @@ export default function SettingsPage() {
 
       {process.env.NODE_ENV !== "production" && (
       <Group title="Muse">
-        <Link href="/trace" className="press flex items-center justify-between rounded-[22px] bg-surface px-4 py-4 text-[16px] font-medium text-ink no-underline">
+        <Link href="/trace" className="press flex items-center justify-between rounded-[22px] bg-surface px-4 py-4 text-body font-medium text-ink no-underline">
           <span>
             <span className="block">What Muse did for your family</span>
-            <span className="block text-[13px] font-normal text-ink-soft">Every caption, translation and suggestion, step by step</span>
+            <span className="block text-footnote font-normal text-ink-soft">Every caption, translation and suggestion, step by step</span>
           </span>
           <Icon name="chevron" size={18} className="text-ink-faint" />
         </Link>
@@ -314,7 +314,7 @@ export default function SettingsPage() {
       </Button>
 
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 z-50 flex justify-center" style={{ bottom: "calc(24px + env(safe-area-inset-bottom))" }}>
-        {saved && <p className="frost glass-pill m-0 px-5 py-3 text-[15px] font-medium">{saved}</p>}
+        {saved && <p className="frost glass-pill m-0 px-4 py-3 text-body font-medium">{saved}</p>}
       </div>
     </div>
   );
@@ -326,13 +326,13 @@ function SharedLinks({ onMessage }: { onMessage: (m: string) => void }) {
   const list = data?.shares ?? [];
   return (
     <div className="px-4 py-4">
-      <p className="m-0 text-[16px] font-medium">Shared outside the family</p>
+      <p className="m-0 text-body font-medium">Shared outside the family</p>
       {list.length === 0 ? (
-        <p className="m-0 mt-1 text-[13px] text-ink-soft">Nothing yet. Recipes you share appear here.</p>
+        <p className="m-0 mt-1 text-footnote text-ink-soft">Nothing yet. Recipes you share appear here.</p>
       ) : (
         <ul className="m-0 mt-2 list-none space-y-1.5 p-0">
           {list.map((s) => (
-            <li key={s.token} className="flex items-center justify-between gap-3 text-[14px]">
+            <li key={s.token} className="flex items-center justify-between gap-3 text-callout">
               <span className="min-w-0 truncate">
                 {s.title} <span className="text-ink-faint">· opened {s.views}×</span>
               </span>
@@ -343,7 +343,7 @@ function SharedLinks({ onMessage }: { onMessage: (m: string) => void }) {
                   await reload();
                   onMessage("Stopped sharing. The link no longer works.");
                 }}
-                className="h-11 shrink-0 px-2 text-[14px] font-semibold text-[#a32418]"
+                className="h-11 shrink-0 px-2 text-callout font-semibold text-[#a32418]"
               >
                 Stop
               </button>

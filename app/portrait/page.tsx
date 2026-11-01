@@ -115,9 +115,9 @@ function PortraitInner() {
     return (
       <div>
         <RoomHeader title="Portrait" subtitle="Muse paints all of you, from your own photos" />
-        <div className="rounded-card bg-surface p-5">
-          <p className="m-0 text-[17px] font-semibold">Ask a grown-up to make one</p>
-          <p className="m-0 mt-1 text-[15px] text-ink-soft">A parent or someone at home can paint a family portrait with you in it.</p>
+        <div className="rounded-card bg-surface p-4">
+          <p className="m-0 text-headline font-semibold">Ask a grown-up to make one</p>
+          <p className="m-0 mt-1 text-body text-ink-soft">A parent or someone at home can paint a family portrait with you in it.</p>
         </div>
       </div>
     );
@@ -129,10 +129,10 @@ function PortraitInner() {
         <RoomHeader title="Portrait" />
         <div className="rounded-hero bg-surface px-6 py-10 text-center">
           <Icon name="check" size={28} className="mx-auto" />
-          <p className="m-0 mt-3 text-[20px] font-semibold">Kept for the family</p>
-          <p className="mx-auto mt-1 max-w-[300px] text-[15px] text-ink-soft">It&rsquo;s in Memory Lane, marked &ldquo;Painted by Muse&rdquo;.</p>
+          <p className="m-0 mt-3 text-title font-semibold">Kept for the family</p>
+          <p className="mx-auto mt-1 max-w-[300px] text-body text-ink-soft">It&rsquo;s in Memory Lane, marked &ldquo;Painted by Muse&rdquo;.</p>
           <div className="mt-5 flex justify-center gap-2">
-            <Link href="/lane" className="press flex h-[52px] items-center rounded-full bg-black px-6 text-[16px] font-semibold text-white no-underline">
+            <Link href="/lane" className="press flex h-12 items-center rounded-full bg-black px-6 text-body font-semibold text-white no-underline">
               Open Memory Lane
             </Link>
           </div>
@@ -151,13 +151,13 @@ function PortraitInner() {
           <figure className="m-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={phase.url} alt={`A painted family portrait of ${picked.length} people, marked Painted by Muse`} className="block w-full rounded-[26px] shadow-frost" />
-            <figcaption className="mt-2 flex items-center gap-1.5 text-[13px] text-ink-soft">
+            <figcaption className="mt-2 flex items-center gap-1.5 text-footnote text-ink-soft">
               <Icon name="sparkle" size={14} />
               {phase.sample ? "Sample: Muse is off, so this was painted on your phone from your photos." : `Painted by Muse from ${picked.length} family photos. A painting, not a photo.`}
             </figcaption>
           </figure>
         )}
-        {error && <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">{error}</p>}
+        {error && <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">{error}</p>}
         {phase.at === "result" && (
           <div className="mt-5 flex gap-2">
             <Button variant="secondary" className="flex-1" onClick={() => { const v = variant + 1; setVariant(v); void paint(v); }}>
@@ -170,7 +170,7 @@ function PortraitInner() {
           </div>
         )}
         {phase.at === "result" && (
-          <button type="button" onClick={() => setPhase({ at: "pick" })} className="press mx-auto mt-2 block h-11 text-[14px] font-medium text-ink-soft">
+          <button type="button" onClick={() => setPhase({ at: "pick" })} className="press mx-auto mt-2 block h-11 text-callout font-medium text-ink-soft">
             Change people or style
           </button>
         )}
@@ -200,18 +200,18 @@ function PortraitInner() {
                   className={cn("press relative flex w-full flex-col items-center rounded-[20px] px-1 pb-2.5 pt-3", on ? "bg-black text-white" : "bg-surface text-ink", !usable && "opacity-45")}
                 >
                   <span className="relative">
-                    <Avatar src={srcFor(m)} name={callName(m)} size={60} />
+                    <Avatar src={srcFor(m)} name={callName(m)} size={48} />
                     {on && (
                       <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-white text-black ring-2 ring-black" aria-hidden="true">
                         <Icon name="check" size={14} />
                       </span>
                     )}
                   </span>
-                  <span className="mt-1.5 block max-w-full truncate text-[14px] font-semibold">{m.id === viewer.id ? "You" : callName(m)}</span>
-                  <span className={cn("block text-[11.5px]", on ? "text-white/70" : "text-ink-soft")}>{!ok ? "Their parent can add" : !(srcFor(m) ?? photo) ? "No photo yet" : on ? "In" : "Tap to add"}</span>
+                  <span className="mt-1.5 block max-w-full truncate text-callout font-semibold">{m.id === viewer.id ? "You" : callName(m)}</span>
+                  <span className={cn("block text-caption", on ? "text-white/70" : "text-ink-soft")}>{!ok ? "Their parent can add" : !(srcFor(m) ?? photo) ? "No photo yet" : on ? "In" : "Tap to add"}</span>
                 </button>
                 {on && photoCards.length > 0 && (
-                  <button type="button" onClick={() => setChoosingFor(choosingFor === m.id ? null : m.id)} className="press mt-0.5 block h-9 w-full text-[12.5px] font-medium text-ink-soft">
+                  <button type="button" onClick={() => setChoosingFor(choosingFor === m.id ? null : m.id)} className="press mt-0.5 block h-9 w-full text-caption font-medium text-ink-soft">
                     {cardFor[m.id] ? "Other photo ✓" : "Use another photo"}
                   </button>
                 )}
@@ -223,9 +223,9 @@ function PortraitInner() {
 
       {choosingFor && (
         <div className="mt-3 rounded-card bg-surface p-3">
-          <p className="m-0 mb-2 px-1 text-[13px] font-medium text-ink-soft">A photo of {callName(members.find((m) => m.id === choosingFor))} from the family&rsquo;s photos</p>
+          <p className="m-0 mb-2 px-1 text-footnote font-medium text-ink-soft">A photo of {callName(members.find((m) => m.id === choosingFor))} from the family&rsquo;s photos</p>
           <div className="grid grid-cols-4 gap-1.5">
-            <button type="button" onClick={() => { setCardFor(({ [choosingFor]: _drop, ...rest }) => (void _drop, rest)); setChoosingFor(null); }} className={cn("press grid aspect-square place-items-center rounded-[12px] bg-white text-[12px] font-medium", !cardFor[choosingFor] && "ring-2 ring-black")}>
+            <button type="button" onClick={() => { setCardFor(({ [choosingFor]: _drop, ...rest }) => (void _drop, rest)); setChoosingFor(null); }} className={cn("press grid aspect-square place-items-center rounded-[12px] bg-white text-caption font-medium", !cardFor[choosingFor] && "ring-2 ring-black")}>
               Profile
             </button>
             {photoCards.map((c) => (
@@ -244,19 +244,19 @@ function PortraitInner() {
           <button key={s} type="button" role="radio" aria-checked={style === s} onClick={() => setStyle(s)} className={cn("press flex items-center gap-3 rounded-[20px] p-2.5 text-left", style === s ? "bg-black text-white" : "bg-surface text-ink")}>
             <span className="h-11 w-11 shrink-0 rounded-[12px]" style={{ background: SWATCH[s] }} aria-hidden="true" />
             <span className="min-w-0">
-              <span className="block text-[15px] font-semibold leading-tight">{STYLE_LOOK[s].label}</span>
-              <span className={cn("block truncate text-[12px]", style === s ? "text-white/70" : "text-ink-soft")}>{STYLE_LOOK[s].note}</span>
+              <span className="block text-body font-semibold leading-tight">{STYLE_LOOK[s].label}</span>
+              <span className={cn("block truncate text-caption", style === s ? "text-white/70" : "text-ink-soft")}>{STYLE_LOOK[s].note}</span>
             </span>
           </button>
         ))}
       </div>
 
-      <p className="m-0 mt-5 text-[13px] leading-snug text-ink-soft">
+      <p className="m-0 mt-5 text-footnote leading-snug text-ink-soft">
         Always a painting, never a photo, and only the people you chose. Nothing is shared until you keep it.
         {quota.data && ` ${quota.data.left} left today.`}
         {quota.data?.sample && " Muse is off here, so you'll see a sample painted on your phone."}
       </p>
-      {error && <p className="m-0 mt-3 text-[14px] text-[#b42318]" role="alert">{error}</p>}
+      {error && <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">{error}</p>}
       <Button className="mt-4 w-full" disabled={picked.length < 1 || quota.data?.left === 0} onClick={() => void paint()}>
         <Icon name="sparkle" size={18} />
         {picked.length > 1 ? `Paint all ${picked.length} of you` : "Paint the portrait"}

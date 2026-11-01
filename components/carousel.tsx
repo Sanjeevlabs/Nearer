@@ -29,7 +29,7 @@ export function Carousel({ children, label, className, slide = "86%" }: { childr
   };
   return (
     <section aria-label={label} aria-roledescription="carousel" className={className}>
-      <ul ref={ref} className="no-scrollbar -mx-5 m-0 flex list-none gap-3 overflow-x-auto px-5 py-1" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 20 }}>
+      <ul ref={ref} className="no-scrollbar -mx-4 m-0 flex list-none gap-3 overflow-x-auto px-4 py-1" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 16 }}>
         {items.map((child, i) => (
           <li key={i} className="shrink-0" style={{ width: items.length === 1 ? "100%" : slide, scrollSnapAlign: "start" }} aria-roledescription="slide" aria-label={`${i + 1} of ${items.length}`}>
             {child}

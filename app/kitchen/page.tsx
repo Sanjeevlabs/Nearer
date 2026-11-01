@@ -81,13 +81,13 @@ export default function KitchenPage() {
             const by = q.askedBy ? byId(q.askedBy) : undefined;
             return (
               <div key={q.id} className="rounded-card bg-[#fff6e6] p-4">
-                <p className="m-0 text-[13px] font-medium text-[#8a4b00]">{by ? `${callName(by)} asked you` : "This week's question"}</p>
-                <p className="voice m-0 mt-1 text-[20px] leading-snug">“{q.text}”</p>
+                <p className="m-0 text-footnote font-medium text-[#8a4b00]">{by ? `${callName(by)} asked you` : "This week's question"}</p>
+                <p className="voice m-0 mt-1 text-title leading-snug">“{q.text}”</p>
                 <Button className="mt-3 w-full" onClick={() => openAdd("voice", { kind: "recipe", questionId: q.id, title: q.text.replace(/^How do you make your /i, "").replace(/\?$/, "") })}>
                   <Icon name="mic" size={18} />
                   Teach it in your voice
                 </Button>
-                <button type="button" className="mt-1 h-10 w-full text-[14px] font-medium text-[#8a4b00]" onClick={async () => { await postJson("/api/keeper", { action: "remove", questionId: q.id }); await asks.reload(); }}>
+                <button type="button" className="mt-1 h-10 w-full text-callout font-medium text-[#8a4b00]" onClick={async () => { await postJson("/api/keeper", { action: "remove", questionId: q.id }); await asks.reload(); }}>
                   Not this one
                 </button>
               </div>
@@ -97,15 +97,15 @@ export default function KitchenPage() {
       )}
 
       <div className="grid grid-cols-3 gap-2">
-        <Link href="/kitchen/new" className="press flex h-[64px] flex-col items-center justify-center gap-0.5 rounded-[20px] bg-black text-[14px] font-semibold text-white no-underline">
+        <Link href="/kitchen/new" className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-black text-callout font-semibold text-white no-underline">
           <Icon name="plus" size={18} />
           Write one
         </Link>
-        <button type="button" onClick={() => openAdd("voice", { kind: "recipe" })} className="press flex h-[64px] flex-col items-center justify-center gap-0.5 rounded-[20px] bg-surface text-[14px] font-semibold">
+        <button type="button" onClick={() => openAdd("voice", { kind: "recipe" })} className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-surface text-callout font-semibold">
           <Icon name="mic" size={18} />
           Teach by voice
         </button>
-        <button type="button" onClick={() => setAsking((v) => !v)} aria-expanded={asking} className={cn("press flex h-[64px] flex-col items-center justify-center gap-0.5 rounded-[20px] text-[14px] font-semibold", asking ? "bg-black/80 text-white" : "bg-surface")}>
+        <button type="button" onClick={() => setAsking((v) => !v)} aria-expanded={asking} className={cn("press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] text-callout font-semibold", asking ? "bg-black/80 text-white" : "bg-surface")}>
           <Icon name="reply" size={18} />
           Ask someone
         </button>
@@ -118,13 +118,13 @@ export default function KitchenPage() {
       {recipes.length > 3 && (
         <label className="mt-5 flex h-11 items-center gap-2 rounded-full bg-surface px-4">
           <span className="sr-only">Search recipes</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${recipes.length} recipes or an ingredient`} className="min-w-0 flex-1 bg-transparent text-[15px] outline-none" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${recipes.length} recipes or an ingredient`} className="min-w-0 flex-1 bg-transparent text-body outline-none" />
         </label>
       )}
       {usedCourses.length > 1 && (
-        <div className="no-scrollbar -mx-5 mt-2 flex gap-1.5 overflow-x-auto px-5" role="radiogroup" aria-label="Course">
+        <div className="no-scrollbar -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Course">
           {(["all", ...usedCourses] as const).map((c) => (
-            <button key={c} type="button" role="radio" aria-checked={course === c} onClick={() => setCourse(c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-[14px] font-medium", course === c ? "bg-black text-white" : "bg-surface")}>
+            <button key={c} type="button" role="radio" aria-checked={course === c} onClick={() => setCourse(c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", course === c ? "bg-black text-white" : "bg-surface")}>
               {c === "all" ? "All" : COURSE_LOOK[c].label}
             </button>
           ))}
@@ -135,16 +135,16 @@ export default function KitchenPage() {
         <Boundary key={cook.id} label="This shelf"><section aria-label={`${callName(cook)}'s recipes`}>
           <div className="mb-3 mt-7 flex items-center gap-2.5">
             <Avatar src={memberPhoto(cook)} name={callName(cook)} size={38} />
-            <h2 className="m-0 min-w-0 flex-1 truncate text-[20px]">
+            <h2 className="m-0 min-w-0 flex-1 truncate text-title">
               {cook.id === viewer.id ? "Your recipes" : `${callName(cook)}'s recipes`}
             </h2>
             {cook.id === viewer.id && (
-              <Link href="/kitchen/new" className="text-[14px] font-semibold text-ink-soft no-underline">
+              <Link href="/kitchen/new" className="text-callout font-semibold text-ink-soft no-underline">
                 + Add
               </Link>
             )}
           </div>
-          <ul className="no-scrollbar -mx-5 my-0 flex list-none snap-x scroll-px-5 gap-3 overflow-x-auto py-0 pb-1 pl-5 pr-5">
+          <ul className="no-scrollbar -mx-4 my-0 flex list-none snap-x scroll-px-4 gap-3 overflow-x-auto py-0 pb-1 pl-4 pr-4">
             {list.map((r) => (
               <RecipeTile key={r.id} recipe={r} attempts={attemptsFor(r.id)} canManage={canChange(viewer, r.cookId) || Boolean(r.addedBy && canChange(viewer, r.addedBy))} onDeleted={() => void reload()} />
             ))}
@@ -156,8 +156,8 @@ export default function KitchenPage() {
         <Link href="/kitchen/new" className="press mt-7 flex items-center gap-3 rounded-card bg-surface p-4 text-ink no-underline">
           <Avatar src={memberPhoto(viewer)} name={callName(viewer)} size={38} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[16px] font-semibold">Your shelf is empty</span>
-            <span className="block text-[13px] text-ink-soft">Share the one dish people ask you to make.</span>
+            <span className="block text-body font-semibold">Your shelf is empty</span>
+            <span className="block text-footnote text-ink-soft">Share the one dish people ask you to make.</span>
           </span>
           <Icon name="chevron" size={18} className="text-ink-faint" />
         </Link>
@@ -172,7 +172,7 @@ export default function KitchenPage() {
               .map((q) => (
                 <li key={q.id} className="flex items-center gap-3 rounded-[18px] bg-surface px-3 py-2.5">
                   <Avatar src={memberPhoto(byId(q.toMemberId))} name={callName(byId(q.toMemberId))} size={36} />
-                  <span className="voice min-w-0 flex-1 text-[16px]">“{q.text}”</span>
+                  <span className="voice min-w-0 flex-1 text-body">“{q.text}”</span>
                   {q.askedBy === viewer.id && (
                     <ActionMenu
                       label="Question options"
@@ -187,8 +187,8 @@ export default function KitchenPage() {
 
       {data && recipes.length === 0 && (
         <div className="mt-6 rounded-hero bg-surface px-6 py-10 text-center">
-          <p className="m-0 text-[20px] font-semibold">The kitchen is waiting for its first recipe</p>
-          <p className="mx-auto mt-2 max-w-[300px] text-[15px] text-ink-soft">Ask the person whose cooking you miss most. They talk; Nearer writes the card; you cook it wherever you are.</p>
+          <p className="m-0 text-title font-semibold">The kitchen is waiting for its first recipe</p>
+          <p className="mx-auto mt-2 max-w-[300px] text-body text-ink-soft">Ask the person whose cooking you miss most. They talk; Nearer writes the card; you cook it wherever you are.</p>
         </div>
       )}
     </div>
@@ -204,15 +204,15 @@ function RecipeTile({ recipe, attempts, canManage, onDeleted }: { recipe: Recipe
     <li className="relative w-[164px] shrink-0 snap-start">
       <Link href={`/kitchen/${recipe.id}`} className="press block text-ink no-underline">
         <RecipeCover recipe={recipe} photo={photo ? (resolveMediaUrl(photo) ?? photo) : null} className="h-[136px] rounded-[22px]" />
-        <p className="m-0 mt-2 line-clamp-2 text-[15px] font-semibold leading-tight">{recipe.title}</p>
-        <p className="m-0 mt-0.5 flex items-center gap-1 text-[12.5px] text-ink-soft">
+        <p className="m-0 mt-2 line-clamp-2 text-body font-semibold leading-tight">{recipe.title}</p>
+        <p className="m-0 mt-0.5 flex items-center gap-1 text-caption text-ink-soft">
           <span style={{ color: look.ink }}>{look.label}</span>
           {time && <span>· {time}</span>}
           {recipe.voiceCardId && <Icon name="mic" size={12} className="ml-0.5 text-[#8a4b00]" />}
           {recipe.videoCardId && <Icon name="camera" size={12} className="text-[#8a4b00]" />}
         </p>
-        {recipe.scanRef && <p className="m-0 font-hand text-[15px] leading-tight text-[#8a4b00]">from the handwritten card</p>}
-        {attempts.length > 0 && <p className="m-0 text-[12px] text-ink-faint">cooked {attempts.length}×</p>}
+        {recipe.scanRef && <p className="m-0 font-hand text-body leading-tight text-[#8a4b00]">from the handwritten card</p>}
+        {attempts.length > 0 && <p className="m-0 text-caption text-ink-faint">cooked {attempts.length}×</p>}
       </Link>
       {canManage && (
         <div className="absolute right-1.5 top-1.5">
@@ -240,23 +240,23 @@ function AskForRecipe({ onDone }: { onDone: () => void }) {
   return (
     <div className="mt-3 rounded-card bg-surface p-4">
       {sent ? (
-        <p className="m-0 text-[15px]">
+        <p className="m-0 text-body">
           Asked. {sent} will see it at the top of their courtyard, and can answer by voice.
         </p>
       ) : (
         <>
-          <p className="m-0 mb-2 text-[13px] font-medium text-ink-soft">Ask</p>
+          <p className="m-0 mb-2 text-footnote font-medium text-ink-soft">Ask</p>
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
             {elders.map((m) => (
-              <button key={m.id} type="button" onClick={() => setTo(m.id)} aria-pressed={to === m.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-[15px] font-medium", to === m.id ? "bg-black text-white" : "bg-white")}>
+              <button key={m.id} type="button" onClick={() => setTo(m.id)} aria-pressed={to === m.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", to === m.id ? "bg-black text-white" : "bg-white")}>
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
                 {callName(m)}
               </button>
             ))}
           </div>
           <label className="mt-3 block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-soft">how they make their…</span>
-            <input value={dish} onChange={(e) => setDish(e.target.value)} maxLength={60} placeholder="aloo paratha" className="h-[52px] w-full rounded-full bg-white px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold" />
+            <span className="mb-1.5 block text-footnote font-medium text-ink-soft">how they make their…</span>
+            <input value={dish} onChange={(e) => setDish(e.target.value)} maxLength={60} placeholder="aloo paratha" className="h-12 w-full rounded-full bg-white px-5 text-body outline-none focus:ring-2 focus:ring-marigold" />
           </label>
           <Button
             className="mt-3 w-full"

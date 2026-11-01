@@ -44,7 +44,7 @@ export function PeoplePicker({
             transition={{ type: "spring", stiffness: 420, damping: 38 }}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <h2 className="m-0 mb-3 px-2 text-[19px]">{title}</h2>
+            <h2 className="m-0 mb-3 px-2 text-title">{title}</h2>
             <ul className="m-0 list-none overflow-hidden rounded-[22px] bg-white/90 p-0 ring-1 ring-black/[.05]">
               {people.length > 1 && (
                 <li>
@@ -56,7 +56,7 @@ export function PeoplePicker({
                         </span>
                       ))}
                     </span>
-                    <span className="flex-1 text-[16px] font-semibold">{everyoneLabel ?? t("picker.everyone")}</span>
+                    <span className="flex-1 text-body font-semibold">{everyoneLabel ?? t("picker.everyone")}</span>
                     <Icon name="chevron" size={16} className="text-ink-faint rtl:-scale-x-100" />
                   </button>
                 </li>
@@ -71,8 +71,8 @@ export function PeoplePicker({
                         {st?.dot && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full ring-2 ring-white" style={{ background: st.dot }} />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[16px] font-semibold leading-tight">{callName(p)}</span>
-                        {st?.text && <span className="block truncate text-[13px] text-ink-soft">{st.text}</span>}
+                        <span className="block text-body font-semibold leading-tight">{callName(p)}</span>
+                        {st?.text && <span className="block truncate text-footnote text-ink-soft">{st.text}</span>}
                       </span>
                       <Icon name="chevron" size={16} className="text-ink-faint rtl:-scale-x-100" />
                     </button>

@@ -17,8 +17,8 @@ import { useJson } from "@/lib/use-json";
 
 /** Family room, Kids tab: what the children shared, asked and were told. Grown-ups only. */
 
-const card = "mt-5 rounded-[26px] bg-surface p-5";
-const Empty = ({ children }: { children: React.ReactNode }) => <p className="m-0 mt-2 text-[14.5px] leading-snug text-ink-soft">{children}</p>;
+const card = "mt-5 rounded-[26px] bg-surface p-4";
+const Empty = ({ children }: { children: React.ReactNode }) => <p className="m-0 mt-2 text-callout leading-snug text-ink-soft">{children}</p>;
 
 /** "Age 9 · Birthday 9 Nov": the age only when the birth year is known, the birthday only when it is added. */
 function ageLine(m: Member): string | null {
@@ -33,7 +33,7 @@ function PlayPill({ voice, label }: { voice: Card | undefined; label: string }) 
   if (!voice) return null;
   const playing = current?.id === voice.id && isPlaying;
   return (
-    <button type="button" onClick={() => (current?.id === voice.id ? toggle() : play(voice))} aria-label={playing ? "Pause" : label} className="press flex h-11 items-center gap-2 rounded-full bg-well px-4 text-[14px] font-semibold">
+    <button type="button" onClick={() => (current?.id === voice.id ? toggle() : play(voice))} aria-label={playing ? "Pause" : label} className="press flex h-11 items-center gap-2 rounded-full bg-well px-4 text-callout font-semibold">
       <Icon name={playing ? "pause" : "play"} size={14} />
       {playing ? "Pause" : "Play"}
     </button>
@@ -64,11 +64,11 @@ function KidsBody({ data }: { data: KidsPage }) {
               return (
                 <li key={k.id}>
                   <Link href={`/people/${k.id}`} className="flex items-center gap-3 text-ink no-underline">
-                    <Avatar src={memberPhoto(k)} name={callName(k)} size={52} />
+                    <Avatar src={memberPhoto(k)} name={callName(k)} size={44} />
                     <span className="min-w-0">
-                      <span className="block text-[18px] font-semibold leading-tight">{callName(k)}</span>
-                      {bday && <span className="block text-[14px] leading-snug text-ink-soft">{bday}</span>}
-                      <span className="block text-[14px] leading-snug text-ink-soft">{last ? `Last from ${callName(k)}: ${relativeDay(last.takenAt)}` : `Nothing from ${callName(k)} yet`}</span>
+                      <span className="block text-headline font-semibold leading-tight">{callName(k)}</span>
+                      {bday && <span className="block text-callout leading-snug text-ink-soft">{bday}</span>}
+                      <span className="block text-callout leading-snug text-ink-soft">{last ? `Last from ${callName(k)}: ${relativeDay(last.takenAt)}` : `Nothing from ${callName(k)} yet`}</span>
                     </span>
                   </Link>
                 </li>
@@ -78,11 +78,11 @@ function KidsBody({ data }: { data: KidsPage }) {
         )}
       </section>
 
-      <section data-ui="kids-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-5" style={{ background: "var(--well)" }}>
+      <section data-ui="kids-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-4" style={{ background: "var(--well)" }}>
         <div className="flex items-center justify-between gap-3">
           <Label>Fridge</Label>
           {kids.length > 0 && (
-            <button type="button" onClick={() => openAdd("photos", { kind: "fridge", ...(kids.length === 1 ? { forMemberId: kids[0].id } : {}) })} className="press -mr-2 flex h-10 items-center gap-1.5 px-2 text-[14px] font-semibold text-ink">
+            <button type="button" onClick={() => openAdd("photos", { kind: "fridge", ...(kids.length === 1 ? { forMemberId: kids[0].id } : {}) })} className="press -mr-2 flex h-10 items-center gap-1.5 px-2 text-callout font-semibold text-ink">
               <Icon name="plus" size={15} />
               Add to the fridge
             </button>
@@ -104,14 +104,14 @@ function KidsBody({ data }: { data: KidsPage }) {
               const storyId = data.askStory[a.id];
               return (
                 <li key={a.id}>
-                  <p className="m-0 text-[16px] font-semibold">{a.topic === "story" ? `${who} would like a story` : `${who} asked you something`}</p>
+                  <p className="m-0 text-body font-semibold">{a.topic === "story" ? `${who} would like a story` : `${who} asked you something`}</p>
                   {words &&
                     (a.answeredCardId && storyId ? (
-                      <Link href={`/stories?new=${encodeURIComponent(storyId)}`} className="voice m-0 mt-0.5 block text-[17px] leading-snug text-ink">
+                      <Link href={`/stories?new=${encodeURIComponent(storyId)}`} className="voice m-0 mt-0.5 block text-headline leading-snug text-ink">
                         &ldquo;{words}&rdquo; &rarr;
                       </Link>
                     ) : (
-                      <p className="voice m-0 mt-0.5 line-clamp-3 text-[17px] leading-snug text-ink">&ldquo;{words}&rdquo;</p>
+                      <p className="voice m-0 mt-0.5 line-clamp-3 text-headline leading-snug text-ink">&ldquo;{words}&rdquo;</p>
                     ))}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <PlayPill voice={q} label={`Play ${who}'s question`} />
@@ -120,7 +120,7 @@ function KidsBody({ data }: { data: KidsPage }) {
                         Answer by voice
                       </button>
                     )}
-                    <span className="text-[12.5px] text-ink-soft">{a.answeredCardId && !storyId ? `Answered ${relativeDay(a.answeredAt ?? a.askedAt)}` : relativeDay(a.askedAt)}</span>
+                    <span className="text-caption text-ink-soft">{a.answeredCardId && !storyId ? `Answered ${relativeDay(a.answeredAt ?? a.askedAt)}` : relativeDay(a.askedAt)}</span>
                   </div>
                 </li>
               );
@@ -140,11 +140,11 @@ function KidsBody({ data }: { data: KidsPage }) {
           <ul className="m-0 mt-2 list-none space-y-3 p-0">
             {data.stories.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3">
-                <span className="min-w-0 text-[15px] leading-snug">
+                <span className="min-w-0 text-body leading-snug">
                   <span className="block font-semibold">
                     {nameOf(s.byMemberId)} for {nameOf(s.forMemberId)}
                   </span>
-                  <span className="block text-[13px] text-ink-soft">{s.title ? `${s.title} · ${relativeDay(s.at)}` : relativeDay(s.at)}</span>
+                  <span className="block text-footnote text-ink-soft">{s.title ? `${s.title} · ${relativeDay(s.at)}` : relativeDay(s.at)}</span>
                 </span>
                 <PlayPill voice={voice(s.cardId)} label={`Play ${nameOf(s.byMemberId)}'s story for ${nameOf(s.forMemberId)}`} />
               </li>
@@ -181,7 +181,7 @@ export default function KidsPageRoute() {
     <div>
       <RoomHeader title="Kids" subtitle="What the children shared, asked and were told" />
       {isKid(viewer) ? (
-        <p className="m-0 text-[15px] text-ink-soft">This page is for the grown-ups. Your things are on your first screen.</p>
+        <p className="m-0 text-body text-ink-soft">This page is for the grown-ups. Your things are on your first screen.</p>
       ) : q.data === null ? (
         <div className="skeleton h-[420px] rounded-card" aria-busy="true" aria-label="Loading the kids" />
       ) : (

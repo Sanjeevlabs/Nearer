@@ -39,25 +39,25 @@ export function Waiting({ hostName, onCheck }: { hostName: string | null; onChec
       <Photo src={COURTYARD} alt="" sizes="100vw" priority />
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/40" aria-hidden="true" />
       <main className="relative mx-auto flex h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
-        <p className="m-0 px-2 text-[22px] font-bold tracking-[-0.02em] text-white drop-shadow">Nearer</p>
+        <p className="m-0 px-2 text-title font-bold tracking-[-0.02em] text-white drop-shadow">Nearer</p>
         <div className="flex-1" />
         <section aria-live="polite" className="glass rounded-[30px] p-6">
           <span className="relative mb-4 flex h-3 w-3" aria-hidden="true">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#e8a33d] opacity-60 motion-reduce:animate-none" />
             <span className="relative inline-flex h-3 w-3 rounded-full bg-[#e8a33d]" />
           </span>
-          <h1 className="m-0 text-[28px] leading-[1.15] text-white">Waiting for {who} to let you in</h1>
-          <p className="voice m-0 mt-2 text-[17px] leading-snug text-white/85">You&rsquo;re at the door. Once they say yes, the window opens here on its own.</p>
+          <h1 data-display className="m-0 text-display leading-[1.15] text-white">Waiting for {who} to let you in</h1>
+          <p className="voice m-0 mt-2 text-headline leading-snug text-white/85">You&rsquo;re at the door. Once they say yes, the window opens here on its own.</p>
           <a
             href={`https://wa.me/?text=${encodeURIComponent(ask)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="press mt-6 flex h-[52px] items-center justify-center gap-2 rounded-full bg-white text-[16px] font-semibold text-black no-underline"
+            className="press mt-6 flex h-12 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black no-underline"
           >
             <Icon name="whatsapp" size={20} />
             Ask them on WhatsApp
           </a>
-          <button type="button" disabled={busy} onClick={() => void signOut()} className="press mt-2 h-11 w-full text-[14px] font-medium text-white/80 disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => void signOut()} className="press mt-2 h-11 w-full text-callout font-medium text-white/80 disabled:opacity-50">
             Not you? Sign out
           </button>
         </section>
