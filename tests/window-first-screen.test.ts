@@ -189,6 +189,6 @@ describe("the demo is seeded against the member's local morning", () => {
 describe("the default photo", () => {
   it("is one constant, shared by the server and the phone", () => {
     expect(SERVER_DEFAULT).toBe(DEFAULT_IMAGE);
-    expect(DEFAULT_IMAGE).toBe("/demo/courtyard.jpg");
+    expect(DEFAULT_IMAGE).toBe("/demo/home-courtyard.jpg");
   });
 });
