@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as tokenGet } from "@/app/api/sit/token/route";
+import { GET as roomGet } from "@/app/api/sit/room/route";
 import { POST as sitPost } from "@/app/api/sit/route";
 import { jaasEnabled, mintJaasToken } from "@/lib/jaas";
 import { resetDemo } from "@/lib/store";
@@ -78,5 +79,30 @@ describe("GET /api/sit/token", () => {
     expect(decode(host.jwt.split(".")[1]).context.user.moderator).toBe("true");
     const guest = (await (await tokenGet(req(`/api/sit/token?id=${knock.id}`, "dadi"))).json()) as { jwt: string };
     expect(decode(guest.jwt.split(".")[1]).context.user.moderator).toBe("false");
+  });
+});
+
+describe("GET /api/sit/room", () => {
+  it("404s for an unknown id", async () => {
+    expect((await roomGet(req("/api/sit/room?id=nope"))).status).toBe(404);
+  });
+
+  it("gives a public Jitsi url, and no token, when JaaS is not configured", async () => {
+    const { knock } = (await (await sitPost(req("/api/sit", "leo", { action: "knock", minutes: 30 }))).json()) as { knock: { id: string } };
+    const res = await roomGet(req(`/api/sit/room?id=${knock.id}`, "dadi"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    const body = (await res.json()) as { url: string };
+    expect(new URL(body.url).host).toBe("meet.jit.si");
+    expect(body.url).toBe(`https://meet.jit.si/Aangan-${knock.id}`);
+    expect(body).not.toHaveProperty("jwt");
+  });
+
+  it("follows the JaaS provider when configured, still without a token", async () => {
+    enable();
+    const { knock } = (await (await sitPost(req("/api/sit", "leo", { action: "knock", minutes: 30 }))).json()) as { knock: { id: string } };
+    const body = (await (await roomGet(req(`/api/sit/room?id=${knock.id}`, "dadi"))).json()) as { url: string };
+    expect(body.url).toBe(`https://8x8.vc/${APP}/Aangan-${knock.id}`);
+    expect(body).not.toHaveProperty("jwt");
   });
 });

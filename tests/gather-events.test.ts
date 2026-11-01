@@ -202,6 +202,15 @@ describe("/api/gather/events (mock)", () => {
     expect((await POST(req("dadi", { action: "task", eventId: e.id, taskId: t.id, ownerId: "stranger" }))).status).toBe(400);
   });
 
+  it("locks into a sitting in the venue the planner chose", async () => {
+    const date = addDays(new Date().toISOString().slice(0, 10), 5);
+    const { event: e } = await json<{ event: FamilyEvent }>(POST(req("arjun", { action: "create", type: "custom", title: "Terrace evening", date })));
+    const locked = await json<{ event: FamilyEvent }>(POST(req("arjun", { action: "lock", eventId: e.id, slotId: e.slots[0].id, venue: "terrace" })));
+    expect(locked.event.sittingId).toBeTruthy();
+    const sit = await json<{ sittings: { id: string; venue: string }[] }>(sitGET(new Request("http://test/api/sit", { headers: { cookie: sessionCookie("arjun") } })));
+    expect(sit.sittings.find((s) => s.id === locked.event.sittingId)?.venue).toBe("terrace");
+  });
+
   it("one event per occasion and date: a second tap opens the same one", async () => {
     const date = addDays(new Date().toISOString().slice(0, 10), 4);
     const body = { action: "create", type: "birthday", occasionKey: "birthday", forMemberId: "dadi", date };

@@ -9,7 +9,8 @@ import { deleteDoc, newId, putDoc } from "@/lib/family-docs";
 import { draftPlan } from "@/lib/gather-plan";
 import { buildPrompts, upcomingOccasion, type UpcomingOccasion } from "@/lib/gather-prompts";
 import { dismiss, getEvent, listDismissed, listEvents, putEvent } from "@/lib/gather-store";
-import { SITTING_REASONS } from "@/lib/kinds";
+import { SITTING_REASONS, VENUE_IDS } from "@/lib/kinds";
+import type { VenueId } from "@/lib/venues";
 import { addDays, cleanTitle, daysBetween, occasionsInRange } from "@/lib/occasion-calendar";
 import { familyHolidays } from "@/lib/occasions-server";
 import { callName } from "@/lib/people";
@@ -67,16 +68,16 @@ const Body = z.discriminatedUnion("action", [
     /** Also plan a cake, flowers or sweets. Owner and admins only. */
     extras: z.boolean().default(false),
   }),
-  z.object({ action: z.literal("vote"), eventId: Id, slotId: Id }),
+  z.object({ action: z.literal("vote"), eventId: Id, slotId: Id, venue: z.enum(VENUE_IDS).optional() }),
   z.object({ action: z.literal("none"), eventId: Id }),
-  z.object({ action: z.literal("lock"), eventId: Id, slotId: Id }),
+  z.object({ action: z.literal("lock"), eventId: Id, slotId: Id, venue: z.enum(VENUE_IDS).default("courtyard") }),
   z.object({ action: z.literal("task"), eventId: Id, taskId: Id, ownerId: Id.nullable().optional(), done: z.boolean().optional() }),
   z.object({ action: z.literal("cancel"), eventId: Id }),
   z.object({ action: z.literal("dismiss"), key: z.string().min(1).max(160) }),
 ]);
 
-/** Lock a slot: create the gathering session (a sitting with its video room). */
-async function lock(familyId: string, e: FamilyEvent, slotId: string): Promise<FamilyEvent> {
+/** Lock a slot: create the gathering session (a sitting with its video room) in the chosen venue. */
+async function lock(familyId: string, e: FamilyEvent, slotId: string, venue: VenueId = "courtyard"): Promise<FamilyEvent> {
   const slot = e.slots.find((s) => s.id === slotId);
   if (!slot) return e;
   const reason = (SITTING_REASONS as readonly string[]).includes(templateFor(e.type).sittingReason) ? (templateFor(e.type).sittingReason as (typeof SITTING_REASONS)[number]) : "just-sit";
@@ -89,6 +90,7 @@ async function lock(familyId: string, e: FamilyEvent, slotId: string): Promise<F
     startsAt: slot.startsAt,
     invites: e.invites,
     note: e.plan.runOfShow.map((s) => s.title).join(" · ").slice(0, 200),
+    venue,
     going,
     cantMake: [],
     createdAt: new Date().toISOString(),
@@ -176,14 +178,15 @@ async function postHandler(req: Request): Promise<Response> {
     let next = body.action === "vote" ? toggleVote(e, body.slotId, auth.memberId) : markNone(e, auth.memberId);
     next = await putEvent(auth.familyId, next);
     // When most can make it, Muse locks the slot and opens the session.
+    // The planner's venue rides along when their own vote locks it.
     const ready = slotToLock(next);
-    if (ready) next = await lock(auth.familyId, next, ready.id);
+    if (ready) next = await lock(auth.familyId, next, ready.id, body.action === "vote" && isHost ? body.venue : undefined);
     return Response.json({ event: next, locked: next.status === "locked" });
   }
   if (body.action === "lock") {
     if (!isHost) return Response.json({ error: "not-host" }, { status: 403 });
     if (!e.slots.some((s) => s.id === body.slotId)) return Response.json({ error: "unknown-slot" }, { status: 400 });
-    return Response.json({ event: await lock(auth.familyId, e, body.slotId), locked: true });
+    return Response.json({ event: await lock(auth.familyId, e, body.slotId, body.venue), locked: true });
   }
   if (body.action === "task") {
     if (body.ownerId && !inFamily(body.ownerId)) return Response.json({ error: "unknown-member" }, { status: 400 });
