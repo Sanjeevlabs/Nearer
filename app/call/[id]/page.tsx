@@ -187,6 +187,16 @@ export default function CallPage() {
               </p>
               <h1 className="m-0 truncate text-[19px] text-white">{title}</h1>
             </div>
+            {valid && mode === "api" && (
+              <button type="button" onClick={toggleBg} aria-pressed={bg} className="press flex h-9 shrink-0 items-center rounded-full bg-black/35 px-3 text-[12.5px] font-semibold text-white">
+                Background {bg ? "on" : "off"}
+              </button>
+            )}
+            {valid && (
+              <a href={roomUrl(id)} target="_blank" rel="noreferrer" aria-label="Open in browser" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/35 text-white no-underline">
+                <Icon name="share" size={16} />
+              </a>
+            )}
           </header>
           <ul className="no-scrollbar m-0 flex list-none gap-2 overflow-x-auto px-4 pb-1 pt-2" aria-label="Family clocks">
             {members.map((m) => (
@@ -222,16 +232,6 @@ export default function CallPage() {
             )
           ) : (
             <div className="grid h-full place-items-center px-8 text-center text-white/70">This sitting has ended. Start a new one from the courtyard.</div>
-          )}
-          {valid && (
-            <a href={roomUrl(id)} target="_blank" rel="noreferrer" className="glass-dark absolute right-3 top-3 flex h-9 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-semibold text-white no-underline">
-              Open in browser
-            </a>
-          )}
-          {valid && mode === "api" && (
-            <button type="button" onClick={toggleBg} aria-pressed={bg} className="glass-dark press absolute left-3 top-3 flex h-9 items-center rounded-full px-3 text-[12.5px] font-semibold text-white">
-              Background: {bg ? "on" : "off"}
-            </button>
           )}
         </div>
       </VenueScene>
