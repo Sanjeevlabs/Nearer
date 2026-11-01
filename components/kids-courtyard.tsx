@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { growLine, isKid, kidCards, kidsOf, type Grew } from "@/lib/kids";
 import type { KidAsk } from "@/lib/kinds";
+import type { Card, Member } from "@/lib/schemas";
 import { callName, cardCover, relativeDay } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
@@ -18,8 +19,8 @@ import { useViewer } from "./viewer";
 // kids asked, a line when a new mark lands on the doorframe, and the fridge strip.
 // Nothing here appears for a child, and nothing appears when the family has no children.
 
-const Label = ({ children }: { children: React.ReactNode }) => <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-soft">{children}</p>;
-const pill = "press h-11 rounded-full px-5 text-[14px] font-semibold";
+export const Label = ({ children }: { children: React.ReactNode }) => <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.1em] text-ink-soft">{children}</p>;
+export const pill = "press h-11 rounded-full px-5 text-[14px] font-semibold";
 
 /** "Tonight's story for Vihaan": one prompt a day; recording or "Not now" both end it. */
 function BedtimePrompt() {
@@ -119,24 +120,18 @@ function GrewCard() {
   );
 }
 
-/** The fridge: the kids' latest photos, drawings and voices, as polaroids held by a magnet. */
-function Fridge() {
+/**
+ * The fridge's polaroids held by a magnet: tap one to open it, and a "Reply by voice" pill per child.
+ * `grid` wraps them all (the Kids page); otherwise one scrolling strip (the courtyard).
+ */
+export function FridgeBoard({ cards, replyTo, grid = false }: { cards: Card[]; replyTo: Member[]; grid?: boolean }) {
   const { members } = useViewer();
-  const { openAdd, refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
-  const asks = useJson<{ askCardIds?: string[] }>("/api/kid-ask");
+  const { openAdd } = useShell();
   const [open, setOpen] = useState<number | null>(null);
-  const strip = useMemo(() => {
-    const skip = new Set(asks.data?.askCardIds ?? []);
-    return kidCards(cards ?? [], members).filter((c) => !skip.has(c.id)).slice(0, 6);
-  }, [cards, members, asks.data]);
-  if (strip.length === 0) return null;
-  const latest = members.find((m) => m.id === strip[0].authorId);
   return (
-    <section data-ui="courtyard-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-5" style={{ background: "var(--well)" }}>
-      <Label>Fridge</Label>
-      <ul className="no-scrollbar -mx-1 m-0 mt-3 flex list-none gap-3 overflow-x-auto px-1 pb-2 pt-2">
-        {strip.map((c, i) => {
+    <>
+      <ul className={grid ? "m-0 mt-3 flex list-none flex-wrap gap-x-3 gap-y-4 p-0 pt-2" : "no-scrollbar -mx-1 m-0 mt-3 flex list-none gap-3 overflow-x-auto px-1 pb-2 pt-2"}>
+        {cards.map((c, i) => {
           const author = members.find((m) => m.id === c.authorId);
           return (
             <li key={c.id} className="shrink-0" style={{ transform: `rotate(${i % 2 ? 2.2 : -2.2}deg)` }}>
@@ -156,11 +151,40 @@ function Fridge() {
           );
         })}
       </ul>
-      <button type="button" onClick={() => latest && openAdd("voice", null, [latest.id])} className={`${pill} mt-1 flex items-center gap-2 bg-white text-ink`}>
-        <Icon name="mic" size={15} />
-        Reply to {callName(latest)} by voice
-      </button>
-      <AnimatePresence>{open !== null && <LaneViewer cards={strip} start={open} title="Fridge" onClose={() => setOpen(null)} />}</AnimatePresence>
+      <div className="mt-1 flex flex-wrap gap-2">
+        {replyTo.map((kid) => (
+          <button key={kid.id} type="button" onClick={() => openAdd("voice", null, [kid.id])} className={`${pill} flex items-center gap-2 bg-white text-ink`}>
+            <Icon name="mic" size={15} />
+            Reply to {callName(kid)} by voice
+          </button>
+        ))}
+      </div>
+      <AnimatePresence>{open !== null && <LaneViewer cards={cards} start={open} title="Fridge" onClose={() => setOpen(null)} />}</AnimatePresence>
+    </>
+  );
+}
+
+/** The fridge strip on the courtyard: the kids' latest photos, drawings and voices. */
+function Fridge() {
+  const { members } = useViewer();
+  const { refreshKey } = useShell();
+  const { cards } = useFamilyCards(refreshKey);
+  const asks = useJson<{ askCardIds?: string[] }>("/api/kid-ask");
+  const strip = useMemo(() => {
+    const skip = new Set(asks.data?.askCardIds ?? []);
+    return kidCards(cards ?? [], members).filter((c) => !skip.has(c.id)).slice(0, 6);
+  }, [cards, members, asks.data]);
+  if (strip.length === 0) return null;
+  const latest = members.find((m) => m.id === strip[0].authorId);
+  return (
+    <section data-ui="courtyard-fridge" aria-label="Fridge" className="mt-5 rounded-[26px] p-5" style={{ background: "var(--well)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <Label>Fridge</Label>
+        <Link href="/bond/kids" className="press -mr-2 flex h-10 items-center px-2 text-[14px] font-semibold text-ink no-underline">
+          All &rarr;
+        </Link>
+      </div>
+      <FridgeBoard cards={strip} replyTo={latest ? [latest] : []} />
     </section>
   );
 }

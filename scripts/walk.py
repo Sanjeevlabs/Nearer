@@ -24,7 +24,8 @@ ROOMS = {
     "Memories": ["/lane", "/stories"],
     "Kitchen": ["/kitchen"],
     "Care": ["/care", "/care/helpers", "/nearby"],
-    "Family": ["/bond", "/bond/homes", "/book", "/advice", "/portrait"],
+    # Kids (/bond/kids) is there because the demo family has children.
+    "Family": ["/bond", "/bond/homes", "/bond/kids", "/book", "/advice", "/portrait"],
     "Celebrations": ["/gather", "/rituals", "/together/visits", "/together/holidays", "/gather/play"],
 }
 # Kid mode (lib/menu.ts roomsFor(..., kid)): a child's house has three rooms, and fewer tabs in them.

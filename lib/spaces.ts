@@ -9,11 +9,12 @@ export interface Space {
   rooms: { href: string; title: string }[];
 }
 
-export function spacesFor(isParent: boolean, canPortrait = true, kid = false): Space[] {
-  return roomsFor(isParent, canPortrait, kid).map((r) => ({ id: r.id, title: r.title, rooms: r.tabs.map((t) => ({ href: t.href, title: t.label })) }));
+export function spacesFor(isParent: boolean, canPortrait = true, kid = false, hasKids = false): Space[] {
+  return roomsFor(isParent, canPortrait, kid, hasKids).map((r) => ({ id: r.id, title: r.title, rooms: r.tabs.map((t) => ({ href: t.href, title: t.label })) }));
 }
 
-const ALL = spacesFor(false);
+// Every page a grown-up can have (Kids included), so /bond/kids always knows its room.
+const ALL = spacesFor(false, true, false, true);
 
 /** The space a path belongs to, and which of its rooms is open (the longest matching page wins). */
 export function spaceFor(pathname: string): { space: Space; room: string } | null {
@@ -26,9 +27,6 @@ export function spaceFor(pathname: string): { space: Space; room: string } | nul
   return best;
 }
 
-const NO_PORTRAIT = spacesFor(false, false);
-const KID = spacesFor(false, false, true);
-
 /** The room a tab page belongs to, one-page rooms (Kitchen) included: the eyebrow above its title. */
 export function roomOf(pathname: string): Space | null {
   const at = spaceFor(pathname);
@@ -38,12 +36,13 @@ export function roomOf(pathname: string): Space | null {
 /**
  * The tab row for a page: only on a room's own tab page, and only when the
  * room has more than one. Children (`canPortrait` false) get the room without
- * Portrait, and no row on a page that isn't one of their tabs.
+ * Portrait, and no row on a page that isn't one of their tabs. `hasKids`
+ * adds the Kids tab (grown-ups in a family with children).
  */
-export function tabsFor(pathname: string, canPortrait = true, kid = false): { space: Space; room: string } | null {
+export function tabsFor(pathname: string, canPortrait = true, kid = false, hasKids = false): { space: Space; room: string } | null {
   const at = spaceFor(pathname);
   if (!at || at.room !== pathname) return null;
-  const space = kid ? KID.find((s) => s.id === at.space.id) : canPortrait ? at.space : NO_PORTRAIT.find((s) => s.id === at.space.id);
+  const space = spacesFor(false, canPortrait, kid, hasKids).find((s) => s.id === at.space.id);
   if (!space || !space.rooms.some((r) => r.href === at.room)) return null;
   return space.rooms.length > 1 ? { space, room: at.room } : null;
 }

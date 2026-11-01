@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as bedtimeGet, POST as bedtimePost } from "@/app/api/bedtime/route";
 import { GET as heightGet, POST as heightPost, DELETE as heightDelete } from "@/app/api/height/route";
 import { GET as askGet, POST as askPost } from "@/app/api/kid-ask/route";
+import { GET as kidsGet } from "@/app/api/kids/route";
 import { POST as sharePost } from "@/app/api/share/route";
 import { GET as waitingGet } from "@/app/api/waiting/route";
 import { dbAddCard, dbListMembers, dbListRelationships } from "@/lib/db";
@@ -226,7 +227,7 @@ describe("From the kids", () => {
   it("counts the kids' new cards since the last visit and names who; asks are not counted", async () => {
     const members = await dbListMembers(FAM);
     const w = await windowState(FAM, "dadi", new Date());
-    expect(w.glance.kids).toMatchObject({ href: "/lane?from=kids", text: "New from Vihaan & Anika", count: 3 });
+    expect(w.glance.kids).toMatchObject({ href: "/bond/kids", text: "New from Vihaan & Anika", count: 3 });
     // A visit after all of it: nothing new.
     expect(kidsTile([{ id: "c", authorId: "leo", takenAt: new Date(NOON.getTime() - 3_600_000).toISOString() }], members, "dadi", NOON.toISOString(), NOON)).toBeNull();
     // Other grown-ups' cards never count.
@@ -250,5 +251,47 @@ describe("privacy", () => {
     expect((await listDocs(FAM, "height_mark")).some((m) => m.memberId === "aria")).toBe(true);
     await deleteDocsForMember(FAM, "dadi");
     expect((await listDocs(FAM, "bedtime_story")).some((s) => s.byMemberId === "dadi")).toBe(false);
+  });
+});
+
+describe("the Kids tab and page", () => {
+  it("the tab sits after Homes for grown-ups in a family with kids, and never for kids or without them", () => {
+    const tabs = (kid: boolean, hasKids: boolean) => roomsFor(false, true, kid, hasKids).find((r) => r.id === "family")!.tabs.map((t) => t.href);
+    expect(tabs(false, true)).toEqual(["/bond", "/bond/homes", "/bond/kids", "/book", "/advice", "/portrait"]);
+    expect(tabs(false, false)).not.toContain("/bond/kids");
+    expect(tabs(true, true)).not.toContain("/bond/kids");
+    expect(tabsFor("/bond/kids", true, false, true)?.space.rooms.map((r) => r.title)).toContain("Kids");
+    expect(tabsFor("/bond/kids", true, false, false)).toBeNull();
+    expect(tabsFor("/bond", true, false, false)?.space.rooms.map((r) => r.title)).not.toContain("Kids");
+  });
+
+  it("one request gives the fridge, the asks, the stories and the marks; a child gets 403", async () => {
+    const q = await voice("leo", "Dadi, why is the sky blue?");
+    await askPost(post("/api/kid-ask", { action: "ask", topic: "question", cardId: q.id }, "leo"));
+    const drawing = await dbAddCard({ familyId: FAM, type: "photo", caption: "my drawing", lang: "en", takenAt: new Date().toISOString(), authorId: "aria" });
+    const told = await voice("dadi", "Once upon a time");
+    await bedtimePost(post("/api/bedtime", { action: "create", forMemberId: "leo", cardId: told.id, title: "The moon" }, "dadi"));
+    await heightPost(post("/api/height", { memberId: "leo", cm: 120 }, "dadi"));
+    const out = await json<{ kids: string[]; fridge: { id: string }[]; voices: { id: string }[]; asks: { id: string; cardId: string | null }[]; stories: { cardId: string }[]; marks: { memberId: string }[] }>(kidsGet(get("/api/kids", "dadi")));
+    expect(out.kids).toEqual(expect.arrayContaining(["aria", "leo"]));
+    expect(out.fridge.map((c) => c.id)).toContain(drawing.id);
+    expect(out.fridge.map((c) => c.id)).not.toContain(q.id); // a spoken question is not something they shared
+    expect(out.asks.some((a) => a.cardId === q.id)).toBe(true);
+    expect(out.voices.map((c) => c.id)).toEqual(expect.arrayContaining([q.id, told.id]));
+    expect(out.stories.map((s) => s.cardId)).toContain(told.id);
+    expect(out.marks.map((m) => m.memberId)).toContain("leo");
+    expect((await kidsGet(get("/api/kids", "leo"))).status).toBe(403);
+  });
+
+  it("an answered ask moves after the open ones and points at its Story", async () => {
+    const q1 = await voice("leo", "First?");
+    const q2 = await voice("leo", "Second?");
+    const a1 = await json<{ ask: { id: string } }>(askPost(post("/api/kid-ask", { action: "ask", topic: "question", cardId: q1.id }, "leo")));
+    await askPost(post("/api/kid-ask", { action: "ask", topic: "question", cardId: q2.id }, "leo"));
+    const ans = await voice("dadi", "Because of the light");
+    await askPost(post("/api/kid-ask", { action: "answer", askId: a1.ask.id, cardId: ans.id }, "dadi"));
+    const out = await json<{ asks: { id: string; answeredCardId: string | null }[]; askStory: Record<string, string> }>(kidsGet(get("/api/kids", "dadi")));
+    expect(out.asks.map((a) => Boolean(a.answeredCardId))).toEqual([...out.asks.filter((a) => !a.answeredCardId).map(() => false), true]);
+    expect(out.askStory[a1.ask.id]).toBeTruthy();
   });
 });

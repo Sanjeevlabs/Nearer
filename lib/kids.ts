@@ -207,5 +207,5 @@ export function kidsTile(cards: Pick<Card, "id" | "authorId" | "takenAt">[], mem
     if (n && !names.includes(n)) names.push(n);
   }
   const who = names.length <= 1 ? (names[0] ?? "the kids") : names.length === 2 ? `${names[0]} & ${names[1]}` : `${names[0]} & others`;
-  return { text: `New from ${who}`, href: "/lane?from=kids", count: fresh.length };
+  return { text: `New from ${who}`, href: "/bond/kids", count: fresh.length };
 }

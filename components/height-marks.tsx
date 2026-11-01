@@ -16,7 +16,7 @@ import { useViewer } from "./viewer";
 
 const field = "h-[52px] w-full appearance-none rounded-full bg-white px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold";
 
-function AddMark({ child, onClose, onSaved }: { child: Member; onClose: () => void; onSaved: () => void }) {
+export function AddMark({ child, onClose, onSaved }: { child: Member; onClose: () => void; onSaved: () => void }) {
   const today = new Date().toISOString().slice(0, 10);
   const [cm, setCm] = useState("");
   const [note, setNote] = useState("");
