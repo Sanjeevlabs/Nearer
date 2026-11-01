@@ -269,7 +269,7 @@ export default function SettingsPage() {
           </div>
         )}
         <div className="mt-4 overflow-hidden rounded-[22px] bg-surface">
-          <button type="button" onClick={() => void removeMemories()} disabled={busy === "remove"} className="press flex w-full items-center justify-between px-4 py-4 text-left text-[16px] font-medium">
+          <button type="button" onClick={() => { if (window.confirm("Delete your reactions, wishes and listens? This can't be undone.")) void removeMemories(); }} disabled={busy === "remove"} className="press flex w-full items-center justify-between px-4 py-4 text-left text-[16px] font-medium">
             Delete my reactions, wishes and listens
             <Icon name="chevron" size={18} className="text-ink-faint" />
           </button>
