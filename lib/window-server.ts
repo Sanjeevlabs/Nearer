@@ -22,6 +22,7 @@ import { withDemoShelf } from "./demo";
 import { isDemoFamily } from "./auth";
 import { createDownloadUrl } from "./storage";
 import { sinceLines } from "./since";
+import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
 import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
@@ -184,12 +185,14 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   // Last sign of life in Aangan: any moment (opening the app included), a
   // voice or photo they sent, a safety check-in. Only what they already share.
-  const [cards, checkins, settings] = await Promise.all([dbListCards(familyId), listDocs(familyId, "safety_checkin"), listDocs(familyId, "care_settings")]);
+  const [cards, rawCheckins, settings] = await Promise.all([dbListCards(familyId), listDocs(familyId, "safety_checkin"), listDocs(familyId, "care_settings")]);
+  // An open check-in nobody answered for 48 h reads as closed "no reply" (the daily scan stores it).
+  const checkins = rawCheckins.map((c) => expireCheckin(c, now.getTime()));
   const signs = (id: string): string[] =>
     [
       ...presence.filter((p) => p.memberId === id).map((p) => p.at),
       ...withDemoShelf(cards, familyId).filter((c) => c.authorId === id && Date.parse(c.takenAt) <= now.getTime()).map((c) => c.takenAt),
-      ...checkins.filter((c) => c.memberId === id).map((c) => c.closedAt ?? c.at),
+      ...checkins.filter((c) => c.memberId === id).map((c) => answeredAt(c) ?? c.at),
     ].filter((t) => Date.parse(t) <= now.getTime());
   const lastSeen = (id: string): string | null => signs(id).sort().pop() ?? null;
   const people: WindowPerson[] = (home?.members ?? [])

@@ -6,6 +6,19 @@ import type { SafetyCheckin } from "./kinds";
 
 export const GRACE_MIN = { heading: 20, journey: 120 } as const;
 export const LOCATION_TTL_MS = 24 * 3_600_000;
+/** An open check-in nobody closed is shut after this long, as "no reply". */
+export const OPEN_TTL_MS = 48 * 3_600_000;
+
+/** When someone really closed it (a person did); an automatic "no reply" close is not an answer. */
+export function answeredAt(c: Pick<SafetyCheckin, "closedAt"> & { noReply?: boolean }): string | null {
+  return c.closedAt && !c.noReply ? c.closedAt : null;
+}
+
+/** The check-in as it stands at `now`: open for more than 48 h means closed as "no reply" (location dropped). */
+export function expireCheckin(c: SafetyCheckin, now = Date.now()): SafetyCheckin {
+  if (c.closedAt || now - Date.parse(c.at) < OPEN_TTL_MS) return c;
+  return { ...c, closedAt: new Date(Date.parse(c.at) + OPEN_TTL_MS).toISOString(), noReply: true, location: null };
+}
 
 export type SafetyState =
   | { tone: "calm"; label: string; at: string; checkin: SafetyCheckin }
@@ -17,6 +30,7 @@ export function stateOf(checkins: SafetyCheckin[], memberId: string, now = Date.
   const mine = checkins.filter((c) => c.memberId === memberId).sort((a, b) => b.at.localeCompare(a.at) || Number(Boolean(a.closedAt)) - Number(Boolean(b.closedAt)));
   const latest = mine[0];
   if (!latest) return null;
+  if (latest.noReply) return { tone: "calm", label: "No reply", at: latest.closedAt ?? latest.at, checkin: latest };
   if (latest.kind === "help" && !latest.closedAt) return { tone: "help", label: "Asked for help", at: latest.at, checkin: latest };
   if ((latest.kind === "heading" || latest.kind === "journey") && !latest.closedAt && latest.etaAt) {
     const grace = latest.kind === "heading" ? GRACE_MIN.heading : GRACE_MIN.journey;

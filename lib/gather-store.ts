@@ -80,3 +80,41 @@ export function resetEvents(): void {
   events.clear();
   dismissals.clear();
 }
+
+/** The calendar day a dismissal key is about: the last `YYYY-MM-DD` in it (`suggest:<occasion>:<who>:<date>`). */
+function keyDay(k: string): string | null {
+  return /(\d{4}-\d{2}-\d{2})$/.exec(k)?.[1] ?? null;
+}
+
+/**
+ * Drop dismissals whose event has gone by (`today` is YYYY-MM-DD). A key with no
+ * date in it falls back to 60 days after it was dismissed. Returns how many went.
+ */
+export async function purgeDismissals(familyId: string, today: string, now: Date = new Date()): Promise<number> {
+  const rows: Dismiss[] = [];
+  const sb = dbFor(familyId);
+  if (sb) {
+    for (let from = 0; from < 5000; from += 500) {
+      const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", "event_dismiss").range(from, from + 499);
+      if (error || !data) break;
+      for (const r of data) {
+        const p = DismissSchema.safeParse((r as { data: unknown }).data);
+        if (p.success) rows.push(p.data);
+      }
+      if (data.length < 500) break;
+    }
+  }
+  dismissals.forEach((d, k) => {
+    if (k.startsWith(`${familyId}::`)) rows.push(d);
+  });
+  let gone = 0;
+  for (const d of rows) {
+    const day = keyDay(d.key);
+    const expired = day ? day < today : now.getTime() - Date.parse(d.at) > 60 * 86_400_000;
+    if (!expired) continue;
+    dismissals.delete(key(familyId, d.id));
+    if (sb) await sb.from("family_docs").delete().eq("id", `${familyId}:${d.id}`).eq("kind", "event_dismiss");
+    gone++;
+  }
+  return gone;
+}

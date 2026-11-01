@@ -48,6 +48,26 @@ export async function listDocs<K extends DocKind>(familyId: string, kind: K): Pr
   return newest(rows);
 }
 
+/**
+ * Every row of one kind, paged past listDocs' newest-500 window. For the daily
+ * purge only: expired rows are the OLD ones, which the newest-500 list never reaches.
+ */
+export async function listAllDocs<K extends DocKind>(familyId: string, kind: K, cap = 5000): Promise<DocOf<K>[]> {
+  const sb = dbFor(familyId);
+  if (!sb) return memList(familyId, kind);
+  const rows: DocOf<K>[] = [];
+  for (let from = 0; from < cap; from += 500) {
+    const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: true }).range(from, from + 499);
+    if (error || !data) break;
+    for (const r of data) {
+      const d = parse(kind, (r as { data: unknown }).data);
+      if (d) rows.push(d);
+    }
+    if (data.length < 500) break;
+  }
+  return rows;
+}
+
 export async function getDoc<K extends DocKind>(familyId: string, kind: K, id: string): Promise<DocOf<K> | undefined> {
   const sb = dbFor(familyId);
   if (!sb) return memList(familyId, kind).find((d) => (d as { id: string }).id === id);

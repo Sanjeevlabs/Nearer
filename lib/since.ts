@@ -1,6 +1,7 @@
 // "Since you were here": a few plain sentences about what happened after the
 // viewer's previous visit. Words, never counts. Pure: callers pass what they
 // already loaded.
+import { answeredAt } from "./safety";
 import type { Card, Play, Reaction } from "./schemas";
 
 export interface SinceInput {
@@ -15,7 +16,7 @@ export interface SinceInput {
   cards: Pick<Card, "id" | "type" | "authorId" | "takenAt">[];
   plays: Pick<Play, "cardId" | "memberId" | "playedAt">[];
   reactions: Pick<Reaction, "cardId" | "memberId" | "kind" | "createdAt">[];
-  checkins: { memberId: string; kind: string; at: string; closedAt: string | null }[];
+  checkins: { memberId: string; kind: string; at: string; closedAt: string | null; noReply?: boolean }[];
   limit?: number;
 }
 
@@ -55,10 +56,10 @@ export function sinceLines(i: SinceInput): string[] {
   }
   for (const k of i.checkins) {
     const who = name(k.memberId);
-    const when = k.closedAt ?? k.at;
+    const when = answeredAt(k) ?? k.at;
     if (!who || !far.has(k.memberId) || !after(when)) continue;
     if (k.kind === "home-safe") out.push({ at: when, key: `safe:${k.memberId}:${when}`, text: `${who} checked in: home safe` });
-    else if (k.closedAt) out.push({ at: when, key: `safe:${k.memberId}:${when}`, text: `${who} checked in: all well` });
+    else if (answeredAt(k)) out.push({ at: when, key: `safe:${k.memberId}:${when}`, text: `${who} checked in: all well` });
   }
 
   const seen = new Set<string>();
