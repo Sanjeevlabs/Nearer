@@ -82,6 +82,73 @@ Generated on Linux: the iOS project was created with `npx cap add ios` and has n
 been built here. Capacitor 8 uses Swift Package Manager, so there is no
 `pod install` step; Xcode resolves `ios/App/CapApp-SPM` on first open.
 
+## Push notifications
+
+Real push for the Android app, for the installed web app (Android Chrome, desktop browsers, iOS 16.4+
+once Nearer is on the Home Screen) and, once the owner adds an Apple key, the iOS app. Calm by design.
+
+**What sends** (code: `lib/push/`, events in `lib/push/events.ts`, the rules in `lib/push/policy.ts`):
+
+| Event | When | Opens |
+|---|---|---|
+| A voice note, photo or video sent to you | Now | `/lane?card=<id>` |
+| Someone lit the lamp for you (a heartbeat) | Now | `/` |
+| A question, a request for a story or recipe, a child's ask | Now | `/inbox` |
+| "I need help", and an overdue check-in (Safe & sound) | Always, at any hour, outside the cap | `/safe` |
+| Blessings, "heard", shared, occasion, call, letter | Together, in the 8 AM nudge run: "3 things from your family" | `/inbox` |
+
+Immediate pushes respect quiet hours (22:00 to 07:00 where the recipient is) and a cap of 6 a day per
+person; anything held back joins the 8 AM summary. Each kind has a switch in Settings, You, Notifications
+(plus "Send me a test"). Never sent: counts of inactivity, streaks, "you haven't opened Nearer".
+Text never carries what was said, only who sent what; in the recipient's language where
+`lib/push/copy.ts` has it, else English.
+
+**Overdue check-ins** are found by `GET /api/push/sweep` (Bearer `CRON_SECRET`), run by a second Cron
+Trigger every 15 minutes (`wrangler.jsonc`, `cf-worker.mjs`); the daily scan also runs it. Remove the
+`*/15` trigger to go back to once a day.
+
+**Storage:** table `push_subscriptions` (see `supabase/schema.sql`) and one `push_settings` row per person
+in `family_docs`. Devices are bound to the signed-in person; a 404/410 from the push service deletes the
+subscription; five other refusals in a row drop it; sign-out and leaving the family remove it.
+
+### Owner steps
+
+1. **Run the SQL** from the PR body (or re-run `supabase/schema.sql`; it is idempotent).
+2. **Firebase (free)**: create a project at console.firebase.google.com, Add app, Android, package
+   `site.nearer.app`. Download `google-services.json` into `android/app/` (local only; it is gitignored and
+   the build skips Firebase when it is absent).
+3. **Service account for the server**: Firebase console, Project settings, Service accounts, Generate new
+   private key. Then:
+   ```sh
+   npx wrangler secret put FCM_SERVICE_ACCOUNT    # paste the whole JSON file
+   ```
+   (FCM sends are free; the service account only needs the "Firebase Cloud Messaging API (V1)" to be on,
+   which it is by default for new projects.)
+4. **Web push keys**:
+   ```sh
+   node scripts/vapid-keys.mjs                   # prints a key pair once
+   npx wrangler secret put VAPID_PUBLIC_KEY
+   npx wrangler secret put VAPID_PRIVATE_KEY
+   npx wrangler secret put VAPID_SUBJECT         # mailto:hello@nearer.site
+   ```
+   A new pair makes everyone turn notifications on again, so keep the old one.
+5. **iOS app** (needs the paid Apple Developer account): create an APNs Auth Key (.p8) under Keys, and upload
+   it to Firebase, Project settings, Cloud Messaging, Apple app configuration (add the iOS app with bundle id
+   `site.nearer.app` first, download `GoogleService-Info.plist` into `ios/App/App/`, never commit it). In Xcode,
+   File, Add Package Dependencies, `https://github.com/firebase/firebase-ios-sdk`, add **FirebaseCore** and
+   **FirebaseMessaging** to the App target. `AppDelegate.swift` already uses them when present
+   (`#if canImport`), so the push token becomes an FCM token. The entitlement `aps-environment` and the
+   `remote-notification` background mode are already set. Not built or tested on a device in this repo.
+6. **Build the Android APK**:
+   ```sh
+   export CAP_SERVER_URL=https://<origin> ANDROID_HOME=~/Android/Sdk
+   npx cap sync android && cd android && ./gradlew assembleDebug
+   ```
+   Install, open the app, Settings, Notifications, Turn on, then "Send me a test".
+
+The installed web app needs only the SQL and step 4. On iPhone and iPad it works only from the Home
+Screen (Share, Add to Home Screen), and the app says so instead of showing a prompt that cannot work.
+
 ## Sign-in deep links
 
 Google blocks OAuth inside embedded WebViews, so in the app sign-in must open in
@@ -113,8 +180,9 @@ verifier lives).
 - **Haptics**: `haptic("light" | "medium" | "heavy" | "selection" | "success" | "warning" | "error")`.
 - **Deep links**: sign-in callbacks (above), routed by `onAppUrlOpen`.
 - **Share**: `share({ title, text, url })` opens the native sheet; `navigator.share` on the web.
-- **Push permission**: `registerPush()` asks, registers with FCM/APNs and returns the
-  token. Sending it to the server is a TODO.
+- **Push notifications**: `registerPush()` asks (from the soft card or Settings, never on load),
+  registers with FCM and saves the token on the server; `watchPush()` keeps it fresh and opens the
+  page a tapped notification names. See "Push notifications" below.
 - **External links**: `openExternal(url)` uses the in-app browser.
 - **Offline**: when the origin can't load, `public/offline.html` shows; it returns to
   the app as soon as the connection does.
@@ -122,18 +190,14 @@ verifier lives).
 
 ## What's next
 
-1. **Push sending**: `POST /api/push/register` stores `{ memberId, platform, token }`;
-   the server sends via FCM HTTP v1 (Android, and iOS through FCM's APNs
-   bridge) for the morning letter, a knock to sit together, a quiet-person nudge.
-   Store the service-account key in the environment only.
-2. **Home-screen widget** (iOS WidgetKit, Android Jetpack Glance): the far home's
+1. **Home-screen widget** (iOS WidgetKit, Android Jetpack Glance): the far home's
    window, the lamp state and each person's safe & sound dot. Reads a small
    `GET /api/widget` (`{ home, city, localTime, lamp: { glow, litAt }, people: [{ name, dot }] }`,
    a few hundred bytes, cached 15 min) with a long-lived, widget-only, read-only
    token stored in the shared app group / DataStore. Tap opens the app on the window.
-3. **Android TV build**: a leanback launcher entry and a D-pad friendly window view,
+2. **Android TV build**: a leanback launcher entry and a D-pad friendly window view,
    so parents see the window on the living-room TV.
-4. Phone-wide activity for safe & sound (Android Usage Access only, opt-in);
+3. Phone-wide activity for safe & sound (Android Usage Access only, opt-in);
    iOS does not allow it.
 
 ## Store review notes
