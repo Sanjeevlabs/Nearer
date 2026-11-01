@@ -540,6 +540,31 @@ export const WeeklyCallSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
+// ---------- Together habits: one shared habit, ticked daily, in words and never in scores ----------
+export const HabitSchema = z.object({
+  id,
+  /** "Morning walk". Free text, 40 characters. */
+  name: z.string().trim().min(1).max(40),
+  /** Each person's own wall clock: 7 AM where they are. */
+  hour: z.number().int().min(0).max(23),
+  minute: z.number().int().min(0).max(59).default(0),
+  createdBy: id,
+  createdAt: iso,
+  /** Who joined (member ids). */
+  members: z.array(id).max(60).default([]),
+  archivedAt: iso.nullable().default(null),
+});
+
+/** One person's tick for one of their local days. id = "<habitId>:<memberId>:<YYYY-MM-DD>", so a double tap is one row. */
+export const HabitTickSchema = z.object({
+  id: z.string().min(1).max(200),
+  habitId: id,
+  memberId: id,
+  /** The ticker's local day (their own zone), YYYY-MM-DD. */
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  at: iso,
+});
+
 export const DOC_SCHEMAS = {
   recipe: RecipeSchema,
   attempt: AttemptSchema,
@@ -572,11 +597,15 @@ export const DOC_SCHEMAS = {
   muse_image_run: MuseImageRunSchema,
   nudge: NudgeSchema,
   nudge_settings: NudgeSettingsSchema,
+  habit: HabitSchema,
+  habit_tick: HabitTickSchema,
 } as const;
 
 export type DocKind = keyof typeof DOC_SCHEMAS;
 export type DocOf<K extends DocKind> = z.infer<(typeof DOC_SCHEMAS)[K]>;
 
+export type Habit = DocOf<"habit">;
+export type HabitTick = DocOf<"habit_tick">;
 export type Recipe = DocOf<"recipe">;
 export type Attempt = DocOf<"attempt">;
 export type Presence = DocOf<"presence">;

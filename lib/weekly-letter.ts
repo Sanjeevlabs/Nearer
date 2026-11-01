@@ -4,6 +4,7 @@
 import { z } from "zod";
 import { dbListCards, dbListMembers, dbListPlays, dbListReactions, dbListSuggestions } from "./db";
 import { listDocs } from "./family-docs";
+import { activeHabit, habitWeekFacts } from "./habits";
 import { museJson } from "./muse";
 import { callName } from "./people";
 import type { Suggestion } from "./schemas";
@@ -56,7 +57,7 @@ export async function gatherWeekFacts(familyId: string, weekStart?: string, now:
     return Number.isFinite(t) && t >= from && t < to;
   };
 
-  const [members, cards, plays, reactions, stories, recipes, attempts, questions, lamps, chitthi, tasks] = await Promise.all([
+  const [members, cards, plays, reactions, stories, recipes, attempts, questions, lamps, chitthi, tasks, habits, habitTicks] = await Promise.all([
     dbListMembers(familyId),
     dbListCards(familyId),
     dbListPlays(undefined, familyId),
@@ -68,6 +69,8 @@ export async function gatherWeekFacts(familyId: string, weekStart?: string, now:
     listDocs(familyId, "lamp"),
     listDocs(familyId, "chitthi"),
     listDocs(familyId, "today_task"),
+    listDocs(familyId, "habit"),
+    listDocs(familyId, "habit_tick"),
   ]);
   const name = (id: string | null | undefined) => callName(members.find((m) => m.id === id));
   // Not for the whole family yet: sealed morning letters and unfinished Today answers.
@@ -107,6 +110,14 @@ export async function gatherWeekFacts(familyId: string, weekStart?: string, now:
   }
   for (const q of questions) if (inWeek(q.createdAt)) rows.push({ at: q.createdAt, text: `${q.askedBy ? name(q.askedBy) : "The family"} asked ${name(q.toMemberId)}: '${clip(oneLine(q.text), 70)}'` });
   for (const l of lamps) if (inWeek(l.litAt)) rows.push({ at: l.litAt as string, text: `${name(l.litBy)} lit the lamp` });
+  // The family habit, in words: who walked most mornings, a day the whole family did it together. No counts.
+  const habit = activeHabit(habits);
+  if (habit) {
+    const days = Array.from({ length: 7 }, (_, i) => new Date(from + i * DAY).toISOString().slice(0, 10));
+    const inFamily = habit.members.filter((id) => members.some((m) => m.id === id));
+    const names = Object.fromEntries(inFamily.map((id) => [id, name(id)]));
+    for (const f of habitWeekFacts({ ...habit, members: inFamily }, habitTicks, names, days)) rows.push({ at: `${f.day}T12:00:00.000Z`, text: f.text });
+  }
   // Safety check-ins are private to the people chosen for them: never part of a letter.
 
   rows.sort((a, b) => a.at.localeCompare(b.at));
