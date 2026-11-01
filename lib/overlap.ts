@@ -39,8 +39,9 @@ export function suggestTimes(zones: string[], from = new Date(), n = 3): Date[] 
 }
 
 /** A video room both sides can open with no account. Unguessable per sitting/knock. */
-export function roomUrl(id: string): string {
-  return `https://meet.jit.si/Aangan-${id.replace(/[^a-zA-Z0-9-]/g, "")}`;
+export function roomUrl(id: string, info?: { provider: string; domain: string; appId?: string }): string {
+  const room = `Aangan-${id.replace(/[^a-zA-Z0-9-]/g, "")}`;
+  return info?.provider === "jaas" && info.appId ? `https://${info.domain}/${info.appId}/${room}` : `https://meet.jit.si/${room}`;
 }
 
 /** A downloadable calendar entry (.ics) for one sitting. */

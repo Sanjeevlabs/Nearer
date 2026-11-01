@@ -384,12 +384,13 @@ export function seedDemoRooms(now = Date.now()): void {
     invites: ["dadi", "dada", "arjun", "kavya"],
     recipeId: "recipe-dadi-dal",
     note: "Maa watches, we cook. Bring your own onions.",
+    venue: "terrace",
     keptCardId: null,
     createdAt: ago(60 * 30, now),
   });
   if (localNow >= 7 && localNow < 21.5) {
     const note = localNow < 12 ? "Morning chai on the verandah. Come sit?" : localNow < 17 ? "Shelling peas. Come sit with me?" : "Evening chai. Come sit?";
-    seedDoc(FAM, "knock", { id: "knock-dadi", memberId: "dadi", note, at: ago(10, now), until: ahead(50, now) });
+    seedDoc(FAM, "knock", { id: "knock-dadi", memberId: "dadi", note, venue: "courtyard", at: ago(10, now), until: ahead(50, now) });
   }
 
   // ---------- The weekly question ----------

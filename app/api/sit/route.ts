@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth";
 import { docsFor } from "@/lib/request-data";
 import { dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
-import { SITTING_REASONS } from "@/lib/kinds";
+import { SITTING_REASONS, VENUE_IDS } from "@/lib/kinds";
 import { guardWrites } from "@/lib/api-guard";
 
 // Sit together: planned sittings with a reason, and "come sit" knocks.
@@ -16,11 +16,12 @@ const Body = z.discriminatedUnion("action", [
     invites: z.array(z.string().min(1)).max(30).default([]),
     recipeId: z.string().nullable().optional(),
     note: z.string().trim().max(200).default(""),
+    venue: z.enum(VENUE_IDS).default("courtyard"),
   }),
   z.object({ action: z.literal("cancel"), sittingId: z.string().min(1) }),
   z.object({ action: z.literal("rsvp"), sittingId: z.string().min(1), answer: z.enum(["going", "cant", "clear"]) }),
   z.object({ action: z.literal("reschedule"), sittingId: z.string().min(1), startsAt: z.string().datetime(), title: z.string().trim().min(2).max(80).optional() }),
-  z.object({ action: z.literal("knock"), minutes: z.number().int().min(15).max(180).default(45), note: z.string().trim().max(80).default("") }),
+  z.object({ action: z.literal("knock"), minutes: z.number().int().min(15).max(180).default(45), note: z.string().trim().max(80).default(""), venue: z.enum(VENUE_IDS).default("courtyard") }),
   z.object({ action: z.literal("unknock") }),
 ]);
 
@@ -48,7 +49,7 @@ async function postHandler(req: Request): Promise<Response> {
     if (Date.parse(body.startsAt) < now.getTime() - 5 * 60_000) return Response.json({ error: "in-the-past" }, { status: 400 });
     const family = new Set((await dbListMembers(auth.familyId)).map((m) => m.id));
     const invites = Array.from(new Set(body.invites.filter((id) => family.has(id) && id !== auth.memberId)));
-    const sitting = await putDoc(auth.familyId, "sitting", { id: newId("sit"), reason: body.reason, title: body.title, hostId: auth.memberId, startsAt: new Date(body.startsAt).toISOString(), invites, recipeId: body.recipeId ?? null, note: body.note, keptCardId: null, createdAt: now.toISOString() });
+    const sitting = await putDoc(auth.familyId, "sitting", { id: newId("sit"), reason: body.reason, title: body.title, hostId: auth.memberId, startsAt: new Date(body.startsAt).toISOString(), invites, recipeId: body.recipeId ?? null, note: body.note, venue: body.venue, keptCardId: null, createdAt: now.toISOString() });
     return Response.json({ sitting }, { status: 201 });
   }
   if (body.action === "rsvp" || body.action === "reschedule") {
@@ -79,7 +80,7 @@ async function postHandler(req: Request): Promise<Response> {
   const mine = (await listDocs(auth.familyId, "knock")).filter((k) => k.memberId === auth.memberId);
   for (const k of mine) await deleteDoc(auth.familyId, "knock", k.id);
   if (body.action === "unknock") return Response.json({ closed: mine.length });
-  const knock = await putDoc(auth.familyId, "knock", { id: newId("knock"), memberId: auth.memberId, note: body.note, at: now.toISOString(), until: new Date(now.getTime() + body.minutes * 60_000).toISOString() });
+  const knock = await putDoc(auth.familyId, "knock", { id: newId("knock"), memberId: auth.memberId, note: body.note, venue: body.venue, at: now.toISOString(), until: new Date(now.getTime() + body.minutes * 60_000).toISOString() });
   return Response.json({ knock }, { status: 201 });
 }
 

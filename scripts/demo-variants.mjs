@@ -24,6 +24,8 @@ const dir = join(process.cwd(), "public", "demo");
 const plan = { "courtyard.jpg": [390, 780] };
 // The first screen's home photos (scripts/gen-courtyard.mjs), once they exist.
 for (const n of ["home-courtyard", "home-balcony", "home-window"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [390, 780];
+// The sitting venues (scripts/gen-courtyard.mjs venue-*): full-bleed on the call page.
+for (const n of ["courtyard", "terrace", "pergola", "deck", "lounge", "patio"]) if (existsSync(join(dir, "venues", `${n}.jpg`))) plan[`venues/${n}.jpg`] = [390, 780, 1600];
 for (const f of readdirSync(dir)) {
   if (/^family-[a-z]+\.webp$/.test(f)) plan[f] = [440, 880];
   if (/^portrait-[a-z]+\.webp$/.test(f)) plan[f] = [160, 400];

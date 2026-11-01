@@ -12,7 +12,7 @@ export const WINDOW_SIZES = "(min-width: 480px) 480px, 100vw";
  * here, not in lib/window-server.ts, only because the phone needs it before the
  * window's data arrives; window-server.ts re-exports it as DEFAULT_IMAGE.
  */
-export const DEFAULT_IMAGE = "/demo/courtyard.jpg";
+export const DEFAULT_IMAGE = "/demo/home-courtyard.jpg";
 
 /** Height of the photo: about half the screen, never under 340px. */
 export const WINDOW_PHOTO_HEIGHT = "max(340px, 52vh)";

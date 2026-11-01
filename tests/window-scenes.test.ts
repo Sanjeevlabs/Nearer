@@ -1,3 +1,4 @@
+import { DEFAULT_IMAGE } from "@/lib/hero";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GET as windowGet, POST as windowPost } from "@/app/api/window/route";
 import { clearRateLimits } from "@/lib/auth";
@@ -26,7 +27,7 @@ describe("first screen: scene, pots, home photo", () => {
     const real = defaultView("some-family", "m1");
     expect(real).toMatchObject({ style: "still", scene: "window", pots: [], homePhoto: null, mixAlbum: true });
     const st = await state();
-    expect(st).toMatchObject({ homePhoto: null, imageRef: "/demo/courtyard.jpg" });
+    expect(st).toMatchObject({ homePhoto: null, imageRef: DEFAULT_IMAGE });
     expect(st.scene).toBeUndefined();
     expect(st.pots).toBeUndefined();
     expect(st.mixAlbum).toBeUndefined();
@@ -38,7 +39,7 @@ describe("first screen: scene, pots, home photo", () => {
     expect((await post("arjun", { action: "pots", pots: ["rose", "succulent", "rose"] })).status).toBe(200);
     expect((await post("arjun", { action: "pots", pots: ["cactus"] })).status).toBe(400);
     expect((await post("arjun", { action: "wall", wall: "lime" })).status).toBe(200);
-    expect(await state()).toMatchObject({ wall: "lime", imageRef: "/demo/courtyard.jpg", view: { style: "still" } });
+    expect(await state()).toMatchObject({ wall: "lime", imageRef: DEFAULT_IMAGE, view: { style: "still" } });
   });
 
   it("never lives: choosing a photo as living still gives a still view; composing motion is retired", async () => {
