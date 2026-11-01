@@ -63,6 +63,8 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
       // Offline: local state still switches.
     }
     setViewerIdState(id);
+    // Another person's session: nothing cached for the last one may paint.
+    window.dispatchEvent(new Event("aangan:auth"));
   }, []);
 
   const refreshMembers = useCallback(async () => {

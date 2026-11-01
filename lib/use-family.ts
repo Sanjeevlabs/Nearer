@@ -65,3 +65,16 @@ export function resetFamilyCards(): void {
   loadedAt = 0;
   loadedKey = -1;
 }
+
+// The person or family changed: the old snapshot must never paint for the next one.
+// Something was written: refetch the cards a moment later (coalesced) if anyone is showing them.
+if (typeof window !== "undefined") {
+  window.addEventListener("aangan:auth", () => {
+    resetFamilyCards();
+    listeners.forEach((l) => l());
+  });
+  window.addEventListener("aangan:changed", () => {
+    loadedAt = 0;
+    if (listeners.size > 0) void load();
+  });
+}
