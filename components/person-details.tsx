@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Member } from "@/lib/schemas";
-import { callName, memberPhoto } from "@/lib/people";
+import { ageOf, callName, memberPhoto } from "@/lib/people";
+import { birthYearOf, birthdayProblem, buildBirthday, dayMonthLabel, mmdd } from "@/lib/birthday";
+import { BirthYearField } from "./birth-year";
 import { cn } from "@/lib/utils";
 import { ZONES, placeFromTz } from "@/lib/zones";
 import { can } from "@/lib/permissions";
@@ -19,6 +21,13 @@ const ROLES: { value: Member["role"]; label: string }[] = [
 ];
 const field = "h-[52px] w-full appearance-none rounded-full bg-surface px-5 text-[16px] outline-none focus:ring-2 focus:ring-marigold";
 
+/** "Delhi · Age 9 · Birthday 9 Nov": the age only when the birth year is known. */
+function aboutLine(person: Member): string {
+  const age = ageOf(person);
+  const day = dayMonthLabel(person.birthday);
+  return [placeFromTz(person.tz), age !== null ? `Age ${age}` : null, day ? `Birthday ${day}` : "Birthday not added"].filter(Boolean).join(" · ");
+}
+
 /**
  * About this person: edit their details or remove them from the tree.
  * Rules mirror the server: a person with their own account manages themselves.
@@ -31,8 +40,9 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
   const [name, setName] = useState(person.displayName);
   const [role, setRole] = useState(person.role);
   const [tz, setTz] = useState(person.tz);
-  const [month, setMonth] = useState(person.birthday.slice(0, 2));
-  const [day, setDay] = useState(person.birthday.slice(3, 5));
+  const [month, setMonth] = useState(mmdd(person.birthday).slice(0, 2));
+  const [day, setDay] = useState(mmdd(person.birthday).slice(3, 5));
+  const [year, setYear] = useState(String(birthYearOf(person.birthday) ?? ""));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isSelf = person.id === viewer.id;
@@ -43,12 +53,14 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
   if (isSelf) return null; // You edit yourself in Settings.
 
   const save = async () => {
+    const problem = birthdayProblem(month, day, year);
+    if (problem) return setError(problem);
     setBusy(true);
     setError(null);
     const res = await fetch(`/api/members/${encodeURIComponent(person.id)}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ displayName: name.trim(), role, tz, birthday: month && day ? `${month}-${day}` : "" }),
+      body: JSON.stringify({ displayName: name.trim(), role, tz, birthday: buildBirthday(month, day, year) }),
     }).catch(() => null);
     setBusy(false);
     if (!res?.ok) return setError("Couldn't save. Try again.");
@@ -72,10 +84,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="m-0 text-[20px]">About {callName(person)}</h2>
-          <p className="m-0 mt-1 text-[14px] text-ink-soft">
-            {placeFromTz(person.tz)}
-            {person.birthday ? ` · born ${MONTHS[Number(person.birthday.slice(0, 2)) - 1]} ${Number(person.birthday.slice(3))}` : " · birthday not added"}
-          </p>
+          <p className="m-0 mt-1 text-[14px] text-ink-soft">{aboutLine(person)}</p>
         </div>
         {manageable && !editing && (
           <button type="button" onClick={() => setEditing(true)} className="press h-10 rounded-full bg-white px-4 text-[14px] font-semibold">
@@ -114,8 +123,8 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
               ))}
             </select>
           </label>
-          <div className="grid grid-cols-2 gap-2">
-            <select aria-label="Birthday month" className={cn(field, "bg-white")} value={month} onChange={(e) => setMonth(e.target.value)}>
+          <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-2">
+            <select aria-label="Birthday month" className={cn(field, "bg-white !px-4")} value={month} onChange={(e) => setMonth(e.target.value)}>
               <option value="">Birthday month</option>
               {MONTHS.map((m, i) => (
                 <option key={m} value={String(i + 1).padStart(2, "0")}>
@@ -123,7 +132,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
                 </option>
               ))}
             </select>
-            <select aria-label="Birthday day" className={cn(field, "bg-white")} value={day} onChange={(e) => setDay(e.target.value)}>
+            <select aria-label="Birthday day" className={cn(field, "bg-white !px-4")} value={day} onChange={(e) => setDay(e.target.value)}>
               <option value="">Day</option>
               {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
                 <option key={d} value={d}>
@@ -131,7 +140,9 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
                 </option>
               ))}
             </select>
+            <BirthYearField value={year} onChange={setYear} className="!px-4" />
           </div>
+          <p className="m-0 text-[13px] text-ink-soft">The year is optional. With it, Aangan can show {callName(person)}&rsquo;s age.</p>
           <div className="flex gap-2 pt-1">
             <Button className="flex-1" disabled={busy || !name.trim()} onClick={() => void save()}>
               {busy ? "Saving…" : "Save"}

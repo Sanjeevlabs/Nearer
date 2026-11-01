@@ -5,6 +5,7 @@
 // kept; a section's fields go in one request where the route accepts that,
 // otherwise in a short sequence with one combined result.
 
+import { birthdayProblem, buildBirthday } from "./birthday";
 import type { SaveResult } from "./settings-draft";
 import type { Member } from "./schemas";
 import type { SupportedLang } from "./i18n";
@@ -34,10 +35,18 @@ async function send(f: F, url: string, method: string, body: unknown): Promise<{
 export interface ProfileDraft {
   firstName: string;
   photoRef: string | null;
+  /** Birthday parts as typed: month "01".."12", day "01".."31", year "" or four digits. */
+  birthMonth: string;
+  birthDay: string;
+  birthYear: string;
 }
 
 export async function saveProfile(f: F, d: ProfileDraft, saved: ProfileDraft): Promise<SaveResult<ProfileDraft>> {
-  const patch: { firstName?: string; photoRef?: string | null } = {};
+  const patch: { firstName?: string; photoRef?: string | null; birthday?: string } = {};
+  if (d.birthMonth !== saved.birthMonth || d.birthDay !== saved.birthDay || d.birthYear !== saved.birthYear) {
+    if (birthdayProblem(d.birthMonth, d.birthDay, d.birthYear)) return { ok: false, error: birthdayProblem(d.birthMonth, d.birthDay, d.birthYear) ?? SAVE_FAILED };
+    patch.birthday = buildBirthday(d.birthMonth, d.birthDay, d.birthYear);
+  }
   if (d.firstName.trim() !== saved.firstName) patch.firstName = d.firstName.trim();
   if (d.photoRef !== saved.photoRef) patch.photoRef = d.photoRef;
   if (Object.keys(patch).length === 0) return { ok: true };

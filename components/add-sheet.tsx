@@ -9,6 +9,7 @@ import { blobToWav16k, extractVideoFrames, processImage, processVideo, processVo
 import { getSessionMedia } from "@/lib/media-session";
 import { uploadQueue, type Outcome } from "@/lib/upload-queue";
 import { callName, formatDuration, memberPhoto } from "@/lib/people";
+import { isKid } from "@/lib/kids";
 import type { TranscriptSegment } from "@/lib/schemas";
 import { CARD_NOTE_MAX, CARD_PLACE_MAX } from "@/lib/card-limits";
 import { cn } from "@/lib/utils";
@@ -38,9 +39,12 @@ export type ReplyContribution =
   /** A grown-up answers a child's ask by voice; it also lands in Stories. */
   | { kind: "kid_answer"; askId: string; prompt?: string }
   /** A bedtime story for one child. */
-  | { kind: "bedtime"; forMemberId: string };
+  | { kind: "bedtime"; forMemberId: string }
+  /** A grown-up photographs a child's drawing for the fridge; the sheet asks whose it is. */
+  | { kind: "fridge"; forMemberId?: string };
 
 const PURPOSE: Record<Exclude<ReplyContribution["kind"], "wish" | "blessing">, { title: string; hint: string; cta: string }> = {
+  fridge: { title: "Add to the fridge", hint: "A drawing, a school photo, a first attempt. It goes up with their name and yours.", cta: "Put it on the fridge" },
   kid_ask: { title: "Ask a question", hint: "Say it out loud. They will hear it and answer in their own voice.", cta: "Send my question" },
   kid_answer: { title: "Your answer", hint: "Answer the way you would at the table. It is kept in Stories too.", cta: "Send my answer" },
   bedtime: { title: "A story for tonight", hint: "A few minutes, a quiet voice. It waits on their screen for tonight.", cta: "Send the story" },
@@ -72,7 +76,7 @@ export function purposeTitle(c: ReplyContribution | null): string | null {
 
 // Card upload carries the real bytes: `media` for the photo/video plus key
 // frames for video grounding. The server captions from these bytes only.
-async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: string, lang: string, frames: Blob[] = [], extra: { place?: string; note?: string } = {}): Promise<Outcome> {
+async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: string, lang: string, frames: Blob[] = [], extra: { place?: string; note?: string; forMemberId?: string } = {}): Promise<Outcome> {
   const fields: Record<string, string> = {
     type: upload.kind === "video" ? "video" : "photo",
     caption,
@@ -87,6 +91,7 @@ async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: s
   };
   if (extra.place) fields.place = extra.place.slice(0, CARD_PLACE_MAX);
   if (extra.note) fields.note = extra.note.slice(0, CARD_NOTE_MAX);
+  if (extra.forMemberId) fields.forMemberId = extra.forMemberId;
   const files = [{ field: "media", name: "media", blob: file as Blob }, ...frames.slice(0, 3).map((blob) => ({ field: "frames", name: "frame.jpg", blob }))];
   // Saved on the device first; the queue sends it and keeps retrying if the network drops.
   return uploadQueue().enqueue({
@@ -581,8 +586,12 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
 }
 
 /* ----------------------------------------------------------------- moment */
-function MomentComposer({ onDone }: { onDone: () => void }) {
-  const { viewer } = useViewer();
+function MomentComposer({ onDone, contribution = null }: { onDone: () => void; contribution?: ReplyContribution | null }) {
+  const { viewer, members } = useViewer();
+  // "Add to the fridge": whose is it? Only the family's kids; one tap, no default when there are several.
+  const fridge = contribution?.kind === "fridge";
+  const kids = useMemo(() => (fridge ? members.filter((m) => isKid(m) && m.status !== "pending") : []), [fridge, members]);
+  const [whose, setWhose] = useState<string>(contribution?.kind === "fridge" ? (contribution.forMemberId ?? "") : "");
   const [files, setFiles] = useState<File[]>([]);
   const [note, setNote] = useState("");
   // Written on the print: where (their home city to start with) and a short note.
@@ -621,7 +630,7 @@ function MomentComposer({ onDone }: { onDone: () => void }) {
         const stored = getSessionMedia(upload.mediaRef)?.blob ?? file;
         const frames = video ? await extractVideoFrames(file).catch(() => []) : [];
         setSending("Saved, sending…");
-        const out = await postMoment(upload, stored, note.trim(), viewer.lang, frames, { place: where.trim(), note: printNote.trim() });
+        const out = await postMoment(upload, stored, note.trim(), viewer.lang, frames, fridge ? { forMemberId: whose } : { place: where.trim(), note: printNote.trim() });
         if (out === "dropped") failed += 1;
         else if (out === "queued") queued += 1;
       } catch {
@@ -686,7 +695,21 @@ function MomentComposer({ onDone }: { onDone: () => void }) {
         </div>
       )}
 
-      {single && <RestoreOffer key={`${single.name}-${single.size}-${single.lastModified}`} file={single} onChange={setRestored} />}
+      {fridge && (
+        <fieldset className="m-0 mt-4 border-0 p-0" data-ui="fridge-whose">
+          <legend className="mb-2 p-0 text-[15px] font-semibold">Whose is this?</legend>
+          <div className="flex flex-wrap gap-2">
+            {kids.map((k) => (
+              <button key={k.id} type="button" aria-pressed={whose === k.id} onClick={() => setWhose(k.id)} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1.5 pr-4 text-[15px] font-semibold", whose === k.id ? "bg-black text-white" : "bg-surface text-ink")}>
+                <Avatar src={memberPhoto(k)} name={callName(k)} size={32} />
+                {callName(k)}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
+      {single && !fridge && <RestoreOffer key={`${single.name}-${single.size}-${single.lastModified}`} file={single} onChange={setRestored} />}
 
       <label className="mt-4 block">
         <span className="sr-only">Caption</span>
@@ -695,10 +718,11 @@ function MomentComposer({ onDone }: { onDone: () => void }) {
           value={note}
           maxLength={280}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Caption (optional)"
+          placeholder={fridge ? "What is it? (optional)" : "Caption (optional)"}
           className="h-[52px] w-full rounded-full bg-surface px-5 text-[16px] outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
         />
       </label>
+      {!fridge && (
       <div className="mt-3 rounded-[22px] border border-[var(--line)] p-3">
         <p className="m-0 px-1 text-[13px] font-medium text-ink-soft">Written on the print</p>
         <label className="mt-2 flex items-center gap-3">
@@ -726,6 +750,7 @@ function MomentComposer({ onDone }: { onDone: () => void }) {
           />
         </label>
       </div>
+      )}
       {error && (
         <p className="m-0 mt-2 text-[14px] text-[#b42318]" role="alert">
           {error}
@@ -736,8 +761,8 @@ function MomentComposer({ onDone }: { onDone: () => void }) {
           {sending}
         </p>
       )}
-      <Button className="mt-4 w-full" disabled={files.length === 0 || busy || sending !== null} onClick={() => void share()}>
-        {busy ? "Sharing…" : files.length > 1 ? `Share ${files.length} with the family` : "Share with the family"}
+      <Button className="mt-4 w-full" disabled={files.length === 0 || busy || sending !== null || (fridge && !whose)} onClick={() => void share()}>
+        {busy ? "Sharing…" : fridge ? (whose ? PURPOSE.fridge.cta : "Choose whose it is") : files.length > 1 ? `Share ${files.length} with the family` : "Share with the family"}
       </Button>
     </div>
   );
@@ -783,12 +808,12 @@ export function AddSheet() {
           >
             <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="m-0 text-[22px]">{voice ? (purposeTitle(replyTo) ?? "New voice note") : "Share a moment"}</h2>
+              <h2 className="m-0 text-[22px]">{voice ? (purposeTitle(replyTo) ?? "New voice note") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}</h2>
               <button type="button" onClick={closeAdd} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
                 <Icon name="close" />
               </button>
             </div>
-            {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} />}
+            {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} />}
           </m.div>
         </div>
       )}

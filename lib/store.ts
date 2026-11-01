@@ -224,7 +224,7 @@ export function seedDemo(): void {
   photo("demo-wed-mehendi", "priya", "2025-12-05T14:00:00.000Z", "/demo/portrait-aria.webp", "Anika's first mehendi, drying in the sun.", { place: "Jaipur" });
   photo("demo-wed-baraat", "arjun", "2025-12-06T15:45:00.000Z", "/demo/portrait-dad.webp", "Dancing in the baraat till the band gave up.", { place: "Jaipur" });
 
-  // The kids' side of the house: what Vihaan and Anika shared lately (lib/demo-rooms.ts seeds their asks, bedtime story and height marks).
+  // The kids' side of the house: what Vihaan and Anika shared lately (lib/demo-rooms.ts seeds their asks and bedtime story).
   const mins = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
   photo("demo-kid-leo-drawing", "leo", mins(5 * 60), "/demo/drawing-leo.webp", "My house, with the sun and all of us.", { place: "Bengaluru", note: "I drew this for Maa." });
   photo("demo-kid-leo-top", "leo", mins(26 * 60), "/demo/family-leo.webp", "My top spun for a whole minute.", { place: "Bengaluru" });

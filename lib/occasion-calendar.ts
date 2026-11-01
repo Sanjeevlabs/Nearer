@@ -2,6 +2,7 @@
 // and the family's festivals fall on which day. Client-safe (no fs).
 // Festival specifics come from data/ and rituals/ via the API; nothing here
 // names a festival.
+import { parseBirthday } from "./birthday";
 
 export interface OccasionStep {
   key: string;
@@ -98,9 +99,11 @@ export function daysBetween(fromIso: string, toIso: string): number {
   return Math.round((utc(toIso) - utc(fromIso)) / DAY);
 }
 
-function birthdayIn(year: number, mmdd: string): string | null {
-  if (!/^\d{2}-\d{2}$/.test(mmdd)) return null;
-  const [m, d] = mmdd.split("-").map(Number);
+function birthdayIn(year: number, birthday: string): string | null {
+  // Either stored shape ("MM-DD" or "YYYY-MM-DD"): the calendar only wants the day and month.
+  const p = parseBirthday(birthday);
+  if (!p) return null;
+  const { month: m, day: d } = p;
   if (m < 1 || m > 12 || d < 1 || d > 31) return null;
   const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
   // 29 Feb is kept on 28 Feb in other years.

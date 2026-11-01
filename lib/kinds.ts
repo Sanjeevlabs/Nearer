@@ -569,7 +569,7 @@ export const HabitTickSchema = z.object({
   at: iso,
 });
 
-// ---------- Children (kid mode, bedtime stories, "Ask Dadi", height marks) ----------
+// ---------- Children (kid mode, bedtime stories, "Ask Dadi") ----------
 /**
  * A grandparent's (or parent's) bedtime story for one child. `cardId` is the voice
  * card; a row with `cardId: null` is only that person saying "not now" for the day
@@ -599,19 +599,8 @@ export const KidAskSchema = z.object({
   topic: z.enum(["question", "story"]).default("question"),
 });
 
-/** One mark on the doorframe. Just a number and a date: nothing is compared or judged. */
-export const HeightMarkSchema = z.object({
-  id,
-  memberId: id,
-  cm: z.number().min(30).max(220),
-  at: iso,
-  byMemberId: id,
-  note: z.string().max(60).default(""),
-});
-
 export type BedtimeStory = z.infer<typeof BedtimeStorySchema>;
 export type KidAsk = z.infer<typeof KidAskSchema>;
-export type HeightMark = z.infer<typeof HeightMarkSchema>;
 
 export const DOC_SCHEMAS = {
   recipe: RecipeSchema,
@@ -649,7 +638,6 @@ export const DOC_SCHEMAS = {
   habit_tick: HabitTickSchema,
   bedtime_story: BedtimeStorySchema,
   kid_ask: KidAskSchema,
-  height_mark: HeightMarkSchema,
 } as const;
 
 export type DocKind = keyof typeof DOC_SCHEMAS;

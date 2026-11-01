@@ -141,6 +141,8 @@ alter table cards add column if not exists addressed_to text references members(
 -- The printed-photo frame: where it was taken and a short note (both optional).
 alter table cards add column if not exists place text not null default '';
 alter table cards add column if not exists note text not null default '';
+-- Fridge: a grown-up adds a child's drawing "for" that child. Run before deploy (adding to the fridge fails without it; nothing else does).
+alter table cards add column if not exists for_member_id text references members(id) on delete set null;
 
 -- ------------------------------------------------------------------- media
 -- Private-bucket objects referenced by cards. storage_path is the object key
@@ -418,6 +420,7 @@ create table if not exists family_docs (
   updated_at timestamptz not null default now()
 );
 -- Kinds are validated by lib/kinds.ts; the check keeps junk out of the table.
+-- height_mark: retired 1 Nov, kept in the list below so old rows parse (the app no longer reads or writes it).
 alter table family_docs drop constraint if exists family_docs_kind_check;
 alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark'));
 create index if not exists family_docs_family_kind_idx on family_docs (family_id, kind, created_at desc);

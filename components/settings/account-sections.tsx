@@ -16,6 +16,8 @@ import { ZONES, placeFromTz } from "@/lib/zones";
 import { cn } from "@/lib/utils";
 import { Group, SettingsSection } from "./section";
 import { useDraft } from "./use-draft";
+import { BirthYearField } from "@/components/birth-year";
+import { parseBirthday } from "@/lib/birthday";
 
 // The "You" and "Privacy" preferences. Every control here edits a draft; the
 // section's Save is the only thing that writes (lib/settings-save.ts).
@@ -25,7 +27,11 @@ const MAX_PHOTO = 5 * 1024 * 1024;
 /** Name and portrait. */
 export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }) {
   const { viewer, refreshMembers } = useViewer();
-  const form = useDraft<ProfileDraft>({ firstName: viewer.firstName, photoRef: viewer.photoRef ?? null }, { id: "profile" });
+  const birth = parseBirthday(viewer.birthday);
+  const form = useDraft<ProfileDraft>(
+    { firstName: viewer.firstName, photoRef: viewer.photoRef ?? null, birthMonth: birth ? String(birth.month).padStart(2, "0") : "", birthDay: birth ? String(birth.day).padStart(2, "0") : "", birthYear: birth?.year ? String(birth.year) : "" },
+    { id: "profile" },
+  );
   const [busy, setBusy] = useState(false);
   const [pickError, setPickError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -88,6 +94,29 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
             if (f) void pick(f);
           }}
         />
+      </div>
+      <div className="mt-4" data-ui="settings-birthday">
+        <p className="m-0 mb-1.5 text-[13px] font-medium text-ink-soft">Your birthday (optional)</p>
+        <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-2">
+          <select aria-label="Birthday month" value={form.draft.birthMonth} onChange={(e) => form.set({ birthMonth: e.target.value })} className="h-[52px] w-full appearance-none rounded-full bg-surface px-4 text-[16px] outline-none focus:ring-2 focus:ring-marigold">
+            <option value="">Month</option>
+            {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
+              <option key={m} value={String(i + 1).padStart(2, "0")}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <select aria-label="Birthday day" value={form.draft.birthDay} onChange={(e) => form.set({ birthDay: e.target.value })} className="h-[52px] w-full appearance-none rounded-full bg-surface px-4 text-[16px] outline-none focus:ring-2 focus:ring-marigold">
+            <option value="">Day</option>
+            {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
+              <option key={d} value={d}>
+                {Number(d)}
+              </option>
+            ))}
+          </select>
+          <BirthYearField value={form.draft.birthYear} onChange={(v) => form.set({ birthYear: v })} className="!bg-surface !px-4" />
+        </div>
+        <p className="m-0 mt-1.5 text-[13px] text-ink-soft">The year is optional. With it, Aangan can show your age.</p>
       </div>
       {busy && <p className="m-0 mt-2 text-[13px] text-ink-soft">Adding your photo…</p>}
       {pickError && (

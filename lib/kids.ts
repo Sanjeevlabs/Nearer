@@ -1,26 +1,46 @@
 // Children in Aangan: who counts as a kid, whose grandparent or parent someone is,
-// the bedtime-story rules, kid asks and the doorframe's "grew" line. Pure and
-// client-safe (no fs, no db): the routes load, this decides.
-// No advice, no percentiles, no health words anywhere in here: a height is a
-// number and a date, nothing more.
-import type { BedtimeStory, HeightMark, KidAsk } from "./kinds";
+// the bedtime-story rules and kid asks. Pure and client-safe (no fs, no db): the
+// routes load, this decides.
+import type { BedtimeStory, KidAsk } from "./kinds";
+import { ageOf } from "./people";
 import type { Card, Member, Relationship } from "./schemas";
 
 const DAY = 86_400_000;
 
+/** The fields that decide whether someone is a kid. `birthday` and `tz` are optional so narrow picks still compile; without a birth year the old rule applies. */
+export type KidLike = Pick<Member, "access" | "role"> & Partial<Pick<Member, "birthday" | "tz">>;
+
+/** Under this age a person is a kid (13 and over are teens). */
+export const KID_UNDER = 13;
+
 /**
- * A child's own view of the app (kid mode): a child account, or a child-generation
- * profile with plain member access. Teens and grown-ups never are.
+ * A child's own view of the app (kid mode). One rule, used everywhere:
+ * a known age decides (under 13 is a kid, 13 and over never is); with no birth year it is
+ * a child account, or a child-generation profile with plain member access.
  */
-export function isKid(m: Pick<Member, "access" | "role"> | undefined | null): boolean {
+export function isKid(m: KidLike | undefined | null, now: Date = new Date()): boolean {
   if (!m) return false;
+  const age = ageOf(m, now);
+  if (age !== null) return age < KID_UNDER;
   return m.access === "child" || (m.role === "child" && m.access === "member");
 }
 
-/** Something a child shared: its author is a kid. The only marker; nothing extra is stored. */
-export function isKidCard(card: Pick<Card, "authorId">, members: Pick<Member, "id" | "access" | "role">[]): boolean {
+/** Something that belongs on the fridge: a kid shared it, or a grown-up added it for a kid (`forMemberId`). */
+export function isKidCard(card: Pick<Card, "authorId"> & { forMemberId?: string | null }, members: (KidLike & { id: string })[]): boolean {
+  const list = members;
+  if (card.forMemberId && isKid(list.find((m) => m.id === card.forMemberId))) return true;
   if (!card.authorId) return false;
-  return isKid(members.find((m) => m.id === card.authorId));
+  return isKid(list.find((m) => m.id === card.authorId));
+}
+
+/** The kid a fridge card is about: who it was added for, else who shared it. */
+export function fridgeKidId(card: Pick<Card, "authorId"> & { forMemberId?: string | null }): string | null {
+  return card.forMemberId ?? card.authorId ?? null;
+}
+
+/** A grown-up put this on the fridge for a kid (so it says "Pinned by"). */
+export function pinnedBy(card: Pick<Card, "authorId"> & { forMemberId?: string | null }): string | null {
+  return card.forMemberId && card.authorId && card.authorId !== card.forMemberId ? card.authorId : null;
 }
 
 /** Voice notes that are a child's question (kid_ask), not something they shared: left off the fridge and the tile. */
@@ -28,8 +48,8 @@ export function askCardIds(asks: Pick<KidAsk, "cardId">[]): Set<string> {
   return new Set(asks.map((a) => a.cardId).filter((x): x is string => Boolean(x)));
 }
 
-/** The kids' own cards, newest first. */
-export function kidCards<C extends Pick<Card, "authorId" | "takenAt">>(cards: C[], members: Pick<Member, "id" | "access" | "role">[]): C[] {
+/** The fridge: the kids' own cards and the ones grown-ups added for them, newest first. */
+export function kidCards<C extends Pick<Card, "authorId" | "takenAt"> & { forMemberId?: string | null }>(cards: C[], members: (KidLike & { id: string })[]): C[] {
   return cards.filter((c) => isKidCard(c, members)).sort((a, b) => b.takenAt.localeCompare(a.takenAt));
 }
 
@@ -54,7 +74,7 @@ export function guardiansOf(childId: string, rels: Relationship[]): string[] {
 
 /** Child id -> their parents and grandparents, for every kid in the family. */
 export function guardianMap(members: Member[], rels: Relationship[]): Record<string, string[]> {
-  return Object.fromEntries(members.filter(isKid).map((k) => [k.id, guardiansOf(k.id, rels)]));
+  return Object.fromEntries(members.filter((m) => isKid(m)).map((k) => [k.id, guardiansOf(k.id, rels)]));
 }
 
 /** The kids this person is a parent or grandparent of. */
@@ -129,53 +149,6 @@ export function askLine(name: string, topic: KidAsk["topic"]): string {
   return topic === "story" ? `${name} would like a story` : `${name} asked you something`;
 }
 
-/* ---------------------------------------------------------- the kids' wall */
-/** Marks for one child, oldest first. */
-export function marksFor(childId: string, marks: HeightMark[]): HeightMark[] {
-  return marks.filter((m) => m.memberId === childId).sort((a, b) => a.at.localeCompare(b.at));
-}
-
-/** "3 Mar" or "3 Mar 2025" when it is not this year. */
-export function shortDate(iso: string, now: Date = new Date()): string {
-  const d = new Date(iso);
-  const same = d.getUTCFullYear() === now.getUTCFullYear();
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", ...(same ? {} : { year: "numeric" }), timeZone: "UTC" });
-}
-
-/** A new mark lands: how long it stays a news line. */
-export const GREW_DAYS = 7;
-
-export interface Grew {
-  memberId: string;
-  cm: number;
-  /** Centimetres since the mark before. */
-  by: number;
-  since: string;
-  at: string;
-}
-
-/**
- * "Vihaan grew 2 cm since 3 Mar": the newest mark of each child, when it is under a week old
- * and there is an earlier mark to measure from. Nothing else: no advice, no comparison.
- */
-export function recentGrowth(marks: HeightMark[], now: Date): Grew[] {
-  const out: Grew[] = [];
-  for (const id of Array.from(new Set(marks.map((m) => m.memberId)))) {
-    const list = marksFor(id, marks).filter((m) => Date.parse(m.at) <= now.getTime() + 60_000);
-    const last = list[list.length - 1];
-    const prev = list[list.length - 2];
-    if (!last || !prev || now.getTime() - Date.parse(last.at) > GREW_DAYS * DAY) continue;
-    const by = Math.round((last.cm - prev.cm) * 10) / 10;
-    if (by <= 0) continue;
-    out.push({ memberId: id, cm: last.cm, by, since: prev.at, at: last.at });
-  }
-  return out.sort((a, b) => b.at.localeCompare(a.at));
-}
-
-export function growLine(name: string, g: Pick<Grew, "by" | "since">, now: Date = new Date()): string {
-  return `${name} grew ${Number.isInteger(g.by) ? g.by : g.by.toFixed(1)} cm since ${shortDate(g.since, now)}`;
-}
-
 /* ------------------------------------------------------ the kids' glance tile */
 export interface KidsTile {
   text: string;
@@ -188,13 +161,13 @@ export interface KidsTile {
  * "From the kids": kid cards that arrived after `since` (the viewer's previous visit; a week back
  * if there was none), with the names of who shared. Null hides the tile.
  */
-export function kidsTile(cards: Pick<Card, "id" | "authorId" | "takenAt">[], members: Member[], viewerId: string, since: string | null, now: Date, skip: ReadonlySet<string> = new Set()): KidsTile | null {
+export function kidsTile(cards: (Pick<Card, "id" | "authorId" | "takenAt"> & { forMemberId?: string | null })[], members: Member[], viewerId: string, since: string | null, now: Date, skip: ReadonlySet<string> = new Set()): KidsTile | null {
   const from = since ?? new Date(now.getTime() - 7 * DAY).toISOString();
   const fresh = kidCards(cards, members).filter((c) => !skip.has(c.id) && c.authorId !== viewerId && c.takenAt > from && Date.parse(c.takenAt) <= now.getTime() + 60_000);
   if (fresh.length === 0) return null;
   const names: string[] = [];
   for (const c of fresh) {
-    const m = members.find((x) => x.id === c.authorId);
+    const m = members.find((x) => x.id === fridgeKidId(c));
     const n = m?.displayName || m?.firstName || "";
     if (n && !names.includes(n)) names.push(n);
   }

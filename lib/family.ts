@@ -1,3 +1,4 @@
+import { parseBirthday } from "./birthday";
 import type { Member } from "./schemas";
 
 // Demo family (synthetic seed data; the viewer cycles between members).
@@ -33,7 +34,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "hi-deva",
     tz: "Asia/Kolkata",
     city: "Amritsar",
-    birthday: "01-22",
+    birthday: "1955-01-22",
     homeImageRef: null,
     homePalette: [],
   },
@@ -51,7 +52,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "hi-deva",
     tz: "Asia/Kolkata",
     city: "Amritsar",
-    birthday: "08-15",
+    birthday: "1952-08-15",
     homeImageRef: null,
     homePalette: [],
   },
@@ -69,7 +70,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Asia/Kolkata",
     city: "Bengaluru",
-    birthday: "07-30",
+    birthday: "1987-07-30",
     homeImageRef: null,
     homePalette: [],
   },
@@ -87,7 +88,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Asia/Kolkata",
     city: "Bengaluru",
-    birthday: "11-09",
+    birthday: "2017-11-09",
     homeImageRef: null,
     homePalette: [],
   },
@@ -105,7 +106,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "hi-latn",
     tz: "Asia/Kolkata",
     city: "Bengaluru",
-    birthday: "03-14",
+    birthday: "2019-03-14",
     homeImageRef: null,
     homePalette: [],
   },
@@ -123,7 +124,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Asia/Kolkata",
     city: "Bengaluru",
-    birthday: "05-02",
+    birthday: "1989-05-02",
     homeImageRef: null,
     homePalette: [],
   },
@@ -141,7 +142,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Asia/Kolkata",
     city: "Pune",
-    birthday: "09-19",
+    birthday: "1990-09-19",
     homeImageRef: null,
     homePalette: [],
   },
@@ -159,7 +160,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Asia/Kolkata",
     city: "Pune",
-    birthday: "12-03",
+    birthday: "1985-12-03",
     homeImageRef: null,
     homePalette: [],
   },
@@ -177,7 +178,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Asia/Kolkata",
     city: "Pune",
-    birthday: "06-25",
+    birthday: "2018-06-25",
     homeImageRef: null,
     homePalette: [],
   },
@@ -195,7 +196,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Europe/London",
     city: "London",
-    birthday: "03-14",
+    birthday: "1987-03-14",
     homeImageRef: null,
     homePalette: [],
   },
@@ -213,7 +214,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Europe/London",
     city: "London",
-    birthday: "08-30",
+    birthday: "1989-08-30",
     homeImageRef: null,
     homePalette: [],
   },
@@ -231,7 +232,7 @@ export const DEMO_MEMBERS: Member[] = active([
     displayLang: "en",
     tz: "Europe/London",
     city: "London",
-    birthday: "11-21",
+    birthday: "2021-11-21",
     homeImageRef: null,
     homePalette: [],
   },
@@ -262,15 +263,15 @@ const iyer = (id: string, firstName: string, displayName: string, role: Member["
 });
 
 export const DEMO_IYER_MEMBERS: Member[] = [
-  iyer("iyer-priya", "Priya", "Priya", "adult", "owner", "Asia/Kolkata", "05-02", "p-priya", null, "en", "en", "Bengaluru"),
-  iyer("iyer-arjun", "Arjun", "Arjun", "adult", "member", "Asia/Kolkata", "07-30", "p-arjun", "/demo/portrait-dad.webp", "en", "en", "Bengaluru"),
-  iyer("iyer-leo", "Vihaan", "Vihaan", "child", "child", "Asia/Kolkata", "11-09", "p-leo", "/demo/portrait-leo.webp", "en", "en", "Bengaluru"),
-  iyer("iyer-aria", "Anika", "Anika", "child", "child", "Asia/Kolkata", "03-14", "p-aria", "/demo/portrait-aria.webp", "en", "en", "Bengaluru"),
-  iyer("iyer-nani", "Lakshmi", "Amma", "elder", "member", "Asia/Kolkata", "02-11", null, null, "ta", "ta"),
-  iyer("iyer-nana", "Venkat", "Appa", "elder", "member", "Asia/Kolkata", "09-05", null, null, "ta", "ta"),
-  iyer("iyer-karthik", "Karthik", "Karthik", "adult", "member", "Asia/Kolkata", "01-27", null, null, "en", "en", "Pune"),
-  iyer("iyer-meera", "Meera", "Meera", "adult", "member", "Asia/Kolkata", "06-08", null, null, "en", "en", "Pune"),
-  iyer("iyer-diya", "Diya", "Diya", "child", "child", "Asia/Kolkata", "10-02", null, null, "en", "en", "Pune"),
+  iyer("iyer-priya", "Priya", "Priya", "adult", "owner", "Asia/Kolkata", "1989-05-02", "p-priya", null, "en", "en", "Bengaluru"),
+  iyer("iyer-arjun", "Arjun", "Arjun", "adult", "member", "Asia/Kolkata", "1987-07-30", "p-arjun", "/demo/portrait-dad.webp", "en", "en", "Bengaluru"),
+  iyer("iyer-leo", "Vihaan", "Vihaan", "child", "child", "Asia/Kolkata", "2017-11-09", "p-leo", "/demo/portrait-leo.webp", "en", "en", "Bengaluru"),
+  iyer("iyer-aria", "Anika", "Anika", "child", "child", "Asia/Kolkata", "2019-03-14", "p-aria", "/demo/portrait-aria.webp", "en", "en", "Bengaluru"),
+  iyer("iyer-nani", "Lakshmi", "Amma", "elder", "member", "Asia/Kolkata", "1958-02-11", null, null, "ta", "ta"),
+  iyer("iyer-nana", "Venkat", "Appa", "elder", "member", "Asia/Kolkata", "1955-09-05", null, null, "ta", "ta"),
+  iyer("iyer-karthik", "Karthik", "Karthik", "adult", "member", "Asia/Kolkata", "1986-01-27", null, null, "en", "en", "Pune"),
+  iyer("iyer-meera", "Meera", "Meera", "adult", "member", "Asia/Kolkata", "1988-06-08", null, null, "en", "en", "Pune"),
+  iyer("iyer-diya", "Diya", "Diya", "child", "child", "Asia/Kolkata", "2016-10-02", null, null, "en", "en", "Pune"),
 ];
 
 /** Demo Aangans: the synthetic families the demo invite code opens. */
@@ -330,9 +331,10 @@ export function signalLineFor(viewerId: string, displayLang: string): string {
 
 // Days from `now` until the next MM-DD birthday. Pure and data-driven.
 /** Days until the next birthday; Infinity when no birthday has been added. */
-export function daysUntilBirthday(mmdd: string, now = new Date()): number {
-  if (!/^\d{2}-\d{2}$/.test(mmdd)) return Number.POSITIVE_INFINITY;
-  const [m, d] = mmdd.split("-").map(Number);
+export function daysUntilBirthday(birthday: string, now = new Date()): number {
+  const p = parseBirthday(birthday);
+  if (!p) return Number.POSITIVE_INFINITY;
+  const { month: m, day: d } = p;
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   let next = new Date(Date.UTC(now.getUTCFullYear(), m - 1, d));
   if (next < start) next = new Date(Date.UTC(now.getUTCFullYear() + 1, m - 1, d));

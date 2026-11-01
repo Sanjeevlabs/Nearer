@@ -2,6 +2,10 @@ import { z } from "zod";
 import { EVENT_KINDS } from "./kind-values";
 import { CARD_NOTE_MAX, CARD_PLACE_MAX } from "./card-limits";
 import { LANG_CODES } from "./languages";
+import { BIRTHDAY_RE, validBirthday } from "./birthday";
+
+/** A birthday a person typed: "MM-DD" or "YYYY-MM-DD" (1900 to today, never the future), or "" to clear it. */
+export const BirthdayInput = z.string().regex(BIRTHDAY_RE).refine((v) => validBirthday(v), "invalid-birthday");
 
 // Caption may only reference tagged members (enforced in lib/grounding.ts).
 export const CaptionSchema = z.object({
@@ -116,6 +120,8 @@ export const CardSchema = z.object({
   place: z.string().max(CARD_PLACE_MAX).default(""),
   /** A short handwritten-style note under the print. Optional; falls back to the caption. */
   note: z.string().max(CARD_NOTE_MAX).default(""),
+  /** A kid this belongs to on the fridge, set when a grown-up photographs their drawing for them (member id). Null otherwise. */
+  forMemberId: z.string().nullable().optional(),
 });
 
 export const MemberRoleSchema = z.enum(["elder", "adult", "child"]);
@@ -144,8 +150,8 @@ export const MemberSchema = z.object({
   tz: z.string().default("UTC"),
   /** The city they live in, as they'd say it ("Amritsar"). Shown on the window; never tracked. */
   city: z.string().max(60).default(""),
-  /** MM-DD, or "" when nobody has added it yet (no fake dates). */
-  birthday: z.string().regex(/^(\d{2}-\d{2})?$/).default(""),
+  /** "YYYY-MM-DD" when the year is known, "MM-DD" when it is not, "" when nobody has added it yet (no fake dates). See lib/birthday.ts. */
+  birthday: z.string().regex(BIRTHDAY_RE).default(""),
   homeImageRef: z.string().nullable().default(null),
   homePalette: z.array(z.string()).default([]),
   /** Portrait used for the person's album. */
@@ -183,6 +189,8 @@ export const CreateCardRequestSchema = z.object({
   addressedTo: z.string().max(64).nullable().default(null),
   place: z.string().trim().max(CARD_PLACE_MAX).default(""),
   note: z.string().trim().max(CARD_NOTE_MAX).default(""),
+  /** "Add to the fridge": the kid it is for. The route checks they are a kid of this family. */
+  forMemberId: z.string().max(64).nullable().default(null),
 });
 
 export const HomeImageRequestSchema = z.object({
@@ -223,7 +231,7 @@ export const CreateRelationshipRequestSchema = z.object({
   newMemberRole: MemberRoleSchema.optional(),
   relation: z.string().min(1).max(40),
   tz: TimeZoneSchema.optional(),
-  birthday: z.string().regex(/^\d{2}-\d{2}$/).optional(),
+  birthday: BirthdayInput.refine((v) => v !== "").optional(),
 });
 
 /** Edit a person in the tree (name, role, where they live, birthday). */
@@ -231,7 +239,7 @@ export const UpdateMemberRequestSchema = z.object({
   displayName: z.string().trim().min(1).max(40).optional(),
   role: MemberRoleSchema.optional(),
   tz: TimeZoneSchema.optional(),
-  birthday: z.string().regex(/^(\d{2}-\d{2})?$/).optional(),
+  birthday: BirthdayInput.optional(),
   /** Admin only. */
   access: AccessSchema.optional(),
 });
