@@ -24,7 +24,7 @@ function useQr(path: string): string | null {
   return svg;
 }
 
-export function HomeSite({ onDemo }: { onDemo: () => Promise<void> }) {
+export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => Promise<void>; signedIn?: boolean; onEnter?: () => void }) {
   const qr = useQr("/?demo=1");
   const [busy, setBusy] = useState(false);
   return (
@@ -36,12 +36,20 @@ export function HomeSite({ onDemo }: { onDemo: () => Promise<void> }) {
           Aangan
         </span>
         <nav className="flex items-center gap-5 text-[15px]">
-          <Link href="/signin" className="text-ink-soft no-underline hover:text-ink">
-            Sign in
-          </Link>
-          <Link href="/create" className="press rounded-full bg-ink px-4 py-2 font-semibold text-white no-underline">
-            Start your family
-          </Link>
+          {signedIn ? (
+            <button type="button" onClick={onEnter} className="press rounded-full bg-ink px-4 py-2 font-semibold text-white">
+              Open Aangan
+            </button>
+          ) : (
+            <>
+              <Link href="/signin" className="text-ink-soft no-underline hover:text-ink">
+                Sign in
+              </Link>
+              <Link href="/create" className="press rounded-full bg-ink px-4 py-2 font-semibold text-white no-underline">
+                Start your family
+              </Link>
+            </>
+          )}
         </nav>
       </header>
 

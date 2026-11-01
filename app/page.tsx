@@ -10,6 +10,8 @@ import { Photo } from "@/components/ui/kit";
 import { HERO_SIZES } from "@/lib/hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
+import { hasEntered, markEntered } from "@/lib/entered";
+
 const DOOR_KEY = "aangan:door";
 
 // Each person needs one of these four: the window (signed in, door closed), the courtyard
@@ -79,9 +81,15 @@ export default function Page() {
     const res = await fetch("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ inviteCode: "AANGAN-DEMO", memberId: "arjun" }) });
     if (res.ok) {
       resetFamilyCards();
+      markEntered();
+      setEntered(true);
       window.dispatchEvent(new Event("aangan:auth"));
     }
   }, []);
+  // A laptop visitor sees the home page first, even with a session from an
+  // earlier day; one tap on Open Aangan (or any app route) steps inside.
+  const [entered, setEntered] = useState<boolean | null>(null);
+  useEffect(() => setEntered(hasEntered()), []);
 
   const gate = !ready || open === null ? "checking" : !signedIn ? "landing" : open ? "family" : "lite";
 
@@ -110,8 +118,19 @@ export default function Page() {
     window.scrollTo(0, 0);
   }, [moving]);
 
-  if (gate === "checking") return <CheckingShell />;
+  if (gate === "checking" || (wide && entered === null)) return <CheckingShell />;
   if (gate === "landing") return wide ? <HomeSite onDemo={startDemo} /> : <Landing onDemo={startDemo} />;
+  if (wide && !entered)
+    return (
+      <HomeSite
+        onDemo={startDemo}
+        signedIn
+        onEnter={() => {
+          markEntered();
+          setEntered(true);
+        }}
+      />
+    );
   return (
     <>
       {gate === "lite" ? <LiteWindow onOpenDoor={() => setMoving("opening")} /> : (

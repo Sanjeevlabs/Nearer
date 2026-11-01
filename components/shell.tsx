@@ -3,6 +3,7 @@
 import { AnimatePresence, LazyMotion, m } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { markEntered } from "@/lib/entered";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { talkTarget } from "@/lib/households";
 import { callName, peopleByRecency } from "@/lib/people";
@@ -210,6 +211,11 @@ function useHeartbeat(on: boolean): void {
 function ShellInner({ children }: { children: React.ReactNode }) {
   const { viewer, signedIn } = useViewer();
   useHeartbeat(signedIn);
+  // Any app route counts as stepping inside: "/" on a laptop is then the app, not the site.
+  const herePath = usePathname();
+  useEffect(() => {
+    if (herePath !== "/" && herePath !== "/home") markEntered();
+  }, [herePath]);
   // Native app: status bar style, and deep links (auth callback, shared links) open in-app.
   const nativeRouter = useRouter();
   useEffect(() => {
