@@ -295,3 +295,10 @@
 - Research brief (relationship science, rituals, prompts, speed) → Festival Week (data-driven; elder leads the steps, children ask, lamp takes the festival colour), window glance strip (awake now · waiting for you · next · our call), the fixed weekly call ritual with .ics, "Do You Know?" story prompts, batched nudges (≤3/week, recipient's morning, email when configured) with a weekly letter digest; copy audit removed counts and "last seen" wording.
 - Speed: courtyard LCP 6.0 s → 1.2 s, CLS 0.37 → 0, 18 → 6 API calls; shared JS 272 → 202 KB gz; images 312 → 82 KB; perf budget + vitals in CI. Reliability: upload queue with retry, stale-while-revalidate, per-section boundaries, service worker.
 - Tests: 661. Schema check vs code kinds enforced by a test.
+
+## 1 Nov 2026 · Stage 24: the first screen, for real
+- First screen: the home photo, full-bleed and large; the drawn window/balcony/courtyard scenes, pots and the family slideshow are gone. One small time/weather badge (sun or moon only by their real solar time; weather only when fetched). Lamp and latest voice as rows under the photo. Safe & sound rows open a sheet with the person's day, moments and check-ins. Window LCP 3.6 s → 0.7 s, CLS 0.
+- Care room without "Send something"; one app per category per country. Family room split into Tree and Homes; Settings into You/Window/People/Privacy.
+- Settings never auto-save: every section has Save/Discard with status; actions stay immediate with confirms.
+- Lint now fails if runtime code or dependencies reach any non-Meta model vendor.
+- Tests: 701.

@@ -25,8 +25,8 @@ describe("the five rooms", () => {
     expect(tabs).toEqual({
       Memories: ["Memory Lane /lane", "Stories /stories"],
       Kitchen: ["Recipes /kitchen"],
-      Care: ["Send something /send", "Care tasks /care", "Helpers /care/helpers", "Nearby /nearby"],
-      Family: ["Family tree /bond", "The Book /book", "Advice /advice", "Portrait /portrait"],
+      Care: ["Care tasks /care", "Helpers /care/helpers", "Nearby /nearby"],
+      Family: ["Family tree /bond", "Homes /bond/homes", "The Book /book", "Advice /advice", "Portrait /portrait"],
       Celebrations: ["Coming up /gather", "Occasions /rituals", "Visits /together/visits", "Holidays /together/holidays", "Play /gather/play"],
     });
   });
@@ -41,9 +41,11 @@ describe("the five rooms", () => {
 
   it("shows each room's tabs on its pages, with the right one active; Kitchen and pages outside rooms have none", () => {
     expect(tabLabels("/stories")).toEqual(["Memory Lane", "Stories"]);
-    expect(tabLabels("/book")).toEqual(["Family tree", "The Book", "Advice", "Portrait"]);
-    expect(tabLabels("/send")).toEqual(["Send something", "Care tasks", "Helpers", "Nearby"]);
-    expect(tabLabels("/care/helpers")).toEqual(["Send something", "Care tasks", "Helpers", "Nearby"]);
+    expect(tabLabels("/book")).toEqual(["Family tree", "Homes", "The Book", "Advice", "Portrait"]);
+    expect(tabLabels("/care/helpers")).toEqual(["Care tasks", "Helpers", "Nearby"]);
+    expect(tabsFor("/send")).toBeNull();
+    expect(roomsFor(false).flatMap((r) => r.tabs.map((t) => t.href))).not.toContain("/send");
+    expect(roomsFor(false).find((r) => r.id === "care")?.note).not.toMatch(/send/i);
     expect(tabLabels("/gather")).toEqual(["Coming up", "Occasions", "Visits", "Holidays", "Play"]);
     expect(tabLabels("/rituals")).toEqual(["Coming up", "Occasions", "Visits", "Holidays", "Play"]);
     expect(tabsFor("/gather/play")?.room).toBe("/gather/play");

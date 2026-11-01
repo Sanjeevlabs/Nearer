@@ -11,7 +11,7 @@ import { sessionCookie } from "./auth-helper";
 const req = (member: string, body?: unknown) =>
   new Request("http://test/api/window", { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json", cookie: sessionCookie(member) }, body: body === undefined ? undefined : JSON.stringify(body) });
 const post = (member: string, body: unknown) => windowPost(req(member, body));
-type State = { scene: string; pots: string[]; homePhoto: string | null; mixAlbum: boolean; wall: string };
+type State = { homePhoto: string | null; wall: string; imageRef: string; view: { style: string } | null; scene?: unknown; pots?: unknown; mixAlbum?: unknown };
 const state = async (member = "arjun") => (await (await windowGet(req(member))).json()) as State;
 
 beforeEach(() => {
@@ -22,36 +22,30 @@ beforeEach(() => {
 });
 
 describe("first screen: scene, pots, home photo", () => {
-  it("defaults: real families keep the window, no pots, the album; the demo opens on marigold and jasmine", async () => {
+  it("defaults: one still photo; the old scene, pots and album fields stay in the document but are not on the first screen", async () => {
     const real = defaultView("some-family", "m1");
-    expect(real).toMatchObject({ scene: "window", pots: [], homePhoto: null, mixAlbum: true });
-    expect(await state()).toMatchObject({ scene: "window", pots: ["marigold", "jasmine"], homePhoto: null, mixAlbum: true });
+    expect(real).toMatchObject({ style: "still", scene: "window", pots: [], homePhoto: null, mixAlbum: true });
+    const st = await state();
+    expect(st).toMatchObject({ homePhoto: null, imageRef: "/demo/courtyard.jpg" });
+    expect(st.scene).toBeUndefined();
+    expect(st.pots).toBeUndefined();
+    expect(st.mixAlbum).toBeUndefined();
   });
 
-  it("saves a scene from the list only, per viewer", async () => {
+  it("still accepts scene, pots and wall (older clients) without changing what is shown", async () => {
     expect((await post("arjun", { action: "scene", scene: "balcony" })).status).toBe(200);
-    expect((await state()).scene).toBe("balcony");
-    expect((await state("dadi")).scene).toBe("window");
     expect((await post("arjun", { action: "scene", scene: "rooftop" })).status).toBe(400);
-    expect((await post("arjun", { action: "scene" })).status).toBe(400);
-    expect((await state()).scene).toBe("balcony");
-  });
-
-  it("changing the scene or the wall keeps the pots", async () => {
-    await post("arjun", { action: "scene", scene: "courtyard" });
-    await post("arjun", { action: "wall", wall: "lime" });
-    expect(await state()).toMatchObject({ scene: "courtyard", wall: "lime", pots: ["marigold", "jasmine"] });
-  });
-
-  it("takes at most three pots, only from the set, without repeats", async () => {
-    const ok = await post("arjun", { action: "pots", pots: ["rose", "succulent", "rose"] });
-    expect(ok.status).toBe(200);
-    expect((await state()).pots).toEqual(["rose", "succulent"]);
-    expect((await post("arjun", { action: "pots", pots: ["rose", "jasmine", "geranium", "marigold"] })).status).toBe(400);
+    expect((await post("arjun", { action: "pots", pots: ["rose", "succulent", "rose"] })).status).toBe(200);
     expect((await post("arjun", { action: "pots", pots: ["cactus"] })).status).toBe(400);
-    expect((await post("arjun", { action: "pots", pots: "rose" })).status).toBe(400);
-    expect((await post("arjun", { action: "pots", pots: [] })).status).toBe(200);
-    expect((await state()).pots).toEqual([]);
+    expect((await post("arjun", { action: "wall", wall: "lime" })).status).toBe(200);
+    expect(await state()).toMatchObject({ wall: "lime", imageRef: "/demo/courtyard.jpg", view: { style: "still" } });
+  });
+
+  it("never lives: choosing a photo as living still gives a still view; composing motion is retired", async () => {
+    const r = await post("arjun", { action: "choose", cardId: "demo-court-dadi", style: "living" });
+    expect(r.status).toBe(200);
+    expect(((await r.json()) as { view: { style: string } }).view.style).toBe("still");
+    expect((await post("arjun", { action: "compose" })).status).toBe(409);
   });
 
   it("uses only this family's own photo as their home", async () => {
@@ -69,7 +63,7 @@ describe("first screen: scene, pots, home photo", () => {
     expect((await post("arjun", { action: "homePhoto", ref: "/demo/family-dadi.webp" })).status).toBe(200);
     // Mix in family photos: on by default, a toggle.
     expect((await post("arjun", { action: "homePhoto", mix: false })).status).toBe(200);
-    expect(await state()).toMatchObject({ homePhoto: "/demo/family-dadi.webp", mixAlbum: false });
+    expect((await state()).homePhoto).toBe("/demo/family-dadi.webp");
     // Back to the album.
     expect((await post("arjun", { action: "homePhoto", ref: null })).status).toBe(200);
     expect((await state()).homePhoto).toBeNull();

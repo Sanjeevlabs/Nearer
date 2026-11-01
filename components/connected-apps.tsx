@@ -39,7 +39,7 @@ export function ConnectedApps() {
     return (
       <div id="connected-apps" className="rounded-[22px] bg-surface px-4 py-5 text-center">
         <p className="m-0 text-[15px] text-ink-soft">Couldn&rsquo;t load your apps.</p>
-        <button type="button" onClick={() => void reload()} className="press mt-2 h-10 rounded-full bg-white px-4 text-[14px] font-semibold">
+        <button type="button" onClick={() => void reload()} className="press mt-2 h-11 rounded-full bg-white px-4 text-[14px] font-semibold">
           Try again
         </button>
       </div>
@@ -69,11 +69,11 @@ export function ConnectedApps() {
               <span className="block truncate text-[13px] text-ink-soft">{a.partners.join(" · ")}<span className="sr-only">{a.connected ? ", connected" : ", not connected"}</span></span>
             </span>
             {a.connected ? (
-              <button type="button" disabled={busy === a.id} onClick={() => void disconnect(a)} aria-label={`Disconnect ${a.name}`} className="press h-10 rounded-full bg-white px-4 text-[14px] font-semibold text-ink-soft disabled:opacity-40">
+              <button type="button" disabled={busy === a.id} onClick={() => void disconnect(a)} aria-label={`Disconnect ${a.name}`} className="press h-11 rounded-full bg-white px-4 text-[14px] font-semibold text-ink-soft disabled:opacity-40">
                 Disconnect
               </button>
             ) : (
-              <a href={`/api/partners/${encodeURIComponent(a.id)}/connect`} className="press flex h-10 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-white no-underline">
+              <a href={`/api/partners/${encodeURIComponent(a.id)}/connect`} className="press flex h-11 items-center rounded-full bg-ink px-4 text-[14px] font-semibold text-white no-underline">
                 Connect
               </a>
             )}

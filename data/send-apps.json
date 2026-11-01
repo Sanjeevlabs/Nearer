@@ -1,5 +1,5 @@
 {
-  "_comment": "Data, never logic. 'Send something' → the apps families already use, by category and by the recipient's home country (from their time zone, data/traditions.json zones). Links only: names and official public URLs, no logos, no tracking or referral parameters. Aangan places nothing here; the app or site takes over. '*' is the fallback for a country not listed. A category with no apps for a country is not shown.",
+  "_comment": "Data, never logic. 'Send something' → the apps families already use, one most-used app per category, by the recipient's home country (from their time zone, data/traditions.json zones). Links only: names and official public URLs, no logos, no tracking or referral parameters. Aangan places nothing here; the app or site takes over. '*' is the fallback for a country not listed. A category with no apps for a country is not shown.",
   "categories": [
     { "id": "groceries", "label": "Groceries", "icon": "basket" },
     { "id": "sweets", "label": "Sweets & cakes", "icon": "cake" },
@@ -12,76 +12,34 @@
     "IN": {
       "name": "India",
       "apps": {
-        "groceries": [
-          { "name": "Blinkit", "url": "https://blinkit.com" },
-          { "name": "Zepto", "url": "https://www.zeptonow.com" },
-          { "name": "Swiggy Instamart", "url": "https://www.swiggy.com/instamart" },
-          { "name": "BigBasket", "url": "https://www.bigbasket.com" }
-        ],
-        "sweets": [
-          { "name": "Swiggy", "url": "https://www.swiggy.com" },
-          { "name": "Zomato", "url": "https://www.zomato.com" }
-        ],
-        "medicines": [
-          { "name": "Tata 1mg", "url": "https://www.1mg.com" },
-          { "name": "PharmEasy", "url": "https://pharmeasy.in" },
-          { "name": "Apollo 24|7", "url": "https://www.apollo247.com" }
-        ],
+        "groceries": [{ "name": "Blinkit", "url": "https://blinkit.com" }],
+        "sweets": [{ "name": "Zomato", "url": "https://www.zomato.com" }],
+        "medicines": [{ "name": "Tata 1mg", "url": "https://www.1mg.com" }],
         "house-help": [{ "name": "Urban Company", "url": "https://www.urbancompany.com" }],
-        "flowers": [
-          { "name": "Ferns N Petals", "url": "https://www.fnp.com" },
-          { "name": "IGP", "url": "https://www.igp.com" }
-        ],
-        "rides": [
-          { "name": "Uber", "url": "https://www.uber.com" },
-          { "name": "Ola", "url": "https://www.olacabs.com" }
-        ]
+        "flowers": [{ "name": "Ferns N Petals", "url": "https://www.fnp.com" }],
+        "rides": [{ "name": "Uber", "url": "https://www.uber.com" }]
       }
     },
     "US": {
       "name": "the US",
       "apps": {
-        "groceries": [
-          { "name": "Instacart", "url": "https://www.instacart.com" },
-          { "name": "DoorDash", "url": "https://www.doordash.com" }
-        ],
-        "sweets": [
-          { "name": "DoorDash", "url": "https://www.doordash.com" },
-          { "name": "Uber Eats", "url": "https://www.ubereats.com" }
-        ],
-        "medicines": [
-          { "name": "CVS", "url": "https://www.cvs.com" },
-          { "name": "Walgreens", "url": "https://www.walgreens.com" }
-        ],
-        "house-help": [
-          { "name": "TaskRabbit", "url": "https://www.taskrabbit.com" },
-          { "name": "Angi", "url": "https://www.angi.com" }
-        ],
+        "groceries": [{ "name": "Instacart", "url": "https://www.instacart.com" }],
+        "sweets": [{ "name": "DoorDash", "url": "https://www.doordash.com" }],
+        "medicines": [{ "name": "CVS", "url": "https://www.cvs.com" }],
+        "house-help": [{ "name": "TaskRabbit", "url": "https://www.taskrabbit.com" }],
         "flowers": [{ "name": "1-800-Flowers", "url": "https://www.1800flowers.com" }],
-        "rides": [
-          { "name": "Uber", "url": "https://www.uber.com" },
-          { "name": "Lyft", "url": "https://www.lyft.com" }
-        ]
+        "rides": [{ "name": "Uber", "url": "https://www.uber.com" }]
       }
     },
     "GB": {
       "name": "the UK",
       "apps": {
         "groceries": [{ "name": "Ocado", "url": "https://www.ocado.com" }],
-        "sweets": [
-          { "name": "Deliveroo", "url": "https://deliveroo.co.uk" },
-          { "name": "Uber Eats", "url": "https://www.ubereats.com" }
-        ],
+        "sweets": [{ "name": "Deliveroo", "url": "https://deliveroo.co.uk" }],
         "medicines": [{ "name": "Boots", "url": "https://www.boots.com" }],
         "house-help": [{ "name": "TaskRabbit", "url": "https://www.taskrabbit.co.uk" }],
-        "flowers": [
-          { "name": "Interflora", "url": "https://www.interflora.co.uk" },
-          { "name": "Moonpig", "url": "https://www.moonpig.com" }
-        ],
-        "rides": [
-          { "name": "Uber", "url": "https://www.uber.com" },
-          { "name": "Bolt", "url": "https://bolt.eu" }
-        ]
+        "flowers": [{ "name": "Interflora", "url": "https://www.interflora.co.uk" }],
+        "rides": [{ "name": "Uber", "url": "https://www.uber.com" }]
       }
     },
     "*": {

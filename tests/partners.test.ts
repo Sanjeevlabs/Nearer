@@ -145,8 +145,21 @@ describe("tokens and OAuth", () => {
   });
 });
 
+const connectSwiggy = () => connect(get("/api/partners/swiggy/connect", "arjun"), ctx("swiggy"));
+
 describe("send something (MOCK)", () => {
+  it("shows an account partner only once that account is connected; gift stores need none", async () => {
+    const before = await json<{ suggestions: S[] }>(suggestPost(post("/api/partners/suggest", "arjun", { forMemberId: "dadi", occasion: "Diwali" })));
+    expect(before.suggestions.length).toBeGreaterThan(0);
+    expect(before.suggestions.some((s) => s.partnerId.startsWith("swiggy") || s.partnerId.startsWith("zomato"))).toBe(false);
+    expect(before.suggestions.every((s) => s.kind === "gifts")).toBe(true);
+    await connectSwiggy();
+    const after = await json<{ suggestions: S[] }>(suggestPost(post("/api/partners/suggest", "arjun", { forMemberId: "dadi", occasion: "Diwali" })));
+    expect(after.suggestions.some((s) => s.partnerId === "swiggy-instamart")).toBe(true);
+  });
+
   it("suggests three grounded, labelled samples for an occasion", async () => {
+    await connectSwiggy();
     const out = await json<{ sample: boolean; suggestions: S[] }>(suggestPost(post("/api/partners/suggest", "arjun", { forMemberId: "dadi", occasion: "Diwali" })));
     expect(out.sample).toBe(true);
     expect(out.suggestions).toHaveLength(3);
@@ -158,6 +171,7 @@ describe("send something (MOCK)", () => {
   });
 
   it("matches a need to the right items and refuses medicines", async () => {
+    await connectSwiggy();
     const need = await json<{ suggestions: S[] }>(suggestPost(post("/api/partners/suggest", "arjun", { forMemberId: "dadi", need: "Milk and atta for the week" })));
     expect(need.suggestions.map((s) => s.name)).toEqual(expect.arrayContaining(["Toned milk, 1 L", "Whole wheat atta, 5 kg"]));
     const med = await json<{ suggestions: S[]; refused?: string }>(suggestPost(post("/api/partners/suggest", "arjun", { forMemberId: "dadi", need: "BP tablets" })));
@@ -171,8 +185,11 @@ describe("send something (MOCK)", () => {
   });
 
   it("asks to connect, then previews, needs an explicit confirm, and places it once", async () => {
+    await connectSwiggy();
     const { suggestions } = await json<{ suggestions: S[] }>(suggestPost(post("/api/partners/suggest", "arjun", { forMemberId: "dadi", occasion: "Diwali" })));
     const im = suggestions.find((s) => s.partnerId === "swiggy-instamart")!;
+    // The connection is dropped after the list was shown: the order asks to connect again.
+    await disconnect(new Request("http://test/api/partners/swiggy/connect", { method: "DELETE", headers: { cookie: sessionCookie("arjun") } }), ctx("swiggy"));
     expect(await json(orderPost(post("/api/partners/order", "arjun", { action: "preview", suggestionId: im.id, forMemberId: "dadi" })))).toEqual({ needsConnect: "swiggy", name: "Swiggy" });
 
     const c = await connect(get("/api/partners/swiggy/connect", "arjun"), ctx("swiggy"));

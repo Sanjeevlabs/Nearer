@@ -105,7 +105,7 @@ export function Icon({ name, size = 22, className, strokeWidth = 2 }: { name: Ic
 
 /** The bundled demo photos come in small WebP widths too (scripts/demo-variants.mjs). */
 function demoWidths(src: string): number[] | null {
-  if (src === "/demo/courtyard.jpg") return [390, 780];
+  if (src === "/demo/courtyard.jpg" || /^\/demo\/home-(courtyard|balcony|window)\.jpg$/.test(src)) return [390, 780];
   if (/^\/demo\/family-[a-z]+\.webp$/.test(src)) return [440, 880];
   if (/^\/demo\/portrait-[a-z]+\.webp$/.test(src)) return [160, 400];
   return null;
@@ -284,7 +284,7 @@ export function Monogram({ name, size }: { name: string; size: number }) {
 
 /* ---------------------------------------------------------------- rooms */
 /** Header for every room: back to the courtyard, a large title, optional subtitle. */
-export function RoomHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
+export function RoomHeader({ title, subtitle, action, room }: { title: string; subtitle?: string; action?: React.ReactNode; /** For a page that is in a room but not one of its tabs (Send something → "Care"). */ room?: string }) {
   const router = useRouter();
   return (
     <header className="mb-5">
@@ -299,7 +299,7 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
         </button>
         {action}
       </div>
-      <RoomName />
+      <RoomName override={room} />
       <h1 className="m-0 text-[32px] font-light leading-[1.05] tracking-[-0.015em]">{title}</h1>
       {/* Subtitles stay in the code for screen readers only: the page says it, the header doesn't repeat it. */}
       {subtitle && <p className="sr-only">{subtitle}</p>}
@@ -309,10 +309,11 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
 }
 
 /** Which room of the house this tab page is in, as a quiet line above its title. */
-function RoomName() {
+function RoomName({ override }: { override?: string }) {
   const room = roomOf(usePathname());
-  if (!room) return null;
-  return <p className="m-0 mb-1 text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-soft">{room.title}</p>;
+  const title = override ?? room?.title;
+  if (!title) return null;
+  return <p className="m-0 mb-1 text-[12px] font-semibold uppercase tracking-[0.12em] text-ink-soft">{title}</p>;
 }
 
 /** The pages of the current room, as one quiet row. Only on a room's own tab page. */

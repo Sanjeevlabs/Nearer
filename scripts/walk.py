@@ -23,8 +23,8 @@ from playwright.sync_api import sync_playwright
 ROOMS = {
     "Memories": ["/lane", "/stories"],
     "Kitchen": ["/kitchen"],
-    "Care": ["/send", "/care", "/care/helpers", "/nearby"],
-    "Family": ["/bond", "/book", "/advice", "/portrait"],
+    "Care": ["/care", "/care/helpers", "/nearby"],
+    "Family": ["/bond", "/bond/homes", "/book", "/advice", "/portrait"],
     "Celebrations": ["/gather", "/rituals", "/together/visits", "/together/holidays", "/gather/play"],
 }
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("aria", "child")]

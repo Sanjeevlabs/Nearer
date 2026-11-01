@@ -1,20 +1,23 @@
-// Server side of the window: who's on the other side, their sky, and the
-// motion Muse composes over the chosen photo. Server only.
+// Server side of the window (the first screen): who's on the other side, their
+// real place and sky, and what they shared today. Server only.
 import { can } from "./permissions";
+import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
 import { dbListCards, dbListMembers, dbListPlays, dbListReactions, dbListRelationships } from "./db";
 import { getDoc, listDocs } from "./family-docs";
-import { WINDOW_LAYERS, type Presence, type WindowLayer, type WindowView } from "./kinds";
+import type { Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
 import { MOMENT_LABEL, todayFor } from "./presence";
 import type { Member } from "./schemas";
-import { fetchWeather, mockWeather, phaseFor, type DayPhase, type Weather } from "./weather";
-import { cityOf, farHomeFor, groundedLayers, plainLine } from "./window";
+import { fetchWeather, geocode, mockPlace, mockWeather, phaseFor, type DayPhase, type PlaceHint, type Weather } from "./weather";
+import { countryOfMember } from "./place";
+import { checkinEvents, composedLine, type DayMoment } from "./window-words";
+import { cityOf, farHomeFor } from "./window";
 import { hourIn } from "./zones";
 import { aliveState, type Alive } from "./status";
 import { dayRhythm, rhythmLine, type DayRhythm } from "./rhythm";
-import { moonPhase, sunInArch, sunPosition } from "./sky";
-import type { FirstScene, Pot, Wall } from "./kinds";
+import { isNightAt, moonPhase, skyGlyph } from "./sky";
+import type { Wall } from "./kinds";
 import { withDemoShelf } from "./demo";
 import { isDemoFamily } from "./auth";
 import { createDownloadUrl } from "./storage";
@@ -27,50 +30,62 @@ import { familyHolidays } from "./occasions-server";
 import { occasionsInRange, addDays } from "./occasion-calendar";
 import { dateIn } from "./today";
 
+export interface WindowPerson {
+  id: string;
+  lastActive: string | null;
+  state: Alive;
+  line: string;
+  rhythm: DayRhythm;
+  /** What they shared today (their local day), oldest first: chai, a walk, the temple. */
+  moments: DayMoment[];
+  /** Today's safety check-ins, oldest first. */
+  checkins: { at: string; label: string }[];
+}
+
 export interface WindowState {
   view: WindowView | null;
+  /** The viewer's chosen family photo, else DEFAULT_IMAGE. A home photo (below) wins over both. */
   imageRef: string;
   far: { ids: string[]; names: string; city: string; tz: string } | null;
+  /** Only when the weather fetch succeeded. Otherwise null, and nothing about the weather is said anywhere. */
   weather: Weather | null;
   phase: DayPhase;
-  layers: WindowLayer[];
+  /** One factual line under the photo (empty when there is nothing true to say). */
   line: string;
   /** What they shared today, newest first, in words ("is having chai"). */
   moments: { memberId: string; label: string; at: string }[];
   /** Safe & sound at a glance, per person at the window (at most two). */
-  people: { id: string; lastActive: string | null; state: Alive; line: string; rhythm: DayRhythm }[];
+  people: WindowPerson[];
   /** This viewer's amber threshold, in hours. */
   quietAfterHours: number;
   /** The viewer's previous visit and what happened after it, in plain words (newest first, at most three). */
   since: { at: string | null; lines: string[]; line?: string };
-  /** A family photo was chosen for this window (else: the scene slideshow). */
+  /** A family photo was chosen for this window. */
   chosen: boolean;
   /** Someone on the other side has signed in (has an account). Emails never leave the server. */
   joined: boolean;
-  /** How far apart the two homes are, in km (city to city), when both are known. */
+  /** How far apart the two homes are, in km (city to city), only when both places are known. */
   km: number | null;
-  /** The wall around this viewer's window. */
+  /** The wall setting (tolerated, unused on the first screen). */
   wall: Wall;
-  /** Their real sky: the sun in the arch (null when it has set) and tonight's moon. */
-  sky: { sun: { x: number; y: number } | null; moon: { illumination: number; waxing: boolean; name: string } };
+  /**
+   * The sky badge: the sun between their sunrise and sunset, the moon only at
+   * night, nothing at twilight or when we don't know where they are.
+   * `bothNight`: it is night at both homes, the only time "the same moon" is true.
+   */
+  sky: { glyph: "sun" | "moon" | null; moon: { illumination: number; waxing: boolean; name: string }; bothNight: boolean };
   /** Is now a good time to call, in their day and yours. */
   call: { good: boolean; text: string };
-  /** What this viewer stands at: window, balcony or courtyard. */
-  scene: FirstScene;
-  /** Flower pots on the sill / railing / courtyard floor (up to three). */
-  pots: Pot[];
-  /** Four 3-second answers about the whole family (the strip under Safe & sound). */
+  /** Four 3-second answers about the whole family (under Safe & sound). */
   glance: Glance;
-  /** A photo of their actual home as the view (a media ref), else null: the living album. */
+  /** A photo of their actual home as the view (a media ref), else null: the default photo. */
   homePhoto: string | null;
-  /** With a home photo: family photos cross-fade in now and then. */
-  mixAlbum: boolean;
 }
 
 /**
- * A viewer's window before they've changed anything. Real families: the
- * window, no pots, the living album. The synthetic demo families open on
- * marigold and jasmine on the sill, so the demo shows something lovely.
+ * A viewer's window before they've changed anything. The first screen is one
+ * still photograph (the default photo until they set their own). The old
+ * slideshow, scene and pots fields stay in the document and are tolerated.
  */
 export function defaultView(familyId: string, memberId: string): WindowView {
   return {
@@ -78,7 +93,7 @@ export function defaultView(familyId: string, memberId: string): WindowView {
     memberId,
     cardId: null,
     imageRef: null,
-    style: "living",
+    style: "still",
     layers: [],
     line: "",
     madeBy: "family",
@@ -110,17 +125,35 @@ export async function homePhotoOk(familyId: string, ref: string): Promise<boolea
   return cards.some((c) => c.type === "photo" && c.mediaRef === ref);
 }
 
-const DEFAULT_IMAGE = { elders: "/demo/aangan-home.svg", children: "/demo/home-city.svg" };
+/** The photo when a family has set none. Defined in lib/hero.ts (switch it there). */
+export { DEFAULT_IMAGE };
 
-async function weatherFor(city: string): Promise<Weather | null> {
+const mock = () => process.env.MOCK === "true";
+
+/** Weather only when the Open-Meteo fetch succeeded (mock mode: the deterministic stand-in). Otherwise null: nothing is guessed. */
+async function weatherFor(city: string, hint: PlaceHint): Promise<Weather | null> {
   if (!city) return null;
-  return process.env.MOCK === "true" ? mockWeather(city) : await fetchWeather(city);
+  return mock() ? mockWeather(city) : await fetchWeather(city, hint);
+}
+
+/** Where a city is (the right city in the right country), or null. */
+async function placeFor(city: string, hint: PlaceHint): Promise<{ lat: number; lon: number } | null> {
+  if (!city) return null;
+  return mock() ? mockPlace(city) : await geocode(city, hint);
 }
 
 function names(ms: Member[]): string {
   const call = (m: Member) => m.displayName || m.firstName;
   const list = ms.filter((m) => m.role !== "child").map(call);
   return list.length <= 1 ? (list[0] ?? "") : `${list.slice(0, -1).join(", ")} & ${list[list.length - 1]}`;
+}
+
+function localDay(iso: string, tz: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+  } catch {
+    return iso.slice(0, 10);
+  }
 }
 
 export async function windowState(familyId: string, viewerId: string, now = new Date()): Promise<WindowState> {
@@ -134,18 +167,21 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const city = cityOf(home);
   const tz = home?.tz ?? viewer?.tz ?? "UTC";
   const phase = phaseFor(hourIn(tz, now));
-  const [weather, here] = await Promise.all([weatherFor(city), weatherFor(viewer?.city ?? "")]);
+  // Which city: the one in the member's own country (their time zone's), never just the first match.
+  const cityMember = home?.members.find((m) => m.city);
+  const farHint: PlaceHint = { country: countryOfMember(cityMember), tz: cityMember?.tz ?? tz };
+  const hereHint: PlaceHint = { country: countryOfMember(viewer), tz: viewer?.tz };
+  const [weather, farPlace, herePlace] = await Promise.all([weatherFor(city, farHint), placeFor(city, farHint), placeFor(viewer?.city ?? "", hereHint)]);
   const presence = await listDocs(familyId, "presence");
   const ids = home?.members.map((m) => m.id) ?? [];
   const today: Presence[] = ids.flatMap((id) => todayFor(id, presence, tz, now)).filter((p) => p.moment !== "here");
   today.sort((a, b) => b.at.localeCompare(a.at));
-  const grounded = groundedLayers(weather, phase, today.map((p) => p.moment).reverse());
-  // Muse's choice stands only while it's fresh and only inside what's grounded.
-  const fresh = view && view.madeBy === "muse" && now.getTime() - Date.parse(view.updatedAt) < 3 * 3_600_000;
-  const layers = view?.style === "still" ? [] : fresh ? view.layers.filter((l) => grounded.includes(l)) : grounded;
   const who = names(home?.members ?? []);
-  const latest = today[0] ? `${members.find((m) => m.id === today[0].memberId)?.displayName ?? ""} ${MOMENT_LABEL[today[0].moment].line}`.trim() : null;
-  const line = fresh && view.line ? view.line : plainLine(who, city, weather, latest);
+  const nameOfId = (id: string) => {
+    const m = members.find((x) => x.id === id);
+    return m?.displayName || m?.firstName || "";
+  };
+  const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   // Last sign of life in Aangan: any moment (opening the app included), a
   // voice or photo they sent, a safety check-in. Only what they already share.
   const [cards, checkins, settings] = await Promise.all([dbListCards(familyId), listDocs(familyId, "safety_checkin"), listDocs(familyId, "care_settings")]);
@@ -156,16 +192,40 @@ export async function windowState(familyId: string, viewerId: string, now = new 
       ...checkins.filter((c) => c.memberId === id).map((c) => c.closedAt ?? c.at),
     ].filter((t) => Date.parse(t) <= now.getTime());
   const lastSeen = (id: string): string | null => signs(id).sort().pop() ?? null;
-  const people = (home?.members ?? [])
+  const people: WindowPerson[] = (home?.members ?? [])
     .filter((m) => m.role !== "child")
     .map((m) => {
       const shares = settings.find((s) => s.memberId === m.id)?.shareVisits ?? true;
       const lastActive = shares ? lastSeen(m.id) : null;
       const state = aliveState(lastActive, m.tz, { shares, now, quietAfter: view?.quietAfterHours });
       const rhythm = dayRhythm(shares ? signs(m.id) : [], m.tz, now);
-      return { id: m.id, lastActive, state, rhythm, line: rhythmLine(state, lastActive, rhythm, m.tz, (iso) => agoWords(iso, now)) };
+      // The only sign being the app heartbeat (just opening Aangan) is not "active" for long.
+      const latestShared = presence.find((p) => p.memberId === m.id && p.at === lastActive);
+      const heartbeatOnly = Boolean(lastActive) && latestShared?.moment === "here";
+      const shared = dayOf(m.id, m.tz);
+      return {
+        id: m.id,
+        lastActive,
+        state,
+        rhythm,
+        line: rhythmLine(state, lastActive, rhythm, m.tz, (iso) => agoWords(iso, now), { heartbeatOnly, now }),
+        moments: shares ? shared.moments : [],
+        checkins: shared.checkins,
+      };
     })
     .slice(0, 2);
+  function dayOf(id: string, mtz: string): { moments: DayMoment[]; checkins: { at: string; label: string }[] } {
+    const day = localDay(now.toISOString(), mtz);
+    const moments = todayFor(id, presence, mtz, now)
+      .filter((p) => p.moment !== "here" && Date.parse(p.at) <= now.getTime())
+      .map((p) => ({ label: MOMENT_LABEL[p.moment].label, note: p.note ?? "", at: p.at }));
+    const mine = checkins
+      .filter((c) => c.memberId === id)
+      .flatMap((c) => checkinEvents(c))
+      .filter((e) => localDay(e.at, mtz) === day && Date.parse(e.at) <= now.getTime())
+      .sort((a, b) => a.at.localeCompare(b.at));
+    return { moments, checkins: mine };
+  }
   // Since you were here: the visit before this one (the latest "here" is this visit).
   const visits = presence
     .filter((p) => p.memberId === viewerId && p.moment === "here" && Date.parse(p.at) <= now.getTime())
@@ -190,32 +250,27 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   }
   const sinceLine = await sinceSentence(familyId, viewerId, viewer?.displayLang ?? "en", sinceWords);
   const own = view ?? defaultView(familyId, viewerId);
-  let imageRef = view?.imageRef ?? null;
-  if (!imageRef) imageRef = home?.elders ? DEFAULT_IMAGE.elders : DEFAULT_IMAGE.children;
+  const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
   return {
-    view: view ?? null,
+    view: view ? { ...view, style: "still" } : null,
     imageRef,
     far: home ? { ids, names: who, city, tz } : null,
     weather,
     phase,
-    layers,
     line,
     moments: today.slice(0, 4).map((p) => ({ memberId: p.memberId, label: MOMENT_LABEL[p.moment].line, at: p.at })),
     people,
     since: { at: previous, lines: sinceWords, ...(sinceLine ? { line: sinceLine } : {}) },
     quietAfterHours: view?.quietAfterHours ?? 4,
     chosen: Boolean(view?.cardId && view.imageRef),
-    // Signed in, or has done anything in Aangan (the demo family has no emails).
-    km: distanceKm(weather, here),
+    km: distanceKm(farPlace, herePlace),
     wall: view?.wall ?? "jodhpur",
-    sky: skyOver(weather, now),
+    sky: skyOver(farPlace, herePlace, now),
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
+    // Signed in, or has done anything in Aangan (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
     glance: await glanceFor(familyId, viewerId, members, home?.tz ?? null, cards, now, lastSeen),
-    scene: own.scene,
-    pots: own.pots,
     homePhoto: own.homePhoto,
-    mixAlbum: own.mixAlbum,
   };
 }
 
@@ -254,8 +309,9 @@ async function glanceFor(familyId: string, viewerId: string, members: Member[], 
   };
 }
 
-function distanceKm(a: Weather | null, b: Weather | null): number | null {
-  if (a?.lat === undefined || a.lon === undefined || b?.lat === undefined || b.lon === undefined) return null;
+/** City to city, to the nearest 10 km, only when both places are known and really apart. */
+export function distanceKm(a: { lat: number; lon: number } | null, b: { lat: number; lon: number } | null): number | null {
+  if (!a || !b) return null;
   const R = 6371;
   const r = Math.PI / 180;
   const dLat = (b.lat - a.lat) * r;
@@ -273,10 +329,14 @@ function agoWords(iso: string, now: Date): string {
   return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
 }
 
-function skyOver(weather: Weather | null, now: Date): WindowState["sky"] {
+/** The sky over their home from real coordinates; without them, no glyph (never a guess). */
+export function skyOver(far: { lat: number; lon: number } | null, here: { lat: number; lon: number } | null, now: Date): WindowState["sky"] {
   const m = moonPhase(now);
-  const sun = weather?.lat !== undefined && weather.lon !== undefined ? sunInArch(sunPosition(weather.lat, weather.lon, now)) : null;
-  return { sun, moon: { illumination: Math.round(m.illumination * 100) / 100, waxing: m.waxing, name: m.name } };
+  return {
+    glyph: skyGlyph(far?.lat, far?.lon, now),
+    moon: { illumination: Math.round(m.illumination * 100) / 100, waxing: m.waxing, name: m.name },
+    bothNight: isNightAt(far?.lat, far?.lon, now) === true && isNightAt(here?.lat, here?.lon, now) === true,
+  };
 }
 
 function clockIn(tz: string, d: Date): string {
@@ -307,11 +367,6 @@ export async function photoRefFor(familyId: string, cardId: string): Promise<str
   if (!card || card.type !== "photo") return null;
   return card.mediaRef;
 }
-
-const SceneSchema = z.object({
-  layers: z.array(z.enum(WINDOW_LAYERS)).max(4),
-  line: z.string().min(3).max(140),
-});
 
 const SinceSchema = z.object({ line: z.string().min(3).max(140) });
 
@@ -345,36 +400,4 @@ export async function sinceSentence(
     accept: (d) => !/\d/.test(d.line),
   });
   return out.source === "muse" ? out.data.line : null;
-}
-
-/**
- * Muse composes the window: which of the grounded motions to show and one
- * quiet line from what is actually true there. Validated, grounded, cached.
- */
-export async function composeWindow(familyId: string, state: WindowState, caption: string): Promise<{ layers: WindowLayer[]; line: string; source: "muse" | "fallback" }> {
-  const grounded = state.layers.length ? state.layers : groundedLayers(state.weather, state.phase, []);
-  const facts = [
-    `Home: ${state.far?.names ?? "family"} in ${state.far?.city || "their town"}`,
-    `Time of day there: ${state.phase}`,
-    state.weather ? `Weather there: ${state.weather.label}, ${state.weather.tempC}°C` : "Weather: unknown",
-    `Shared today: ${state.moments.map((m) => m.label).join("; ") || "nothing yet"}`,
-    `Photo in the window: ${caption || "their home"}`,
-    `Allowed motion layers (choose from these only): ${grounded.join(", ") || "none"}`,
-  ].join("\n");
-  const fallback = { layers: grounded, line: state.line };
-  const out = await museJson({
-    familyId,
-    purpose: `Brought the window to ${state.far?.names ?? "the other home"} to life`,
-    system:
-      "You compose a calm 'window' onto a family member's home far away. Reply with JSON {layers, line}. " +
-      "layers: up to 4, ONLY from the allowed list, most fitting first. line: one warm sentence (max 120 chars) " +
-      "using ONLY the facts given: who, the time of day, the weather, what they shared. Never invent events, health, or feelings.",
-    user: facts,
-    schema: SceneSchema,
-    mock: () => ({ layers: grounded, line: state.line }),
-    fallback,
-    maxTokens: 300,
-    accept: (d) => d.layers.every((l) => grounded.includes(l)),
-  });
-  return { ...out.data, source: out.source };
 }

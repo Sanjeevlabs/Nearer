@@ -3,6 +3,8 @@
 // rooms; a room opens on its first tab, and inside it the tab row (lib/spaces.ts
 // → RoomHeader) is the only way sideways. A room with one page (Kitchen) has
 // no tab row. Every tab is its own page: no two tabs anywhere share one.
+// /send (Send something) is not a tab either: it opens from the window's gift
+// button, a care task or an occasion, and shows "Care" as its room (RoomHeader room prop).
 // Safe & sound is not here: it lives on the window, the first screen.
 // Settings is not here either: tap your own photo. Inviting family opens the
 // invite sheet in place (the tree page, the dock, the window), never Settings.
@@ -46,10 +48,9 @@ export function roomsFor(isParent: boolean, canPortrait = true): Room[] {
     {
       id: "care",
       title: "Care",
-      note: "Send something, help at home, people nearby",
+      note: "Help at home, people nearby",
       icon: "care",
       tabs: [
-        { href: "/send", label: "Send something" },
         { href: "/care", label: "Care tasks" },
         { href: "/care/helpers", label: "Helpers" },
         { href: "/nearby", label: "Nearby" },
@@ -58,10 +59,11 @@ export function roomsFor(isParent: boolean, canPortrait = true): Room[] {
     {
       id: "family",
       title: "Family",
-      note: canPortrait ? "Tree, the Book, advice, a portrait" : "Tree, the Book, advice",
+      note: canPortrait ? "Tree, homes, the Book, advice, a portrait" : "Tree, homes, the Book, advice",
       icon: "tree",
       tabs: [
         { href: "/bond", label: "Family tree" },
+        { href: "/bond/homes", label: "Homes" },
         { href: "/book", label: "The Book" },
         { href: "/advice", label: "Advice" },
         { href: "/portrait", label: "Portrait" },

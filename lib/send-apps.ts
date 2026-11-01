@@ -18,7 +18,7 @@ const CategorySchema = z.object({ id: z.string().regex(/^[a-z-]+$/), label: z.st
 export const SendAppsSchema = z
   .object({
     categories: z.array(CategorySchema).min(1),
-    countries: z.record(z.object({ name: z.string().min(1), apps: z.record(z.array(AppSchema).max(4)) })),
+    countries: z.record(z.object({ name: z.string().min(1), apps: z.record(z.array(AppSchema).max(1)) })),
   })
   .refine((d) => Boolean(d.countries["*"]), "needs a '*' fallback")
   .refine((d) => Object.values(d.countries).every((c) => Object.keys(c.apps).every((k) => d.categories.some((cat) => cat.id === k))), "every app list names a known category");

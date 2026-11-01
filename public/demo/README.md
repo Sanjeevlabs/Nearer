@@ -11,6 +11,14 @@ inside real memory cards, which must only show the family's own uploads.
   illustration — arched wooden doorway, potted plants, morning light; no
   people. Used only when a member has no home photo. The in-app SVG courtyard
   (`components/courtyard-art.tsx`) remains the offline fallback.
+- `home-courtyard.jpg`, `home-balcony.jpg`, `home-window.jpg` (not generated
+  yet; the owner runs `META_API_KEY=... node scripts/gen-courtyard.mjs`, then
+  `node scripts/demo-variants.mjs` for the 390/780 WebP widths): the first
+  screen's default home photo options, 1024 square, no people. A North-Indian
+  haveli courtyard at morning (tulsi, string cot, brass pots), a city balcony
+  with plants at golden hour, an old wooden window with marigolds on the sill.
+  The app keeps `courtyard.jpg` until `DEFAULT_IMAGE` in `lib/hero.ts` (re-exported
+  from `lib/window-server.ts`) is switched to one of them.
 - `family-dadi.webp`, `family-leo.webp`, `family-aria.webp`,
   `family-group.webp` (28 Oct 2026, `node scripts/seed.mjs`): consistent
   demo-family portraits. Manifest: `family.json`.

@@ -268,6 +268,10 @@ button {
    behind the door: app/layout.tsx sets html[data-door=open] before first paint. */
 .door-hero { display: none; }
 html[data-door="open"] .door-hero { display: block; }
+/* The window's photo, painted from the server's HTML before any script (phones only). Hidden behind the door and when this phone remembers a custom home photo. */
+.win-hero { display: block; }
+html[data-door="open"] .win-hero, html[data-hero="custom"] .win-hero { display: none; }
+@media (min-width: 900px) { .win-hero { display: none; } }
 html[data-door="open"] .checking-ground { background: var(--paper); }
 .glass-dark {
   background: rgba(20, 16, 13, 0.55);

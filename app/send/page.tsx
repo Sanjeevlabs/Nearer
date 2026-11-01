@@ -11,10 +11,10 @@ import { appsFor, countryForTz } from "@/lib/send-apps";
 import { cn } from "@/lib/utils";
 import { Boundary } from "@/components/ui/boundary";
 
-// Send something (SPEC §9), the first page in Care. Who it's for, the apps
+// Send something (SPEC §9). In Care's room but not a tab: no tab row. Who it's for, the apps
 // their home already uses (links only, by their country: data/send-apps.json),
 // then Muse's three ideas from the family's connected partners.
-// Opened from the window, a care task, an occasion, or Care in the rooms.
+// Opened from the window's gift button, a care task, or an occasion.
 
 function host(url: string): string {
   try {
@@ -80,7 +80,7 @@ function Send() {
   };
   return (
     <div>
-      <RoomHeader title="Send something" subtitle="Groceries, sweets, a gift: in their own apps, or Muse's ideas" />
+      <RoomHeader room="Care" title="Send something" subtitle="Groceries, sweets, a gift: in their own apps, or Muse's ideas" />
       {people.length > 1 && (
         <div className="no-scrollbar -mx-5 mb-5 flex gap-1.5 overflow-x-auto px-5" role="radiogroup" aria-label="Send to">
           {people.map((m) => (
