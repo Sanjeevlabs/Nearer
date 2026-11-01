@@ -67,6 +67,10 @@ describe("waitingForYou", () => {
     expect(waitingForYou({ ...base, needs: [{ ...need, status: "done" as const }] })).toBeNull();
     expect(waitingForYou({ ...base, needs: [{ ...need, claimedBy: "priya" }] })).toBeNull();
   });
+  it("a care need nobody closed in a month stops nagging from the tile", () => {
+    expect(waitingForYou({ ...base, needs: [{ ...need, createdAt: "2026-10-02T00:00:00.000Z" }] })?.kind).toBe("care");
+    expect(waitingForYou({ ...base, needs: [{ ...need, createdAt: "2026-09-29T00:00:00.000Z" }] })).toBeNull();
+  });
   it("newest wins; at the same moment people come before chores", () => {
     expect(waitingForYou({ ...base, cards: [card], questions: [question], today: [today], needs: [need] })?.kind).toBe("today");
     expect(waitingForYou({ ...base, cards: [card], questions: [question], needs: [need] })?.kind).toBe("question");

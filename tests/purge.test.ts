@@ -102,6 +102,18 @@ describe("purgeExpired", () => {
     expect(await listDismissed(FAM, "arjun")).toEqual(["suggest:diwali:all:2026-11-08"]);
   });
 
+  it("drops delivered voice-note schedule rows after a week, keeps written family letters and pending ones", async () => {
+    const row = (id: string, deliverAt: string, kind: "voice" | "letter") => ({ id, deliverAt, authorId: "arjun", createdAt: plus(-10 * D), kind });
+    await putDoc(FAM, "chitthi", row("c-old", plus(-8 * D), "voice"));
+    await putDoc(FAM, "chitthi", row("c-letter", plus(-30 * D), "letter"));
+    await putDoc(FAM, "chitthi", row("c-pending", plus(H), "voice"));
+    expect((await purgeExpired(FAM, T0)).chitthi).toBe(1);
+    const left = (await listDocs(FAM, "chitthi")).map((c) => c.id);
+    expect(left).toContain("c-letter");
+    expect(left).toContain("c-pending");
+    expect(left).not.toContain("c-old");
+  });
+
   it("trims lamp heartbeats past their 2-day life", async () => {
     await putDoc(FAM, "lamp", { id: "home-x", litAt: null, litBy: null, beats: [{ from: "arjun", at: plus(-3 * D) }, { from: "arjun", at: plus(-H) }], felt: {}, updatedAt: plus(-H) });
     expect((await purgeExpired(FAM, T0)).lampBeats).toBe(1);

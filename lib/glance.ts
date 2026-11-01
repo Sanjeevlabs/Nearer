@@ -83,6 +83,7 @@ const ASK_HREF: Record<string, string> = { story: "/stories", recipe: "/kitchen"
 /** Tie-break when two things arrived at the same moment: people before chores. */
 const RANK: Record<WaitingKind, number> = { voice: 0, question: 1, today: 2, care: 3, nudge: 4 };
 const CARD_DAYS = 30;
+const NEED_DAYS = 30;
 
 /**
  * Everything addressed to or about the viewer that they haven't acted on,
@@ -127,6 +128,8 @@ export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] 
   }
   for (const n of i.needs) {
     if (n.claimedBy !== i.viewerId || n.doneAt || (n.status !== "claimed" && n.status !== "progress")) continue;
+    // A need nobody has closed in a month stops nagging from the tile (it stays on the care board).
+    if (nowMs - Date.parse(n.createdAt) > NEED_DAYS * 86_400_000) continue;
     found.push({ at: n.createdAt, kind: "care", text: n.title, href: "/care" });
   }
   for (const n of i.nudges ?? []) found.push({ at: n.at, kind: "nudge", text: n.text, href: n.href, nudgeId: n.id });

@@ -25,6 +25,8 @@ export const TTL = {
   presenceMs: 15 * DAY,
   /** A suggestion nobody answered is withdrawn after this long. */
   suggestionMs: 21 * DAY,
+  /** A scheduled voice note's row only hides the card until it arrives; a week after, it is dead weight. */
+  chitthiMs: 7 * DAY,
   /** A used one-time order preview id is remembered this long (a preview lives 10 minutes). */
   previewMs: DAY,
 } as const;
@@ -42,11 +44,12 @@ export interface PurgeCounts {
   lampBeats: number;
   suggestionsWithdrawn: number;
   previews: number;
+  chitthi: number;
 }
 
 export async function purgeExpired(familyId: string, now: Date = new Date()): Promise<PurgeCounts> {
   const t = now.getTime();
-  const out: PurgeCounts = { knocks: 0, nudges: 0, eventDismissals: 0, dayLines: 0, sittings: 0, checkinsClosed: 0, checkinsDeleted: 0, museCalls: 0, presence: 0, lampBeats: 0, suggestionsWithdrawn: 0, previews: 0 };
+  const out: PurgeCounts = { knocks: 0, nudges: 0, eventDismissals: 0, dayLines: 0, sittings: 0, checkinsClosed: 0, checkinsDeleted: 0, museCalls: 0, presence: 0, lampBeats: 0, suggestionsWithdrawn: 0, previews: 0, chitthi: 0 };
   // One kind failing never stops the rest.
   const step = async (name: string, f: () => Promise<void>) => {
     try {
@@ -99,6 +102,10 @@ export async function purgeExpired(familyId: string, now: Date = new Date()): Pr
         out.lampBeats += l.beats.length - beats.length;
       }
     }
+  });
+  await step("chitthi", async () => {
+    // Written family letters stay (the courtyard shows the newest); only delivered voice notes' rows go.
+    for (const c of await listAllDocs(familyId, "chitthi")) if (c.kind !== "letter" && t - Date.parse(c.deliverAt) > TTL.chitthiMs) (await deleteDoc(familyId, "chitthi", c.id), out.chitthi++);
   });
   await step("preview_used", async () => {
     for (const u of await listAllDocs(familyId, "preview_used")) if (t - Date.parse(u.at) > TTL.previewMs) (await deleteDoc(familyId, "preview_used", u.id), out.previews++);
