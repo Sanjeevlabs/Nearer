@@ -12,6 +12,7 @@ import { DEFAULT_IMAGE, HERO_SIZES } from "@/lib/hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
 import { hasEntered, markEntered } from "@/lib/entered";
+import { isKid } from "@/lib/kids";
 
 const DOOR_KEY = "aangan:door";
 
@@ -19,6 +20,7 @@ const DOOR_KEY = "aangan:door";
 // (above, door open), the landing (signed out) or the door itself (only when it swings).
 // The others stay out of the first download; the likely next one is fetched while idle.
 const LiteWindow = dynamic(() => import("@/components/window").then((x) => x.LiteWindow), { ssr: false, loading: () => <WindowLoading /> });
+const KidHome = dynamic(() => import("@/components/kid-home").then((x) => x.KidHome), { ssr: false, loading: () => <WindowLoading /> });
 const Landing = dynamic(() => import("@/components/welcome").then((x) => x.Landing), { ssr: false });
 const HomeSite = dynamic(() => import("@/components/home-site").then((x) => x.HomeSite), { ssr: false });
 const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.DoorTransition), { ssr: false });
@@ -48,7 +50,7 @@ function CheckingShell() {
 // The door opens the family courtyard; it stays open for the session.
 export default function Page() {
   const { setChromeHidden } = useShell();
-  const { ready, signedIn } = useViewer();
+  const { ready, signedIn, viewer } = useViewer();
   const [open, setOpen] = useState<boolean | null>(null);
   const [moving, setMoving] = useState<"opening" | "closing" | null>(null);
   // Once the door has swung it stays mounted, so it can fade out.
@@ -95,7 +97,8 @@ export default function Page() {
   const [entered, setEntered] = useState<boolean | null>(null);
   useEffect(() => setEntered(hasEntered()), []);
 
-  const gate = !ready || open === null ? "checking" : !signedIn ? "landing" : open ? "family" : "lite";
+  // A child never gets the grown-ups' window or courtyard: their first screen is kid-home.
+  const gate = !ready || open === null ? "checking" : !signedIn ? "landing" : isKid(viewer) ? "kid" : open ? "family" : "lite";
 
   useEffect(() => {
     if (gate === "checking") return;
@@ -107,7 +110,7 @@ export default function Page() {
   }, [gate, startDemo]);
 
   useEffect(() => {
-    setChromeHidden(gate !== "family");
+    setChromeHidden(gate !== "family" && gate !== "kid");
   }, [gate, setChromeHidden]);
 
   const settle = useCallback(() => {
@@ -135,6 +138,7 @@ export default function Page() {
         }}
       />
     );
+  if (gate === "kid") return <KidHome />;
   return (
     <>
       {gate === "lite" ? <LiteWindow onOpenDoor={() => setMoving("opening")} /> : (

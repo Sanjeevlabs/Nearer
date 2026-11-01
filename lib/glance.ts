@@ -78,7 +78,7 @@ export interface WaitingInput {
   /** The viewer's own nudges with their words already resolved (lib/nudges.ts `unseenFor`). */
   nudges?: { id: string; kind: string; text: string; href: string; at: string }[];
   /** Children's asks, with each child's parents and grandparents (lib/kids.ts guardianMap). */
-  kidAsks?: Pick<KidAsk, "id" | "fromMemberId" | "toMemberId" | "answeredCardId" | "askedAt" | "topic">[];
+  kidAsks?: Pick<KidAsk, "id" | "fromMemberId" | "toMemberId" | "answeredCardId" | "askedAt" | "topic" | "cardId">[];
   guardians?: Record<string, string[]>;
 }
 
@@ -111,8 +111,10 @@ export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] 
 
   const played = new Set(i.plays.filter((p) => p.memberId === i.viewerId).map((p) => p.cardId));
   const mine = i.cards.filter((c) => c.authorId === i.viewerId);
+  // A child's spoken question waits as "<name> asked you something", not also as a voice note.
+  const askVoices = new Set((i.kidAsks ?? []).map((a) => a.cardId).filter(Boolean));
   for (const c of i.cards) {
-    if (!c.authorId || c.authorId === i.viewerId || played.has(c.id) || !past(c.takenAt)) continue;
+    if (!c.authorId || c.authorId === i.viewerId || played.has(c.id) || !past(c.takenAt) || askVoices.has(c.id)) continue;
     if (!addressees(c).includes(i.viewerId) || nowMs - Date.parse(c.takenAt) > CARD_DAYS * 86_400_000) continue;
     // Answering the sender is acting on it: something of yours to them (or to everyone) since.
     const replied = mine.some((r) => r.takenAt > c.takenAt && past(r.takenAt) && (addressees(r).length === 0 || addressees(r).includes(c.authorId as string)));
