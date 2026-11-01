@@ -42,7 +42,8 @@ export function WishAhead({ viewer }: { viewer: Member }) {
     }
     return null;
   }, [data, today, viewer.id]);
-  if (!ask) return null;
+  // A child is never asked (no fetch above); the guard also covers the first paint before the session resolves, when a grown-up fallback viewer's cached data would flash the row.
+  if (!ask || viewer.role === "child") return null;
   const { o, run, person } = ask;
   const title = person ? `${callName(person)}'s birthday` : o.title;
   const word = viewer.role === "elder" ? "blessing" : "wish";
