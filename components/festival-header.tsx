@@ -3,7 +3,7 @@
 import { AnimatePresence, m } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { daysInWords, type FestivalWeek, type FestivalWeekPayload } from "@/lib/festival-week";
+import { daysInWords, pruneStepTicks, stepTicksKey, type FestivalWeek, type FestivalWeekPayload } from "@/lib/festival-week";
 import { lampGlowCss } from "@/lib/lamp";
 import { callName, cardCover } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
@@ -72,7 +72,17 @@ function useTicks(key: string): [Set<number>, (i: number) => void] {
  */
 export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<FestivalWeek, "slug" | "title" | "date" | "stepsForLead" | "accent" | "greeting"> | null; open: boolean; onClose: () => void }) {
   const { openAdd } = useShell();
-  const [done, toggle] = useTicks(`aangan:festival-steps:${week?.slug}:${week?.date}`);
+  const { viewer } = useViewer();
+  const [done, toggle] = useTicks(week ? stepTicksKey(viewer.familyId, week.slug, week.date) : "aangan:festival-steps:none");
+  useEffect(() => {
+    // Last year's ticks and the old un-keyed ones go once this year's sheet is used.
+    if (!week) return;
+    try {
+      pruneStepTicks(localStorage, week.date.slice(0, 4));
+    } catch {
+      /* private mode */
+    }
+  }, [week]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
