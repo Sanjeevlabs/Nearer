@@ -174,7 +174,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const farHint: PlaceHint = { country: countryOfMember(cityMember), tz: cityMember?.tz ?? tz };
   const hereHint: PlaceHint = { country: countryOfMember(viewer), tz: viewer?.tz };
   const [weather, farPlace, herePlace] = await Promise.all([weatherFor(city, farHint), placeFor(city, farHint), placeFor(viewer?.city ?? "", hereHint)]);
-  const presence = await listDocs(familyId, "presence");
+  // The rhythm looks back 15 days: a time window, not the newest 500 (heartbeats pile up).
+  const presence = await listDocs(familyId, "presence", { sinceMs: 16 * 86_400_000 });
   const ids = home?.members.map((m) => m.id) ?? [];
   const today: Presence[] = ids.flatMap((id) => todayFor(id, presence, tz, now)).filter((p) => p.moment !== "here");
   today.sort((a, b) => b.at.localeCompare(a.at));

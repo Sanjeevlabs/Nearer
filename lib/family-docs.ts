@@ -38,11 +38,19 @@ function newest<T>(rows: T[]): T[] {
   return rows.sort((a, b) => at(b).localeCompare(at(a)));
 }
 
-export async function listDocs<K extends DocKind>(familyId: string, kind: K): Promise<DocOf<K>[]> {
+/**
+ * The family's rows of one kind, newest first. Live, that is the newest 500 rows
+ * unless `sinceMs` asks for a time window instead (rows written in the last
+ * `sinceMs`, up to 3000): kinds that pile up fast, like heartbeats, would
+ * otherwise push the days a screen needs out of the 500.
+ */
+export async function listDocs<K extends DocKind>(familyId: string, kind: K, opts: { sinceMs?: number } = {}): Promise<DocOf<K>[]> {
   const local = memList(familyId, kind);
   const sb = dbFor(familyId);
   if (!sb) return newest(local);
-  const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: false }).limit(500);
+  let q = sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind);
+  if (opts.sinceMs) q = q.gte("created_at", new Date(Date.now() - opts.sinceMs).toISOString());
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(opts.sinceMs ? 3000 : 500);
   if (error || !data) return newest(local);
   const rows = data.map((r) => parse(kind, (r as { data: unknown }).data)).filter((d): d is DocOf<K> => d !== null);
   return newest(rows);
