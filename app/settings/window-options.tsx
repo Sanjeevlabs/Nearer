@@ -8,7 +8,11 @@ import { processHomeImage } from "@/lib/media-client";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { callName, memberPhoto } from "@/lib/people";
 import { can } from "@/lib/permissions";
-import { postJson, useJson } from "@/lib/use-json";
+import { useJson } from "@/lib/use-json";
+import { QUIET_CHOICES, QUIET_HOURS } from "@/lib/status";
+import { liveFetch, sameWindow, saveWindow, type WindowDraft } from "@/lib/settings-save";
+import { SettingsSection } from "@/components/settings/section";
+import { useDraft } from "@/components/settings/use-draft";
 import { cn } from "@/lib/utils";
 import { placeFromTz } from "@/lib/zones";
 
@@ -20,66 +24,69 @@ import { placeFromTz } from "@/lib/zones";
 interface W {
   people: { id: string }[];
   homePhoto?: string | null;
+  quietAfterHours?: number;
 }
 
-export function WindowOptions() {
-  const { viewer, members } = useViewer();
-  const { data, reload } = useJson<W>("/api/window");
-  // undefined = not changed yet.
-  const [photo, setPhoto] = useState<string | null | undefined>(undefined);
-  const [people, setPeople] = useState<string[] | undefined>(undefined);
-  const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
-
+/** Loads the saved first screen, then hands it to the form below. */
+export function WindowOptions({ onMessage }: { onMessage?: (m: string) => void } = {}) {
+  const { data, failed, reload } = useJson<W>("/api/window");
+  if (failed)
+    return (
+      <div role="alert" className="mb-6 rounded-[22px] bg-surface px-4 py-4 text-[14px] text-ink-soft">
+        Couldn&rsquo;t load your first screen.
+        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-white px-4 text-[14px] font-semibold text-ink">
+          Retry
+        </button>
+      </div>
+    );
   if (!data) return <div key="loading" className="skeleton mb-6 h-[360px] rounded-card" aria-busy="true" aria-label="Loading your first screen" />;
+  const initial: WindowDraft = { photo: data.homePhoto ?? null, people: data.people.map((p) => p.id), quietAfterHours: data.quietAfterHours ?? QUIET_HOURS };
+  return <WindowForm initial={initial} reload={reload} onMessage={onMessage} />;
+}
 
-  const savedPhoto = data.homePhoto ?? null;
-  const savedPeople = data.people.map((p) => p.id);
-  const nowPhoto = photo === undefined ? savedPhoto : photo;
-  const nowPeople = people ?? savedPeople;
-  const dirty = nowPhoto !== savedPhoto || nowPeople.join() !== savedPeople.join();
+function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; reload: () => Promise<void>; onMessage?: (m: string) => void }) {
+  const { viewer, members } = useViewer();
+  const form = useDraft<WindowDraft>(initial, { id: "window", eq: sameWindow });
+  const [uploading, setUploading] = useState(false);
+  const [pickError, setPickError] = useState<string | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const busy = form.status === "saving";
+  const nowPhoto = form.draft.photo;
+  const nowPeople = form.draft.people;
   const others = members.filter((mm) => mm.id !== viewer.id && mm.role !== "child" && can(mm, "window.at"));
   const url = resolveMediaUrl(nowPhoto);
 
   const pick = async (file: File) => {
-    setError(null);
-    setSaved(false);
-    if (file.size > 5 * 1024 * 1024) return setError("That photo is over 5 MB. Try a smaller one.");
+    setPickError(null);
+    if (file.size > 5 * 1024 * 1024) return setPickError("That photo is over 5 MB. Try a smaller one.");
     setUploading(true);
     try {
       const { mediaRef } = await processHomeImage(file);
-      setPhoto(mediaRef);
+      form.set({ photo: mediaRef });
     } catch {
-      setError("Couldn't read that photo. Try another.");
+      setPickError("Couldn't read that photo. Try another.");
     }
     setUploading(false);
-  };
-
-  const save = async () => {
-    setBusy(true);
-    setError(null);
-    let ok = true;
-    if (nowPhoto !== savedPhoto) ok = Boolean((await postJson<{ view?: unknown }>("/api/window", { action: "homePhoto", ref: nowPhoto }))?.view);
-    if (ok && nowPeople.join() !== savedPeople.join()) ok = Boolean((await postJson<{ view?: unknown }>("/api/window", { action: "people", people: nowPeople }))?.view);
-    if (ok) {
-      await reload();
-      setPhoto(undefined);
-      setPeople(undefined);
-      setSaved(true);
-    } else setError("Couldn't save that. Try again.");
-    setBusy(false);
   };
 
   const tile = (on: boolean) => cn("press relative block aspect-[4/3] w-full overflow-hidden rounded-[14px] bg-surface ring-1 ring-black/10", on && "outline outline-2 outline-offset-[3px] outline-ink");
 
   return (
-    <div id="window-options" className="mb-6 scroll-mt-6">
+    <SettingsSection
+      id="window"
+      title="Your first screen"
+      tab="window"
+      form={form}
+      onSave={async (d, s) => {
+        const r = await saveWindow(liveFetch, d, s);
+        await reload();
+        if (r.ok) onMessage?.("Saved");
+        return r;
+      }}
+    >
       <p className="m-0 text-[13px] font-medium text-ink-soft">The photo you see first</p>
       <div className="mt-2 grid grid-cols-2 gap-3" role="radiogroup" aria-label="The photo you see first">
-        <button type="button" role="radio" aria-checked={nowPhoto === null} disabled={busy} onClick={() => (setPhoto(null), setSaved(false))} className="text-left">
+        <button type="button" role="radio" aria-checked={nowPhoto === null} disabled={busy} onClick={() => form.set({ photo: null })} className="text-left">
           <span className={tile(nowPhoto === null)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={DEFAULT_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -134,7 +141,7 @@ export function WindowOptions() {
                   aria-checked={on}
                   aria-label={`${callName(mm)} at your window`}
                   disabled={busy || full}
-                  onClick={() => (setPeople(on ? nowPeople.filter((id) => id !== mm.id) : [...nowPeople, mm.id]), setSaved(false))}
+                  onClick={() => form.set({ people: on ? nowPeople.filter((id) => id !== mm.id) : [...nowPeople, mm.id] })}
                   className={cn("relative h-[44px] w-[52px] shrink-0 rounded-full disabled:opacity-35")}
                 >
                   <span className={cn("absolute inset-x-0 top-[9px] h-[26px] rounded-full transition-colors", on ? "bg-ink" : "bg-black/15")} />
@@ -146,21 +153,28 @@ export function WindowOptions() {
         </ul>
       )}
 
-      <div className="mt-4 flex items-center gap-3">
-        <button type="button" disabled={!dirty || busy || uploading} onClick={() => void save()} className="press h-11 rounded-full bg-ink px-6 text-[15px] font-semibold text-white disabled:opacity-35">
-          {busy ? "Saving…" : "Save"}
-        </button>
-        {saved && !dirty && (
-          <span className="text-[13px] text-ink-soft" role="status">
-            Saved
-          </span>
-        )}
+      <p className="m-0 mt-5 mb-2 text-[13px] font-medium text-ink-soft">Turn their dot amber when they&rsquo;ve been quiet for</p>
+      <div className="flex gap-1.5" role="radiogroup" aria-label="Amber after">
+        {QUIET_CHOICES.map((h) => (
+          <button
+            key={h}
+            type="button"
+            role="radio"
+            aria-checked={form.draft.quietAfterHours === h}
+            disabled={busy}
+            onClick={() => form.set({ quietAfterHours: h })}
+            className={cn("press h-11 flex-1 rounded-full text-[14px] font-semibold", form.draft.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+          >
+            {h} h
+          </button>
+        ))}
       </div>
-      {error && (
+      <p className="m-0 mt-1.5 text-[12px] text-ink-faint">Only during their day. At night it shows &ldquo;asleep&rdquo;. Based on activity in Aangan.</p>
+      {pickError && (
         <p className="m-0 mt-2 text-[13px] text-[#c2343a]" role="alert">
-          {error}
+          {pickError}
         </p>
       )}
-    </div>
+    </SettingsSection>
   );
 }

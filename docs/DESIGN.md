@@ -85,7 +85,7 @@ Inside a room: a large title, a back chevron, no dock. Rooms are places you visi
 | **Birthday Reel** | The family's gift, played in order | Play | Full-screen, segmented progress, petals once |
 | **Coming up** (Celebrations) | What is ahead, and planning it | Plan | Date and time shown in every member's local time, playlist the agent prepared, Start together |
 | **Family tree** | See and grow the family | Add someone | Generational tree with portraits, guided add |
-| **Settings** | Set once, forget | — | Profile, language and script (English default), time zone, home photo, notifications, invite family, privacy and data, sign out |
+| **Settings** | Set once, forget. Nothing auto-saves: each section holds its edits and has its own Save (Saving…, Saved, error with Retry, Discard); actions (sign out, leave, remove, approve, invite, delete memories) happen at once | — | Profile, language and script (English default), time zone, home photo, notifications, invite family, privacy and data, sign out |
 
 ## 6. States every screen must have
 
