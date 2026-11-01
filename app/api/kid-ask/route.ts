@@ -36,7 +36,8 @@ async function getHandler(req: Request): Promise<Response> {
   const list = isKid(me)
     ? asks.filter((a) => a.fromMemberId === auth.memberId && (!a.answeredAt || now - Date.parse(a.answeredAt) < KEEP_ANSWERED_MS))
     : openAsksFor(asks, auth.memberId, guardianMap(members, rels));
-  return Response.json({ asks: [...list].sort((a, b) => b.askedAt.localeCompare(a.askedAt)) });
+  // askCardIds: a child's spoken question is not something they shared, so the fridge leaves it out.
+  return Response.json({ asks: [...list].sort((a, b) => b.askedAt.localeCompare(a.askedAt)), askCardIds: asks.map((a) => a.cardId).filter(Boolean) });
 }
 
 async function postHandler(req: Request): Promise<Response> {
