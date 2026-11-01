@@ -4,10 +4,10 @@ import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
 import { dbListCards, dbListMembers, dbListPlays, dbListReactions, dbListRelationships } from "./db";
-import { listDocsMany } from "./family-docs";
+import { listDocs, listDocsMany } from "./family-docs";
 import { withDeadline } from "./deadline";
 import { getRitualSettings } from "./occasion-settings";
-import type { Presence, WindowView } from "./kinds";
+import type { Nudge, Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
 import { MOMENT_LABEL, todayFor } from "./presence";
 import type { Card, Member, Play, Relationship } from "./schemas";
@@ -24,9 +24,11 @@ import { withDemoShelf } from "./demo";
 import { isDemoFamily } from "./auth";
 import { createDownloadUrl } from "./storage";
 import { sinceLines } from "./since";
+import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
 import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
+import { renderNudgeText, unseenFor } from "./nudges";
 import { listEvents } from "./gather-store";
 import type { FamilyEvent } from "./events";
 import { familyHolidays } from "./occasions-server";
@@ -160,7 +162,9 @@ function localDay(iso: string, tz: string): string {
 }
 
 /** The family-wide reads the window needs, all started at once (one wave of round trips). */
-const WINDOW_KINDS = ["window_view", "presence", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call"] as const;
+const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call"] as const;
+/** The rhythm looks back 15 days: a time window, not the newest 500 (heartbeats pile up). */
+const PRESENCE_WINDOW_MS = 16 * 86_400_000;
 /** The window needs the recent shelf (latest voice, last signs, what waits), never the whole lane. */
 const CARD_WINDOW_DAYS = 60;
 const CARD_WINDOW_LIMIT = 200;
@@ -174,6 +178,10 @@ export interface WindowReads {
   members: Member[];
   relationships: Relationship[];
   docs: WindowDocs;
+  /** Heartbeats and moments from the last 16 days. */
+  presence: Presence[];
+  /** The viewer's nudges that are due and unseen (the same list the dock dot reads). */
+  nudges: Nudge[];
   /** Recent cards only (last 60 days, at most 200). */
   cards: Card[];
   plays: Play[];
@@ -187,7 +195,7 @@ export interface WindowReads {
  * another read, in a single Promise.all. A route may start this before it
  * knows the session is good (alongside the auth lookup): it only reads.
  */
-export function readWindow(familyId: string, now: Date = new Date()): Promise<WindowReads> {
+export function readWindow(familyId: string, now: Date = new Date(), viewerId?: string): Promise<WindowReads> {
   const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
   const settings = getRitualSettings(familyId);
   settings.catch(() => undefined);
@@ -203,17 +211,20 @@ export function readWindow(familyId: string, now: Date = new Date()): Promise<Wi
     membersP,
     dbListRelationships(familyId),
     listDocsMany(familyId, WINDOW_KINDS),
+    safe(listDocs(familyId, "presence", { sinceMs: PRESENCE_WINDOW_MS }), [] as Presence[]),
+    viewerId ? safe(unseenFor(familyId, viewerId, now), [] as Nudge[]) : Promise.resolve([] as Nudge[]),
     dbListCards(familyId, { since, limit: CARD_WINDOW_LIMIT }),
     safe(dbListPlays(undefined, familyId), [] as Play[]),
     safe(listEvents(familyId), [] as FamilyEvent[]),
-  ]).then(([members, relationships, docs, cards, plays, events]) => ({ members, relationships, docs, cards, plays, events, holidays }));
+  ]).then(([members, relationships, docs, presence, nudges, cards, plays, events]) => ({ members, relationships, docs, presence, nudges, cards, plays, events, holidays }));
 }
 
 export async function windowState(familyId: string, viewerId: string, now = new Date(), preread?: Promise<WindowReads>): Promise<WindowState> {
-  const { members, relationships, docs, cards: recent, plays, events, holidays } = await (preread ?? readWindow(familyId, now));
+  const { members, relationships, docs, presence, nudges: rawNudges, cards: recent, plays, events, holidays } = await (preread ?? readWindow(familyId, now, viewerId));
   const view = docs.window_view.find((d) => d.id === viewerId);
-  const presence = docs.presence;
-  const checkins = docs.safety_checkin;
+  // An open check-in nobody answered for 48 h reads as closed "no reply" (the daily scan stores it).
+  const checkins = docs.safety_checkin.map((c) => expireCheckin(c, now.getTime()));
+  const nudges = rawNudges.map((n) => ({ id: n.id, kind: n.kind, text: renderNudgeText(n.text, members), href: n.href, at: n.at }));
   const settings = docs.care_settings;
   const viewer = members.find((m) => m.id === viewerId);
   const farHome = viewer ? farHomeFor(viewer, members, relationships) : undefined;
@@ -258,7 +269,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     [
       ...presence.filter((p) => p.memberId === id).map((p) => p.at),
       ...shelf.filter((c) => c.authorId === id && Date.parse(c.takenAt) <= now.getTime()).map((c) => c.takenAt),
-      ...checkins.filter((c) => c.memberId === id).map((c) => c.closedAt ?? c.at),
+      ...checkins.filter((c) => c.memberId === id).map((c) => answeredAt(c) ?? c.at),
     ].filter((t) => Date.parse(t) <= now.getTime());
   const lastSeen = (id: string): string | null => signs(id).sort().pop() ?? null;
   const people: WindowPerson[] = (home?.members ?? [])
@@ -333,7 +344,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Aangan (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance: glanceFrom({ viewerId, members, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, events, holidays: hol }),
+    glance: glanceFrom({ viewerId, members, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol }),
     homePhoto: own.homePhoto,
   };
 }
@@ -353,6 +364,7 @@ function glanceFrom(i: {
   lastSeen: (id: string) => string | null;
   plays: Play[];
   docs: Pick<WindowDocs, "question" | "today_task" | "need" | "weekly_call">;
+  nudges: { id: string; kind: string; text: string; href: string; at: string }[];
   events: FamilyEvent[];
   holidays: CalHoliday[];
 }): Glance {
@@ -363,7 +375,8 @@ function glanceFrom(i: {
   const today = dateIn(myTz, now);
   return {
     awake: awakeNow(members, viewerId, now, i.lastSeen),
-    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need }),
+    // The same list the dock dot reads (GET /api/waiting), from reads already in hand.
+    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need, nudges: i.nudges }),
     next: nextUp({
       today,
       now,

@@ -4,7 +4,7 @@ import { docsFor } from "@/lib/request-data";
 import { dbListMembers } from "@/lib/db";
 import { getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { SAFETY_KINDS } from "@/lib/kinds";
-import { stateOf, withoutStaleLocation } from "@/lib/safety";
+import { expireCheckin, stateOf, withoutStaleLocation } from "@/lib/safety";
 import { guardWrites } from "@/lib/api-guard";
 
 // Safe & sound. Owned by the person it protects:
@@ -32,7 +32,7 @@ async function getHandler(req: Request): Promise<Response> {
   const [settings, checkins] = await Promise.all([docsFor(req, auth.familyId, "safety_settings"), docsFor(req, auth.familyId, "safety_checkin")]);
   // Who shares with me: enabled, not paused, and I'm one of their chosen people.
   const sharesWithMe = new Set(settings.filter((s) => s.enabled && !s.paused && s.watchers.includes(auth.memberId)).map((s) => s.memberId));
-  const visible = checkins.filter((c) => c.memberId === auth.memberId || sharesWithMe.has(c.memberId)).map((c) => withoutStaleLocation(c));
+  const visible = checkins.map((c) => expireCheckin(c)).filter((c) => c.memberId === auth.memberId || sharesWithMe.has(c.memberId)).map((c) => withoutStaleLocation(c));
   const mine = settings.find((s) => s.memberId === auth.memberId) ?? null;
   // At a glance, per person (for the home screen): everyone sharing with me, plus me if I'm on.
   const people = [...(mine?.enabled ? [auth.memberId] : []), ...Array.from(sharesWithMe).filter((id) => id !== auth.memberId)];

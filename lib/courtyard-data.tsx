@@ -66,10 +66,20 @@ export function CourtyardProvider({ children, every = 60_000 }: { children: Reac
     };
     const timer = setInterval(tick, every);
     document.addEventListener("visibilitychange", tick);
+    // A write elsewhere (lib/use-json.ts invalidateJson) refreshes every slice; a new person or family starts empty.
+    const changed = () => void load(true);
+    const reset = () => {
+      setState({ status: "loading", data: {} });
+      void load(false);
+    };
+    window.addEventListener("aangan:changed", changed);
+    window.addEventListener("aangan:auth", reset);
     return () => {
       live.current = false;
       clearInterval(timer);
       document.removeEventListener("visibilitychange", tick);
+      window.removeEventListener("aangan:changed", changed);
+      window.removeEventListener("aangan:auth", reset);
     };
   }, [load, every]);
   const reload = useCallback(() => load(true), [load]);

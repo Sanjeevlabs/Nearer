@@ -3,6 +3,7 @@
 // data is missing (no weather fetched, no lamp lit, nothing shared yet).
 import { FADE_HOURS } from "./lamp";
 import type { SafetyCheckin } from "./kinds";
+import { answeredAt } from "./safety";
 import type { Weather } from "./weather";
 
 function localDay(at: Date, tz: string): string {
@@ -55,11 +56,11 @@ export interface DayMoment {
 }
 
 /** What a safety check-in said, as one or two timed events (it was made, and it was closed). */
-export function checkinEvents(c: Pick<SafetyCheckin, "kind" | "at" | "closedAt">): { at: string; label: string }[] {
+export function checkinEvents(c: Pick<SafetyCheckin, "kind" | "at" | "closedAt"> & { noReply?: boolean }): { at: string; label: string }[] {
   const made: Record<string, string> = { heading: "Heading home", journey: "Travelling", help: "Asked for help", "out-late": "Out late", "home-safe": "Home safe" };
   const closed: Record<string, string> = { heading: "Home safe", journey: "Landed safe", help: "Okay now", "out-late": "Home safe", "home-safe": "Home safe" };
   const out = [{ at: c.at, label: made[c.kind] ?? "Checked in" }];
-  if (c.closedAt && c.closedAt !== c.at && c.kind !== "home-safe") out.push({ at: c.closedAt, label: closed[c.kind] ?? "Closed" });
+  if (answeredAt(c) && c.closedAt !== c.at && c.kind !== "home-safe") out.push({ at: c.closedAt as string, label: closed[c.kind] ?? "Closed" });
   return out;
 }
 

@@ -109,10 +109,12 @@ import { windowState } from "@/lib/window-server";
 
 /** Ceilings per endpoint: { calls: from() count, depth: sequential waves }. Tightened as the work lands. */
 const BUDGET = {
-  windowState: { calls: 8, depth: 2 },
-  window: { calls: 9, depth: 2 },
-  courtyard: { calls: 17, depth: 3 },
-  courtyardOneAangan: { calls: 13, depth: 2 },
+  // Calls run in parallel waves; depth (sequential waves) is what the person waits for.
+  // The window also reads presence by time window and the viewer's unseen nudges (one wave, two more calls).
+  windowState: { calls: 10, depth: 2 },
+  window: { calls: 10, depth: 2 },
+  courtyard: { calls: 19, depth: 3 },
+  courtyardOneAangan: { calls: 15, depth: 2 },
   festivalWeek: { calls: 6, depth: 2 },
 };
 
@@ -203,7 +205,7 @@ describe("database round trips", () => {
     // The recent shelf, not the lane: one bounded cards query, and the family's documents in one.
     expect(m.log.filter((q) => q.includes("cards(")).every((q) => q.includes("taken_at>="))).toBe(true);
     expect(m.byTable.cards).toBe(1);
-    expect(m.byTable.family_docs).toBeLessThanOrEqual(3);
+    expect(m.byTable.family_docs).toBeLessThanOrEqual(5);
     expect(m.calls).toBeLessThanOrEqual(BUDGET.windowState.calls);
     expect(m.depth).toBeLessThanOrEqual(BUDGET.windowState.depth);
   });

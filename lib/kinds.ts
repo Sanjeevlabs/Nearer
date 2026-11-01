@@ -143,6 +143,8 @@ export const SafetyCheckinSchema = z.object({
   etaAt: iso.nullable().default(null),
   /** When she closed it ("Home safe", "Landed", "I'm okay now"). */
   closedAt: iso.nullable().default(null),
+  /** True when nobody replied and the daily scan (or a read) closed it after 48 h: not a sign of life. */
+  noReply: z.boolean().optional(),
   /** Only ever on "I need help", only if she chose to send it; dropped after 24 h. */
   location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), accuracy: z.number().min(0).max(100000), at: iso }).nullable().default(null),
   at: iso,
@@ -431,6 +433,14 @@ export const ChitthiSchema = z.object({
   lang: z.enum(["en", "hi"]).optional(),
 });
 
+// ---------- A spent one-time order preview (a preview places one order, on any Worker) ----------
+export const PreviewUsedSchema = z.object({
+  /** `preview-<nonce>`: the nonce sealed inside the preview id. */
+  id,
+  memberId: id,
+  at: iso,
+});
+
 // ---------- A line about today: one short line on your own day, gone at your midnight ----------
 export const DayLineSchema = z.object({
   /** The author's member id: one line per person, replaced when they write a new one. */
@@ -557,6 +567,7 @@ export const DOC_SCHEMAS = {
   chitthi: ChitthiSchema,
   partner_token: PartnerTokenSchema,
   day_line: DayLineSchema,
+  preview_used: PreviewUsedSchema,
   weekly_call: WeeklyCallSchema,
   muse_image_run: MuseImageRunSchema,
   nudge: NudgeSchema,

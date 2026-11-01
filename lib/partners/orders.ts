@@ -6,6 +6,7 @@
 // flow (UPI QR / store checkout); Aangan never sees payment details.
 // Server only.
 import { randomBytes } from "crypto";
+import { claimDoc } from "../family-docs";
 import { isMockMode } from "../config";
 import { NeedsConnect, openPartner } from "./adapter";
 import type { Candidate } from "./catalog";
@@ -48,14 +49,12 @@ interface Pending {
 
 // The preview id is the sealed preview itself (AES-GCM, bound to the member,
 // 10 minutes): nothing to look up, and it can't be edited client-side.
-// Confirmed ids are remembered so one preview places one order.
+// Confirmed ids are remembered (family_docs "preview_used", claimed with an
+// insert that fails on a repeat) so one preview places one order even when two
+// taps reach two different Workers.
 const PREVIEW_PURPOSE = "partner-preview";
-const g = globalThis as typeof globalThis & { __aanganUsedPreviews?: Map<string, number> };
-const used = (g.__aanganUsedPreviews ??= new Map<string, number>());
-
-export function resetOrders(): void {
-  used.clear();
-}
+/** Test hook, kept for callers: spent ids live in family_docs now (resetDocs clears the mock copy). */
+export function resetOrders(): void {}
 
 function sampleAddresses(recipientCity: string, ownCity: string): ParsedAddress[] {
   const list: ParsedAddress[] = [];
@@ -116,9 +115,9 @@ export async function createPreview(input: {
 export async function confirmPreview(input: { familyId: string; memberId: string; previewId: string }): Promise<ConfirmResult> {
   const p = unseal(PREVIEW_PURPOSE, input.previewId) as Pending | null;
   const now = Date.now();
-  if (!p || typeof p.n !== "string" || p.exp < now || p.f !== input.familyId || p.m !== input.memberId || used.has(p.n)) throw new Error("preview-not-found");
-  used.forEach((exp, k) => exp < now && used.delete(k));
-  used.set(p.n, p.exp);
+  if (!p || typeof p.n !== "string" || p.exp < now || p.f !== input.familyId || p.m !== input.memberId) throw new Error("preview-not-found");
+  // Single use, across Workers: only the request that inserts the spent marker goes on.
+  if (!(await claimDoc(input.familyId, "preview_used", { id: `preview-${p.n}`.slice(0, 120), memberId: input.memberId, at: new Date(now).toISOString() }))) throw new Error("preview-not-found");
   const partner = getPartner(p.preview.partnerId);
   if (!partner) throw new Error("unknown-partner");
 

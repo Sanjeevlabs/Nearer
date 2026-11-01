@@ -4,6 +4,7 @@ import { requireMember, requireSession } from "@/lib/auth";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { nudgeHeard } from "@/lib/nudge-producers";
+import { markSeenWhere } from "@/lib/nudges";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
@@ -38,6 +39,8 @@ async function postHandler(req: Request): Promise<Response> {
   }
   const play = await dbAddPlay({ ...parsed.data, familyId: auth.familyId });
   await nudgeHeard(auth.familyId, card, parsed.data.memberId); // never throws
+  // Opening the card is seeing the nudges that point at it ("Maa heard your voice note").
+  await markSeenWhere(auth.familyId, auth.memberId, (href) => href.includes(`card=${encodeURIComponent(card.id)}`)).catch(() => 0);
   return Response.json({ play }, { status: 201 });
 }
 

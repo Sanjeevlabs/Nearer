@@ -38,11 +38,19 @@ function newest<T>(rows: T[]): T[] {
   return rows.sort((a, b) => at(b).localeCompare(at(a)));
 }
 
-export async function listDocs<K extends DocKind>(familyId: string, kind: K): Promise<DocOf<K>[]> {
+/**
+ * The family's rows of one kind, newest first. Live, that is the newest 500 rows
+ * unless `sinceMs` asks for a time window instead (rows written in the last
+ * `sinceMs`, up to 3000): kinds that pile up fast, like heartbeats, would
+ * otherwise push the days a screen needs out of the 500.
+ */
+export async function listDocs<K extends DocKind>(familyId: string, kind: K, opts: { sinceMs?: number } = {}): Promise<DocOf<K>[]> {
   const local = memList(familyId, kind);
   const sb = dbFor(familyId);
   if (!sb) return newest(local);
-  const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: false }).limit(500);
+  let q = sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind);
+  if (opts.sinceMs) q = q.gte("created_at", new Date(Date.now() - opts.sinceMs).toISOString());
+  const { data, error } = await q.order("created_at", { ascending: false }).limit(opts.sinceMs ? 3000 : 500);
   if (error || !data) return newest(local);
   const rows = data.map((r) => parse(kind, (r as { data: unknown }).data)).filter((d): d is DocOf<K> => d !== null);
   return newest(rows);
@@ -78,6 +86,26 @@ export async function listDocsMany<const Ks extends readonly DocKind[]>(familyId
   return out;
 }
 
+/**
+ * Every row of one kind, paged past listDocs' newest-500 window. For the daily
+ * purge only: expired rows are the OLD ones, which the newest-500 list never reaches.
+ */
+export async function listAllDocs<K extends DocKind>(familyId: string, kind: K, cap = 5000): Promise<DocOf<K>[]> {
+  const sb = dbFor(familyId);
+  if (!sb) return memList(familyId, kind);
+  const rows: DocOf<K>[] = [];
+  for (let from = 0; from < cap; from += 500) {
+    const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: true }).range(from, from + 499);
+    if (error || !data) break;
+    for (const r of data) {
+      const d = parse(kind, (r as { data: unknown }).data);
+      if (d) rows.push(d);
+    }
+    if (data.length < 500) break;
+  }
+  return rows;
+}
+
 export async function getDoc<K extends DocKind>(familyId: string, kind: K, id: string): Promise<DocOf<K> | undefined> {
   const sb = dbFor(familyId);
   if (!sb) return memList(familyId, kind).find((d) => (d as { id: string }).id === id);
@@ -102,6 +130,26 @@ export async function putDoc<K extends DocKind>(familyId: string, kind: K, input
     .upsert({ id: `${familyId}:${row.id}`, family_id: familyId, kind, data: row, updated_at: new Date().toISOString() }, { onConflict: "id" });
   if (error) throw new DbWriteError("family_docs", error.message);
   return data;
+}
+
+/**
+ * Insert only if no row has this id: true when this call created it, false when
+ * it already existed (another request, possibly on another Worker, got there
+ * first). The one-at-a-time guard for "single use" things. Throws on a write failure.
+ */
+export async function claimDoc<K extends DocKind>(familyId: string, kind: K, input: unknown): Promise<boolean> {
+  const data = DOC_SCHEMAS[kind].parse(input) as DocOf<K>;
+  const row = data as unknown as { id: string } & Record<string, unknown>;
+  const sb = dbFor(familyId);
+  if (!sb) {
+    if (mem.has(memKey(familyId, row.id))) return false;
+    mem.set(memKey(familyId, row.id), { familyId, kind, data: row, createdAt: new Date().toISOString() });
+    return true;
+  }
+  const { error } = await sb.from("family_docs").insert({ id: `${familyId}:${row.id}`, family_id: familyId, kind, data: row, updated_at: new Date().toISOString() });
+  if (!error) return true;
+  if ((error as { code?: string }).code === "23505") return false;
+  throw new DbWriteError("family_docs", error.message);
 }
 
 export async function deleteDoc(familyId: string, kind: DocKind, id: string): Promise<void> {
