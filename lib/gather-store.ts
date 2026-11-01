@@ -32,14 +32,19 @@ async function putLive(familyId: string, kind: string, id: string, data: unknown
   if (error) throw new DbWriteError("family_docs", error.message);
 }
 
+// Memory is the store only where there is no database (mock mode, the seed demo
+// family) or the database could not be read. With the database live it is the
+// source of truth on every read: this process's copy must never bring back a
+// row another Worker has since removed (Workers share no memory).
 export async function listEvents(familyId: string): Promise<FamilyEvent[]> {
-  const local: FamilyEvent[] = [];
-  events.forEach((e, k) => {
-    if (k.startsWith(`${familyId}::`)) local.push(e);
-  });
-  const rows = (await listLive(familyId, "event", EventSchema)) ?? [];
-  const ids = new Set(rows.map((r) => r.id));
-  return [...rows, ...local.filter((e) => !ids.has(e.id))].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+  const rows = await listLive(familyId, "event", EventSchema);
+  const out: FamilyEvent[] = [];
+  if (rows) out.push(...rows);
+  else
+    events.forEach((e, k) => {
+      if (k.startsWith(`${familyId}::`)) out.push(e);
+    });
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function getEvent(familyId: string, id: string): Promise<FamilyEvent | undefined> {
@@ -56,12 +61,15 @@ export async function putEvent(familyId: string, input: unknown): Promise<Family
 }
 
 export async function listDismissed(familyId: string, memberId: string): Promise<string[]> {
-  const local: Dismiss[] = [];
-  dismissals.forEach((d, k) => {
-    if (k.startsWith(`${familyId}::`)) local.push(d);
-  });
-  const rows = (await listLive(familyId, "event_dismiss", DismissSchema)) ?? [];
-  return Array.from(new Set([...rows, ...local].filter((d) => d.memberId === memberId).map((d) => d.key)));
+  let rows = await listLive(familyId, "event_dismiss", DismissSchema);
+  if (!rows) {
+    const local: Dismiss[] = [];
+    dismissals.forEach((d, k) => {
+      if (k.startsWith(`${familyId}::`)) local.push(d);
+    });
+    rows = local;
+  }
+  return Array.from(new Set(rows.filter((d) => d.memberId === memberId).map((d) => d.key)));
 }
 
 export async function dismiss(familyId: string, memberId: string, k: string): Promise<void> {
