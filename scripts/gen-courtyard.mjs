@@ -3,6 +3,7 @@
 //        node scripts/gen-courtyard.mjs courtyard   (only the original fallback)
 //        node scripts/gen-courtyard.mjs home-window (any subset, by name)
 // Then:  node scripts/demo-variants.mjs              (writes the 390/780 WebP widths)
+//        node scripts/gen-courtyard.mjs venue-terrace (the sitting venues: venue-courtyard, -terrace, -pergola, -deck, -lounge, -patio)
 // To use one as the default photo, change DEFAULT_IMAGE in lib/hero.ts.
 // The key comes from META_API_KEY in the environment (or .env.local); it is
 // never printed, logged, or written anywhere by this script.
@@ -55,6 +56,50 @@ const JOBS = {
       "weathered plaster walls, potted plants, soft golden light and gentle shadows. " +
       `${NO_PEOPLE} Cozy, quiet, timeless.`,
   },
+  // The six places the family sits (lib/venues.ts). Not in the default run:
+  // `node scripts/gen-courtyard.mjs venue-terrace venue-deck ...`. Replaces the Pillow placeholders.
+  "venue-courtyard": {
+    file: "public/demo/venues/courtyard.jpg",
+    prompt:
+      "Photorealistic wide photograph of an Indian family courtyard at early evening: a string cot (charpai) and several cane chairs " +
+      "around a low table, a tulsi plant on a raised brick platform, brass lamps just lit, warm lime-washed walls and arched doorways. " +
+      `Open floor in the middle, seating along the edges. ${NO_PEOPLE} No brand names or logos. Cozy and welcoming.`,
+  },
+  "venue-terrace": {
+    file: "public/demo/venues/terrace.jpg",
+    prompt:
+      "Photorealistic wide photograph of a penthouse terrace at dusk: city lights beginning to glow below, low modern sofas " +
+      "arranged around a glowing fire bowl, soft cushions, deep blue and amber sky. " +
+      `Open floor in the middle, seating along the edges. ${NO_PEOPLE} No brand names or logos. Calm and intimate.`,
+  },
+  "venue-pergola": {
+    file: "public/demo/venues/pergola.jpg",
+    prompt:
+      "Photorealistic wide photograph of a garden pergola in the evening: a wicker sofa and two wicker chairs with cushions, " +
+      "string lights glowing overhead, climbing greenery, a small garden swing. " +
+      `Open floor in the middle, seating along the edges. ${NO_PEOPLE} No brand names or logos. Soft and homely.`,
+  },
+  "venue-deck": {
+    file: "public/demo/venues/deck.jpg",
+    prompt:
+      "Photorealistic wide photograph of a wooden beach deck at sunset: a row of canvas deck chairs and a few floor cushions, " +
+      "the sea and a low orange sun beyond the railing, warm light on weathered planks. " +
+      `Open floor in the middle, seating along the edges. ${NO_PEOPLE} No brand names or logos. Relaxed and golden.`,
+  },
+  "venue-lounge": {
+    file: "public/demo/venues/lounge.jpg",
+    prompt:
+      "Photorealistic wide photograph of a cosy fireplace lounge: a lit fireplace, a deep fabric sofa, two armchairs, " +
+      "a thick patterned rug, floor cushions, warm lamp light, wooden shelves. " +
+      `Open floor in the middle, seating along the edges. ${NO_PEOPLE} No brand names or logos. Snug and warm.`,
+  },
+  "venue-patio": {
+    file: "public/demo/venues/patio.jpg",
+    prompt:
+      "Photorealistic wide photograph of a Mediterranean patio in late afternoon: a rough stone wall covered in bougainvillea, " +
+      "a long wooden table with simple chairs along both sides, terracotta pots, dappled sunlight. " +
+      `Open floor in the middle, seating along the edges. ${NO_PEOPLE} No brand names or logos. Sunny and unhurried.`,
+  },
 };
 
 const wanted = process.argv.slice(2);
@@ -72,14 +117,14 @@ if (!key) {
   process.exit(2);
 }
 
-mkdirSync("public/demo", { recursive: true });
+mkdirSync("public/demo/venues", { recursive: true });
 for (const name of names) {
   const job = JOBS[name];
   const startedAt = new Date().toISOString();
   const res = await fetch("https://api.meta.ai/v1/images/generations", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model: MODEL, prompt: job.prompt, size: "1024x1024", n: 1 }),
+    body: JSON.stringify({ model: MODEL, prompt: job.prompt, size: name.startsWith("venue-") ? "1536x1024" : "1024x1024", n: 1 }),
   });
   if (!res.ok) {
     console.error(`${name}: image request failed: provider-http-${res.status}`);

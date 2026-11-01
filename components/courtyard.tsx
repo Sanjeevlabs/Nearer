@@ -13,6 +13,7 @@ import { useFamilyCards } from "@/lib/use-family";
 import { ago, postJson, useJson } from "@/lib/use-json";
 import { can } from "@/lib/permissions";
 import { isAwake, placeFromTz, timeIn } from "@/lib/zones";
+import { DEFAULT_VENUE, venueOf, type VenueId } from "@/lib/venues";
 import { Carousel } from "./carousel";
 import { MyNeeds, MyQuestions, StoryDoor, VisitCountdown, useNextVisit } from "./home-presence";
 import { MuseSlide, useMuseSlot } from "./muse-slot";
@@ -22,6 +23,7 @@ import { useShell } from "./shell";
 import { SafetyWatch } from "./safety";
 import { PersonDay, lampFor } from "./person-day";
 import { SideSwitch, useSides } from "./sides";
+import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
 import { EventPrompts } from "./event-prompts";
 import { TodayCard, useToday } from "./today";
@@ -75,6 +77,8 @@ function SitSlide() {
   const { viewer, members } = useViewer();
   const sit = useJson<{ sittings: Sitting[]; knocks: Knock[] }>("/api/sit");
   const [busy, setBusy] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [venue, setVenue] = useState<VenueId>(DEFAULT_VENUE);
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
     setNow(new Date());
@@ -88,8 +92,9 @@ function SitSlide() {
   const next = (sit.data?.sittings ?? []).filter((s) => Date.parse(s.startsAt) > Date.now()).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
   const start = async () => {
     if (knock) return router.push(`/call/${knock.id}`);
+    if (!picking) return setPicking(true);
     setBusy(true);
-    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: 45, note: "Come sit with me" });
+    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: 45, note: "Come sit with me", venue });
     setBusy(false);
     if (out?.knock) router.push(`/call/${out.knock.id}`);
   };
@@ -106,10 +111,17 @@ function SitSlide() {
           </Link>
         )}
       </div>
+      {picking && !knock ? (
+        <div>
+          <p className="m-0 mb-2 text-[15px] text-white/80">Where shall we sit?</p>
+          <VenuePicker value={venue} onChange={setVenue} />
+        </div>
+      ) : (
       <div>
         <p className="m-0 text-[22px] font-light leading-tight">{knock ? `${host?.id === viewer.id ? "You're" : `${callName(host)} is`} on a video call` : awake.length > 1 ? `${awake.length} of you are awake now` : "Everyone's asleep somewhere"}</p>
-        <p className="m-0 mt-1 text-[13.5px] text-white/60">{knock ? `Until ${now ? timeIn(viewer.tz, new Date(knock.until)) : ""}` : next ? `Next: ${next.title} · ${relativeDay(next.startsAt)}` : "Leave the camera on, like sitting in one room"}</p>
+        <p className="m-0 mt-1 text-[13.5px] text-white/60">{knock ? `Until ${now ? timeIn(viewer.tz, new Date(knock.until)) : ""}` : next ? `Next: ${next.title} · ${relativeDay(next.startsAt)} · ${venueOf(next.venue).name}` : "Leave the camera on, like sitting in one room"}</p>
       </div>
+      )}
       <div className="flex items-center justify-between gap-3">
         <ul className="m-0 flex list-none -space-x-2.5 p-0" aria-label="Awake now">
           {(awake.length ? awake : adults).slice(0, 6).map((mm) => (
@@ -118,7 +130,7 @@ function SitSlide() {
             </li>
           ))}
         </ul>
-        <button type="button" onClick={() => void start()} disabled={busy} aria-label={knock ? "Join the call" : "Start a video call"} className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-black">
+        <button type="button" onClick={() => void start()} disabled={busy} aria-label={knock ? "Join the call" : picking ? "Start sitting here" : "Start a video call"} className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-black">
           <Icon name="video" size={20} />
         </button>
       </div>

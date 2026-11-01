@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { COURSES, EVENT_KINDS, GAME_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS } from "./kind-values";
+import { COURSES, EVENT_KINDS, GAME_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS } from "./kind-values";
 
-export { COURSES, EVENT_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS };
+export { COURSES, EVENT_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS };
 
 // Schemas for the family's "living" records: Kitchen, presence, care,
 // local helpers, sittings and the weekly question. They share one table
@@ -324,6 +324,8 @@ export const SittingSchema = z.object({
   invites: z.array(id).default([]),
   recipeId: z.string().nullable().default(null),
   note: z.string().max(200).default(""),
+  /** Where the family sits (lib/venues.ts). */
+  venue: z.enum(VENUE_IDS).default("courtyard"),
   /** The moment kept afterwards: a card in Memory Lane. */
   keptCardId: z.string().nullable().default(null),
   /** RSVPs: who said they'll be there, and who can't make it. */
@@ -337,6 +339,8 @@ export const KnockSchema = z.object({
   id,
   memberId: id,
   note: z.string().max(80).default(""),
+  /** The knocker's venue. */
+  venue: z.enum(VENUE_IDS).default("courtyard"),
   at: iso,
   until: iso,
 });
