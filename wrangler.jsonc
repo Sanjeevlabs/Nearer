@@ -12,8 +12,9 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  // Daily ritual/role scan (was vercel.json "crons"), 09:00 UTC.
-  "triggers": { "crons": ["0 9 * * *"] },
+  // Daily ritual/role scan (was vercel.json "crons"), 09:00 UTC; and every 15 minutes the overdue
+  // check-in sweep (/api/push/sweep: "hasn't checked in" reaches the people she chose within minutes).
+  "triggers": { "crons": ["0 9 * * *", "*/15 * * * *"] },
   "observability": { "enabled": true },
   // Production origin (DNS on Cloudflare). Must match APP_ORIGIN and CAP_SERVER_URL.
   "routes": [

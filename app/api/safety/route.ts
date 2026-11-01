@@ -6,6 +6,7 @@ import { getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { SAFETY_KINDS } from "@/lib/kinds";
 import { expireCheckin, stateOf, withoutStaleLocation } from "@/lib/safety";
 import { guardWrites } from "@/lib/api-guard";
+import { pushHelp } from "@/lib/push/events";
 
 // Safe & sound. Owned by the person it protects:
 // - Only she can turn it on, choose who sees it, pause it, or check in.
@@ -89,6 +90,8 @@ async function postHandler(req: Request): Promise<Response> {
   const location = body.kind === "help" && body.location ? { ...body.location, at: now.toISOString() } : null;
   const closesItself = body.kind === "home-safe" || body.kind === "out-late";
   const checkin = await putDoc(auth.familyId, "safety_checkin", { id: newId("safe"), memberId: auth.memberId, kind: body.kind, note: body.note, etaAt, closedAt: closesItself ? now.toISOString() : null, location, at: now.toISOString() });
+  // "I need help" reaches her chosen people at once, at any hour (background; never fails the check-in).
+  if (checkin.kind === "help") pushHelp(auth.familyId, auth.memberId);
   return Response.json({ checkin }, { status: 201 });
 }
 

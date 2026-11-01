@@ -6,6 +6,7 @@ import { getDoc, listDocs, putDoc } from "@/lib/family-docs";
 import { households } from "@/lib/households";
 import { BEAT_TTL_MS, glowFrom, lastContact, pendingBeats } from "@/lib/lamp";
 import { guardWrites } from "@/lib/api-guard";
+import { pushBeat } from "@/lib/push/events";
 
 // The light in the window (SPEC §30.1, §30.4). One lamp per home.
 // GET: every home's lamp + heartbeats waiting for you.
@@ -73,6 +74,7 @@ async function postHandler(req: Request): Promise<Response> {
     // Sending one also lights your own lamp.
     const own = (await getDoc(auth.familyId, "lamp", mine.id)) ?? blank(mine.id);
     await putDoc(auth.familyId, "lamp", { ...own, litAt: nowIso, litBy: auth.memberId, updatedAt: nowIso });
+    pushBeat(auth.familyId, auth.memberId, (parsed.data as { toMemberId: string }).toMemberId);
     return Response.json({ ok: true });
   }
 

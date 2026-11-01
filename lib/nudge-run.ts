@@ -7,6 +7,7 @@ import { DOC_SCHEMAS } from "./kinds";
 import { letterShareLink, renderDigestEmail } from "./nudge-mail";
 import { drain, enqueueNudge, markDelivered, nudgeSettingsFor, renderNudgeText } from "./nudges";
 import { mailConfigured, sendMail } from "./mail";
+import { pushMorning, sweepOverdue } from "./push/events";
 import type { DocKind } from "./kinds";
 import type { Member } from "./schemas";
 import { weekStartOf } from "./week";
@@ -96,6 +97,7 @@ export async function deliverDueNudges(familyId: string, members: Member[], now:
   const origin = (process.env.APP_ORIGIN || "").replace(/\/$/, "");
   const batches = await drain(familyId, now);
   const out = { emails: 0, inapp: 0 };
+  const texts = new Map<string, string[]>();
   const letters = batches.some((b) => b.nudges.some((n) => n.kind === "letter")) ? await listDocs(familyId, "chitthi") : [];
   for (const b of batches) {
     const member = members.find((m) => m.id === b.memberId);
@@ -117,9 +119,13 @@ export async function deliverDueNudges(familyId: string, members: Member[], now:
       channel = (await sendMail({ to: member.email, ...mail })).channel;
     }
     await markDelivered(familyId, b.nudges, channel, now);
+    texts.set(member.id, b.nudges.map((n) => renderNudgeText(n.text, members)));
     if (channel === "email") out.emails++;
     else out.inapp++;
   }
+  // One push per person for the morning ("3 things from your family"), plus whatever was held back overnight.
+  // A failure here never undoes the delivery above.
+  await pushMorning(familyId, members, texts, now).catch((e: unknown) => console.error("[push] morning failed", String(e)));
   return out;
 }
 
@@ -127,6 +133,7 @@ export async function deliverDueNudges(familyId: string, members: Member[], now:
 export async function runScanNudges(familyId: string, input: NudgeScanInput): Promise<{ queued: number; emails: number; inapp: number }> {
   try {
     const { queued } = await queueScanNudges(familyId, input);
+    await sweepOverdue(familyId, input.now).catch((e: unknown) => console.error("[push] overdue sweep failed", String(e)));
     return { queued, ...(await deliverDueNudges(familyId, input.members, input.now)) };
   } catch (e) {
     console.error("[nudges] scan failed", familyId, String(e));
