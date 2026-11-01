@@ -8,7 +8,7 @@ import { shortDate } from "@/lib/kids";
 // labels are spaced so two close marks never overlap. Nothing is compared or judged.
 
 const H = 300;
-const GAP = 36;
+const GAP = 46;
 const MAX = 7;
 
 export function Doorframe({ marks, className = "" }: { marks: HeightMark[]; className?: string }) {
