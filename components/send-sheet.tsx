@@ -63,10 +63,14 @@ type Step =
 
 const KIND_ICON: Record<Kind, IconName> = { groceries: "basket", food: "utensils", dining: "utensils", gifts: "gift", "home-services": "wrench" };
 
-export function money(minor: number, currency: string): string {
+/** The home locale of the common currencies, so a pound reads as a pound and a rupee as a rupee. */
+const CURRENCY_LOCALE: Record<string, string> = { INR: "en-IN", GBP: "en-GB", USD: "en-US", CAD: "en-CA", AUD: "en-AU", EUR: "de-DE", AED: "en-AE", SGD: "en-SG" };
+
+/** Minor units (pence, paise) in the item's own currency and locale; never a fixed locale. */
+export function money(minor: number, currency: string, locale?: string): string {
   const major = minor / 100;
   try {
-    return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: Number.isInteger(major) ? 0 : 2 }).format(major);
+    return new Intl.NumberFormat(locale ?? CURRENCY_LOCALE[currency] ?? "en", { style: "currency", currency, maximumFractionDigits: Number.isInteger(major) ? 0 : 2 }).format(major);
   } catch {
     return `${currency} ${major.toFixed(2)}`;
   }

@@ -1,5 +1,5 @@
 import { requireSession } from "@/lib/auth";
-import { isMockMode } from "@/lib/config";
+import { isSampleMode } from "@/lib/config";
 import { connectedGroups } from "@/lib/connected-apps";
 import { dbListMembers, dbListRelationships } from "@/lib/db";
 import { ACCOUNTS, isEnabled } from "@/lib/partners/registry";
@@ -22,5 +22,5 @@ export async function GET(req: Request): Promise<Response> {
   });
   // `accounts` keeps the plain connect/disconnect state for callers that only need that.
   const accounts = ACCOUNTS.filter((a) => on.has(a.id)).map((a) => ({ id: a.id, name: a.name, connected: mine.some((c) => c.account === a.id) }));
-  return Response.json({ sample: isMockMode(), groups, accounts });
+  return Response.json({ sample: isSampleMode(), groups, accounts });
 }
