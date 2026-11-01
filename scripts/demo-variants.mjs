@@ -6,7 +6,7 @@
 //
 // Needs `sharp`, which Next installs for its own use; it is not a dependency of
 // this repo, so this is a run-once helper, not part of the build.
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
@@ -22,6 +22,8 @@ try {
 const dir = join(process.cwd(), "public", "demo");
 // file -> widths. Keep in step with DEMO_WIDTHS in components/ui/kit.tsx.
 const plan = { "courtyard.jpg": [390, 780] };
+// The first screen's home photos (scripts/gen-courtyard.mjs), once they exist.
+for (const n of ["home-courtyard", "home-balcony", "home-window"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [390, 780];
 for (const f of readdirSync(dir)) {
   if (/^family-[a-z]+\.webp$/.test(f)) plan[f] = [440, 880];
   if (/^portrait-[a-z]+\.webp$/.test(f)) plan[f] = [160, 400];
