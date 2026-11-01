@@ -34,6 +34,11 @@ function nextLocal(weekday: number, hour: number, tz: string, now: number): stri
   return ahead(3 * 24 * 60, now);
 }
 
+/** Midnight at the start of the local day in a zone (to the minute), as ms. Fixed-offset zones are exact; across a DST change it can be an hour out, which a demo seed does not mind. */
+export function localMidnight(tz: string, now: number): number {
+  return now - Math.round(hourIn(tz, new Date(now)) * 60) * 60_000;
+}
+
 export function seedDemoRooms(now = Date.now()): void {
   // ---------- Today: one task, both homes. Maa answered; Arjun hasn't yet ----------
   const dayAgo = (n: number) => dateIn("Asia/Kolkata", new Date(now - n * 86_400_000));
@@ -216,24 +221,32 @@ export function seedDemoRooms(now = Date.now()): void {
     ["visitors", 19, "The Kapoors came over"],
     ["resting", 21.75, "Good night"],
   ];
+  // Seeded against HER local day, not against server start: every time below is
+  // an hour on the local clock, so "up since 6:09 AM" reads right at any hour.
+  // Before 6 AM there, the demo shows the day that just ended.
   const localNow = hourIn(tz, new Date(now)); // India is +5:30: minutes matter
-  const shift = localNow < 6 ? 24 : 0; // before dawn: show yesterday
-  day
-    .filter(([, h]) => h <= localNow + shift)
-    .forEach(([moment, h, note], i) => seedDoc(FAM, "presence", { id: `presence-dadi-${i}`, memberId: "dadi", moment, note, at: ago(Math.round((localNow + shift - h) * 60), now) }));
+  const dayOff = localNow < 6 ? -1 : 0;
+  const at = (hour: number, dayOffset = dayOff) => new Date(localMidnight(tz, now) + dayOffset * 86_400_000 + Math.round(hour * 60) * 60_000).toISOString();
+  const isPast = (hour: number) => Date.parse(at(hour)) <= now;
+  day.filter(([, h]) => isPast(h)).forEach(([moment, h, note], i) => seedDoc(FAM, "presence", { id: `presence-dadi-${i}`, memberId: "dadi", moment, note, at: at(h) }));
   const dadaDay: [string, number, string][] = [
     ["walk", 7.5, "With Maa, round the park"],
     ["market", 10.25, "Newspaper and milk"],
     ["garden", 16.5, "The tulsi needs water"],
     ["resting", 22, ""],
   ];
-  dadaDay
-    .filter(([, h]) => h <= localNow + shift)
-    .forEach(([moment, h, note], i) => seedDoc(FAM, "presence", { id: `presence-dada-${i}`, memberId: "dada", moment, note, at: ago(Math.round((localNow + shift - h) * 60), now) }));
+  dadaDay.filter(([, h]) => isPast(h)).forEach(([moment, h, note], i) => seedDoc(FAM, "presence", { id: `presence-dada-${i}`, memberId: "dada", moment, note, at: at(h) }));
+  // Their usual days (the last four): up by about 6:30, the last sign about 9:30 at night. This gives "usual" a band to compare today with.
+  [1, 2, 3, 4].forEach((back) => {
+    seedDoc(FAM, "presence", { id: `presence-dadi-usual-${back}-0`, memberId: "dadi", moment: "awake", note: "", at: at(6.2 + 0.1 * back, dayOff - back) });
+    seedDoc(FAM, "presence", { id: `presence-dadi-usual-${back}-1`, memberId: "dadi", moment: "resting", note: "", at: at(21.5 + 0.1 * back, dayOff - back) });
+    seedDoc(FAM, "presence", { id: `presence-dada-usual-${back}-0`, memberId: "dada", moment: "walk", note: "", at: at(6.9 + 0.1 * back, dayOff - back) });
+    seedDoc(FAM, "presence", { id: `presence-dada-usual-${back}-1`, memberId: "dada", moment: "resting", note: "", at: at(21.8, dayOff - back) });
+  });
   seedDoc(FAM, "presence", { id: "presence-arjun-0", memberId: "arjun", moment: "thinking", note: "", at: ago(15, now) });
-  // A visit yesterday, so "Since yesterday" has something to say in the demo.
+  // A visit yesterday morning and evening (local), so "Since yesterday" has something to say in the demo.
   for (const id of ["arjun", "priya", "dadi", "dada"])
-    [30, 20].forEach((h, i) => seedDoc(FAM, "presence", { id: `presence-${id}-visit-${i}`, memberId: id, moment: "here", note: "", at: ago(60 * h, now) }));
+    [9.2, 19.7].forEach((h, i) => seedDoc(FAM, "presence", { id: `presence-${id}-visit-${i}`, memberId: id, moment: "here", note: "", at: at(h, -1 + dayOff) }));
   // Coming up: Vihaan's birthday video call, evening of 9 Nov (IST), both homes invited.
   const people = [
     { id: "priya", role: "adult", lang: "en" },

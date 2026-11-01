@@ -1,5 +1,6 @@
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { dbListMembers } from "@/lib/db";
+import { countryOfMember } from "@/lib/place";
 import { fetchWeather, mockWeather } from "@/lib/weather";
 
 // The sky over a family member's city. Only cities that someone in *this*
@@ -12,6 +13,6 @@ export async function GET(req: Request): Promise<Response> {
   const member = (await dbListMembers(auth.familyId)).find((m) => m.id === memberId);
   if (!member) return Response.json({ error: "unknown-member" }, { status: 404 });
   if (!member.city) return Response.json({ weather: null });
-  const weather = process.env.MOCK === "true" ? mockWeather(member.city) : ((await fetchWeather(member.city)) ?? null);
+  const weather = process.env.MOCK === "true" ? mockWeather(member.city) : ((await fetchWeather(member.city, { country: countryOfMember(member), tz: member.tz })) ?? null);
   return Response.json({ weather });
 }

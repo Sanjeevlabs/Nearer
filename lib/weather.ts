@@ -26,6 +26,9 @@ const KNOWN: Record<string, [number, number]> = {
   jaipur: [26.91, 75.79], "new york": [40.71, -74.01], toronto: [43.65, -79.38], dubai: [25.2, 55.27], singapore: [1.35, 103.82], sydney: [-33.87, 151.21],
 };
 
+/** "Amritsar, Punjab" -> "Amritsar": the geocoder wants the place name alone. */
+const nameOf = (city: string) => city.split(",")[0].trim();
+
 /** WMO weather code → our six skies (https://open-meteo.com/en/docs). */
 export function skyFromWmo(code: number): { kind: SkyKind; label: string } {
   if (code === 0) return { kind: "clear", label: "Clear" };
@@ -64,32 +67,84 @@ export function mockWeather(city: string, now = new Date()): Weather {
   const pick = (h + day) % 5;
   const codes = [0, 2, 61, 3, 45];
   const sky = skyFromWmo(codes[pick]);
-  const ll = KNOWN[city.trim().toLowerCase()];
+  const ll = KNOWN[nameOf(city).toLowerCase()];
   return { city, tempC: 14 + ((h >> 3) % 16), ...sky, source: "mock", at: now.toISOString(), ...(ll ? { lat: ll[0], lon: ll[1] } : {}) };
 }
 
-const CACHE = new Map<string, { at: number; w: Weather }>();
-const TTL = 30 * 60_000;
+/** Which Amritsar: the member's country (from their time zone) and the zone itself. */
+export interface PlaceHint {
+  country?: string | null;
+  tz?: string | null;
+}
 
-/** Server only. Geocode the city name, read current weather, cache 30 min. */
-export async function fetchWeather(city: string, fetcher: typeof fetch = fetch): Promise<Weather | null> {
-  const key = city.trim().toLowerCase();
+export interface GeoResult {
+  latitude: number;
+  longitude: number;
+  country_code?: string;
+  timezone?: string;
+}
+
+const tzKey = (tz: string) => (tz === "Asia/Calcutta" ? "Asia/Kolkata" : tz);
+
+/**
+ * The first geocoder match in the right country. With no country known, the
+ * first match whose time zone is the member's. With neither: null (never a guess).
+ */
+export function pickPlace(results: GeoResult[] | undefined, hint: PlaceHint): GeoResult | null {
+  const list = results ?? [];
+  if (hint.country) return list.find((r) => r.country_code?.toUpperCase() === hint.country?.toUpperCase()) ?? null;
+  if (hint.tz && hint.tz !== "UTC") return list.find((r) => r.timezone && tzKey(r.timezone) === tzKey(hint.tz as string)) ?? null;
+  return null;
+}
+
+const CACHE = new Map<string, { at: number; w: Weather }>();
+const GEO = new Map<string, { at: number; p: { lat: number; lon: number } | null }>();
+const TTL = 30 * 60_000;
+const GEO_TTL = 24 * 3_600_000;
+const GEO_MISS_TTL = 10 * 60_000;
+const keyOf = (city: string, hint: PlaceHint) => `${city.trim().toLowerCase()}|${(hint.country ?? "").toUpperCase()}|${hint.country ? "" : (hint.tz ?? "")}`;
+
+/** Server only. Coordinates of a city in the member's country, cached per city + country. */
+export async function geocode(city: string, hint: PlaceHint = {}, fetcher: typeof fetch = fetch): Promise<{ lat: number; lon: number } | null> {
+  if (!city.trim()) return null;
+  const key = keyOf(city, hint);
+  const hit = GEO.get(key);
+  if (hit && Date.now() - hit.at < (hit.p ? GEO_TTL : GEO_MISS_TTL)) return hit.p;
+  try {
+    const geo = await fetcher(`https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name=${encodeURIComponent(nameOf(city))}`, { signal: AbortSignal.timeout(4000) });
+    if (!geo.ok) return null;
+    const g = (await geo.json()) as { results?: GeoResult[] };
+    const place = pickPlace(g.results, hint);
+    const p = place ? { lat: place.latitude, lon: place.longitude } : null;
+    GEO.set(key, { at: Date.now(), p });
+    return p;
+  } catch {
+    return null;
+  }
+}
+
+/** Server only. Geocode the city (in the right country), read current weather, cache 30 min. */
+export async function fetchWeather(city: string, hint: PlaceHint = {}, fetcher: typeof fetch = fetch): Promise<Weather | null> {
+  const key = keyOf(city, hint);
   const hit = CACHE.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.w;
   try {
-    const geo = await fetcher(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=${encodeURIComponent(city)}`, { signal: AbortSignal.timeout(4000) });
-    if (!geo.ok) return null;
-    const g = (await geo.json()) as { results?: { latitude: number; longitude: number }[] };
-    const place = g.results?.[0];
+    const place = await geocode(city, hint, fetcher);
     if (!place) return null;
-    const res = await fetcher(`https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,weather_code`, { signal: AbortSignal.timeout(4000) });
+    const res = await fetcher(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code`, { signal: AbortSignal.timeout(4000) });
     if (!res.ok) return null;
     const d = (await res.json()) as { current?: { temperature_2m?: number; weather_code?: number } };
     if (typeof d.current?.temperature_2m !== "number" || typeof d.current.weather_code !== "number") return null;
-    const w: Weather = { city, tempC: Math.round(d.current.temperature_2m), ...skyFromWmo(d.current.weather_code), source: "open-meteo", at: new Date().toISOString(), lat: place.latitude, lon: place.longitude };
+    const w: Weather = { city, tempC: Math.round(d.current.temperature_2m), ...skyFromWmo(d.current.weather_code), source: "open-meteo", at: new Date().toISOString(), lat: place.lat, lon: place.lon };
     CACHE.set(key, { at: Date.now(), w });
     return w;
   } catch {
     return null;
   }
+}
+
+/** Coordinates for the demo and tests (no network); null for a city we don't know. */
+export function mockPlace(city: string): { lat: number; lon: number } | null {
+  const ll = KNOWN[nameOf(city).toLowerCase()];
+  return ll ? { lat: ll[0], lon: ll[1] } : null;
 }

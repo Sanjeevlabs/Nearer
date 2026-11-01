@@ -64,6 +64,28 @@ export function sunInArch(pos: SunPos): { x: number; y: number } | null {
   return { x, y };
 }
 
+export type SolarPhase = "day" | "twilight" | "night";
+
+/** Sunrise to sunset is day (the sun's centre above -0.833°, refraction included); below -6° (civil twilight over) is night; in between, neither. */
+export function solarPhase(altitude: number): SolarPhase {
+  if (altitude > -0.833) return "day";
+  if (altitude > -6) return "twilight";
+  return "night";
+}
+
+/** The glyph for a badge: the sun by day, the moon at night, nothing at twilight or without coordinates. */
+export function skyGlyph(lat: number | undefined, lon: number | undefined, at = new Date()): "sun" | "moon" | null {
+  if (lat === undefined || lon === undefined) return null;
+  const p = solarPhase(sunPosition(lat, lon, at).altitude);
+  return p === "day" ? "sun" : p === "night" ? "moon" : null;
+}
+
+/** Is it night (sun more than 6° below the horizon) at this place? null when we don't know where it is. */
+export function isNightAt(lat: number | undefined, lon: number | undefined, at = new Date()): boolean | null {
+  if (lat === undefined || lon === undefined) return null;
+  return solarPhase(sunPosition(lat, lon, at).altitude) === "night";
+}
+
 /**
  * SVG path for the dark part of the moon disc (radius r, centred at r,r),
  * so the lit part shows through. Waxing lights the right side (northern sky).

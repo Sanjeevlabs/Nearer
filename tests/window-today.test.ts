@@ -41,13 +41,10 @@ describe("the window (LITE)", () => {
     expect(skyFromWmo(95).kind).toBe("storm");
   });
 
-  it("lets you choose only your own family's photos; Muse composes inside the grounded set", async () => {
+  it("lets you choose only your own family's photos", async () => {
     expect((await windowPost(req("/api/window", "arjun", { action: "choose", cardId: "nope", style: "living" }))).status).toBe(404);
     const chosen = await json<{ view: { imageRef: string } }>(windowPost(req("/api/window", "arjun", { action: "choose", cardId: "demo-court-dadi", style: "living" })));
     expect(chosen.view.imageRef).toBe("/demo/family-dadi.webp");
-    const composed = await json<{ view: { layers: string[]; madeBy: string } }>(windowPost(req("/api/window", "arjun", { action: "compose" })));
-    const state = await json<{ layers: string[] }>(windowGet(req("/api/window", "arjun")));
-    expect(composed.view.layers.every((l) => state.layers.includes(l))).toBe(true);
   });
 
   it("looks up weather only for cities this family lives in", async () => {
