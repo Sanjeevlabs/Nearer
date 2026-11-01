@@ -148,6 +148,8 @@ export const SafetyCheckinSchema = z.object({
   /** Only ever on "I need help", only if she chose to send it; dropped after 24 h. */
   location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), accuracy: z.number().min(0).max(100000), at: iso }).nullable().default(null),
   at: iso,
+  /** When her people were pushed about this check-in being overdue (once only). */
+  alertedAt: iso.nullable().optional(),
 });
 
 // ---------- Stories (the kids' corner) ----------
@@ -528,6 +530,24 @@ export const NudgeSettingsSchema = z.object({
   maxPerWeek: z.number().int().min(0).max(3).default(3),
 });
 
+// ---------- Push: what a person wants on their phone, and today's tally ----------
+/**
+ * Per member: id is the member id. Each switch is one category of push (default on).
+ * `day`/`sent` count today's immediate pushes in the person's own zone (the daily cap);
+ * `overflow` is what was held back for the 8 AM summary ("3 things from your family").
+ */
+export const PushSettingsSchema = z.object({
+  id,
+  voice: z.boolean().default(true),
+  lamp: z.boolean().default(true),
+  asks: z.boolean().default(true),
+  digest: z.boolean().default(true),
+  safety: z.boolean().default(true),
+  day: z.string().max(10).default(""),
+  sent: z.number().int().min(0).max(1000).default(0),
+  overflow: z.number().int().min(0).max(1000).default(0),
+});
+
 // ---------- The fixed weekly call: one per family, a named ritual ----------
 /** "Sunday chai": the same hour every week, in the zone it was set in. */
 export const WeeklyCallSchema = z.object({
@@ -634,6 +654,7 @@ export const DOC_SCHEMAS = {
   muse_image_run: MuseImageRunSchema,
   nudge: NudgeSchema,
   nudge_settings: NudgeSettingsSchema,
+  push_settings: PushSettingsSchema,
   habit: HabitSchema,
   habit_tick: HabitTickSchema,
   bedtime_story: BedtimeStorySchema,
@@ -678,6 +699,7 @@ export type MuseImageRun = DocOf<"muse_image_run">;
 export type Nudge = DocOf<"nudge">;
 export type NudgeKind = (typeof NUDGE_KINDS)[number];
 export type NudgeSettings = DocOf<"nudge_settings">;
+export type PushSettings = DocOf<"push_settings">;
 export type Wall = (typeof WALLS)[number];
 export type WindowLayer = (typeof WINDOW_LAYERS)[number];
 export type FirstScene = (typeof FIRST_SCENES)[number];
