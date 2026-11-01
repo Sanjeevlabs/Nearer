@@ -548,7 +548,7 @@ export function ActionMenu({ actions, label = "More", tone = "soft", className }
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className={cn("press grid h-10 w-10 place-items-center rounded-full", tone === "light" ? "text-white" : "text-ink-soft")}
+        className={cn("press grid h-11 w-11 place-items-center rounded-full", tone === "light" ? "text-white" : "text-ink-soft")}
       >
         <Icon name="more" size={20} />
       </button>
@@ -559,10 +559,10 @@ export function ActionMenu({ actions, label = "More", tone = "soft", className }
               <div key={a.label} className="px-3 py-2">
                 <p className="m-0 text-[14px] text-ink">{a.confirm ?? `${a.label}?`}</p>
                 <div className="mt-2 flex gap-2">
-                  <button type="button" disabled={busy} onClick={() => void run(a)} className="press h-9 flex-1 rounded-full bg-[#b42318] text-[14px] font-semibold text-white">
+                  <button type="button" disabled={busy} onClick={() => void run(a)} className="press h-11 flex-1 rounded-full bg-[#b42318] text-[14px] font-semibold text-white">
                     {busy ? "…" : "Yes"}
                   </button>
-                  <button type="button" onClick={() => setConfirming(null)} className="press h-9 flex-1 rounded-full bg-black/[.06] text-[14px] font-semibold">
+                  <button type="button" onClick={() => setConfirming(null)} className="press h-11 flex-1 rounded-full bg-black/[.06] text-[14px] font-semibold">
                     Keep
                   </button>
                 </div>
