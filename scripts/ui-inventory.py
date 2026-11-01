@@ -219,15 +219,22 @@ def settle(page) -> None:
 def capture(page, scr: dict, persona: str, other: str, log: list[str]):
     path = scr["path"].replace("@other", other)
     # API calls in flight (translations of family words arrive late and swap the text).
-    pending = {"n": 0}
+    pending = {"n": 0, "failed": 0}
     page.on("request", lambda r: "/api/" in r.url and pending.update(n=pending["n"] + 1))
     page.on("requestfinished", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1))
-    page.on("requestfailed", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1))
+    page.on("requestfailed", lambda r: "/api/" in r.url and pending.update(n=pending["n"] - 1, failed=pending["failed"] + 1))
     # Twice: the first visit warms the server's caches (translations, festival week), the second is read.
     page.goto(path, wait_until="load")
     settle(page)
-    page.goto(path, wait_until="load")
-    settle(page)
+    # A screen is read only from a visit where every API call answered: a dropped request
+    # would hide a whole section and look like a UI change. Up to three clean visits.
+    for _ in range(3):
+        pending["failed"] = 0
+        page.goto(path, wait_until="load")
+        settle(page)
+        if pending["failed"] == 0:
+            break
+        log.append(f"{persona} {scr['screen']}: an API request failed, visiting again")
     if path != "/" and persona != "anon" and urlparse(page.url).path.rstrip("/") != path.rstrip("/"):
         log.append(f"{persona} {scr['screen']}: redirected to {urlparse(page.url).path}, skipped")
         return None
