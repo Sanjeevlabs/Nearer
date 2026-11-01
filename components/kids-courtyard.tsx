@@ -43,7 +43,7 @@ function BedtimePrompt() {
         Bedtime
       </Label>
       <p className="voice m-0 mt-2 text-[20px] leading-snug">Tonight&rsquo;s story for {callName(child)}</p>
-      <p className="m-0 mt-1 text-[14.5px] leading-snug text-ink-soft">A few minutes in your voice. It plays on their screen after 7 PM.</p>
+      <p className="m-0 mt-1 text-[14.5px] leading-snug text-ink-soft">A few minutes in your voice. It waits on their screen for tonight.</p>
       <div className="mt-3 flex gap-2">
         <button type="button" disabled={busy} onClick={() => openAdd("voice", { kind: "bedtime", forMemberId: child.id }, [child.id])} className={`${pill} bg-black text-white disabled:opacity-40`}>
           Record a story

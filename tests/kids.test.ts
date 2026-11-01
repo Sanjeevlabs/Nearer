@@ -123,15 +123,12 @@ describe("Ask Dadi", () => {
 });
 
 describe("bedtime stories", () => {
-  it("play only after 7 PM where the child is", async () => {
+  it("plays at any hour where the child is", async () => {
     vi.setSystemTime(NOON);
     resetDemo();
     const early = await json<{ tonight: { cardId: string | null; byMemberId: string } | null; open: boolean }>(bedtimeGet(get("/api/bedtime", "aria")));
-    expect(early.open).toBe(false);
-    expect(early.tonight).toMatchObject({ byMemberId: "dadi", cardId: null });
-
-    vi.setSystemTime(new Date(SEVEN_PM.getTime() - 60_000));
-    expect((await json<{ open: boolean }>(bedtimeGet(get("/api/bedtime", "aria")))).open).toBe(false);
+    expect(early.open).toBe(true);
+    expect(early.tonight).toMatchObject({ byMemberId: "dadi", cardId: "demo-bedtime-dadi-aria" });
 
     vi.setSystemTime(SEVEN_PM);
     const late = await json<{ tonight: { cardId: string | null; title: string } | null; open: boolean }>(bedtimeGet(get("/api/bedtime", "aria")));

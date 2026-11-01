@@ -5,7 +5,6 @@
 // number and a date, nothing more.
 import type { BedtimeStory, HeightMark, KidAsk } from "./kinds";
 import type { Card, Member, Relationship } from "./schemas";
-import { hourIn } from "./zones";
 
 const DAY = 86_400_000;
 
@@ -72,12 +71,8 @@ export function grandparentsOf(childId: string, rels: Relationship[]): string[] 
 }
 
 /* ----------------------------------------------------------------- bedtime */
-/** Bedtime stories open at 7 PM where the child is. */
+/** Bedtime is the suggestion, not a lock: a recorded story plays whenever the child opens it. */
 export const BEDTIME_HOUR = 19;
-
-export function bedtimeOpen(tz: string, now: Date): boolean {
-  return hourIn(tz, now) >= BEDTIME_HOUR;
-}
 
 /** The viewer's calendar day (YYYY-MM-DD) in a zone. */
 export function dayIn(tz: string, now: Date): string {
@@ -98,15 +93,12 @@ export function storiesFor(childId: string, stories: BedtimeStory[]): (BedtimeSt
 /** Stories on the shelf this long are still "tonight's"; older ones rest. */
 export const STORY_FRESH_DAYS = 7;
 
-/**
- * What a child sees for tonight: the newest recent story, and whether it is open yet.
- * Before 7 PM their time it is `waiting`, not playable.
- */
-export function tonightFor(child: Pick<Member, "id" | "tz">, stories: BedtimeStory[], now: Date): { story: BedtimeStory & { cardId: string }; open: boolean } | null {
+/** What a child sees for tonight: the newest story from the last week, playable at any hour. */
+export function tonightFor(child: Pick<Member, "id" | "tz">, stories: BedtimeStory[], now: Date): { story: BedtimeStory & { cardId: string }; open: true } | null {
   const fresh = storiesFor(child.id, stories).filter((s) => now.getTime() - Date.parse(s.at) < STORY_FRESH_DAYS * DAY && Date.parse(s.at) <= now.getTime() + 60_000);
   const story = fresh[0];
   if (!story) return null;
-  return { story, open: bedtimeOpen(child.tz, now) };
+  return { story, open: true };
 }
 
 /**

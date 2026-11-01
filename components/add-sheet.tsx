@@ -43,7 +43,7 @@ export type ReplyContribution =
 const PURPOSE: Record<Exclude<ReplyContribution["kind"], "wish" | "blessing">, { title: string; hint: string; cta: string }> = {
   kid_ask: { title: "Ask a question", hint: "Say it out loud. They will hear it and answer in their own voice.", cta: "Send my question" },
   kid_answer: { title: "Your answer", hint: "Answer the way you would at the table. It is kept in Stories too.", cta: "Send my answer" },
-  bedtime: { title: "A story for tonight", hint: "A few minutes, a quiet voice. It plays on their screen after 7 PM.", cta: "Send the story" },
+  bedtime: { title: "A story for tonight", hint: "A few minutes, a quiet voice. It waits on their screen for tonight.", cta: "Send the story" },
   story: {
     title: "Tell a story",
     hint: "Tell it the way you would at bedtime. Take your time; the children will hear your voice, with the words along.",

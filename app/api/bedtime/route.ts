@@ -3,11 +3,11 @@ import { checkRateLimit, requireSession } from "@/lib/auth";
 import { docsFor, membersFor, relationshipsFor } from "@/lib/request-data";
 import { dbListCards } from "@/lib/db";
 import { newId, putDoc } from "@/lib/family-docs";
-import { bedtimeOpen, bedtimePrompt, dayIn, guardiansOf, isKid, kidsOf, tonightFor } from "@/lib/kids";
+import { bedtimePrompt, dayIn, guardiansOf, isKid, kidsOf, tonightFor } from "@/lib/kids";
 import { guardWrites } from "@/lib/api-guard";
 
 // Bedtime stories. A grandparent (or parent) records a story for a child; it plays on the
-// child's screen after 7 PM their time. One prompt a day for the grown-up: recording
+// child's screen whenever they open it. One prompt a day for the grown-up: recording
 // one, or "Not now", ends it for their day.
 // GET  -> a child: tonight's story (the voice only once it is open); a grown-up: the
 //         prompt for today (or null) and the kids they can tell.
@@ -27,10 +27,8 @@ async function getHandler(req: Request): Promise<Response> {
   const now = new Date();
   if (isKid(me)) {
     const tonight = tonightFor(me, stories, now);
-    if (!tonight) return Response.json({ tonight: null, open: bedtimeOpen(me.tz, now) });
-    const { story, open } = tonight;
-    // Before 7 PM the voice stays in its envelope: who and that it is waiting, nothing to play.
-    return Response.json({ tonight: open ? story : { ...story, title: "", cardId: null }, open });
+    if (!tonight) return Response.json({ tonight: null, open: true });
+    return Response.json({ tonight: tonight.story, open: true });
   }
   const kids = kidsOf(me.id, members, rels);
   const prompt = bedtimePrompt(me, kids, stories, now);

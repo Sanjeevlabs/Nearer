@@ -34,7 +34,7 @@ function BigButton({ label, hint, icon, tone, onClick }: { label: string; hint: 
   );
 }
 
-/** Tonight's story: waits in its envelope until 7 PM, then plays. "Another one?" asks for the next. */
+/** Tonight's story: the newest one recorded for this child, playable any time. "Another one?" asks for the next. */
 function Tonight() {
   const { members, viewer } = useViewer();
   const { refreshKey } = useShell();
@@ -60,13 +60,8 @@ function Tonight() {
         <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
       ) : !t ? (
         <p className="m-0 mt-2 text-[17px] leading-snug text-ink-soft">No story yet. Ask for one with the big Ask button!</p>
-      ) : !tonight.data.open || !card ? (
-        <div className="mt-3 flex items-center gap-4 rounded-[26px] bg-surface p-4" style={{ boxShadow: "var(--surface-edge)" }}>
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-well">
-            <Icon name="moon" size={26} />
-          </span>
-          <p className="m-0 text-[18px] leading-snug">A story is waiting. It opens at 7 PM.</p>
-        </div>
+      ) : !card ? (
+        <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
       ) : (
         <div className="mt-3 rounded-[26px] bg-surface p-4" style={{ boxShadow: "var(--surface-edge)" }}>
           <div className="flex items-center gap-4">
