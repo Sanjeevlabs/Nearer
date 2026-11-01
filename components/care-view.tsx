@@ -383,7 +383,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={need ? need.title : "New task"}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={need ? need.title : "New task"} data-ui="care-task-sheet">
       <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
       <m.div
         className="frost relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-5 pt-3"

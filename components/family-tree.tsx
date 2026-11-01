@@ -29,7 +29,7 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
   const H = t.height + PAD;
 
   return (
-    <div>
+    <div data-ui="family-tree">
       <p className="m-0 mb-3 text-[14px] text-ink-soft">
         {members.length} people · {gens} generation{gens === 1 ? "" : "s"} · {cities} {cities === 1 ? "city" : "cities"}
       </p>

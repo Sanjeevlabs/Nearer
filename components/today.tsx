@@ -69,7 +69,7 @@ export function TodayCard({ variant = "card" }: { variant?: "card" | "line" }) {
     );
 
   return (
-    <section aria-label="Today, for both homes" className="relative mt-5 overflow-hidden rounded-[28px] p-5 text-white" style={{ background: "#1c1b1a" }}>
+    <section data-ui="today-card" aria-label="Today, for both homes" className="relative mt-5 overflow-hidden rounded-[28px] p-5 text-white" style={{ background: "#1c1b1a" }}>
       <p className="relative m-0 flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.1em] text-white/65">
         <Icon name="sparkle" size={14} /> Today · both homes
       </p>
