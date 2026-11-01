@@ -33,6 +33,7 @@ import csv
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -454,7 +455,7 @@ def main() -> int:
     if args.serve:
         # A fresh server per run: the demo's in-memory state (presence, last seen, caches) starts the same every time.
         env = dict(os.environ, MOCK="true", SESSION_SECRET=os.environ.get("SESSION_SECRET", "ui-inventory-secret-not-a-real-secret-0000"))
-        server = subprocess.Popen(["npx", "next", "start", "-p", str(args.serve)], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        server = subprocess.Popen(["npx", "next", "start", "-p", str(args.serve)], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         base = f"http://127.0.0.1:{args.serve}"
         for _ in range(90):
             try:
@@ -463,14 +464,15 @@ def main() -> int:
             except Exception:
                 time.sleep(1)
         else:
-            server.kill()
+            os.killpg(server.pid, signal.SIGTERM)
             raise SystemExit("ui-inventory: the server did not start (run `npx next build` with MOCK=true NEXT_PUBLIC_MOCK=true first)")
     try:
         raw, log = run(base)
     finally:
         if server:
-            server.terminate()
+            # npx forks next-server: stop the whole group, or the port stays taken and the next run reads a stale server.
             try:
+                os.killpg(server.pid, signal.SIGTERM)
                 server.wait(10)
             except Exception:
                 server.kill()
