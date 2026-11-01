@@ -9,6 +9,8 @@
 // Settings is not here either: tap your own photo. Inviting family opens the
 // invite sheet in place (the tree page, the dock, the window), never Settings.
 // Children (teen or child access) don't get Portrait: only grown-ups start one.
+// Kid mode (lib/kids.ts isKid) shows three rooms only: Memories (Lane, Stories),
+// Celebrations (Coming up, Play) and Family (Tree). scripts/walk.py mirrors this.
 
 export interface RoomTab {
   href: string;
@@ -25,8 +27,15 @@ export interface Room {
   tabs: RoomTab[];
 }
 
-/** The five rooms for a viewer. `canPortrait` is false for children (lib/muse-portrait canStartPortrait). */
-export function roomsFor(isParent: boolean, canPortrait = true): Room[] {
+/** What a child in kid mode sees: room id -> the tabs they keep. */
+export const KID_TABS: Partial<Record<Room["id"], string[]>> = {
+  memories: ["/lane", "/stories"],
+  celebrations: ["/gather", "/gather/play"],
+  family: ["/bond"],
+};
+
+/** The five rooms for a viewer. `canPortrait` is false for children (lib/muse-portrait canStartPortrait). `kid` = kid mode: three rooms, fewer tabs. */
+export function roomsFor(isParent: boolean, canPortrait = true, kid = false): Room[] {
   const rooms: Room[] = [
     {
       id: "memories",
@@ -83,6 +92,15 @@ export function roomsFor(isParent: boolean, canPortrait = true): Room[] {
       ],
     },
   ];
+  if (kid) {
+    return rooms
+      .filter((r) => KID_TABS[r.id])
+      .map((r) => ({
+        ...r,
+        note: r.id === "memories" ? "Photos, voices and stories" : r.id === "celebrations" ? "What is coming up, and games" : "Your family tree",
+        tabs: r.tabs.filter((t) => KID_TABS[r.id]?.includes(t.href)),
+      }));
+  }
   return canPortrait ? rooms : rooms.map((r) => ({ ...r, tabs: r.tabs.filter((t) => t.href !== "/portrait") }));
 }
 

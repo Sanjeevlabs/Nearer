@@ -9,8 +9,8 @@ export interface Space {
   rooms: { href: string; title: string }[];
 }
 
-export function spacesFor(isParent: boolean, canPortrait = true): Space[] {
-  return roomsFor(isParent, canPortrait).map((r) => ({ id: r.id, title: r.title, rooms: r.tabs.map((t) => ({ href: t.href, title: t.label })) }));
+export function spacesFor(isParent: boolean, canPortrait = true, kid = false): Space[] {
+  return roomsFor(isParent, canPortrait, kid).map((r) => ({ id: r.id, title: r.title, rooms: r.tabs.map((t) => ({ href: t.href, title: t.label })) }));
 }
 
 const ALL = spacesFor(false);
@@ -27,6 +27,7 @@ export function spaceFor(pathname: string): { space: Space; room: string } | nul
 }
 
 const NO_PORTRAIT = spacesFor(false, false);
+const KID = spacesFor(false, false, true);
 
 /** The room a tab page belongs to, one-page rooms (Kitchen) included: the eyebrow above its title. */
 export function roomOf(pathname: string): Space | null {
@@ -39,10 +40,10 @@ export function roomOf(pathname: string): Space | null {
  * room has more than one. Children (`canPortrait` false) get the room without
  * Portrait, and no row on a page that isn't one of their tabs.
  */
-export function tabsFor(pathname: string, canPortrait = true): { space: Space; room: string } | null {
+export function tabsFor(pathname: string, canPortrait = true, kid = false): { space: Space; room: string } | null {
   const at = spaceFor(pathname);
   if (!at || at.room !== pathname) return null;
-  const space = canPortrait ? at.space : NO_PORTRAIT.find((s) => s.id === at.space.id);
+  const space = kid ? KID.find((s) => s.id === at.space.id) : canPortrait ? at.space : NO_PORTRAIT.find((s) => s.id === at.space.id);
   if (!space || !space.rooms.some((r) => r.href === at.room)) return null;
   return space.rooms.length > 1 ? { space, room: at.room } : null;
 }
