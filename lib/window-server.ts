@@ -4,11 +4,13 @@ import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
 import { dbListCards, dbListMembers, dbListPlays, dbListReactions, dbListRelationships } from "./db";
-import { getDoc, listDocs } from "./family-docs";
+import { listDocsMany } from "./family-docs";
+import { withDeadline } from "./deadline";
+import { getRitualSettings } from "./occasion-settings";
 import type { Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
 import { MOMENT_LABEL, todayFor } from "./presence";
-import type { Member } from "./schemas";
+import type { Card, Member, Play, Relationship } from "./schemas";
 import { fetchWeather, geocode, mockPlace, mockWeather, phaseFor, type DayPhase, type PlaceHint, type Weather } from "./weather";
 import { countryOfMember } from "./place";
 import { checkinEvents, composedLine, type DayMoment } from "./window-words";
@@ -26,8 +28,9 @@ import { describeLang } from "./languages";
 import { isMockMode } from "./config";
 import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
 import { listEvents } from "./gather-store";
+import type { FamilyEvent } from "./events";
 import { familyHolidays } from "./occasions-server";
-import { occasionsInRange, addDays } from "./occasion-calendar";
+import { occasionsInRange, addDays, type CalHoliday } from "./occasion-calendar";
 import { dateIn } from "./today";
 
 export interface WindowPerson {
@@ -156,8 +159,57 @@ function localDay(iso: string, tz: string): string {
   }
 }
 
-export async function windowState(familyId: string, viewerId: string, now = new Date()): Promise<WindowState> {
-  const [members, relationships, view] = await Promise.all([dbListMembers(familyId), dbListRelationships(familyId), getDoc(familyId, "window_view", viewerId)]);
+/** The family-wide reads the window needs, all started at once (one wave of round trips). */
+const WINDOW_KINDS = ["window_view", "presence", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call"] as const;
+/** The window needs the recent shelf (latest voice, last signs, what waits), never the whole lane. */
+const CARD_WINDOW_DAYS = 60;
+const CARD_WINDOW_LIMIT = 200;
+/** A slow sky never holds the window: past this the weather badge just hides. */
+export const WEATHER_DEADLINE_MS = 1500;
+
+type WindowDocs = Awaited<ReturnType<typeof listDocsMany<typeof WINDOW_KINDS>>>;
+
+export interface WindowReads {
+  members: Member[];
+  relationships: Relationship[];
+  docs: WindowDocs;
+  /** Recent cards only (last 60 days, at most 200). */
+  cards: Card[];
+  plays: Play[];
+  events: FamilyEvent[];
+  /** The calendar the family keeps; resolves on its own clock (the feed is a network fetch) and never rejects. */
+  holidays: Promise<CalHoliday[]>;
+}
+
+/**
+ * Everything windowState reads from the database that does not depend on
+ * another read, in a single Promise.all. A route may start this before it
+ * knows the session is good (alongside the auth lookup): it only reads.
+ */
+export function readWindow(familyId: string, now: Date = new Date()): Promise<WindowReads> {
+  const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
+  const settings = getRitualSettings(familyId);
+  settings.catch(() => undefined);
+  const membersP = dbListMembers(familyId);
+  const since = new Date(now.getTime() - CARD_WINDOW_DAYS * 86_400_000).toISOString();
+  // Holidays need the members' zones for the country, but the settings read does not wait for them.
+  const holidays = membersP.then((ms) => familyHolidays(familyId, ms, {}, { settings }).then((h) => h.visible)).catch((): CalHoliday[] => []);
+  return Promise.all([
+    membersP,
+    dbListRelationships(familyId),
+    listDocsMany(familyId, WINDOW_KINDS),
+    dbListCards(familyId, { since, limit: CARD_WINDOW_LIMIT }),
+    safe(dbListPlays(undefined, familyId), [] as Play[]),
+    safe(listEvents(familyId), [] as FamilyEvent[]),
+  ]).then(([members, relationships, docs, cards, plays, events]) => ({ members, relationships, docs, cards, plays, events, holidays }));
+}
+
+export async function windowState(familyId: string, viewerId: string, now = new Date(), preread?: Promise<WindowReads>): Promise<WindowState> {
+  const { members, relationships, docs, cards: recent, plays, events, holidays } = await (preread ?? readWindow(familyId, now));
+  const view = docs.window_view.find((d) => d.id === viewerId);
+  const presence = docs.presence;
+  const checkins = docs.safety_checkin;
+  const settings = docs.care_settings;
   const viewer = members.find((m) => m.id === viewerId);
   const farHome = viewer ? farHomeFor(viewer, members, relationships) : undefined;
   // Who's at your window: your choice (at most two), else the grown-ups on the other side.
@@ -171,8 +223,21 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const cityMember = home?.members.find((m) => m.city);
   const farHint: PlaceHint = { country: countryOfMember(cityMember), tz: cityMember?.tz ?? tz };
   const hereHint: PlaceHint = { country: countryOfMember(viewer), tz: viewer?.tz };
-  const [weather, farPlace, herePlace] = await Promise.all([weatherFor(city, farHint), placeFor(city, farHint), placeFor(viewer?.city ?? "", hereHint)]);
-  const presence = await listDocs(familyId, "presence");
+  // The sky is the only thing that needs the city, so it starts now and runs while the rest is worked out.
+  // Each piece is waited for at most WEATHER_DEADLINE_MS; a late one is left out, never guessed.
+  const skyP = Promise.all([
+    withDeadline(weatherFor(city, farHint), WEATHER_DEADLINE_MS, null),
+    withDeadline(placeFor(city, farHint), WEATHER_DEADLINE_MS, null),
+    withDeadline(placeFor(viewer?.city ?? "", hereHint), WEATHER_DEADLINE_MS, null),
+  ]);
+  // Since you were here: the visit before this one (the latest "here" is this visit).
+  const visits = presence
+    .filter((p) => p.memberId === viewerId && p.moment === "here" && Date.parse(p.at) <= now.getTime())
+    .map((p) => p.at)
+    .sort();
+  const previous = visits.length >= 2 ? visits[visits.length - 2] : null;
+  // The one read that has to wait for another: it is only needed once there was a previous visit.
+  const reactionsP = previous ? dbListReactions(undefined, familyId) : null;
   const ids = home?.members.map((m) => m.id) ?? [];
   const today: Presence[] = ids.flatMap((id) => todayFor(id, presence, tz, now)).filter((p) => p.moment !== "here");
   today.sort((a, b) => b.at.localeCompare(a.at));
@@ -181,14 +246,13 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     const m = members.find((x) => x.id === id);
     return m?.displayName || m?.firstName || "";
   };
-  const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
+  const shelf = withDemoShelf(recent, familyId);
   // Last sign of life in Aangan: any moment (opening the app included), a
   // voice or photo they sent, a safety check-in. Only what they already share.
-  const [cards, checkins, settings] = await Promise.all([dbListCards(familyId), listDocs(familyId, "safety_checkin"), listDocs(familyId, "care_settings")]);
   const signs = (id: string): string[] =>
     [
       ...presence.filter((p) => p.memberId === id).map((p) => p.at),
-      ...withDemoShelf(cards, familyId).filter((c) => c.authorId === id && Date.parse(c.takenAt) <= now.getTime()).map((c) => c.takenAt),
+      ...shelf.filter((c) => c.authorId === id && Date.parse(c.takenAt) <= now.getTime()).map((c) => c.takenAt),
       ...checkins.filter((c) => c.memberId === id).map((c) => c.closedAt ?? c.at),
     ].filter((t) => Date.parse(t) <= now.getTime());
   const lastSeen = (id: string): string | null => signs(id).sort().pop() ?? null;
@@ -226,15 +290,9 @@ export async function windowState(familyId: string, viewerId: string, now = new 
       .sort((a, b) => a.at.localeCompare(b.at));
     return { moments, checkins: mine };
   }
-  // Since you were here: the visit before this one (the latest "here" is this visit).
-  const visits = presence
-    .filter((p) => p.memberId === viewerId && p.moment === "here" && Date.parse(p.at) <= now.getTime())
-    .map((p) => p.at)
-    .sort();
-  const previous = visits.length >= 2 ? visits[visits.length - 2] : null;
   let sinceWords: string[] = [];
-  if (previous) {
-    const [plays, reactions] = await Promise.all([dbListPlays(undefined, familyId), dbListReactions(undefined, familyId)]);
+  if (previous && reactionsP) {
+    const reactions = await reactionsP;
     const sharing = new Set((home?.members ?? []).filter((m) => settings.find((s) => s.memberId === m.id)?.shareVisits ?? true).map((m) => m.id));
     sinceWords = sinceLines({
       viewerId,
@@ -242,13 +300,14 @@ export async function windowState(familyId: string, viewerId: string, now = new 
       now,
       names: Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName])),
       farIds: ids,
-      cards: withDemoShelf(cards, familyId),
+      cards: shelf,
       plays,
       reactions,
       checkins: checkins.filter((c) => sharing.has(c.memberId)),
     });
   }
-  const sinceLine = await sinceSentence(familyId, viewerId, viewer?.displayLang ?? "en", sinceWords);
+  const [sinceLine, [weather, farPlace, herePlace], hol] = await Promise.all([sinceSentence(familyId, viewerId, viewer?.displayLang ?? "en", sinceWords), skyP, holidays]);
+  const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   const own = view ?? defaultView(familyId, viewerId);
   const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
   return {
@@ -269,43 +328,47 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Aangan (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance: await glanceFor(familyId, viewerId, members, home?.tz ?? null, cards, now, lastSeen),
+    glance: glanceFrom({ viewerId, members, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, events, holidays: hol }),
     homePhoto: own.homePhoto,
   };
 }
 
 /**
  * The glance strip: who is awake, what waits for the viewer, what is next, and
- * the weekly call in both zones. Never throws: a failed source just empties its tile.
+ * the weekly call in both zones. Pure over what windowState already read (a
+ * failed source arrives as an empty list, so it just empties its tile).
  */
-async function glanceFor(familyId: string, viewerId: string, members: Member[], theirTz: string | null, cards: Awaited<ReturnType<typeof dbListCards>>, now: Date, lastSeen: (id: string) => string | null): Promise<Glance> {
+function glanceFrom(i: {
+  viewerId: string;
+  members: Member[];
+  theirTz: string | null;
+  /** Already includes the demo shelf. */
+  cards: Card[];
+  now: Date;
+  lastSeen: (id: string) => string | null;
+  plays: Play[];
+  docs: Pick<WindowDocs, "question" | "today_task" | "need" | "weekly_call">;
+  events: FamilyEvent[];
+  holidays: CalHoliday[];
+}): Glance {
+  const { viewerId, members, now } = i;
   const viewer = members.find((m) => m.id === viewerId);
   const myTz = viewer?.tz ?? "UTC";
   const names = Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName]));
-  const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
   const today = dateIn(myTz, now);
-  const [plays, questions, tasks, needs, events, call, hol] = await Promise.all([
-    safe(dbListPlays(undefined, familyId), []),
-    safe(listDocs(familyId, "question"), []),
-    safe(listDocs(familyId, "today_task"), []),
-    safe(listDocs(familyId, "need"), []),
-    safe(listEvents(familyId), []),
-    safe(getDoc(familyId, "weekly_call", "weekly-call"), undefined),
-    safe(familyHolidays(familyId, members).then((h) => h.visible), []),
-  ]);
   return {
-    awake: awakeNow(members, viewerId, now, lastSeen),
-    waiting: waitingForYou({ viewerId, now, names, cards: withDemoShelf(cards, familyId), plays, questions, today: tasks.slice(0, 4), needs }),
+    awake: awakeNow(members, viewerId, now, i.lastSeen),
+    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need }),
     next: nextUp({
       today,
       now,
       tz: myTz,
       viewerId,
       names,
-      events: events.map((e) => ({ id: e.id, title: e.title, date: e.date, status: e.status, occasionKey: e.occasionKey, forMemberId: e.forMemberId, startsAt: e.status === "locked" ? (e.slots.find((sl) => sl.id === e.lockedSlotId)?.startsAt ?? null) : null })),
-      occasions: occasionsInRange(members, hol, today, addDays(today, 120)),
+      events: i.events.map((e) => ({ id: e.id, title: e.title, date: e.date, status: e.status, occasionKey: e.occasionKey, forMemberId: e.forMemberId, startsAt: e.status === "locked" ? (e.slots.find((sl) => sl.id === e.lockedSlotId)?.startsAt ?? null) : null })),
+      occasions: occasionsInRange(members, i.holidays, today, addDays(today, 120)),
     }),
-    call: callTile(call, myTz, theirTz, now),
+    call: callTile(i.docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, i.theirTz, now),
   };
 }
 

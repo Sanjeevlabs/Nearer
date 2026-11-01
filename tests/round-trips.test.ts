@@ -109,8 +109,8 @@ import { windowState } from "@/lib/window-server";
 
 /** Ceilings per endpoint: { calls: from() count, depth: sequential waves }. Tightened as the work lands. */
 const BUDGET = {
-  windowState: { calls: 16, depth: 5 },
-  window: { calls: 17, depth: 6 },
+  windowState: { calls: 8, depth: 2 },
+  window: { calls: 9, depth: 2 },
   courtyard: { calls: 33, depth: 6 },
   festivalWeek: { calls: 7, depth: 5 },
 };
@@ -198,6 +198,10 @@ describe("database round trips", () => {
   it("windowState", async () => {
     const m = await measure(() => windowState(familyId, memberId));
     report("windowState", m);
+    // The recent shelf, not the lane: one bounded cards query, and the family's documents in one.
+    expect(m.log.filter((q) => q.includes("cards(")).every((q) => q.includes("taken_at>="))).toBe(true);
+    expect(m.byTable.cards).toBe(1);
+    expect(m.byTable.family_docs).toBeLessThanOrEqual(3);
     expect(m.calls).toBeLessThanOrEqual(BUDGET.windowState.calls);
     expect(m.depth).toBeLessThanOrEqual(BUDGET.windowState.depth);
   });

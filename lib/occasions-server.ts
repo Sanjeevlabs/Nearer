@@ -64,9 +64,13 @@ export interface FamilyHolidays {
   visible: HolidayItem[];
 }
 
-export async function familyHolidays(familyId: string, members: Pick<Member, "tz">[], deps: HolidayDeps = {}): Promise<FamilyHolidays> {
+/**
+ * `preloaded.settings`: a caller that started the settings read before it knew
+ * the members (so the read ran alongside theirs, not after) hands it in.
+ */
+export async function familyHolidays(familyId: string, members: Pick<Member, "tz">[], deps: HolidayDeps = {}, preloaded: { settings?: Promise<RitualSettings> | RitualSettings } = {}): Promise<FamilyHolidays> {
   const country = countryForZones(members.map((m) => m.tz));
-  const [settings, feed] = await Promise.all([getRitualSettings(familyId), holidaysFor(country, deps)]);
+  const [settings, feed] = await Promise.all([preloaded.settings ?? getRitualSettings(familyId), holidaysFor(country, deps)]);
   const all = withRitualLampHours(feed.items, ritualConfigs());
   return { country, source: feed.source, settings, all, visible: visibleHolidays(all, settings) };
 }
