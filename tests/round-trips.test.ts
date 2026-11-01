@@ -115,7 +115,7 @@ const BUDGET = {
   windowState: { calls: 10, depth: 2 },
   window: { calls: 10, depth: 2 },
   courtyard: { calls: 19, depth: 3 },
-  courtyardOneAangan: { calls: 15, depth: 2 },
+  courtyardOne: { calls: 15, depth: 2 },
   festivalWeek: { calls: 6, depth: 2 },
   // The Kids page: members, relationships, cards and the document kinds, all in the wave after the session lookup.
   kids: { calls: 6, depth: 2 },
@@ -235,8 +235,8 @@ describe("database round trips", () => {
     const m = await measure(async () => (await courtyard(get("/api/courtyard"))).status);
     report("GET /api/courtyard (one family)", m);
     expect(m.out).toBe(200);
-    expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.calls);
-    expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyardOneAangan.depth);
+    expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyardOne.calls);
+    expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyardOne.depth);
   });
 
   it("GET /api/kids", async () => {
