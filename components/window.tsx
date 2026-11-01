@@ -396,6 +396,11 @@ function GlanceStrip({ glance, members }: { glance: Glance | null; members: Memb
           <span className={detail}>{glance.waiting.text}</span>
         </Tile>
       )}
+      {glance.kids && (
+        <Tile href={glance.kids.href} label="From the kids" aria={`From the kids: ${glance.kids.text}`}>
+          <span className={detail}>{glance.kids.text}</span>
+        </Tile>
+      )}
       {glance.next && (
         <Tile href={glance.next.href} label="Next" aria={`Next: ${glance.next.text}`}>
           <span className={detail}>{glance.next.text}</span>

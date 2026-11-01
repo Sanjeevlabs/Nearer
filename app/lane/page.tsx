@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlbumCover } from "@/components/albums";
 import { LaneViewer } from "@/components/lane-viewer";
 import { usePlayer } from "@/components/player";
@@ -16,6 +16,7 @@ import { useFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import { museLabel } from "@/lib/muse-portrait";
+import { kidCards } from "@/lib/kids";
 import { isOccasionAlbum } from "@/lib/occasion-album";
 import { Boundary } from "@/components/ui/boundary";
 
@@ -84,6 +85,16 @@ export default function LanePage() {
   const { refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const [who, setWho] = useState<string | null>(null);
+  // /lane?from=kids (the window's "From the kids" tile): only what the children shared.
+  const [kidsOnly, setKidsOnly] = useState(false);
+  useEffect(() => {
+    try {
+      setKidsOnly(new URLSearchParams(window.location.search).get("from") === "kids");
+    } catch {
+      /* no location */
+    }
+  }, []);
+  const shown = useMemo(() => (cards && kidsOnly ? kidCards(cards, members) : cards), [cards, kidsOnly, members]);
   const albumsQ = useJson<{ albums: Album[] }>(`/api/albums?k=${refreshKey}`);
   const elsewhereQ = useJson<{ elsewhere: string[] }>(`/api/lane?k=${refreshKey}`);
   const [sorting, setSorting] = useState<string | null>(null);
@@ -91,16 +102,16 @@ export default function LanePage() {
 
   // Until we know what the other tabs show, nothing is drawn (no flash of their cards). A failed lookup shows everything.
   const skip = useMemo(() => (elsewhereQ.data ? new Set(elsewhereQ.data.elsewhere) : elsewhereQ.failed ? new Set<string>() : null), [elsewhereQ.data, elsewhereQ.failed]);
-  const groups = useMemo(() => (cards && skip ? laneGroups(cards, who, skip) : null), [cards, who, skip]);
+  const groups = useMemo(() => (shown && skip ? laneGroups(shown, who, skip) : null), [shown, who, skip]);
   const albums = useMemo(() => {
     // Occasion albums (weddings, birthdays, festivals) live in Celebrations → Occasions, not here too.
     const all = (albumsQ.data?.albums ?? []).filter((a) => a.cardIds.length >= 2 && !isOccasionAlbum(a));
     const mine = who && cards ? all.filter((a) => a.cardIds.some((id) => cards.find((c) => c.id === id)?.authorId === who)) : all;
-    return [...mine].sort((a, b) => b.endAt.localeCompare(a.endAt));
-  }, [albumsQ.data, who, cards]);
+    return kidsOnly ? [] : [...mine].sort((a, b) => b.endAt.localeCompare(a.endAt));
+  }, [albumsQ.data, who, cards, kidsOnly]);
   const total = groups ? groups.photo.length + groups.video.length + groups.audio.length : 0;
   // Only people with something on this page get a chip.
-  const authors = useMemo(() => new Set((cards ?? []).filter((c) => !skip?.has(c.id)).map((c) => c.authorId)), [cards, skip]);
+  const authors = useMemo(() => new Set((shown ?? []).filter((c) => !skip?.has(c.id)).map((c) => c.authorId)), [shown, skip]);
   const people = members.filter((m) => authors.has(m.id));
   const viewing = open && groups ? { list: groups[open.kind], title: LANE_ROWS.find((r) => r.kind === open.kind)?.title ?? "" } : null;
 
@@ -115,13 +126,18 @@ export default function LanePage() {
     <div>
       <RoomHeader title="Memory Lane" subtitle="Everyday photos and voices, by the years" />
 
-      {groups !== null && people.length > 1 && (
+      {groups !== null && (people.length > 1 || kidsOnly) && (
         <div className="no-scrollbar -mx-5 mb-4 flex gap-1.5 overflow-x-auto px-5" role="radiogroup" aria-label="Show memories from">
-          <button type="button" role="radio" aria-checked={who === null} onClick={() => setWho(null)} className={cn("press h-10 shrink-0 rounded-full px-4 text-[14px] font-medium", who === null ? "bg-ink text-white" : "bg-surface")}>
+          <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-[14px] font-medium", who === null && !kidsOnly ? "bg-ink text-white" : "bg-surface")}>
             Everyone
           </button>
+          {kidsOnly && (
+            <button type="button" role="radio" aria-checked onClick={() => setKidsOnly(false)} className="press h-10 shrink-0 rounded-full bg-ink px-4 text-[14px] font-medium text-white">
+              From the kids
+            </button>
+          )}
           {people.map((m) => (
-            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => setWho(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-[14px] font-medium", who === m.id ? "bg-ink text-white" : "bg-surface")}>
+            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-[14px] font-medium", who === m.id ? "bg-ink text-white" : "bg-surface")}>
               <Avatar src={memberPhoto(m)} name={callName(m)} size={32} />
               {callName(m)}
             </button>
@@ -146,7 +162,7 @@ export default function LanePage() {
         <EmptyLine>{who ? "Nothing from them yet." : "Nothing here yet. Memories appear as the family shares them."}</EmptyLine>
       ) : (
         <div className="space-y-5">
-          {(albums.length > 0 || (albumsQ.data && total > 0)) && cards && (
+          {!kidsOnly && (albums.length > 0 || (albumsQ.data && total > 0)) && cards && (
             <Boundary label="Albums"><section aria-label="Albums">
               <RowHead
                 title="Albums"
