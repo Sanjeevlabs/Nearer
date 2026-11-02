@@ -12,7 +12,7 @@ export interface Suggestion extends Candidate {
 
 export const PicksSchema = z.object({
   picks: z
-    .array(z.object({ id: z.string().min(1).max(200), why: z.string().trim().max(90).default("") }))
+    .array(z.object({ id: z.string().min(1).max(200), why: z.string().default("").transform((w) => w.trim().slice(0, 90)) }))
     .min(1)
     .max(3),
 });

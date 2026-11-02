@@ -38,13 +38,16 @@ export async function museJson<T>(opts: {
   const model = PROVIDERS[provider].captionModel;
   const key = `muse:${cacheKey(model, `${opts.system}\n${opts.user}`, "muse")}`;
   const started = Date.now();
-  const log = (ok: boolean, cached: boolean, cost: number) =>
+  // `why` says what failed (budget, provider-<status>, truncated, empty, parse,
+  // schema, grounding) so a fallback is diagnosable from the muse_call rows.
+  const log = (ok: boolean, cached: boolean, cost: number, why?: string) =>
     putDoc(opts.familyId, "muse_call", {
       id: newId("muse"),
       purpose: opts.purpose,
       model,
       cached,
       ok,
+      ...(why ? { why } : {}),
       ms: Date.now() - started,
       cost,
       at: new Date().toISOString(),
@@ -60,23 +63,31 @@ export async function museJson<T>(opts: {
   }
   const estimated = isMockMode() ? 0 : 0.01;
   if (!(await serverLedger.check(estimated))) {
-    await log(false, false, 0);
+    await log(false, false, 0, "budget");
     return { data: opts.fallback, source: "fallback", cached: false, cost: 0, model };
   }
+  const reasons: string[] = [];
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const out = isMockMode() ? { json: opts.mock(), cost: 0 } : await liveJson(provider, opts.system, opts.user, model, opts.maxTokens ?? 1200);
       const parsed = opts.schema.safeParse(out.json);
-      if (!parsed.success) continue;
-      if (opts.accept && !opts.accept(parsed.data)) continue;
+      if (!parsed.success) {
+        reasons.push("schema");
+        continue;
+      }
+      if (opts.accept && !opts.accept(parsed.data)) {
+        reasons.push("grounding");
+        continue;
+      }
       await serverLedger.commit(out.cost);
       serverStore.set(key, JSON.stringify(parsed.data));
       await log(true, false, out.cost);
       return { data: parsed.data, source: "muse", cached: false, cost: out.cost, model };
-    } catch {
+    } catch (err) {
+      reasons.push(err instanceof Error ? err.message.slice(0, 40) : "error");
       continue;
     }
   }
-  await log(false, false, 0);
+  await log(false, false, 0, reasons.join(","));
   return { data: opts.fallback, source: "fallback", cached: false, cost: 0, model };
 }
