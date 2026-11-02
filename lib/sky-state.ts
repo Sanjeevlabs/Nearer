@@ -31,7 +31,7 @@ export interface SkyState {
   stars: boolean;
   /** The weather layer, only from a fetched code; null when we don't know (then nothing is drawn). */
   weather: WeatherLayer | null;
-  /** The lamp: 1 within 24 h of being lit, fading to 0 at 72 h. */
+  /** The lamp: 1 when lit, fading straight to 0 at 2 h (lib/lamp.ts LAMP_GLOW_HOURS). */
   lampGlow: number;
 }
 

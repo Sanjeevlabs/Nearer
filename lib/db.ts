@@ -365,13 +365,15 @@ export async function dbSetMemberDisplayLang(memberId: string, displayLang: Memb
   return dbGetMember(memberId);
 }
 
-export async function dbListPlays(cardId: string | undefined, familyId: string): Promise<Play[]> {
+export async function dbListPlays(cardId: string | undefined, familyId: string, since?: string): Promise<Play[]> {
   const sb = dbFor(familyId);
-  if (!sb) return scoped(memListPlays(cardId), familyId);
+  const mem = () => scoped(memListPlays(cardId), familyId).filter((p) => !since || p.playedAt >= since);
+  if (!sb) return mem();
   let q = sb.from("plays").select("*").eq("family_id", familyId).order("played_at", { ascending: false });
   if (cardId) q = q.eq("card_id", cardId);
+  if (since) q = q.gte("played_at", since);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListPlays(cardId), familyId);
+  if (error || !data) return mem();
   return data.map((r) =>
     PlaySchema.parse({
       id: r.id,
@@ -402,13 +404,15 @@ export async function dbAddPlay(input: { cardId: string; memberId: string; famil
   return play;
 }
 
-export async function dbListReactions(cardId: string | undefined, familyId: string): Promise<Reaction[]> {
+export async function dbListReactions(cardId: string | undefined, familyId: string, since?: string): Promise<Reaction[]> {
   const sb = dbFor(familyId);
-  if (!sb) return scoped(memListReactions(cardId), familyId);
+  const mem = () => scoped(memListReactions(cardId), familyId).filter((r) => !since || r.createdAt >= since);
+  if (!sb) return mem();
   let q = sb.from("reactions").select("*").eq("family_id", familyId).order("created_at", { ascending: true });
   if (cardId) q = q.eq("card_id", cardId);
+  if (since) q = q.gte("created_at", since);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListReactions(cardId), familyId);
+  if (error || !data) return mem();
   return data.map((r) =>
     ReactionSchema.parse({
       id: r.id,
@@ -643,14 +647,16 @@ export async function dbAddAgentRun(input: { goal: string; tools: string[]; stat
   return run;
 }
 
-export async function dbListWishes(runId: string | undefined, familyId: string): Promise<Wish[]> {
+export async function dbListWishes(runId: string | undefined, familyId: string, since?: string): Promise<Wish[]> {
   const sb = dbFor(familyId);
-  if (!sb) return scoped(memListWishes(runId), familyId);
+  const mem = () => scoped(memListWishes(runId), familyId).filter((w) => !since || w.createdAt >= since);
+  if (!sb) return mem();
   let q = sb.from("wishes").select("*").order("created_at", { ascending: true });
   if (runId) q = q.eq("ritual_run_id", runId);
   if (familyId) q = q.eq("family_id", familyId);
+  if (since) q = q.gte("created_at", since);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListWishes(runId), familyId);
+  if (error || !data) return mem();
   return data.map((r) =>
     WishSchema.parse({
       id: r.id,

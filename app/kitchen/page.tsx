@@ -22,7 +22,7 @@ import { Boundary } from "@/components/ui/boundary";
 // shelved by the person who cooks it. Each dish belongs to someone, may be
 // taught in their voice or on video, and carries everyone who has cooked it since.
 export default function KitchenPage() {
-  const { viewer, members } = useViewer();
+  const { viewer, members, ready } = useViewer();
   const { openAdd } = useShell();
   const { data, failed, reload } = useJson<{ recipes: Recipe[]; attempts: Attempt[] }>("/api/kitchen");
   const asks = useJson<{ questions: Question[] }>("/api/keeper");
@@ -36,8 +36,9 @@ export default function KitchenPage() {
   const byId = (id: string) => members.find((m) => m.id === id);
   const recipes = data?.recipes ?? [];
   const attemptsFor = (id: string) => (data?.attempts ?? []).filter((a) => a.recipeId === id);
-  // The page draws once the recipes and the questions asked of you are both in, so nothing slides down.
-  const loading = (data === null && !failed) || (asks.data === null && !asks.failed);
+  // The page draws once the family (who cooks what), the recipes and the questions asked of you are all in,
+  // so no shelf appears late and nothing slides down.
+  const loading = !ready || (data === null && !failed) || (asks.data === null && !asks.failed);
   const waiting = (asks.data?.questions ?? []).filter((q) => q.topic === "recipe" && !q.answeredCardId);
   const mine = waiting.filter((q) => q.toMemberId === viewer.id);
   const usedCourses = COURSES.filter((c) => recipes.some((r) => r.course === c));
@@ -59,13 +60,26 @@ export default function KitchenPage() {
     return (
       <div>
         <RoomHeader title="Recipes" subtitle="Every family recipe, shelved by who cooks it" />
+        {/* The size of what replaces it: the three actions, the scan row, then one shelf of tiles. */}
         <div key="loading" aria-busy="true" aria-label="Loading recipes">
           <div className="grid grid-cols-3 gap-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="skeleton h-[64px] rounded-[20px]" />
+              <div key={i} className="skeleton h-12 rounded-[20px]" />
             ))}
           </div>
-          <div className="skeleton mt-7 h-[220px] rounded-card" />
+          <div className="skeleton mt-2 h-[68px] rounded-[20px]" />
+          <div className="mb-3 mt-7 flex items-center gap-2.5">
+            <div className="skeleton h-[38px] w-[38px] rounded-full" />
+            <div className="skeleton h-6 w-40 rounded-full" />
+          </div>
+          <div className="-mx-4 flex gap-3 overflow-hidden px-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="w-[164px] shrink-0">
+                <div className="skeleton h-[136px] rounded-[22px]" />
+                <div className="skeleton mt-2 h-[42px] rounded-[10px]" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

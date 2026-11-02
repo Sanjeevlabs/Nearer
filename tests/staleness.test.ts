@@ -9,7 +9,7 @@ import { GET as suggestionsGET } from "@/app/api/suggestions/route";
 import { dbAddSuggestion } from "@/lib/db";
 import { listDocs, putDoc } from "@/lib/family-docs";
 import { dismiss, listDismissed } from "@/lib/gather-store";
-import { BEAT_TTL_MS, FADE_HOURS, glowFrom } from "@/lib/lamp";
+import { BEAT_TTL_MS, LAMP_GLOW_HOURS, glowFrom } from "@/lib/lamp";
 import { purgeExpired, TTL } from "@/lib/purge";
 import { resetDemo } from "@/lib/store";
 import { authedGet, authedJson } from "./auth-helper";
@@ -28,20 +28,19 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("staleness", () => {
-  it("lamp glow is full for 24 h, then fades to nothing at 72 h", () => {
+  it("lamp glow is full when lit and gone at 2 h", () => {
     const lit = T0.toISOString();
     expect(glowFrom(lit, T0.getTime())).toBe(1);
-    expect(glowFrom(lit, T0.getTime() + 24 * H)).toBe(1);
-    expect(glowFrom(lit, T0.getTime() + 48 * H)).toBe(0.5);
-    expect(glowFrom(lit, T0.getTime() + FADE_HOURS * H)).toBe(0);
-    expect(glowFrom(lit, T0.getTime() + (FADE_HOURS + 1) * H)).toBe(0);
+    expect(glowFrom(lit, T0.getTime() + H)).toBe(0.5);
+    expect(glowFrom(lit, T0.getTime() + LAMP_GLOW_HOURS * H)).toBe(0);
+    expect(glowFrom(lit, T0.getTime() + (LAMP_GLOW_HOURS + 1) * H)).toBe(0);
   });
 
   it("a heartbeat between homes is felt for 2 days, then /api/lamp no longer returns it", async () => {
     // kavya (other home) holds the lamp for arjun's home
     const sent = await lampPOST(authedJson("http://t/api/lamp", { action: "beat", toMemberId: "arjun" }, "kavya"));
     expect(sent.status).toBe(200);
-    const read = async () => ((await (await lampGET(authedGet("http://t/api/lamp", "arjun"))).json()) as { beats: unknown[] }).beats.length;
+    const read = async () => ((await (await lampGET(authedGet("http://t/api/lamp", "arjun"))).json()) as { beats: { from: string }[] }).beats.filter((b) => b.from === "kavya").length;
     expect(await read()).toBe(1);
     vi.setSystemTime(new Date(T0.getTime() + BEAT_TTL_MS + 60_000));
     expect(await read()).toBe(0);

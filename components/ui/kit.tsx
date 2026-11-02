@@ -91,6 +91,7 @@ const ICONS = {
   wrench: L.Wrench,
   utensils: L.UtensilsCrossed,
   bell: L.Bell,
+  question: L.CircleHelp,
 } satisfies Record<string, L.LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

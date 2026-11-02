@@ -90,10 +90,12 @@ describe("the lamp", () => {
     expect(outbox[0]).toMatchObject({ memberId: "arjun", msg: { body: "Maa lit the lamp for you", url: "/", tag: "lamp-dadi" } });
   });
 
-  it("lighting your own lamp tells no one", async () => {
+  it("lighting the lamp tells the other homes, never your own", async () => {
     await lampPost(post("/api/lamp", { action: "light" }, "dadi"));
     await pushIdle();
-    expect(outbox).toEqual([]);
+    expect(bodies("arjun")).toEqual(["Maa is thinking of you"]);
+    expect(to("arjun")[0].msg).toMatchObject({ url: "/", tag: "lamp-dadi" });
+    expect(to("dadi")).toEqual([]);
   });
 });
 

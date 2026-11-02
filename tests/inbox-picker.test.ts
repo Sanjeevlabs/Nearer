@@ -5,11 +5,12 @@ import { POST as postCard } from "@/app/api/cards/route";
 import { GET as inboxGET } from "@/app/api/inbox/route";
 import { ForYouGlyph, HouseGlyph, ReactionGlyph } from "@/components/ui/glyphs";
 import { ADDRESSED_TO_MAX } from "@/lib/card-limits";
-import { addressTo, addressees } from "@/lib/households";
+import { DEMO_MEMBERS } from "@/lib/family";
+import { addressTo, addressees, households } from "@/lib/households";
 import { buildInbox, INBOX_MAX, InboxResponseSchema, type InboxInput } from "@/lib/inbox";
 import { pickerView } from "@/lib/picker-rows";
 import { CardSchema, MemberSchema, type Member, type Relationship } from "@/lib/schemas";
-import { listCards, resetDemo } from "@/lib/store";
+import { listCards, listRelationships, resetDemo } from "@/lib/store";
 import { authedGet, authedJson } from "./auth-helper";
 
 const m = (id: string, role: Member["role"], tz: string, extra: Partial<Member> = {}): Member => MemberSchema.parse({ id, familyId: "f", firstName: id, displayName: id, role, tz, ...extra });
@@ -97,11 +98,11 @@ describe("the inbox", () => {
     expect(items[0]).toMatchObject({ waiting: false, replyTo: "dadi" });
   });
 
-  it("keeps pending and felt heartbeats, drops anything older than 30 days, and is bounded", () => {
+  it("keeps heartbeats as plain earlier lines, drops anything older than 30 days, and is bounded", () => {
     const beats = [{ from: "dadi", at: iso(5) }, { from: "dadi", at: iso(24 * 40) }];
     const items = buildInbox({ ...base, beats, felt: iso(6) });
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ kind: "lamp", waiting: true });
+    expect(items[0]).toMatchObject({ kind: "lamp", waiting: false, plain: true });
     expect(buildInbox({ ...base, beats, felt: iso(1) })[0].waiting).toBe(false);
     const many = Array.from({ length: 200 }, (_, i) => card(`c${i}`, "dadi", "arjun", iso(1 + i / 100)));
     expect(buildInbox({ ...base, cards: many })).toHaveLength(INBOX_MAX);
@@ -111,6 +112,64 @@ describe("the inbox", () => {
     const q = { id: "q", toMemberId: "arjun", askedBy: "priya", topic: "recipe" as const, answeredCardId: null, createdAt: iso(4) };
     expect(buildInbox({ ...base, questions: [q] })[0]).toMatchObject({ kind: "question", waiting: true, action: "answer", text: "Priya asked you for a recipe" });
     expect(buildInbox({ ...base, questions: [{ ...q, answeredCardId: "x" }] })[0].waiting).toBe(false);
+  });
+
+  it("waiting holds only what needs me; receipts, lamps, reminders and occasions are earlier plain lines", () => {
+    const cards = [card("v1", "dadi", "arjun", iso(2)), card("mine", "arjun", null, iso(30))];
+    const q = { id: "q", toMemberId: "arjun", askedBy: "priya", topic: "recipe" as const, answeredCardId: null, createdAt: iso(4) };
+    const kid = { id: "k", fromMemberId: "leo", toMemberId: "arjun", cardId: null, askedAt: iso(3), answeredCardId: null, topic: "question" as const };
+    const today = [{ id: "t1", date: "2026-10-31", parents: ["dadi"], children: ["arjun"], answers: [{ memberId: "dadi", cardId: "c", at: iso(1) }], completedAt: null }];
+    const reactions = [{ id: "r1", cardId: "mine", memberId: "dadi", kind: "bless" as const, createdAt: iso(3) }];
+    const wishes = [{ id: "w1", cardId: "mine", memberId: "priya", kind: "wish" as const, createdAt: iso(3) }];
+    const beats = [{ from: "dadi", at: iso(5) }];
+    const nudges = [
+      { id: "n1", kind: "heard", text: "Priya heard your voice note", href: "/", at: iso(6), seen: false, from: "priya" },
+      { id: "n2", kind: "occasion", text: "Diwali is coming", href: "/", at: iso(7), seen: false },
+    ];
+    const items = buildInbox({ ...base, cards, questions: [q], kidAsks: [kid], today, reactions, wishes, beats, nudges });
+    const waiting = items.filter((i) => i.waiting).map((i) => i.kind).sort();
+    expect(waiting).toEqual(["kid", "question", "today", "voice"]);
+    const earlier = items.filter((i) => !i.waiting);
+    expect(earlier.map((i) => i.kind).sort()).toEqual(["lamp", "nudge", "nudge", "reaction", "wish"]);
+    expect(earlier.every((i) => i.plain)).toBe(true);
+    expect(items.slice(0, 4).every((i) => i.waiting)).toBe(true);
+    expect(items.find((i) => i.id === "nudge-n2")).toMatchObject({ badge: "occasion", replyTo: null });
+    expect(items.find((i) => i.kind === "reaction")?.badge).toBe("blessing");
+    expect(items.find((i) => i.kind === "lamp")?.badge).toBe("lamp");
+    // Answering the Today task, or a Today already finished, takes it off the waiting list.
+    expect(buildInbox({ ...base, today: [{ ...today[0], answers: [...today[0].answers, { memberId: "arjun", cardId: "d", at: iso(0.5) }] }] })).toEqual([]);
+    expect(buildInbox({ ...base, today: [{ ...today[0], completedAt: iso(0.5) }] })).toEqual([]);
+  });
+
+  it("reply by voice is addressed to the sender, never to me", () => {
+    const cards = [card("v1", "dadi", "arjun", iso(2))];
+    const q = { id: "q", toMemberId: "arjun", askedBy: "priya", topic: "recipe" as const, answeredCardId: null, createdAt: iso(4) };
+    const kid = { id: "k", fromMemberId: "leo", toMemberId: "arjun", cardId: null, askedAt: iso(3), answeredCardId: null, topic: "question" as const };
+    const reactions = [{ id: "r1", cardId: "mine", memberId: "dadi", kind: "love" as const, createdAt: iso(3) }];
+    const items = buildInbox({ ...base, cards: [...cards, card("mine", "arjun", null, iso(30))], questions: [q], kidAsks: [kid], reactions, beats: [{ from: "priya", at: iso(5) }] });
+    expect(items.length).toBe(5);
+    for (const i of items) expect(i.replyTo).toBe(i.fromId);
+    expect(items.every((i) => i.replyTo !== "arjun" && i.replyTo !== null)).toBe(true);
+    expect(items.find((i) => i.kind === "voice")?.replyTo).toBe("dadi");
+    expect(items.find((i) => i.kind === "kid")?.replyTo).toBe("leo");
+  });
+
+  it("demo seed: Arjun's inbox shows a voice note, a question, a blessing and a lamp", async () => {
+    resetDemo();
+    const res = await inboxGET(authedGet("http://t/api/inbox", "arjun"));
+    const { items } = InboxResponseSchema.parse(await res.json());
+    const waiting = items.filter((i) => i.waiting);
+    expect(waiting.some((i) => i.kind === "voice" && i.fromId === "dadi" && i.action === "play")).toBe(true);
+    expect(waiting.some((i) => i.kind === "kid" && i.fromId === "leo")).toBe(true);
+    expect(items.some((i) => i.badge === "blessing" && i.fromId === "dadi" && !i.waiting)).toBe(true);
+    expect(items.some((i) => i.kind === "lamp" && i.fromId === "dadi" && !i.waiting)).toBe(true);
+    expect(items.filter((i) => i.plain).every((i) => !i.waiting)).toBe(true);
+  });
+
+  it("the seeded lamp is for Arjun's home", () => {
+    const ms = [...DEMO_MEMBERS].map((x) => MemberSchema.parse(x));
+    const home = households(ms, listRelationships()).find((h) => h.members.some((x) => x.id === "arjun"));
+    expect(home?.id).toBe("home-arjun-priya");
   });
 
   it("API: family-scoped and valid; another family's member sees nothing of it", async () => {

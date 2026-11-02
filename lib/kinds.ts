@@ -412,8 +412,26 @@ export const LampSchema = z.object({
   beats: z.array(z.object({ from: id, at: iso })).max(20).default([]),
   /** Per member: the last heartbeat they've felt. */
   felt: z.record(z.string(), iso).default({}),
+  /** Per member: when they last lit the lamp (one light per 10 minutes each). */
+  lit: z.record(z.string(), iso).default({}),
+  /** "from>to" -> when a "thinking of you" push last went (at most one per pair per 2 hours). */
+  pushed: z.record(z.string(), iso).default({}),
   updatedAt: iso,
 });
+
+// ---------- A note to the Nearer team, spoken (Settings -> Tell us by voice) ----------
+export const FeedbackSchema = z.object({
+  id,
+  memberId: id,
+  /** What the transcription path heard. Empty when it could not hear. */
+  text: z.string().max(2000).default(""),
+  lang: z.string().min(2).max(8).default("en"),
+  durationMs: z.number().int().min(0).max(300_000).default(0),
+  at: iso,
+});
+
+// ---------- A once-a-day marker so a sweep never repeats itself (id carries the key) ----------
+export const SweepMarkSchema = z.object({ id, day: z.string().max(10), at: iso });
 
 // ---------- Partner connections (Send something): sealed tokens, one per member + account ----------
 export const PartnerTokenSchema = z.object({
@@ -659,6 +677,8 @@ export const DOC_SCHEMAS = {
   habit_tick: HabitTickSchema,
   bedtime_story: BedtimeStorySchema,
   kid_ask: KidAskSchema,
+  feedback: FeedbackSchema,
+  sweep_mark: SweepMarkSchema,
 } as const;
 
 export type DocKind = keyof typeof DOC_SCHEMAS;
@@ -692,6 +712,7 @@ export type Question = DocOf<"question">;
 export type MuseCall = DocOf<"muse_call">;
 export type WindowView = DocOf<"window_view">;
 export type Lamp = DocOf<"lamp">;
+export type Feedback = DocOf<"feedback">;
 export type Chitthi = DocOf<"chitthi">;
 export type DayLine = DocOf<"day_line">;
 export type WeeklyCall = DocOf<"weekly_call">;
