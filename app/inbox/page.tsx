@@ -4,12 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
-import { AskedByKids } from "@/components/kids-courtyard";
 import { PushAsk } from "@/components/push-ask";
 import { Avatar, EmptyLine, Icon, RoomHeader, type IconName } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import type { InboxItem } from "@/lib/inbox";
-import { isKid } from "@/lib/kids";
 import { callName, memberPhoto } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
 import { useJson } from "@/lib/use-json";
@@ -73,7 +71,9 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
   const seen = () => {
     if (item.nudgeId) void fetch("/api/nudges/seen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: [item.nudgeId] }) }).catch(() => undefined);
   };
-  const reply = item.replyTo ? (
+  // A kid's question waiting for you: the answer is by voice, right here (it also lands in Stories). The house screen only points here.
+  const kidAsk = item.kind === "kid" && item.waiting && item.id.startsWith("kid-");
+  const reply = item.replyTo && !kidAsk ? (
     <button type="button" onClick={() => openAdd("voice", null, [item.replyTo as string])} className="press flex h-11 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink" aria-label={`Reply by voice to ${callName(from)}`}>
       <Icon name="mic" size={15} />
       Reply by voice
@@ -122,6 +122,18 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
             <Icon name={on && isPlaying ? "pause" : "play"} size={15} />
             {on && isPlaying ? "Pause" : "Play"}
           </button>
+        ) : kidAsk ? (
+          <>
+            <button type="button" onClick={() => openAdd("voice", { kind: "kid_answer", askId: item.id.slice(4) }, [item.fromId as string])} className={`${pill} bg-accent text-accent-ink`}>
+              <Icon name="mic" size={15} />
+              Answer by voice
+            </button>
+            {item.cardId && (
+              <Link href={item.href} onClick={seen} className={`${pill} bg-well text-ink`}>
+                Listen
+              </Link>
+            )}
+          </>
         ) : (
           <Link href={item.href} onClick={seen} className={`${pill} ${item.waiting ? "bg-accent text-accent-ink" : "bg-well text-ink"}`}>
             {item.action === "answer" ? "Answer" : "Open"}
@@ -164,8 +176,6 @@ export default function InboxPage() {
     <div>
       <RoomHeader title="For you" subtitle="What people sent you in the last 30 days" />
       <PushAsk className="mb-6" />
-      {/* Questions from the kids: answered here (and in Family > Kids); the house screen only points here. */}
-      {!isKid(viewer) && <AskedByKids className="mb-6" />}
       {failed && !data ? (
         <div className="rounded-card bg-card p-4 text-center shadow-card" role="alert">
           <p className="m-0 text-headline font-semibold">Couldn&rsquo;t load what&rsquo;s for you.</p>
