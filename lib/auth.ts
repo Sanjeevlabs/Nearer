@@ -11,7 +11,23 @@ import { dbLive } from "./family-db";
 // Internal keys (this cookie, the aangan:* storage and event keys, IndexedDB and bucket names) keep the old
 // codename so existing sessions survive the rename.
 export const SESSION_COOKIE = "aangan_session";
-const SESSION_TTL_MS = 14 * 24 * 3600 * 1000;
+const DAY_MS = 24 * 3600 * 1000;
+/** Everyone's session lasts this long from their last visit in its second half (sliding). */
+export const SESSION_TTL_MS = 14 * DAY_MS;
+/** Parents and elders are never logged out by a quiet season: 90 days, sliding. */
+export const ELDER_SESSION_TTL_MS = 90 * DAY_MS;
+
+/** How long a session for this person lasts (sliding): 90 days for the elder generation, else 14. */
+export function sessionTtlFor(member: { role?: string } | null | undefined): number {
+  return member?.role === "elder" ? ELDER_SESSION_TTL_MS : SESSION_TTL_MS;
+}
+
+/** Re-issue the cookie once less than half of its lifetime is left, so any visit in the second half renews it. */
+export function renewalDue(session: Pick<Session, "exp">, ttlMs: number, now = Date.now()): boolean {
+  const left = session.exp - now;
+  // Also when it was issued with a longer life than this person's role gets (a role changed): bring it in line.
+  return left < ttlMs / 2 || left > ttlMs;
+}
 
 export interface Session {
   familyId: string;
@@ -94,9 +110,19 @@ export function sessionFromRequest(req: Request, key?: string): Session | null {
   return session;
 }
 
-export function sessionCookieHeader(signed: string): string {
+export function sessionCookieHeader(signed: string, ttlMs: number = SESSION_TTL_MS): string {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `${SESSION_COOKIE}=${encodeURIComponent(signed)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(signed)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${Math.floor(ttlMs / 1000)}`;
+}
+
+// A renewed cookie waits here until the route's response is built (lib/api-guard.ts attaches it).
+const renewals = new WeakMap<Request, string>();
+
+/** The Set-Cookie header a request earned by being inside the renewal window, once (then it is gone). */
+export function takeRenewal(req: Request): string | null {
+  const h = renewals.get(req);
+  renewals.delete(req);
+  return h ?? null;
 }
 
 export function clearSessionCookieHeader(): string {
@@ -116,6 +142,14 @@ export async function requireSession(req: Request, familyId?: string): Promise<S
   // A joiner waiting for an admin has a session, but it only opens
   // GET /api/session (the "waiting" screen). Everything else stays shut.
   if (member.status === "pending") return Response.json({ error: "pending" }, { status: 403 });
+  // Sliding session: a request in the second half of the lifetime earns a fresh cookie, with
+  // the lifetime this person's role gets. Membership was just re-checked, so a removed person
+  // never reaches this line and is never renewed.
+  const ttl = sessionTtlFor(member);
+  if (renewalDue(session, ttl)) {
+    const signed = signSession({ familyId: session.familyId, memberId: session.memberId }, ttl);
+    if (signed) renewals.set(req, sessionCookieHeader(signed, ttl));
+  }
   return session;
 }
 
