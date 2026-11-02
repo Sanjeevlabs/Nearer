@@ -32,7 +32,7 @@ export function AvailabilityPicker({ e, members, viewer, onChange }: { e: Family
   };
 
   if (e.slots.length === 0) {
-    return <p className="m-0 rounded-[20px] bg-black/[.04] px-4 py-4 text-body text-ink-soft">No hour that day has every home awake. Try another day.</p>;
+    return <p className="m-0 rounded-[20px] bg-tint px-4 py-4 text-body text-ink-soft">No hour that day has every home awake. Try another day.</p>;
   }
   const pickedNone = e.answered.includes(viewer.id) && !Object.values(e.votes).some((v) => v.includes(viewer.id));
   return (
@@ -49,7 +49,7 @@ export function AvailabilityPicker({ e, members, viewer, onChange }: { e: Family
           const mine = voters.includes(viewer.id);
           const lead = best?.slot.id === s.id && best.count > 0;
           return (
-            <li key={s.id} className={cn("flex items-center gap-2 rounded-[22px] p-1.5 pr-2 transition-colors", mine ? "bg-[#1c1b1a] text-white" : "bg-black/[.04]")}>
+            <li key={s.id} className={cn("flex items-center gap-2 rounded-[22px] p-1.5 pr-2 transition-colors", mine ? "bg-[#1c1b1a] text-white" : "bg-tint")}>
               <button type="button" aria-pressed={mine} disabled={busy !== null} onClick={() => void act({ action: "vote", slotId: s.id, ...(isHost ? { venue } : {}) }, s.id)} className="press flex min-w-0 flex-1 items-center gap-3 rounded-[18px] px-3 py-2.5 text-left disabled:opacity-60">
                 <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full border", mine ? "border-white bg-white text-[#1c1b1a]" : "border-black/20")} aria-hidden="true">
                   {mine && <Icon name="check" size={18} strokeWidth={2.5} />}
@@ -81,7 +81,7 @@ export function AvailabilityPicker({ e, members, viewer, onChange }: { e: Family
       </ul>
       <div className="mt-2 flex items-center justify-between px-1">
         <p className="m-0 text-caption text-ink-faint">Locks when most can make it</p>
-        <button type="button" aria-pressed={pickedNone} disabled={busy !== null} onClick={() => void act({ action: "none" }, "none")} className={cn("press h-9 rounded-full px-3 text-footnote font-semibold", pickedNone ? "bg-black/[.08] text-ink" : "text-ink-soft")}>
+        <button type="button" aria-pressed={pickedNone} disabled={busy !== null} onClick={() => void act({ action: "none" }, "none")} className={cn("press h-9 rounded-full px-3 text-footnote font-semibold", pickedNone ? "bg-tint text-ink" : "text-ink-soft")}>
           None work
         </button>
       </div>

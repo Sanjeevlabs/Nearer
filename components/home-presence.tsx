@@ -143,7 +143,7 @@ export function KnockBanner({ knock, member }: { knock: Knock; member: Member | 
         </p>
         <p className="voice m-0 truncate text-body text-[#8a4b00]">{knock.note || "Come sit with me?"}</p>
       </div>
-      <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-black px-4 text-callout font-semibold text-white no-underline">
+      <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
         Come sit
       </a>
     </div>
@@ -218,7 +218,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
       </ul>
       {quiet.length > 0 && (
         <div className="mt-3 flex gap-2">
-          <button type="button" onClick={() => openAdd("voice", null, home.members.map((m) => m.id))} className="press h-9 rounded-full bg-black px-3.5 text-footnote font-semibold text-white">
+          <button type="button" onClick={() => openAdd("voice", null, home.members.map((m) => m.id))} className="press h-9 rounded-full bg-accent px-3.5 text-footnote font-semibold text-accent-ink">
             Send {name} a voice note
           </button>
         </div>
@@ -247,7 +247,7 @@ export function ShareYourDay() {
       <p className="m-0 text-footnote text-ink-soft">{today.length ? `Shared today: ${today.map((p) => MOMENT_LABEL[p.moment].label).join(", ")}` : "The ordinary day is what they miss most."}</p>
       <div className="no-scrollbar -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4">
         {shareableFor(viewer.role).map((mo) => (
-          <button key={mo} type="button" onClick={() => void share(mo)} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-semibold", sent === mo ? "bg-ink text-white" : "bg-surface")}>
+          <button key={mo} type="button" onClick={() => void share(mo)} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-semibold", sent === mo ? "bg-accent text-accent-ink" : "bg-surface")}>
             {MOMENT_LABEL[mo].label}
           </button>
         ))}
@@ -294,7 +294,7 @@ export function MyQuestions() {
                       ? openAdd("voice", { kind: "story", questionId: q.id, prompt: q.text })
                       : openAdd("voice", { kind: "answer", questionId: q.id, prompt: q.text })
                 }
-                className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-black px-4 text-callout font-semibold text-white"
+                className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink"
               >
                 <Icon name="mic" size={16} />
                 {q.topic === "story" && q.askedBy ? "Tell it" : q.topic === "recipe" && q.askedBy ? "Teach it" : q.topic === "blessing" ? "Bless" : "Answer"}
@@ -323,7 +323,7 @@ export function MyNeeds() {
           <p className={cn("m-0 text-callout", n.noteForParent ? "voice text-body" : "text-ink-soft")}>{n.noteForParent || "Waiting for someone to pick it up."}</p>
         </Link>
       ))}
-      <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: viewer.id })} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white">
+      <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: viewer.id })} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink">
         <Icon name="mic" size={18} />
         Ask the family for help
       </button>

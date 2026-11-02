@@ -59,7 +59,7 @@ export default function PlayPage() {
               <span className="block text-body font-semibold">{callName(who)}&rsquo;s door is open</span>
               <span className="block truncate text-body text-white/75">{k.note || "Come sit with me"}</span>
             </span>
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#1c1b1a]">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-[#1c1b1a]">
               <Icon name="video" size={20} />
             </span>
           </button>

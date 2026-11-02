@@ -63,9 +63,9 @@ const ROLE_SUGGEST: Helper["role"][] = ["groceries", "driver", "plumber", "elect
 const chip = (on: boolean) =>
   cn(
     "press relative h-10 shrink-0 rounded-full px-4 text-body font-medium before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-['']",
-    on ? "bg-black text-white" : "bg-card shadow-card",
+    on ? "bg-accent text-accent-ink" : "bg-card shadow-card",
   );
-const field = "h-12 w-full rounded-[14px] bg-well px-4 text-body outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30";
+const field = "h-12 w-full rounded-[14px] bg-well px-4 text-body outline-none ring-1 ring-[var(--line)] focus:ring-2 focus:ring-black/30";
 
 export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
   const pageTitle = tab === "tasks" ? "Care tasks" : "Local helpers";
@@ -113,7 +113,7 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
       {!isParent && homes.length > 1 && (
         <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 py-1">
           {homes.map((h) => (
-            <button key={h.id} type="button" onClick={() => setChosen(h.id)} aria-pressed={h.id === home.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", h.id === home.id ? "bg-black text-white" : "bg-card shadow-card")}>
+            <button key={h.id} type="button" onClick={() => setChosen(h.id)} aria-pressed={h.id === home.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", h.id === home.id ? "bg-accent text-accent-ink" : "bg-card shadow-card")}>
               <span className="flex -space-x-2">
                 {h.members.slice(0, 2).map((x) => (
                   <Avatar key={x.id} src={memberPhoto(x)} name={callName(x)} size={30} />
@@ -191,7 +191,7 @@ function Tasks({ home, parent, isParent, needs, helpers, pets, onChange }: { hom
     <section aria-label="Tasks">
       {mayAdd && (
         <div className="flex items-center gap-2 rounded-[24px] bg-card p-2 shadow-card">
-          <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: parent.id })} aria-label="Say a task" className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-black text-white">
+          <button type="button" onClick={() => openAdd("voice", { kind: "need", forMemberId: parent.id })} aria-label="Say a task" className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
             <Icon name="mic" size={24} />
           </button>
           <input
@@ -334,7 +334,7 @@ function TaskRow({ need, onOpen, manage, act, muted }: { need: Need; onOpen: () 
         </Link>
       )}
       {manage && live && (
-        <button type="button" disabled={busy} onClick={() => void run({ action: "done", needId: need.id })} aria-label={`Mark done: ${need.title}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black text-white disabled:opacity-40">
+        <button type="button" disabled={busy} onClick={() => void run({ action: "done", needId: need.id })} aria-label={`Mark done: ${need.title}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink disabled:opacity-40">
           <Icon name="check" size={18} />
         </button>
       )}
@@ -429,7 +429,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
               <Row label="For">
                 <div className="flex gap-1.5">
                   {elders.map((x) => (
-                    <button key={x.id} type="button" aria-pressed={forId === x.id} onClick={() => setForId(x.id)} disabled={Boolean(need)} className={cn("press h-10 rounded-full px-3.5 text-callout font-semibold", forId === x.id ? "bg-black text-white" : "bg-surface", need && "opacity-60")}>
+                    <button key={x.id} type="button" aria-pressed={forId === x.id} onClick={() => setForId(x.id)} disabled={Boolean(need)} className={cn("press h-10 rounded-full px-3.5 text-callout font-semibold", forId === x.id ? "bg-accent text-accent-ink" : "bg-surface", need && "opacity-60")}>
                       {callName(x)}
                     </button>
                   ))}
@@ -479,7 +479,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
                     aria-pressed={on}
                     disabled={busy}
                     onClick={() => (need ? void act({ action: x.id === viewer.id ? "claim" : "assign-to", needId: need.id, memberId: x.id }) : setAssignee(on ? null : x.id))}
-                    className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-callout font-semibold", on ? "bg-black text-white" : "bg-surface")}
+                    className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-callout font-semibold", on ? "bg-accent text-accent-ink" : "bg-surface")}
                   >
                     <Avatar src={memberPhoto(x)} name={callName(x)} size={32} />
                     {x.id === viewer.id ? "Me" : callName(x)}
@@ -519,7 +519,7 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
                     <button type="button" disabled={busy || need.status === "progress"} onClick={() => act({ action: "status", needId: need.id, status: "progress" })} className="press h-11 rounded-full bg-surface text-callout font-semibold disabled:opacity-40">
                       Start
                     </button>
-                    <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "done" })} className="press h-11 rounded-full bg-black text-callout font-semibold text-white">
+                    <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "done" })} className="press h-11 rounded-full bg-accent text-callout font-semibold text-accent-ink">
                       Done
                     </button>
                     <button type="button" disabled={busy} onClick={() => act({ action: "status", needId: need.id, status: "cancelled" })} className="press h-11 rounded-full bg-surface text-callout font-semibold text-ink-soft">
@@ -586,7 +586,7 @@ function Segmented<T extends string>({ value, options, labels, onChange }: { val
   return (
     <div className="flex rounded-full bg-surface p-0.5" role="radiogroup">
       {options.map((o) => (
-        <button key={o} type="button" role="radio" aria-checked={value === o} onClick={() => onChange(o)} className={cn("press h-9 rounded-full px-3 text-footnote font-semibold", value === o ? "bg-white shadow-sm" : "text-ink-soft")}>
+        <button key={o} type="button" role="radio" aria-checked={value === o} onClick={() => onChange(o)} className={cn("press h-9 rounded-full px-3 text-footnote font-semibold", value === o ? "bg-surface shadow-sm" : "text-ink-soft")}>
           {labels[o]}
         </button>
       ))}
@@ -633,7 +633,7 @@ function Helpers({ parent, helpers, needs, canManage, onChange }: { parent: Memb
                       <a href={waHref(h.phone)} target="_blank" rel="noreferrer" aria-label={`WhatsApp ${h.name}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well text-ink">
                         <Icon name="whatsapp" size={17} />
                       </a>
-                      <a href={telHref(h.phone)} aria-label={`Call ${h.name}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black text-white">
+                      <a href={telHref(h.phone)} aria-label={`Call ${h.name}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
                         <Icon name="phone" size={16} />
                       </a>
                     </>

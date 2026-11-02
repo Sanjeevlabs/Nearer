@@ -53,11 +53,11 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
     return (
       <div>
         <RoomHeader title="Celebration" />
-        <div className="rounded-[28px] bg-black/[.04] p-4" role={failed ? "alert" : undefined}>
+        <div className="rounded-[28px] bg-tint p-4" role={failed ? "alert" : undefined}>
           <p className="m-0 text-headline font-semibold">{failed ? "Couldn't load this celebration." : "This celebration has ended or was cancelled."}</p>
           <div className="mt-3 flex gap-2">
             {failed && (
-              <Button variant="secondary" className="!bg-white" onClick={() => void reload()}>
+              <Button variant="secondary" className="!bg-surface" onClick={() => void reload()}>
                 Try again
               </Button>
             )}

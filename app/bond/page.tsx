@@ -125,7 +125,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
             role="radio"
             aria-checked={relation === w}
             onClick={() => setRelation(w)}
-            className={cn("press h-10 rounded-full px-4 text-body font-medium", relation === w ? "bg-black text-white" : "bg-surface")}
+            className={cn("press h-10 rounded-full px-4 text-body font-medium", relation === w ? "bg-accent text-accent-ink" : "bg-surface")}
           >
             {w}
           </button>
@@ -140,7 +140,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
             role="radio"
             aria-checked={anchorId === mm.id}
             onClick={() => setAnchorId(mm.id)}
-            className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", anchorId === mm.id ? "bg-black text-white" : "bg-surface")}
+            className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", anchorId === mm.id ? "bg-accent text-accent-ink" : "bg-surface")}
           >
             <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />
             {mm.id === viewer.id ? "You" : callName(mm)}

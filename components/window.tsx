@@ -125,7 +125,7 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
   }, [onOpen]);
   const p = Math.min(1, x / max());
   return (
-    <div ref={track} data-ui="window-key" className="relative mx-auto w-full max-w-[280px] select-none overflow-hidden rounded-full bg-ink" style={{ height: BAR_H, touchAction: "none" }}>
+    <div ref={track} data-ui="window-key" className="relative mx-auto w-full max-w-[280px] select-none overflow-hidden rounded-full bg-[#174e4a]" style={{ height: BAR_H, touchAction: "none" }}>
       {/* Chevrons centred on the whole track */}
       <span className="pointer-events-none absolute inset-0 flex items-center justify-center gap-1 text-white/50" style={{ opacity: 1 - p * 1.4 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
@@ -225,7 +225,7 @@ function RhythmBar({ rhythm }: { rhythm: DayRhythm }) {
   return (
     <div>
       <div className="relative h-[30px]" role="img" aria-label={rhythm.ticks.length ? `Active at ${rhythm.ticks.length} times today${usual ? ", against their usual day" : ""}` : "Nothing yet today"}>
-        <div className="absolute inset-x-0 top-[11px] h-[8px] rounded-full bg-black/[.06]" />
+        <div className="absolute inset-x-0 top-[11px] h-[8px] rounded-full bg-tint" />
         {usual && <div className="absolute top-[11px] h-[8px] rounded-full bg-black/[.16]" style={{ left: `${usual[0] * 100}%`, width: `${Math.max(2, (usual[1] - usual[0]) * 100)}%` }} />}
         {rhythm.ticks.map((t, i) => (
           <span key={i} className="absolute top-[5px] h-[20px] w-[3px] -translate-x-1/2 rounded-full bg-ink" style={{ left: `${t * 100}%` }} />
@@ -294,10 +294,10 @@ function PersonSheet({ person, st, onTalk, onCall, onClose }: { person: Member |
           <SheetList title="Shared today" empty="Nothing shared yet today." rows={(s?.moments ?? []).map((mo, i) => ({ key: `${mo.at}-${i}`, at: clockWord(mo.at, p.tz), main: mo.label, note: mo.note }))} />
           <SheetList title="Check-ins" empty="No check-ins today." rows={(s?.checkins ?? []).map((c, i) => ({ key: `${c.at}-${i}`, at: clockWord(c.at, p.tz), main: c.label }))} />
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button type="button" onClick={onTalk} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-black/[.06] text-body font-semibold text-ink">
+            <button type="button" onClick={onTalk} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-tint text-body font-semibold text-ink">
               <Icon name="mic" size={19} /> Voice note
             </button>
-            <button type="button" onClick={onCall} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-ink text-body font-semibold text-white">
+            <button type="button" onClick={onCall} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink">
               <Icon name="video" size={19} /> Call
             </button>
           </div>
@@ -514,7 +514,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
             <section className={cn(CARD, "p-4")} style={EDGE} role="alert">
               <p className="m-0 text-body font-semibold">Couldn&apos;t open the window</p>
               <p className="m-0 mt-1 text-callout text-ink-soft">Check your connection and try again.</p>
-              <button type="button" onClick={() => void win.reload()} className="press mt-3 h-11 rounded-full bg-ink px-5 text-callout font-semibold text-white">
+              <button type="button" onClick={() => void win.reload()} className="press mt-3 h-11 rounded-full bg-accent px-5 text-callout font-semibold text-accent-ink">
                 Try again
               </button>
             </section>
@@ -572,7 +572,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                 <button type="button" onClick={() => talk()} disabled={!atWindow.length} className="press flex min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
                   <Icon name="mic" size={19} strokeWidth={1.9} /> Voice note
                 </button>
-                <button type="button" onClick={() => void call()} disabled={calling || !atWindow.length} aria-label={knock ? "Join the video call" : "Call"} className={cn("press relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-ink py-2 text-footnote font-semibold text-white disabled:opacity-40", calling && "opacity-60")}>
+                <button type="button" onClick={() => void call()} disabled={calling || !atWindow.length} aria-label={knock ? "Join the video call" : "Call"} className={cn("press relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-accent py-2 text-footnote font-semibold text-accent-ink disabled:opacity-40", calling && "opacity-60")}>
                   <Icon name="video" size={19} strokeWidth={1.9} /> {knock ? "Join" : "Call"}
                   {knock && <span className="absolute right-3 top-2 h-2.5 w-2.5 animate-ping rounded-full bg-[#3ccf7a] motion-reduce:animate-none" />}
                 </button>
@@ -589,7 +589,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               {/* Their latest voice: one compact row */}
               {latestVoice && (
                 <section data-ui="window-voice" className={cn(CARD, "flex min-h-[56px] items-center gap-3 px-4 py-1.5")} style={EDGE} aria-label="Their latest voice">
-                  <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice note`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-white">
+                  <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice note`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
                     <Icon name={playing ? "pause" : "play"} size={16} />
                   </button>
                   <p className="m-0 min-w-0 flex-1 text-callout leading-snug">
@@ -645,7 +645,7 @@ function WaitingNote({ names }: { names: string }) {
   return (
     <div data-ui="window-waiting" className="flex items-center gap-3 border-t border-[var(--line)] py-2">
       <p className="m-0 min-w-0 flex-1 text-footnote leading-snug text-ink-soft">{names ? `${names} hasn't joined yet.` : "They haven't joined yet."} When they do, you&apos;ll see their day here.</p>
-      <button type="button" onClick={() => void send()} disabled={busy} className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 text-footnote font-semibold text-white">
+      <button type="button" onClick={() => void send()} disabled={busy} className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 text-footnote font-semibold text-accent-ink">
         <Icon name="whatsapp" size={16} /> {busy ? "Opening…" : "Invite again"}
       </button>
       <InviteSheet open={sheet} onClose={() => setSheet(false)} />

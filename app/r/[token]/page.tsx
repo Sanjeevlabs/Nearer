@@ -74,7 +74,7 @@ export default async function SharedRecipe(props: { params: Promise<{ token: str
           <img src="/icons/icon-192.png" alt="" width={32} height={32} className="rounded-[9px]" />
           <span className="text-headline font-semibold">Nearer</span>
         </Link>
-        <Link href="/" className="press flex h-10 items-center rounded-full bg-black px-4 text-callout font-semibold text-white no-underline">
+        <Link href="/" className="press flex h-10 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
           Start your family on Nearer
         </Link>
       </div>

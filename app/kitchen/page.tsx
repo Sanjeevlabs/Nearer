@@ -97,7 +97,7 @@ export default function KitchenPage() {
       )}
 
       <div className="grid grid-cols-3 gap-2">
-        <Link href="/kitchen/new" className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-black text-callout font-semibold text-white no-underline">
+        <Link href="/kitchen/new" className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-accent text-callout font-semibold text-accent-ink no-underline">
           <Icon name="plus" size={18} />
           Write one
         </Link>
@@ -124,7 +124,7 @@ export default function KitchenPage() {
       {usedCourses.length > 1 && (
         <div className="no-scrollbar -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Course">
           {(["all", ...usedCourses] as const).map((c) => (
-            <button key={c} type="button" role="radio" aria-checked={course === c} onClick={() => setCourse(c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", course === c ? "bg-black text-white" : "bg-surface")}>
+            <button key={c} type="button" role="radio" aria-checked={course === c} onClick={() => setCourse(c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", course === c ? "bg-accent text-accent-ink" : "bg-surface")}>
               {c === "all" ? "All" : COURSE_LOOK[c].label}
             </button>
           ))}
@@ -248,7 +248,7 @@ function AskForRecipe({ onDone }: { onDone: () => void }) {
           <p className="m-0 mb-2 text-footnote font-medium text-ink-soft">Ask</p>
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
             {elders.map((m) => (
-              <button key={m.id} type="button" onClick={() => setTo(m.id)} aria-pressed={to === m.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", to === m.id ? "bg-black text-white" : "bg-white")}>
+              <button key={m.id} type="button" onClick={() => setTo(m.id)} aria-pressed={to === m.id} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", to === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
                 {callName(m)}
               </button>
@@ -256,7 +256,7 @@ function AskForRecipe({ onDone }: { onDone: () => void }) {
           </div>
           <label className="mt-3 block">
             <span className="mb-1.5 block text-footnote font-medium text-ink-soft">how they make their…</span>
-            <input value={dish} onChange={(e) => setDish(e.target.value)} maxLength={60} placeholder="aloo paratha" className="h-12 w-full rounded-full bg-white px-5 text-body outline-none focus:ring-2 focus:ring-marigold" />
+            <input value={dish} onChange={(e) => setDish(e.target.value)} maxLength={60} placeholder="aloo paratha" className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold" />
           </label>
           <Button
             className="mt-3 w-full"

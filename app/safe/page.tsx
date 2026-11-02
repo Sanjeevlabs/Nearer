@@ -60,7 +60,7 @@ export default function SafePage() {
 
           <SectionTitle>In an emergency</SectionTitle>
           <a href={`tel:${sos.number}`} className="press flex items-center gap-3 rounded-card bg-surface p-4 text-ink no-underline">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-black text-headline font-bold text-white">{sos.number}</span>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-accent text-headline font-bold text-accent-ink">{sos.number}</span>
             <span className="min-w-0">
               <span className="block text-body font-semibold">Call {sos.number}</span>
               <span className="block text-footnote text-ink-soft">Emergency number for {sos.country}, from your time zone ({placeFromTz(viewer.tz)}). Call them first, then your family.</span>
@@ -144,7 +144,7 @@ function CheckIn({ data, onChange }: { data: SafetyData; onChange: () => Promise
 
       {(mode === "heading" || mode === "journey") && (
         <div className="rounded-card bg-surface p-4">
-          <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 120))} placeholder={mode === "heading" ? "From where? (optional)" : "Which flight or train? (optional)"} className="h-12 w-full rounded-2xl bg-white px-4 text-body outline-none" aria-label="Note" />
+          <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 120))} placeholder={mode === "heading" ? "From where? (optional)" : "Which flight or train? (optional)"} className="h-12 w-full rounded-2xl bg-surface px-4 text-body outline-none" aria-label="Note" />
           <p className="m-0 mb-2 mt-3 text-footnote text-ink-soft">I should be there in</p>
           <div className="flex flex-wrap gap-2">
             {(mode === "heading" ? HEADING_ETAS : JOURNEY_ETAS).map((n) => (
@@ -153,7 +153,7 @@ function CheckIn({ data, onChange }: { data: SafetyData; onChange: () => Promise
                 type="button"
                 disabled={busy}
                 onClick={() => send({ kind: mode, etaMinutes: mode === "heading" ? n : n * 60 }, `${names} will hear from Nearer only if you're not in by then.`)}
-                className="press h-11 rounded-full bg-white px-4 text-body font-semibold"
+                className="press h-11 rounded-full bg-surface px-4 text-body font-semibold"
               >
                 {mode === "heading" ? `${n} min` : `${n} h`}
               </button>
@@ -166,7 +166,7 @@ function CheckIn({ data, onChange }: { data: SafetyData; onChange: () => Promise
       {mode === "help" ? (
         <div className="frost rounded-card p-4">
           <p className="m-0 text-body font-semibold">Tell {names} you need help?</p>
-          <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 120))} placeholder="What's happening? (optional)" className="mt-3 h-12 w-full rounded-2xl bg-white px-4 text-body outline-none" aria-label="What's happening" />
+          <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 120))} placeholder="What's happening? (optional)" className="mt-3 h-12 w-full rounded-2xl bg-surface px-4 text-body outline-none" aria-label="What's happening" />
           <label className="mt-3 flex items-center gap-2 text-callout">
             <input type="checkbox" checked={shareLoc} onChange={(e) => setShareLoc(e.target.checked)} className="h-5 w-5" />
             Send where I am, once (deleted after 24 h)
@@ -194,7 +194,7 @@ function CheckIn({ data, onChange }: { data: SafetyData; onChange: () => Promise
 
 function Big({ label, sub, onClick, disabled, active }: { label: string; sub: string; onClick: () => void; disabled?: boolean; active?: boolean }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={cn("press rounded-card p-4 text-left disabled:opacity-50", active ? "bg-black text-white" : "bg-surface text-ink")}>
+    <button type="button" onClick={onClick} disabled={disabled} className={cn("press rounded-card p-4 text-left disabled:opacity-50", active ? "bg-accent text-accent-ink" : "bg-surface text-ink")}>
       <span className="block text-body font-semibold">{label}</span>
       <span className={cn("block text-footnote", active ? "text-white/70" : "text-ink-soft")}>{sub}</span>
     </button>
@@ -234,7 +234,7 @@ function Setup({ others, current, onSaved, editing = false }: { others: Member[]
         {others.map((m) => {
           const on = picked.includes(m.id);
           return (
-            <button key={m.id} type="button" aria-pressed={on} onClick={() => setPicked(on ? picked.filter((x) => x !== m.id) : [...picked, m.id])} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1 pr-4 text-body", on ? "bg-black text-white" : "bg-white text-ink")}>
+            <button key={m.id} type="button" aria-pressed={on} onClick={() => setPicked(on ? picked.filter((x) => x !== m.id) : [...picked, m.id])} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1 pr-4 text-body", on ? "bg-accent text-accent-ink" : "bg-surface text-ink")}>
               <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
               {callName(m)}
             </button>

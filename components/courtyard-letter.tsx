@@ -59,7 +59,7 @@ export function CourtyardLetter() {
         <p className="m-0 mt-1.5 line-clamp-2 whitespace-pre-line text-callout leading-snug text-ink-soft">{peek(p.body ?? "")}</p>
         <p className="m-0 mt-3 text-body font-semibold text-ink">{draft.goal}</p>
         <div className="mt-2 flex gap-2">
-          <button type="button" disabled={busy} onClick={() => void decide(true)} className="press h-11 rounded-full bg-black px-5 text-callout font-semibold text-white disabled:opacity-40">
+          <button type="button" disabled={busy} onClick={() => void decide(true)} className="press h-11 rounded-full bg-accent px-5 text-callout font-semibold text-accent-ink disabled:opacity-40">
             Do it
           </button>
           <button type="button" disabled={busy} onClick={() => void decide(false)} className="press h-11 rounded-full px-4 text-callout font-semibold text-ink-soft disabled:opacity-40">

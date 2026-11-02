@@ -1,29 +1,46 @@
 /* Nearer tokens. See docs/DESIGN.md §3.
-   Warm paper ground with white cards; colour comes from the family's photos.
-   Marigold is the only brand colour and means "live": heard, playing, recording. */
+   Warm paper ground, soft cards. ONE accent (deep teal, from the mark's teal petal) carries
+   primary buttons, the open tab, links, focus and selected states. The other four petals
+   are for category colour only (room tiles, kind badges, avatars), never for actions. */
 
 :root {
   /* 31 Oct: warm paper, white cards lifted by a soft shadow (was white on white). */
-  --paper: #f7f5f1;
-  --card: #ffffff;
-  --surface: #ffffff; /* filled blocks on the paper: cards, chips, inputs (a hairline lifts them) */
-  --surface-edge: 0 0 0 1px rgba(60, 42, 24, 0.05), 0 1px 2px rgba(60, 42, 24, 0.04);
+  --paper: #faf6ef;
+  --card: #fffdfa;
+  --surface: #fffdfa; /* filled blocks on the paper: cards, chips, inputs (a hairline lifts them) */
+  --surface-edge: 0 0 0 1px rgba(92, 64, 36, 0.07), 0 1px 2px rgba(92, 64, 36, 0.05);
   /* The family: the five petals of the mark. Only for a person's own colour (avatar fallbacks, fridge magnets). */
   --petal-1: #E8735A;
   --petal-2: #5FAAA3;
   --petal-3: #5B7FCC;
   --petal-4: #8A4F75;
   --petal-5: #DE9F3E;
-  --well: #f1eee9; /* fills inside a white card: icon wells, tracks, inputs */
-  --card-shadow: 0 1px 2px rgba(60, 42, 24, 0.05), 0 8px 24px -12px rgba(60, 42, 24, 0.16);
-  --ink: rgba(0, 0, 0, 0.88);
-  --ink-soft: rgba(0, 0, 0, 0.6); /* ≥ 4.5:1 on paper, card and surface */
-  --ink-faint: rgba(0, 0, 0, 0.42);
-  --line: rgba(0, 0, 0, 0.08);
-  --accent: #1c1b1a;
+  --well: #f2ece2; /* fills inside a card: icon wells, tracks, inputs */
+  --card-shadow: 0 0 0 1px rgba(92, 64, 36, 0.06), 0 1px 2px rgba(92, 64, 36, 0.05), 0 12px 28px -14px rgba(92, 64, 36, 0.22);
+  --ink: rgba(28, 22, 16, 0.9);
+  --ink-soft: rgba(28, 22, 16, 0.64); /* ≥ 4.5:1 on paper, card and surface */
+  --ink-faint: rgba(28, 22, 16, 0.44);
+  --line: rgba(92, 64, 36, 0.12);
+  --tint: rgba(92, 64, 36, 0.07); /* a quiet fill on any ground: pressed, hover, secondary pill */
+  /* The one accent: deep teal. White on it 5.9:1; on paper 5.5:1. */
+  --accent: #1f6f69;
   --accent-ink: #ffffff;
-  --marigold: #1c1b1a; /* 30 Oct: the accent is ink (premium, monochrome); status dots keep their colour */
-  --marigold-glow: rgba(28, 27, 26, 0.18);
+  --accent-soft: #e2efec; /* selected pill, tint behind an accent icon */
+  --accent-soft-ink: #14504b;
+  --marigold: var(--accent); /* legacy name: focus, "live" and selected states now use the accent */
+  --marigold-glow: rgba(31, 111, 105, 0.22);
+  /* Category tints (the other petals), for room tiles, kind badges and avatars only. */
+  --petal-1-soft: #fbe6e0;
+  --petal-2-soft: #dff0ee;
+  --petal-3-soft: #e1e9f8;
+  --petal-4-soft: #f1e3ec;
+  --petal-5-soft: #faecd2;
+  /* The same petals as icon/text ink on their tint (>= 3:1 on the soft fill). */
+  --petal-1-ink: #b4472f;
+  --petal-2-ink: #1f6f69;
+  --petal-3-ink: #3f5fa8;
+  --petal-4-ink: #8a4f75;
+  --petal-5-ink: #8f5f10;
 
   --espresso: #000000;
   --espresso-ink: #ffffff;
@@ -36,9 +53,9 @@
   --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
 
   /* Glass over the page (dock, sheets): the same warm paper, so white blocks read as cards in a sheet too */
-  --frost-bg: rgba(247, 245, 241, 0.86);
-  --frost-solid: #f7f5f1;
-  --frost-border: rgba(0, 0, 0, 0.06);
+  --frost-bg: rgba(250, 246, 239, 0.86);
+  --frost-solid: #faf6ef;
+  --frost-border: rgba(92, 64, 36, 0.1);
   --frost-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
 
   /* Now playing */
@@ -58,6 +75,7 @@
   --radius-hero: 30px;
   --radius-sheet: 32px;
   --radius-card: 24px;
+  --radius-tile: 20px;
   --radius-cover: 20px;
   --radius-pill: 999px;
 
@@ -80,6 +98,44 @@
   --font-body: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-voice: "Literata", Georgia, serif;
   --font-display: var(--font-body);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #171413;
+    --card: #221e1c;
+    --surface: #221e1c;
+    --surface-edge: 0 0 0 1px rgba(255, 236, 214, 0.08), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --well: #2e2825;
+    --card-shadow: 0 0 0 1px rgba(255, 236, 214, 0.07), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+    --ink: rgba(255, 246, 236, 0.92);
+    --ink-soft: rgba(255, 246, 236, 0.66);
+    --ink-faint: rgba(255, 246, 236, 0.42);
+    --line: rgba(255, 236, 214, 0.12);
+    --tint: rgba(255, 236, 214, 0.09);
+    /* Accent on dark: a lighter teal with dark text (9:1 on paper). */
+    --accent: #6fcbc1;
+    --accent-ink: #0c1a19;
+    --accent-soft: #1f3a37;
+    --accent-soft-ink: #a9e6df;
+    --marigold-glow: rgba(111, 203, 193, 0.28);
+    --petal-1-soft: #3b2420;
+    --petal-2-soft: #1f3330;
+    --petal-3-soft: #232c40;
+    --petal-4-soft: #36232f;
+    --petal-5-soft: #382c18;
+    --petal-1-ink: #f29a85;
+    --petal-2-ink: #6fcbc1;
+    --petal-3-ink: #9bb4ee;
+    --petal-4-ink: #d29bbb;
+    --petal-5-ink: #ecc072;
+    --frost-bg: rgba(23, 20, 19, 0.86);
+    --frost-solid: #171413;
+    --frost-border: rgba(255, 236, 214, 0.1);
+    --frost-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
 }
 
 @media (min-width: 768px) {

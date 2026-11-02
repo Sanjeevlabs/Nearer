@@ -35,7 +35,7 @@ function ChapterPage({ chapter, n }: { chapter: Chapter; n: number }) {
         type="button"
         onClick={() => (current?.id === card.id ? toggle() : play(card))}
         aria-label={playing ? "Pause" : "Play this answer in their voice"}
-        className="press mt-4 flex h-11 items-center gap-2 rounded-full bg-ink pl-1.5 pr-4 text-callout font-semibold text-white"
+        className="press mt-4 flex h-11 items-center gap-2 rounded-full bg-accent pl-1.5 pr-4 text-callout font-semibold text-accent-ink"
       >
         <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-black">
           <Icon name={playing ? "pause" : "play"} size={15} />
@@ -75,7 +75,7 @@ function Book() {
       {elders.length > 1 && (
         <nav aria-label="Whose book" className="-mt-3 mb-4 flex gap-1.5">
           {elders.map((e) => (
-            <Link key={e.id} href={`/book?member=${encodeURIComponent(e.id)}`} replace scroll={false} aria-current={e.id === memberId ? "page" : undefined} className={`press flex h-9 items-center rounded-full px-4 text-callout font-medium no-underline ${e.id === memberId ? "bg-ink text-white" : "bg-black/[.05] text-ink"}`}>
+            <Link key={e.id} href={`/book?member=${encodeURIComponent(e.id)}`} replace scroll={false} aria-current={e.id === memberId ? "page" : undefined} className={`press flex h-9 items-center rounded-full px-4 text-callout font-medium no-underline ${e.id === memberId ? "bg-accent text-accent-ink" : "bg-tint text-ink"}`}>
               {callName(e)}
             </Link>
           ))}
@@ -98,7 +98,7 @@ function Book() {
       {failed ? (
         <div className="mt-6 rounded-[22px] bg-surface p-4">
           <p className="m-0 text-body">The book didn&rsquo;t open just now.</p>
-          <button type="button" onClick={() => void reload()} className="press mt-3 h-10 rounded-full bg-ink px-4 text-callout font-semibold text-white">
+          <button type="button" onClick={() => void reload()} className="press mt-3 h-10 rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink">
             Try again
           </button>
         </div>

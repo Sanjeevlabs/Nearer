@@ -33,7 +33,7 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
       <p className="m-0 mb-3 text-callout text-ink-soft">
         {members.length} people · {gens} generation{gens === 1 ? "" : "s"} · {cities} {cities === 1 ? "city" : "cities"}
       </p>
-      <div ref={box} className="no-scrollbar -mx-4 overflow-x-auto rounded-[28px] bg-[#faf7f2] ring-1 ring-black/[.05]" style={{ scrollBehavior: "smooth" }}>
+      <div ref={box} className="no-scrollbar -mx-4 overflow-x-auto rounded-[28px] bg-[#faf7f2] ring-1 ring-[var(--line)]" style={{ scrollBehavior: "smooth" }}>
         <div className="relative" style={{ width: W, height: H }}>
           <svg className="absolute inset-0" width={W} height={H} aria-hidden="true">
             <g transform={`translate(${PAD},${PAD / 2})`} fill="none" stroke="#c9b9a3" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -63,7 +63,7 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
                 <span className="mt-1.5 max-w-full truncate text-center text-footnote font-semibold leading-tight text-ink">{you ? "You" : callName(m)}</span>
                 <span className="max-w-full truncate text-center text-caption leading-tight text-ink-soft">{m.city || placeFromTz(m.tz)}</span>
                 {onAdd && (
-                  <button type="button" onClick={() => onAdd(m.id)} aria-label={`Add someone related to ${callName(m)}`} className="press absolute -right-0 top-[40px] grid h-7 w-7 place-items-center rounded-full bg-white text-ink-soft shadow ring-1 ring-black/10">
+                  <button type="button" onClick={() => onAdd(m.id)} aria-label={`Add someone related to ${callName(m)}`} className="press absolute -right-0 top-[40px] grid h-7 w-7 place-items-center rounded-full bg-white text-ink-soft shadow ring-1 ring-[var(--line)]">
                     <Icon name="plus" size={14} strokeWidth={2.4} />
                   </button>
                 )}

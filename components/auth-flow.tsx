@@ -306,11 +306,11 @@ export function AuthFlow({ mode }: { mode: Mode }) {
                 <span className="mb-1.5 block text-footnote font-medium text-ink-soft">{t("auth.whichYou")}</span>
                 <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="radiogroup" aria-label={t("auth.whichYou")}>
                   {peek.places.map((p) => (
-                    <button key={p.id} type="button" role="radio" aria-checked={claim === p.id} onClick={() => setClaim(claim === p.id ? null : p.id)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-semibold", claim === p.id ? "bg-ink text-white" : "bg-surface")}>
+                    <button key={p.id} type="button" role="radio" aria-checked={claim === p.id} onClick={() => setClaim(claim === p.id ? null : p.id)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-semibold", claim === p.id ? "bg-accent text-accent-ink" : "bg-surface")}>
                       {t("auth.imName", { name: p.callName })}
                     </button>
                   ))}
-                  <button type="button" role="radio" aria-checked={claim === null} onClick={() => setClaim(null)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-medium", claim === null ? "bg-ink text-white" : "bg-surface")}>
+                  <button type="button" role="radio" aria-checked={claim === null} onClick={() => setClaim(null)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-medium", claim === null ? "bg-accent text-accent-ink" : "bg-surface")}>
                     {t("auth.someoneElse")}
                   </button>
                 </div>
@@ -518,7 +518,7 @@ function OtherSide({ onDone, onSkip }: { onDone: (names: string[]) => Promise<vo
       <p className="m-0 mt-2 text-body text-ink-soft">{t("other.sub")}</p>
       <div className="mt-4 flex gap-2" role="radiogroup" aria-label={t("other.theyAre")}>
         {THEY.map((o) => (
-          <button key={o.id} type="button" role="radio" aria-checked={they === o.id} onClick={() => setThey(o.id)} className={cn("press min-h-10 flex-1 rounded-full px-2 py-1.5 text-callout font-medium leading-tight", they === o.id ? "bg-ink text-white" : "bg-surface")}>
+          <button key={o.id} type="button" role="radio" aria-checked={they === o.id} onClick={() => setThey(o.id)} className={cn("press min-h-10 flex-1 rounded-full px-2 py-1.5 text-callout font-medium leading-tight", they === o.id ? "bg-accent text-accent-ink" : "bg-surface")}>
             {t(o.label)}
           </button>
         ))}
@@ -587,7 +587,7 @@ function InviteStep({ code, names, from, onDone }: { code: string | null; names:
       <p data-display dir="ltr" className="tnum m-0 mt-6 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{code}</p>
       <p className="m-0 mt-2 text-center text-footnote text-ink-faint">{t("invite.valid")}</p>
       <div className="flex-1" />
-      <a href={whatsappInvite(origin, code, from || undefined)} target="_blank" rel="noopener noreferrer" className="press mt-8 flex h-12 items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
+      <a href={whatsappInvite(origin, code, from || undefined)} target="_blank" rel="noopener noreferrer" className="press mt-8 flex h-12 items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
         <Icon name="whatsapp" size={20} />
         {t("invite.whatsapp")}
       </a>

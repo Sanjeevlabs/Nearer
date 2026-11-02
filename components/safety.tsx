@@ -71,11 +71,11 @@ export function SafetyRow({ member, state, viewerTz, compact = false }: { member
       {(state.tone === "help" || state.tone === "overdue") && (
         <div className="mt-3 flex flex-wrap gap-2">
           {loc && (
-            <a href={mapsLink(loc)} target="_blank" rel="noreferrer" className="press flex h-10 items-center rounded-full bg-black px-4 text-callout font-semibold text-white no-underline">
+            <a href={mapsLink(loc)} target="_blank" rel="noreferrer" className="press flex h-10 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
               See location · sent {ago(loc.at)}
             </a>
           )}
-          <a href={`tel:${sos.number}`} className="press flex h-10 items-center rounded-full bg-white px-4 text-callout font-semibold text-ink no-underline">
+          <a href={`tel:${sos.number}`} className="press flex h-10 items-center rounded-full bg-surface px-4 text-callout font-semibold text-ink no-underline">
             Emergency in {sos.country}: {sos.number}
           </a>
         </div>
@@ -114,7 +114,7 @@ export function SafetyWatch() {
               await postJson("/api/safety", { action: "close", checkinId: open.checkin.id });
               await reload();
             }}
-            className="press h-10 shrink-0 rounded-full bg-black px-4 text-callout font-semibold text-white"
+            className="press h-10 shrink-0 rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink"
           >
             {open.checkin.kind === "journey" ? "Landed" : open.tone === "help" ? "I'm okay" : "Home safe"}
           </button>

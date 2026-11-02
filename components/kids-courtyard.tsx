@@ -45,7 +45,7 @@ function BedtimePrompt() {
       <p className="voice m-0 mt-2 text-title leading-snug">Tonight&rsquo;s story for {callName(child)}</p>
       <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">A few minutes in your voice. It waits on their screen for tonight.</p>
       <div className="mt-3 flex gap-2">
-        <button type="button" disabled={busy} onClick={() => openAdd("voice", { kind: "bedtime", forMemberId: child.id }, [child.id])} className={`${pill} bg-black text-white disabled:opacity-40`}>
+        <button type="button" disabled={busy} onClick={() => openAdd("voice", { kind: "bedtime", forMemberId: child.id }, [child.id])} className={`${pill} bg-accent text-accent-ink disabled:opacity-40`}>
           Record a story
         </button>
         <button type="button" disabled={busy} onClick={() => void notNow()} className={`${pill} text-ink-soft disabled:opacity-40`}>
@@ -85,7 +85,7 @@ function AskedByKids() {
                     {playing ? "Pause" : "Play"}
                   </button>
                 )}
-                <button type="button" onClick={() => openAdd("voice", { kind: "kid_answer", askId: a.id, prompt: words || undefined }, [a.fromMemberId])} className={`${pill} bg-black text-white`}>
+                <button type="button" onClick={() => openAdd("voice", { kind: "kid_answer", askId: a.id, prompt: words || undefined }, [a.fromMemberId])} className={`${pill} bg-accent text-accent-ink`}>
                   Answer by voice
                 </button>
                 <span className="text-caption text-ink-soft">{relativeDay(a.askedAt)}</span>

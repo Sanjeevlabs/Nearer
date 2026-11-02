@@ -64,7 +64,7 @@ export function InviteSheet({ open, onClose }: { open: boolean; onClose: () => v
               </p>
               {code && (
                 <>
-                  <a href={whatsappInvite(window.location.origin, code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
+                  <a href={whatsappInvite(window.location.origin, code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
                     <Icon name="whatsapp" size={20} />
                     Send on WhatsApp
                   </a>

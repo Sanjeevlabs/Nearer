@@ -58,12 +58,12 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
       </div>
       <div className="mt-2.5 flex flex-wrap items-center gap-2 ps-[56px]">
         {item.action === "play" && card ? (
-          <button type="button" onClick={() => (on ? toggle() : play(card))} className={`${pill} bg-black text-white`} aria-label={`${on && isPlaying ? "Pause" : "Play"}: ${item.text}`}>
+          <button type="button" onClick={() => (on ? toggle() : play(card))} className={`${pill} bg-accent text-accent-ink`} aria-label={`${on && isPlaying ? "Pause" : "Play"}: ${item.text}`}>
             <Icon name={on && isPlaying ? "pause" : "play"} size={15} />
             {on && isPlaying ? "Pause" : "Play"}
           </button>
         ) : (
-          <Link href={item.href} onClick={seen} className={`${pill} ${item.waiting ? "bg-black text-white" : "bg-well text-ink"}`}>
+          <Link href={item.href} onClick={seen} className={`${pill} ${item.waiting ? "bg-accent text-accent-ink" : "bg-well text-ink"}`}>
             {item.action === "answer" ? "Answer" : "Open"}
           </Link>
         )}

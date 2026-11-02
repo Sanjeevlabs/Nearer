@@ -116,7 +116,7 @@ function KidsBody({ data }: { data: KidsPage }) {
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <PlayPill voice={q} label={`Play ${who}'s question`} />
                     {!a.answeredCardId && (
-                      <button type="button" onClick={() => openAdd("voice", { kind: "kid_answer", askId: a.id, prompt: words || undefined }, [a.fromMemberId])} className={`${pill} bg-black text-white`}>
+                      <button type="button" onClick={() => openAdd("voice", { kind: "kid_answer", askId: a.id, prompt: words || undefined }, [a.fromMemberId])} className={`${pill} bg-accent text-accent-ink`}>
                         Answer by voice
                       </button>
                     )}
@@ -154,7 +154,7 @@ function KidsBody({ data }: { data: KidsPage }) {
         {kids.some(mine) && (
           <div className="mt-3 flex flex-wrap gap-2">
             {kids.filter(mine).map((k) => (
-              <button key={k.id} type="button" onClick={() => openAdd("voice", { kind: "bedtime", forMemberId: k.id }, [k.id])} className={`${pill} bg-black text-white`}>
+              <button key={k.id} type="button" onClick={() => openAdd("voice", { kind: "bedtime", forMemberId: k.id }, [k.id])} className={`${pill} bg-accent text-accent-ink`}>
                 Record one for {callName(k)}
               </button>
             ))}

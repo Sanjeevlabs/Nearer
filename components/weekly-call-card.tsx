@@ -81,7 +81,7 @@ export function WeeklyCallCard() {
           <Icon name="calendar" size={17} />
           Add to calendar
         </a>
-        <button type="button" onClick={() => void startNow()} disabled={busy} className="press flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-black px-2 text-callout font-semibold text-white disabled:opacity-40">
+        <button type="button" onClick={() => void startNow()} disabled={busy} className="press flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-2 text-callout font-semibold text-accent-ink disabled:opacity-40">
           <Icon name="video" size={17} />
           Start now
         </button>

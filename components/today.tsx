@@ -78,7 +78,7 @@ export function TodayCard({ variant = "card" }: { variant?: "card" | "line" }) {
       <div className="relative mt-4 flex items-center gap-2">
         {!task.mine ? (
           <button type="button" onClick={answer} className="press flex h-12 items-center gap-2 rounded-full bg-white pl-2 pr-5 text-body font-semibold text-black">
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-black/10">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-tint">
               <Icon name="mic" size={18} strokeWidth={2.4} />
             </span>
             Answer by voice

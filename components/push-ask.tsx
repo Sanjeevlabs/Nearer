@@ -71,7 +71,7 @@ export function PushAsk({ className = "" }: { className?: string }) {
           )}
           {(phase === "ask" || phase === "working") && (
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" disabled={phase === "working"} onClick={() => void turnOn()} className={`${pill} bg-black text-white disabled:opacity-60`}>
+              <button type="button" disabled={phase === "working"} onClick={() => void turnOn()} className={`${pill} bg-accent text-accent-ink disabled:opacity-60`}>
                 {phase === "working" ? "Turning on…" : "Turn on"}
               </button>
               <button type="button" disabled={phase === "working"} onClick={later} className={`${pill} bg-well text-ink`}>

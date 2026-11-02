@@ -238,7 +238,7 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
           <p className="m-0 mb-1.5 text-footnote text-ink-soft">{callName(person)} is the</p>
           <div className="flex flex-wrap gap-1.5">
             {LINK_WORDS.map((w) => (
-              <button key={w} type="button" aria-pressed={word === w} onClick={() => setWord(w)} className={cn("press h-9 rounded-full px-3 text-callout font-medium", word === w ? "bg-black text-white" : "bg-surface")}>
+              <button key={w} type="button" aria-pressed={word === w} onClick={() => setWord(w)} className={cn("press h-9 rounded-full px-3 text-callout font-medium", word === w ? "bg-accent text-accent-ink" : "bg-surface")}>
                 {w}
               </button>
             ))}
@@ -246,7 +246,7 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
           <p className="m-0 mb-1.5 mt-2.5 text-footnote text-ink-soft">of</p>
           <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3">
             {others.map((m) => (
-              <button key={m.id} type="button" aria-pressed={other === m.id} onClick={() => setOther(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-callout font-medium", other === m.id ? "bg-black text-white" : "bg-surface")}>
+              <button key={m.id} type="button" aria-pressed={other === m.id} onClick={() => setOther(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-callout font-medium", other === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={30} />
                 {callName(m)}
               </button>

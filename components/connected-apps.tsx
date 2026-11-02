@@ -80,7 +80,7 @@ export function ConnectedApps() {
                   </button>
                 )}
                 {r.status === "connect" && r.accountId && (
-                  <a href={`/api/partners/${encodeURIComponent(r.accountId)}/connect`} className="press flex h-11 items-center rounded-full bg-ink px-4 text-callout font-semibold text-white no-underline">
+                  <a href={`/api/partners/${encodeURIComponent(r.accountId)}/connect`} className="press flex h-11 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
                     Connect
                   </a>
                 )}

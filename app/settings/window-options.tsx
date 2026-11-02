@@ -75,7 +75,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
     setUploading(false);
   };
 
-  const tile = (on: boolean) => cn("press relative block aspect-[4/3] w-full overflow-hidden rounded-[14px] bg-surface ring-1 ring-black/10", on && "outline outline-2 outline-offset-[3px] outline-ink");
+  const tile = (on: boolean) => cn("press relative block aspect-[4/3] w-full overflow-hidden rounded-[14px] bg-surface ring-1 ring-[var(--line)]", on && "outline outline-2 outline-offset-[3px] outline-ink");
 
   return (
     <SettingsSection
@@ -102,7 +102,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
               aria-checked={on}
               disabled={busy}
               onClick={() => form.set({ photo: null, scene: sp.id })}
-              className={cn("press min-h-[44px] rounded-full text-callout font-semibold", on ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+              className={cn("press min-h-[44px] rounded-full text-callout font-semibold", on ? "bg-accent text-accent-ink" : "bg-surface text-ink-soft")}
             >
               {sp.label}
             </button>
@@ -181,7 +181,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
             aria-checked={form.draft.quietAfterHours === h}
             disabled={busy}
             onClick={() => form.set({ quietAfterHours: h })}
-            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", form.draft.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", form.draft.quietAfterHours === h ? "bg-accent text-accent-ink" : "bg-surface text-ink-soft")}
           >
             {h} h
           </button>

@@ -491,7 +491,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
               {levels.map((v, i) => (
                 <span
                   key={i}
-                  className={cn("block w-[3px] rounded-full", phase === "recording" ? "bg-marigold" : "bg-black/10")}
+                  className={cn("block w-[3px] rounded-full", phase === "recording" ? "bg-marigold" : "bg-tint")}
                   style={{ height: `${Math.max(8, v * 100)}%`, transition: "height 90ms linear" }}
                 />
               ))}
@@ -513,7 +513,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
               onClick={phase === "recording" ? stop : () => void start()}
               disabled={phase === "working"}
               aria-label={phase === "recording" ? "Stop recording" : "Start recording"}
-              className="press mt-5 grid h-[88px] w-[88px] place-items-center rounded-full bg-black text-white disabled:opacity-40"
+              className="press mt-5 grid h-[88px] w-[88px] place-items-center rounded-full bg-accent text-accent-ink disabled:opacity-40"
               style={{ boxShadow: phase === "recording" ? "0 0 0 8px var(--marigold-glow)" : "0 14px 30px rgba(0,0,0,.25)" }}
             >
               <Icon name={phase === "recording" ? "stop" : "mic"} size={34} />
@@ -687,7 +687,7 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
           <legend className="mb-2 p-0 text-body font-semibold">Whose is this?</legend>
           <div className="flex flex-wrap gap-2">
             {kids.map((k) => (
-              <button key={k.id} type="button" aria-pressed={whose === k.id} onClick={() => setWhose(k.id)} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1.5 pr-4 text-body font-semibold", whose === k.id ? "bg-black text-white" : "bg-surface text-ink")}>
+              <button key={k.id} type="button" aria-pressed={whose === k.id} onClick={() => setWhose(k.id)} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1.5 pr-4 text-body font-semibold", whose === k.id ? "bg-accent text-accent-ink" : "bg-surface text-ink")}>
                 <Avatar src={memberPhoto(k)} name={callName(k)} size={32} />
                 {callName(k)}
               </button>

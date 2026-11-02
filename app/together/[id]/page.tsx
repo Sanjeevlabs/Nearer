@@ -89,7 +89,7 @@ export default function ProjectPage() {
         {p.dueAt && <p className="m-0 mt-1 text-footnote text-ink-soft">{new Date(p.dueAt).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · both homes see this</p>}
         <div className="no-scrollbar -mx-4 mt-3 flex items-center gap-1.5 overflow-x-auto px-4">
           {[...(visitor ? [visitor] : []), ...hosts].map((m) => (
-            <span key={m.id} className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white pl-0.5 pr-3 text-footnote font-medium">
+            <span key={m.id} className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface pl-0.5 pr-3 text-footnote font-medium">
               <Avatar src={memberPhoto(m)} name={callName(m)} size={32} />
               {m.id === viewer.id ? "Me" : callName(m)}
             </span>
@@ -107,7 +107,7 @@ export default function ProjectPage() {
           return (
             <li key={task.id} className="py-2">
               <div className="flex items-center gap-2.5">
-                <button type="button" aria-pressed={task.done} aria-label={`${task.done ? "Not done" : "Done"}: ${task.text}`} onClick={() => act({ action: "task-toggle", taskId: task.id })} className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full border-2", task.done ? "border-black bg-black text-white" : "border-black/25")}>
+                <button type="button" aria-pressed={task.done} aria-label={`${task.done ? "Not done" : "Done"}: ${task.text}`} onClick={() => act({ action: "task-toggle", taskId: task.id })} className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full border-2", task.done ? "border-black bg-accent text-accent-ink" : "border-black/25")}>
                   {task.done && <Icon name="check" size={14} strokeWidth={3} />}
                 </button>
                 {editing === task.id ? (
@@ -117,7 +117,7 @@ export default function ProjectPage() {
                     onChange={(e) => setDraft(e.target.value.slice(0, 140))}
                     onBlur={async () => { if (draft.trim() && draft !== task.text) await act({ action: "task-edit", taskId: task.id, text: draft.trim() }); setEditing(null); }}
                     onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                    className="h-10 min-w-0 flex-1 rounded-[12px] bg-white px-3 text-body outline-none"
+                    className="h-10 min-w-0 flex-1 rounded-[12px] bg-surface px-3 text-body outline-none"
                     aria-label="Task"
                   />
                 ) : (
@@ -137,7 +137,7 @@ export default function ProjectPage() {
               {assignFor === task.id && (
                 <div className="no-scrollbar -mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 pb-1">
                   {people.map((m) => (
-                    <button key={m.id} type="button" aria-pressed={task.assignee === m.id} onClick={async () => { await act({ action: "task-assign", taskId: task.id, assignee: task.assignee === m.id ? null : m.id }); setAssignFor(null); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-callout font-medium", task.assignee === m.id ? "bg-black text-white" : "bg-white")}>
+                    <button key={m.id} type="button" aria-pressed={task.assignee === m.id} onClick={async () => { await act({ action: "task-assign", taskId: task.id, assignee: task.assignee === m.id ? null : m.id }); setAssignFor(null); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3 text-callout font-medium", task.assignee === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
                       <Avatar src={memberPhoto(m)} name={callName(m)} size={30} />
                       {m.id === viewer.id ? "Me" : callName(m)}
                     </button>
@@ -174,8 +174,8 @@ function EditPlan({ project, onClose, onSave }: { project: Project; onClose: () 
   const [date, setDate] = useState(project.dueAt ? project.dueAt.slice(0, 10) : "");
   return (
     <div className="mt-3 space-y-2 rounded-card bg-surface p-3">
-      <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} aria-label="Plan name" className="h-11 w-full rounded-full bg-white px-4 text-body outline-none" />
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" className="h-11 w-full rounded-full bg-white px-4 text-body" />
+      <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} aria-label="Plan name" className="h-11 w-full rounded-full bg-surface px-4 text-body outline-none" />
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" className="h-11 w-full rounded-full bg-surface px-4 text-body" />
       <div className="flex gap-2">
         <Button variant="quiet" className="flex-1" onClick={onClose}>
           Cancel

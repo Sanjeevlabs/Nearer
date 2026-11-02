@@ -116,7 +116,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                       const on = what?.kind === "occasion" && what.o.key === o.key;
                       return (
                         <button key={o.key} type="button" aria-pressed={on} onClick={() => choose({ kind: "occasion", o })} className={cn("press flex w-[136px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
-                          {o.memberId ? <Avatar src={memberPhoto(members.find((m) => m.id === o.memberId))} name={o.label} size={30} /> : <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-black/[.05]")}><Icon name="lamp" size={16} /></span>}
+                          {o.memberId ? <Avatar src={memberPhoto(members.find((m) => m.id === o.memberId))} name={o.label} size={30} /> : <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-tint")}><Icon name="lamp" size={16} /></span>}
                           <span className="mt-2 line-clamp-2 text-callout font-semibold leading-tight">{o.label}</span>
                           <span className={cn("mt-0.5 text-caption", on ? "text-white/60" : "text-ink-faint")}>{whenLabel(o.days, o.date)}</span>
                         </button>
@@ -126,7 +126,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                       const on = what?.kind === "other" && what.type === x.type;
                       return (
                         <button key={x.type} type="button" aria-pressed={on} onClick={() => choose({ kind: "other", type: x.type })} className={cn("press flex w-[112px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
-                          <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-black/[.05]")}><Icon name={x.icon} size={16} /></span>
+                          <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-tint")}><Icon name={x.icon} size={16} /></span>
                           <span className="mt-2 text-callout font-semibold leading-tight">{eventTypeLabel(x.type)}</span>
                         </button>
                       );
@@ -192,7 +192,7 @@ function Step({ n, label, children }: { n: number; label: string; children: Reac
   return (
     <div className="mt-4 first:mt-0">
       <p className="m-0 mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.08em] text-ink-faint">
-        <span className="tnum grid h-5 w-5 place-items-center rounded-full bg-black/[.06] text-caption">{n}</span>
+        <span className="tnum grid h-5 w-5 place-items-center rounded-full bg-tint text-caption">{n}</span>
         {label}
       </p>
       {children}

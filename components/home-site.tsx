@@ -34,7 +34,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
         <Lockup mark={28} word={84} className="text-ink" />
         <nav className="flex items-center gap-4 text-body sm:gap-5">
           {signedIn ? (
-            <button type="button" onClick={onEnter} className="press min-h-11 rounded-full bg-ink px-4 py-2 font-semibold text-white">
+            <button type="button" onClick={onEnter} className="press min-h-11 rounded-full bg-accent px-4 py-2 font-semibold text-accent-ink">
               Open Nearer
             </button>
           ) : (
@@ -42,7 +42,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
               <Link href="/signin" className="flex min-h-11 items-center text-ink-soft no-underline hover:text-ink">
                 Sign in
               </Link>
-              <Link href="/create" className="press flex min-h-11 items-center rounded-full bg-ink px-4 py-2 font-semibold text-white no-underline">
+              <Link href="/create" className="press flex min-h-11 items-center rounded-full bg-accent px-4 py-2 font-semibold text-accent-ink no-underline">
                 Start your family
               </Link>
             </>
@@ -63,7 +63,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
           {/* The way in: on every screen when signed in, and on a phone when not (no QR there). */}
           <div className={signedIn ? "mt-7 flex flex-col gap-2.5 sm:max-w-[320px]" : "mt-7 flex flex-col gap-2.5 sm:max-w-[320px] md:hidden"} data-ui="home-actions">
             {signedIn ? (
-              <button type="button" onClick={onEnter} className="press h-12 rounded-full bg-ink text-headline font-semibold text-white">
+              <button type="button" onClick={onEnter} className="press h-12 rounded-full bg-accent text-headline font-semibold text-accent-ink">
                 Open Nearer
               </button>
             ) : (
@@ -76,12 +76,12 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
                     await onDemo();
                     setBusy(false);
                   }}
-                  className="press h-12 rounded-full bg-ink text-headline font-semibold text-white disabled:opacity-60"
+                  className="press h-12 rounded-full bg-accent text-headline font-semibold text-accent-ink disabled:opacity-60"
                 >
                   {busy ? "Opening…" : "Try the demo family"}
                 </button>
                 <p className="m-0 -mt-1 text-center text-footnote text-ink-soft">No sign-up. Opens a demo family.</p>
-                <Link href="/create" className="press flex h-[50px] items-center justify-center rounded-full bg-black/[.07] text-body font-semibold text-ink no-underline">
+                <Link href="/create" className="press flex h-[50px] items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
                   Start your family
                 </Link>
                 <Link href="/signin" className="flex h-11 items-center justify-center text-body font-medium text-ink-soft no-underline">
@@ -90,7 +90,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
               </>
             )}
           </div>
-          <div className="mt-9 hidden items-center gap-6 md:flex rounded-[28px] bg-white p-4 shadow-[0_20px_50px_-30px_rgba(0,0,0,.35)] ring-1 ring-black/[.05]" style={{ maxWidth: 480 }}>
+          <div className="mt-9 hidden items-center gap-6 md:flex rounded-[28px] bg-white p-4 shadow-[0_20px_50px_-30px_rgba(0,0,0,.35)] ring-1 ring-[var(--line)]" style={{ maxWidth: 480 }}>
             <div className="h-[132px] w-[132px] shrink-0 overflow-hidden rounded-[14px] [&_svg]:h-full [&_svg]:w-full" aria-label="QR code: open the Nearer demo on your phone" role="img" dangerouslySetInnerHTML={qr ? { __html: qr } : undefined} />
             <div>
               <p className="m-0 text-title font-semibold leading-tight">Scan to open it on your phone</p>
@@ -122,7 +122,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
         <div className="mx-auto grid max-w-[1120px] gap-10 px-4 sm:px-8 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <article key={f.title}>
-              <div className="overflow-hidden rounded-[26px] bg-paper ring-1 ring-black/[.05]">
+              <div className="overflow-hidden rounded-[26px] bg-paper ring-1 ring-[var(--line)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={f.img} alt="" className="block aspect-[390/560] w-full object-cover object-top" loading="lazy" />
               </div>

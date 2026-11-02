@@ -92,12 +92,12 @@ export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<Festiva
                 return (
                   <li key={i} className="flex items-center gap-2 rounded-[20px] bg-card p-2 pl-3 shadow-card">
                     <button type="button" role="checkbox" aria-checked={on} aria-label={`${on ? "Untick" : "Tick"}: ${step}`} onClick={() => toggle(i)} className="press flex min-h-[44px] min-w-0 flex-1 items-center gap-3 text-left">
-                      <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", on ? "bg-ink text-white" : "ring-1 ring-black/25")} aria-hidden="true">
+                      <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", on ? "bg-accent text-accent-ink" : "ring-1 ring-black/25")} aria-hidden="true">
                         {on && <Icon name="check" size={13} />}
                       </span>
                       <span className={cn("min-w-0 flex-1 text-body leading-snug", on && "text-ink-soft line-through")}>{step}</span>
                     </button>
-                    <button type="button" onClick={() => openAdd("voice", { kind: "story", prompt: step })} aria-label={`Record how you do this step: ${step}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-white">
+                    <button type="button" onClick={() => openAdd("voice", { kind: "story", prompt: step })} aria-label={`Record how you do this step: ${step}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
                       <Icon name="mic" size={18} />
                     </button>
                   </li>
@@ -148,7 +148,7 @@ export function FestivalHeader() {
   const accent = week.accent && HEX.test(week.accent) ? week.accent : null;
   const lamp = lampGlowCss(week.lampAccent);
 
-  const btn = "press inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-5 text-body font-semibold text-white no-underline";
+  const btn = "press inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 text-body font-semibold text-accent-ink no-underline";
   let line = `${leadName} leads this year`;
   let action: React.ReactNode = null;
   if (week.mode === "lead") {
