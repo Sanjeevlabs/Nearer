@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 360" preserveAspectRatio="xMidYMid slice">
+  <style>
+    .wall{fill:#efe9e1}.low{fill:#e6dfd5}.sky{fill:#e4e9ee}.frame{fill:none;stroke:#f8f5f0;stroke-width:8}.line{fill:none;stroke:rgba(60,46,34,.42);stroke-width:1.2}.bar{stroke:#f8f5f0;stroke-width:3}.sill{fill:#f8f5f0;stroke:rgba(60,46,34,.42);stroke-width:1.2}
+    @media (prefers-color-scheme: dark){.wall{fill:#2b2724}.low{fill:#25211e}.sky{fill:#1f2430}.frame{stroke:#3a3531}.line{stroke:rgba(255,240,225,.32)}.bar{stroke:#3a3531}.sill{fill:#3a3531;stroke:rgba(255,240,225,.32)}}
+  </style>
+  <!-- The drawn window with no sky claim: what the first screen shows before their sky is known. -->
+  <rect class="wall" width="390" height="360"/>
+  <path class="sky" d="M95 286 L95 146 A100 100 0 0 1 295 146 L295 286 Z"/>
+  <path class="frame" d="M95 286 L95 146 A100 100 0 0 1 295 146 L295 286"/>
+  <path class="line" d="M95 286 L95 146 A100 100 0 0 1 295 146 L295 286"/>
+  <line class="bar" x1="195" y1="54" x2="195" y2="286"/>
+  <line class="bar" x1="95" y1="183" x2="295" y2="183"/>
+  <rect class="sill" x="77" y="286" width="236" height="10" rx="2"/>
+  <rect class="low" x="0" y="296" width="390" height="64"/>
+</svg>

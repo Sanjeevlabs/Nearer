@@ -293,6 +293,9 @@ export function DrawnScene({ sky, space, onLight, onHold, pulseKey, lampLabel, c
   const at = LAMP_AT[space];
   return (
     <div data-ui="window-scene" data-renderer="drawn" data-phase={sky.phase} className="window-scene relative w-full overflow-hidden" style={{ height: WINDOW_PHOTO_HEIGHT }}>
+      {/* The static frame the shell painted first, under the live drawing. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/window/frame-window.svg" alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" role="img" aria-label={`A drawing of their home, ${sky.phase === "day" ? "in daylight" : sky.phase === "night" ? "at night" : `at ${sky.phase}`}`}>
         <Frame space={space} sky={sky} motion={motion} />
         <Lantern x={W * at.x} y={at.top} glow={sky.lampGlow} cord={at.cord} />

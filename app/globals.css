@@ -270,6 +270,11 @@ button {
   from { background-position: 120% 0; }
   to { background-position: -120% 0; }
 }
+/* The server-sent shell (app/page.tsx CheckingShell): which drawn frame, from the inline hint in app/layout.tsx. */
+.pre-window, .pre-court { display: none; }
+html[data-entered="1"]:not([data-door="open"]) .pre-window { display: block; }
+html[data-door="open"] .pre-court { display: block; }
+html[data-entered="1"] .pre-mark, html[data-door="open"] .pre-mark { display: none; }
 /* The drawn scene (components/window-scene.tsx): thin lines, light shades. */
 .window-scene {
   --scene-wall: #efe9e1;

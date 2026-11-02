@@ -11,8 +11,14 @@ import { Photo } from "./ui/kit";
 
 export function HeroBox({ src, children }: { src: string | null; children?: React.ReactNode }) {
   return (
-    <div className="relative w-full overflow-hidden bg-[#2a211b]" style={{ height: WINDOW_PHOTO_HEIGHT }}>
-      {src && <Photo src={src} alt="Their home" sizes={WINDOW_SIZES} priority />}
+    <div className="relative w-full overflow-hidden bg-paper" style={{ height: WINDOW_PHOTO_HEIGHT }}>
+      {src ? (
+        <Photo src={src} alt="Their home" sizes={WINDOW_SIZES} priority />
+      ) : (
+        // The drawn window frame the server-sent shell painted (same file, already cached): no flash, no sky claimed.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/window/frame-window.svg" alt="" fetchPriority="high" className="window-scene absolute inset-0 h-full w-full object-cover" />
+      )}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[96px]" style={{ background: "linear-gradient(rgba(0,0,0,.38), rgba(0,0,0,0))" }} aria-hidden="true" />
       {children}
     </div>
