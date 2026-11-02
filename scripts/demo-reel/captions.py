@@ -4,7 +4,7 @@
     python3 scripts/demo-reel/captions.py out/demo-reel
 
 Writes, from scripts/demo-reel/shots.py and the recorder's manifest.json:
-  out/nearer-demo-captions.srt      cues on the final timeline (a [TODO] cue for any shot that recorded less than planned)
+  out/nearer-demo-captions.srt      cues on the final timeline (TODO notes go to the voice-over file only, never into the captions)
   out/nearer-demo-voiceover.txt     timestamped voice-over lines
   out/demo-reel/assets/cap-NN.png   the burned-in caption (white system sans on a dark translucent pill, bottom safe area)
   out/demo-reel/assets/endcard.png  the end card (brand mark, wordmark, nearer.site)
@@ -135,10 +135,6 @@ def main() -> int:
         caption_png(s["caption"], assets / f"cap-{s['id']:02d}.png")
         n += 1
         srt.append(f"{n}\n{stamp(a)} --> {stamp(b)}\n{s['caption']}\n")
-        for note in manifest.get(s["id"], {}).get("notes", []):
-            if note.startswith("TODO"):
-                n += 1
-                srt.append(f"{n}\n{stamp(a)} --> {stamp(b)}\n[{note}]\n")
         v = t0 + 0.4
         vo.append(f"{int(v // 60)}:{int(v % 60):02d}  {s['vo']}")
         timeline.append({"id": s["id"], "start": round(t0, 3), "dur": s["dur"], "cap_in": round(a, 3), "cap_out": round(b, 3)})
