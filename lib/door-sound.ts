@@ -1,4 +1,4 @@
-// The sound of the door: a recorded key turning in a lock, the latch, a soft creak
+// The sound of the door: a recorded latch click and a soft wooden creak
 // (public/sound/door-unlock.*, credits in public/sound/CREDITS.md). Played with an
 // HTMLAudioElement that is preloaded on the first user interaction, so it is ready by the
 // time the door moves. Silent when the person asked for reduced motion. If the file cannot
@@ -11,8 +11,8 @@ export const DOOR_SOUND = {
   ogg: "/sound/door-unlock.ogg",
 } as const;
 const VOLUME = 0.6;
-/** Where the key turns in the recording; the phone ticks once here. */
-export const KEY_TURN_MS = 350;
+/** Where the latch clicks in the recording; the phone ticks once here. */
+export const KEY_TURN_MS = 210;
 
 let el: HTMLAudioElement | null = null;
 let broken = false;
@@ -79,7 +79,7 @@ function play(fallback: () => void): void {
   }
 }
 
-/** Key, latch, creak. ~1.5 s. Silent under reduced motion. */
+/** Latch and creak. ~1.5 s. Silent under reduced motion. */
 export function playDoorOpen(): void {
   if (typeof window === "undefined" || reduced()) return;
   play(synthDoorOpen);
