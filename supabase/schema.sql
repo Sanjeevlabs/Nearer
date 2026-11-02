@@ -429,6 +429,23 @@ alter table family_docs add constraint family_docs_kind_check check (kind in ('r
 create index if not exists family_docs_family_kind_idx on family_docs (family_id, kind, created_at desc);
 alter table family_docs enable row level security;
 
+-- ------------------------------------------------------------ client_errors
+-- What the app hit on someone's phone (the error beacon, /api/beacon). Thin and impersonal on
+-- purpose: the page path (ids blanked), the message, the top of the stack, the build, a device
+-- class. Written and read by the server only; owners and admins see their family's last 50.
+create table if not exists client_errors (
+  id text primary key,
+  family_id text not null,
+  route text not null,
+  message text not null,
+  stack text not null default '',
+  build text not null default '',
+  ua text not null default 'other',
+  at timestamptz not null default now()
+);
+create index if not exists client_errors_family_idx on client_errors (family_id, at desc);
+alter table client_errors enable row level security;
+
 -- ---------------------------------------------------------- public_shares
 -- The only data that ever leaves a family: a frozen copy of one thing a
 -- member chose to share (a recipe), behind an unguessable token. Revocable.

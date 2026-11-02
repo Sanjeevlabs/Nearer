@@ -8,6 +8,7 @@ import { purgeDismissals } from "./gather-store";
 import { deleteDoc, listAllDocs, putDoc } from "./family-docs";
 import { HABIT_TICK_KEEP_DAYS } from "./habits";
 import { BEAT_TTL_MS } from "./lamp";
+import { purgeClientErrors } from "./client-errors";
 import { OPEN_TTL_MS, expireCheckin } from "./safety";
 
 const DAY = 86_400_000;
@@ -52,11 +53,12 @@ export interface PurgeCounts {
   chitthi: number;
   habitTicks: number;
   sweepMarks: number;
+  clientErrors: number;
 }
 
 export async function purgeExpired(familyId: string, now: Date = new Date()): Promise<PurgeCounts> {
   const t = now.getTime();
-  const out: PurgeCounts = { knocks: 0, nudges: 0, eventDismissals: 0, dayLines: 0, sittings: 0, checkinsClosed: 0, checkinsDeleted: 0, museCalls: 0, presence: 0, lampBeats: 0, suggestionsWithdrawn: 0, previews: 0, chitthi: 0, habitTicks: 0, sweepMarks: 0 };
+  const out: PurgeCounts = { knocks: 0, nudges: 0, eventDismissals: 0, dayLines: 0, sittings: 0, checkinsClosed: 0, checkinsDeleted: 0, museCalls: 0, presence: 0, lampBeats: 0, suggestionsWithdrawn: 0, previews: 0, chitthi: 0, habitTicks: 0, sweepMarks: 0, clientErrors: 0 };
   // One kind failing never stops the rest.
   const step = async (name: string, f: () => Promise<void>) => {
     try {
@@ -122,6 +124,9 @@ export async function purgeExpired(familyId: string, now: Date = new Date()): Pr
   });
   await step("sweep_mark", async () => {
     for (const k of await listAllDocs(familyId, "sweep_mark")) if (t - Date.parse(k.at) > TTL.sweepMarkMs) (await deleteDoc(familyId, "sweep_mark", k.id), out.sweepMarks++);
+  });
+  await step("client_errors", async () => {
+    out.clientErrors = await purgeClientErrors(familyId, now);
   });
   await step("suggestions", async () => {
     for (const s of await dbListSuggestions("pending", familyId)) {
