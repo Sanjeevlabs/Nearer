@@ -26,10 +26,19 @@ export function dropEarly(): void {
 }
 
 /** GET `url` (no-store), answered by its early request when there is one; a failed early request is retried here. */
+/** The host cuts a request off now and then (a 503 under its CPU limit): worth one more try. */
+const RETRYABLE = new Set([502, 503, 504]);
+
 export function fetchFirst(url: string): Promise<Response> {
   const fresh = () => fetch(url, { cache: "no-store" });
+  const again = async (res: Response): Promise<Response> => {
+    if (!RETRYABLE.has(res.status)) return res;
+    await new Promise((r) => setTimeout(r, 250));
+    const second = await fresh().catch(() => res);
+    return second;
+  };
   const early = takeEarly(url);
-  return early ? early.catch(fresh) : fresh();
+  return (early ? early.catch(fresh) : fresh()).then(again);
 }
 
 /**
