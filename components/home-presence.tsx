@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { CareSettings, Knock, Need, Pet, Presence, PresenceMoment, Project, Question } from "@/lib/kinds";
+import type { CareSettings, Need, Pet, Presence, PresenceMoment, Project, Question } from "@/lib/kinds";
 import { callName, memberPhoto } from "@/lib/people";
 import { MOMENT_LABEL, latestFor, quietDay, shareableFor, todayFor } from "@/lib/presence";
 import type { Member } from "@/lib/schemas";
 import { useDisplayText } from "@/lib/use-display-text";
 import { ago, postJson, useJson } from "@/lib/use-json";
-import { roomUrl } from "@/lib/overlap";
 import { householdName, households, type Household } from "@/lib/households";
 import { cn } from "@/lib/utils";
 import { dayPartIn, placeFromTz, timeIn } from "@/lib/zones";
 import { SafetyWatch } from "./safety";
 import { useShell } from "./shell";
 import { Translated } from "./translated";
-import { Avatar, Icon, LiveDot, MuseMark } from "./ui/kit";
+import { Avatar, Icon, MuseMark } from "./ui/kit";
 import { useViewer } from "./viewer";
 
 interface PresenceData {
@@ -129,24 +128,6 @@ export function VisitCountdown({ visit }: { visit: Project }) {
       </span>
       <Icon name="chevron" size={18} className="text-ink-faint" />
     </Link>
-  );
-}
-
-export function KnockBanner({ knock, member }: { knock: Knock; member: Member | undefined }) {
-  return (
-    <div className="flex items-center gap-3 rounded-card bg-well p-3.5">
-      <Avatar src={memberPhoto(member)} name={callName(member)} size={44} ring />
-      <div className="min-w-0 flex-1">
-        <p className="m-0 flex items-center gap-1.5 text-body font-semibold">
-          <LiveDot />
-          {callName(member)}&rsquo;s door is open
-        </p>
-        <p className="voice m-0 truncate text-body text-ink-soft">{knock.note || "Come sit with me?"}</p>
-      </div>
-      <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
-        Come sit
-      </a>
-    </div>
   );
 }
 

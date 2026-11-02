@@ -3,17 +3,17 @@
 import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
-import { dbListCards, dbListMembers, dbListPlays, dbListRelationships } from "./db";
+import { dbListCards, dbListMembers, dbListRelationships } from "./db";
 import { listDocs, listDocsMany } from "./family-docs";
 import { withDeadline } from "./deadline";
 import { getRitualSettings } from "./occasion-settings";
-import type { Nudge, Presence, WindowView } from "./kinds";
+import type { Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
 import { households } from "./households";
 import { lampView, type LampView } from "./lamp";
 import { inBackground } from "./push/background";
 import { MOMENT_LABEL, todayFor } from "./presence";
-import type { Card, Member, Play, Relationship } from "./schemas";
+import type { Card, Member, Relationship } from "./schemas";
 import { fetchWeather, geocode, mockPlace, mockWeather, phaseFor, type DayPhase, type PlaceHint, type Weather } from "./weather";
 import { countryOfMember } from "./place";
 import { checkinEvents, composedLine, type DayMoment } from "./window-words";
@@ -29,9 +29,8 @@ import { createDownloadUrl } from "./storage";
 import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
-import { awakeNow, callTile, nextLine, nextUp, waitingForYou, type Glance } from "./glance";
-import { askCardIds, guardianMap, kidsTile } from "./kids";
-import { renderNudgeText, unseenFor } from "./nudges";
+import { nextLine, nextUp } from "./glance";
+import { doorsFor, type Door } from "./doors";
 import { listEvents } from "./gather-store";
 import type { FamilyEvent } from "./events";
 import { familyHolidaysNow } from "./occasions-server";
@@ -84,8 +83,10 @@ export interface WindowState {
   sky: { glyph: "sun" | "moon" | null; moon: { illumination: number; waxing: boolean; name: string }; bothNight: boolean };
   /** Is now a good time to call, in their day and yours. */
   call: { good: boolean; text: string };
-  /** Four 3-second answers about the whole family (under Safe & sound). */
-  glance: Glance;
+  /** Doors open to the viewer right now (not their own), only those they may see (lib/doors.ts). */
+  doors: Door[];
+  /** The viewer's own open door, if any. */
+  myDoor: Door | null;
   /** A photo of their actual home as the view (a media ref), else null: the default photo. */
   homePhoto: string | null;
   /** Their city's coordinates (a city, never a person's location), for the real sky; null when unknown. */
@@ -175,7 +176,7 @@ function localDay(iso: string, tz: string): string {
 }
 
 /** The family-wide reads the window needs, all started at once (one wave of round trips). */
-const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask", "lamp"] as const;
+const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask", "lamp", "knock"] as const;
 /** The rhythm looks back 15 days: a time window, not the newest 500 (heartbeats pile up). */
 const PRESENCE_WINDOW_MS = 16 * 86_400_000;
 /** The window needs the recent shelf (latest voice, last signs, what waits), never the whole lane. */
@@ -196,11 +197,8 @@ export interface WindowReads {
   docs: WindowDocs;
   /** Heartbeats and moments from the last 16 days. */
   presence: Presence[];
-  /** The viewer's nudges that are due and unseen (the same list the dock dot reads). */
-  nudges: Nudge[];
   /** Recent cards only (last 60 days, at most 200). */
   cards: Card[];
-  plays: Play[];
   events: FamilyEvent[];
   /** The calendar the family keeps: this isolate's cached feed or the bundled list, never a wait on the network. */
   holidays: Promise<CalHoliday[]>;
@@ -229,19 +227,16 @@ export function readWindow(familyId: string, now: Date = new Date(), viewerId?: 
     dbListRelationships(familyId),
     listDocsMany(familyId, WINDOW_KINDS),
     safe(listDocs(familyId, "presence", { sinceMs: PRESENCE_WINDOW_MS }), [] as Presence[]),
-    viewerId ? safe(unseenFor(familyId, viewerId, now), [] as Nudge[]) : Promise.resolve([] as Nudge[]),
     dbListCards(familyId, { since, limit: CARD_WINDOW_LIMIT }),
-    safe(dbListPlays(undefined, familyId), [] as Play[]),
     safe(listEvents(familyId), [] as FamilyEvent[]),
-  ]).then(([members, relationships, docs, presence, nudges, cards, plays, events]) => ({ members, relationships, docs, presence, nudges, cards, plays, events, holidays }));
+  ]).then(([members, relationships, docs, presence, cards, events]) => ({ members, relationships, docs, presence, cards, events, holidays }));
 }
 
 export async function windowState(familyId: string, viewerId: string, now = new Date(), preread?: Promise<WindowReads>): Promise<WindowState> {
-  const { members, relationships, docs, presence, nudges: rawNudges, cards: recent, plays, events, holidays } = await (preread ?? readWindow(familyId, now, viewerId));
+  const { members, relationships, docs, presence, cards: recent, events, holidays } = await (preread ?? readWindow(familyId, now, viewerId));
   const view = docs.window_view.find((d) => d.id === viewerId);
   // An open check-in nobody answered for 48 h reads as closed "no reply" (the daily scan stores it).
   const checkins = docs.safety_checkin.map((c) => expireCheckin(c, now.getTime()));
-  const nudges = rawNudges.map((n) => ({ id: n.id, kind: n.kind, text: renderNudgeText(n.text, members), href: n.href, at: n.at }));
   const settings = docs.care_settings;
   const viewer = members.find((m) => m.id === viewerId);
   const farHome = viewer ? farHomeFor(viewer, members, relationships) : undefined;
@@ -332,9 +327,9 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const [[weather, farPlace, herePlace], hol] = await Promise.all([skyP, holidays]);
   const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   const own = view ?? defaultView(familyId, viewerId);
-  const glance = glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous });
   const myTz = viewer?.tz ?? "UTC";
-  const next = nextLine({ call: docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, theirTz: home?.tz ?? null, next: glance.next, now, today: dateIn(myTz, now) });
+  const next = nextLine({ call: docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, theirTz: home?.tz ?? null, next: nextFrom({ viewerId, members, now, events, holidays: hol }), now, today: dateIn(myTz, now) });
+  const { doors, myDoor } = doorsFor(docs.knock, viewerId, nameOfId, now.getTime());
   const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
   return {
     view: view ? { ...view, style: "still" } : null,
@@ -354,7 +349,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Nearer (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance,
+    doors,
+    myDoor,
     next,
     homePhoto: own.homePhoto,
     place: farPlace ? { lat: Math.round(farPlace.lat * 100) / 100, lon: Math.round(farPlace.lon * 100) / 100 } : null,
@@ -364,49 +360,22 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   };
 }
 
-/**
- * The glance strip: who is awake, what waits for the viewer, what is next, and
- * the weekly call in both zones. Pure over what windowState already read (a
- * failed source arrives as an empty list, so it just empties its tile).
- */
-function glanceFrom(i: {
-  viewerId: string;
-  members: Member[];
-  relationships: Relationship[];
-  /** The visit before this one: "new from the kids" counts from here. */
-  previousVisit: string | null;
-  theirTz: string | null;
-  /** Already includes the demo shelf. */
-  cards: Card[];
-  now: Date;
-  lastSeen: (id: string) => string | null;
-  plays: Play[];
-  docs: Pick<WindowDocs, "question" | "today_task" | "need" | "weekly_call" | "kid_ask">;
-  nudges: { id: string; kind: string; text: string; href: string; at: string }[];
-  events: FamilyEvent[];
-  holidays: CalHoliday[];
-}): Glance {
+/** The next thing on the family calendar (an event or an occasion), for the one "Next" line. */
+function nextFrom(i: { viewerId: string; members: Member[]; now: Date; events: FamilyEvent[]; holidays: CalHoliday[] }): ReturnType<typeof nextUp> {
   const { viewerId, members, now } = i;
   const viewer = members.find((m) => m.id === viewerId);
   const myTz = viewer?.tz ?? "UTC";
   const names = Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName]));
   const today = dateIn(myTz, now);
-  return {
-    awake: awakeNow(members, viewerId, now, i.lastSeen),
-    // The same list the dock dot reads (GET /api/waiting), from reads already in hand.
-    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need, nudges: i.nudges, kidAsks: i.docs.kid_ask, guardians: guardianMap(members, i.relationships) }),
-    kids: kidsTile(i.cards, members, viewerId, i.previousVisit, now, askCardIds(i.docs.kid_ask)),
-    next: nextUp({
-      today,
-      now,
-      tz: myTz,
-      viewerId,
-      names,
-      events: i.events.map((e) => ({ id: e.id, title: e.title, date: e.date, status: e.status, occasionKey: e.occasionKey, forMemberId: e.forMemberId, startsAt: e.status === "locked" ? (e.slots.find((sl) => sl.id === e.lockedSlotId)?.startsAt ?? null) : null })),
-      occasions: occasionsInRange(members, i.holidays, today, addDays(today, 120)),
-    }),
-    call: callTile(i.docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, i.theirTz, now),
-  };
+  return nextUp({
+    today,
+    now,
+    tz: myTz,
+    viewerId,
+    names,
+    events: i.events.map((e) => ({ id: e.id, title: e.title, date: e.date, status: e.status, occasionKey: e.occasionKey, forMemberId: e.forMemberId, startsAt: e.status === "locked" ? (e.slots.find((sl) => sl.id === e.lockedSlotId)?.startsAt ?? null) : null })),
+    occasions: occasionsInRange(members, i.holidays, today, addDays(today, 120)),
+  });
 }
 
 /** City to city, to the nearest 10 km, only when both places are known and really apart. */

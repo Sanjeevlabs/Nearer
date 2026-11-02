@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { whatsappInvite } from "@/lib/invite-link";
 import { haptic } from "@/lib/native";
-import type { Knock, SafetyCheckin } from "@/lib/kinds";
+import type { SafetyCheckin } from "@/lib/kinds";
+import type { Activity, Door } from "@/lib/doors";
 import { rememberHero, type SceneSpace } from "@/lib/hero";
 import type { LampView } from "@/lib/lamp";
 import { skyState } from "@/lib/sky-state";
@@ -15,7 +16,6 @@ import { callName, memberPhoto } from "@/lib/people";
 import { stateOf, type SafetyState } from "@/lib/safety";
 import { useFamilyCards } from "@/lib/use-family";
 import type { Card, Member } from "@/lib/schemas";
-import type { Glance } from "@/lib/glance";
 import { ALIVE_LOOK } from "@/lib/status";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,8 @@ import dynamic from "next/dynamic";
 import { PeoplePicker } from "./people-picker";
 import { PersonSheet, type WindowPersonData } from "./person-sheet";
 import { PushAsk } from "./push-ask";
+import type { DoorPreset } from "./open-door-sheet";
+import { TogetherCard } from "./together-card";
 import { usePlayer } from "./player";
 import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
@@ -37,6 +39,8 @@ import { WindowScene } from "./window-scene";
 
 // The full day view is only needed after a tap on "See their day": it stays out of the first paint.
 const PersonDay = dynamic(() => import("./person-day").then((m) => m.PersonDay), { ssr: false });
+// "Open your door" is only needed after a tap.
+const OpenDoorSheet = dynamic(() => import("./open-door-sheet").then((m) => m.OpenDoorSheet), { ssr: false });
 
 // The first screen. A real photograph of their home, full width and about half
 // the screen, with one small badge on it (their time, weather, sun or moon).
@@ -58,7 +62,9 @@ interface WindowData {
   km: number | null;
   sky: { glyph: "sun" | "moon" | null; moon: { illumination: number; waxing: boolean; name: string }; bothNight: boolean };
   call: { good: boolean; text: string };
-  glance?: Glance;
+  /** Doors open to the viewer, and their own (lib/doors.ts). */
+  doors?: Door[];
+  myDoor?: Door | null;
   homePhoto?: string | null;
   place?: { lat: number; lon: number } | null;
   next?: { text: string; href: string } | null;
@@ -176,12 +182,12 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const { openAdd } = useShell();
   const { play, current, isPlaying, toggle } = usePlayer();
   const win = useJson<WindowData>("/api/window", { every: 60_000 });
-  const sit = useJson<{ knocks: Knock[] }>("/api/sit");
   const safety = useJson<{ checkins: SafetyCheckin[] }>("/api/safety");
   const waitingFor = useJson<{ items: unknown[] }>("/api/waiting", { every: 60_000 });
   const hasWaiting = (waitingFor.data?.items.length ?? 0) > 0;
   const [, setTick] = useState(0);
-  const [calling, setCalling] = useState(false);
+  // undefined: never opened (the sheet's code is not even loaded); null: closed.
+  const [doorSheet, setDoorSheet] = useState<DoorPreset | null | undefined>(undefined);
   const [picking, setPicking] = useState(false);
   const [open, setOpen] = useState<Member | null>(null);
   const [dayOfId, setDayOfId] = useState<string | null>(null);
@@ -265,7 +271,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
   const latestVoice: Card | undefined = data?.voice ?? undefined;
   const voiceBy = members.find((mm) => mm.id === latestVoice?.authorId);
-  const knock = (sit.data?.knocks ?? []).find((k) => farIds.has(k.memberId));
 
   // Their own home photo (Settings, Your window, Photo) shows as is; otherwise the scene is drawn.
   const ownRef = data?.homePhoto ?? null;
@@ -303,13 +308,10 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     }),
   );
 
-  const call = async () => {
+  // Call opens "Open your door": nobody is dropped into a live room. From a person, the door is for them only.
+  const call = (only?: string, activity?: Activity) => {
     setOpen(null);
-    if (knock) return router.push(`/call/${knock.id}`);
-    setCalling(true);
-    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: 45, note: "Come sit with me" });
-    setCalling(false);
-    if (out?.knock) router.push(`/call/${out.knock.id}`);
+    setDoorSheet({ only, activity });
   };
   const light = async () => {
     setPulse((k) => k + 1);
@@ -439,24 +441,21 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                 </button>
               </section>
 
+              {/* Together: doors open to you, your own, or a way to open yours (from this payload, no extra request). */}
+              <TogetherCard data={data} failed={win.failed} onRetry={() => void win.reload()} onOpen={(a) => call(undefined, a)} />
+
               {/* One action row */}
               <section data-ui="window-actions" aria-label="Reach them" className="grid grid-cols-3 gap-2">
                 <button type="button" onClick={() => talk()} disabled={!atWindow.length} aria-label="Voice note" className="press flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
                   <Icon name="mic" size={19} strokeWidth={1.9} /> Voice
                 </button>
-                <button type="button" onClick={() => void call()} disabled={calling || !atWindow.length} aria-label={knock ? "Join the video call" : "Call"} className={cn("press relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-accent py-2 text-footnote font-semibold text-accent-ink disabled:opacity-40", calling && "opacity-60")}>
-                  <Icon name="video" size={19} strokeWidth={1.9} /> {knock ? "Join" : "Call"}
-                  {knock && <span className="absolute right-3 top-2 h-2.5 w-2.5 animate-ping rounded-full bg-[#3ccf7a] motion-reduce:animate-none" />}
+                <button type="button" onClick={() => call()} aria-label="Call: open your door" className="press relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-accent py-2 text-footnote font-semibold text-accent-ink disabled:opacity-40">
+                  <Icon name="video" size={19} strokeWidth={1.9} /> Call
                 </button>
                 <button type="button" onClick={() => atWindow[0] && router.push(`/send?for=${encodeURIComponent(atWindow[0].id)}`)} disabled={!atWindow.length} aria-label="Send something" className="press flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
                   <Icon name="gift" size={19} strokeWidth={1.9} /> Send
                 </button>
               </section>
-              {knock && (
-                <p className="m-0 -mt-1 px-0.5 text-footnote text-ink-soft">
-                  {callName(members.find((mm) => mm.id === knock.memberId))} is on a video call now
-                </p>
-              )}
 
               {/* Their latest voice: one compact row */}
               {latestVoice && (
@@ -494,9 +493,10 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
         onPick={(ids) => talk(ids)}
         onClose={() => setPicking(false)}
       />
-      <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => void call()} onSeeDay={() => { setDayOfId(open?.id ?? null); setOpen(null); }} onClose={() => setOpen(null)} />
+      <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => open && call(open.id)} onSeeDay={() => { setDayOfId(open?.id ?? null); setOpen(null); }} onClose={() => setOpen(null)} />
       {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} onClose={() => setDayOfId(null)} />}
       <InfoSheet open={info} onClose={() => setInfo(false)} />
+      {doorSheet !== undefined && <OpenDoorSheet open={doorSheet !== null} preset={doorSheet ?? undefined} onClose={() => setDoorSheet(null)} />}
     </div>
   );
 }

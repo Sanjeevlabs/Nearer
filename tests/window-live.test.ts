@@ -190,10 +190,12 @@ describe("/api/window is bounded and does not wait on the holiday feed", () => {
     const res = await windowGET(authedGet("http://t/api/window", "arjun"));
     const ms = Date.now() - t0;
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { lamp: { lamps: unknown[] }; voice: unknown; weather: unknown; glance: { next: unknown } };
+    const body = (await res.json()) as { lamp: { lamps: unknown[] }; voice: unknown; weather: unknown; doors: unknown[]; myDoor: unknown };
     expect(ms).toBeLessThan(1400);
     expect(body.weather).toBeNull();
     expect(Array.isArray(body.lamp.lamps)).toBe(true);
     expect(body).toHaveProperty("voice");
+    expect(Array.isArray(body.doors)).toBe(true);
+    expect(body).not.toHaveProperty("glance");
   });
 });

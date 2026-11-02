@@ -8,11 +8,10 @@ import { AvatarStack, comingIds, EventTimes, JoinButton } from "@/components/eve
 import { EventSections } from "@/components/event-sections";
 import { ActionMenu, Button, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
-import { icsFor, roomUrl } from "@/lib/overlap";
+import { icsFor } from "@/lib/overlap";
 import { isLive, lockedStart, participants, startsInLabel, type FamilyEvent } from "@/lib/events";
 import { eventAction, useEvents } from "@/lib/gather-client";
 import { callName } from "@/lib/people";
-import { useJson } from "@/lib/use-json";
 import { Boundary } from "@/components/ui/boundary";
 
 type Tab = "plan" | "tasks" | "playlist";
@@ -35,9 +34,7 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
   useEffect(() => setLocal(null), [data]);
 
   const e = local ?? data?.events.find((x) => x.id === params.id) ?? null;
-  // The calendar link follows the video provider (JaaS when configured);
-  // the public Jitsi link stands in until the room answer arrives.
-  const room = useJson<{ url: string }>(e?.sittingId ? `/api/sit/room?id=${encodeURIComponent(e.sittingId)}` : null);
+  // The calendar link opens our own call page (its pre-join asks before any microphone or camera), never a public room.
 
   if (!mounted || (!data && !failed)) {
     return (
@@ -81,7 +78,7 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
           {
             label: "Add to calendar",
             onSelect: () => {
-              const blob = new Blob([icsFor({ id: e.id, title: e.title, start, minutes: e.minutes, description: e.plan.runOfShow.map((s) => s.title).join(" · "), url: e.sittingId ? (room.data?.url ?? roomUrl(e.sittingId)) : undefined })], { type: "text/calendar" });
+              const blob = new Blob([icsFor({ id: e.id, title: e.title, start, minutes: e.minutes, description: e.plan.runOfShow.map((s) => s.title).join(" · "), url: e.sittingId ? `${window.location.origin}/call/${encodeURIComponent(e.sittingId)}` : undefined })], { type: "text/calendar" });
               const a = document.createElement("a");
               a.href = URL.createObjectURL(blob);
               a.download = `${e.title.replace(/[^\w]+/g, "-").toLowerCase()}.ics`;

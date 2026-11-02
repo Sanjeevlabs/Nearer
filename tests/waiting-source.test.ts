@@ -1,6 +1,6 @@
 // The dock dot and the window's "Waiting for you" tile read one list
-// (GET /api/waiting == the window glance). Acting on a thing removes it from
-// both: play, answer, reply, open the nudge. An unopened nudge goes stale.
+// (GET /api/waiting). The window no longer carries a glance strip. Acting on a thing removes it from
+// the list: play, answer, reply, open the nudge. An unopened nudge goes stale.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as waitingGET } from "@/app/api/waiting/route";
 import { POST as seenPOST } from "@/app/api/nudges/seen/route";
@@ -9,7 +9,6 @@ import { dbAddCard } from "@/lib/db";
 import { deleteDoc, listDocs, putDoc } from "@/lib/family-docs";
 import { WAIT_MS } from "@/lib/nudges";
 import { resetDemo } from "@/lib/store";
-import { windowState } from "@/lib/window-server";
 import { authedGet, authedJson } from "./auth-helper";
 
 const FAM = "demo-family";
@@ -19,7 +18,7 @@ const D = 24 * H;
 type Item = { kind: string; text: string; href: string; fromId?: string; nudgeId?: string };
 
 const waiting = async (as = "arjun") => ((await (await waitingGET(authedGet("http://t/api/waiting", as))).json()) as { items: Item[]; top: Item | null });
-const glance = async (as = "arjun") => (await windowState(FAM, as, new Date())).glance.waiting;
+const glance = async (as = "arjun") => (await waiting(as)).top;
 const nudge = (id: string, kind: string, at: string, deliverAfter = at) => ({ id, toMemberId: "arjun", kind, text: `{m:dadi} ${id}`, href: `/home?card=${id}`, at, deliverAfter, deliveredAt: null, channel: null, seenAt: null });
 
 beforeEach(async () => {

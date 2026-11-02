@@ -345,6 +345,12 @@ export const KnockSchema = z.object({
   venue: z.enum(VENUE_IDS).default("courtyard"),
   at: iso,
   until: iso,
+  /** What the door is open for (a preset key, lib/doors.ts); `note` stays the human line. */
+  activity: z.enum(["chai", "dinner", "catchup", "cook", "story", "song", "quiz"]).optional(),
+  /** Who may see and join it. Empty or absent: the whole family. */
+  invites: z.array(id).max(30).optional(),
+  /** When the one person it was for was told (a push is sent once, never again). */
+  seenAt: iso.optional(),
 });
 
 // ---------- The weekly question (story keeper) ----------

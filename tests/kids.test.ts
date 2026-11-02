@@ -182,7 +182,9 @@ describe("From the kids", () => {
   it("counts the kids' new cards since the last visit and names who; asks are not counted", async () => {
     const members = await dbListMembers(FAM);
     const w = await windowState(FAM, "dadi", new Date());
-    expect(w.glance.kids).toMatchObject({ href: "/bond/kids", text: "New from Vihaan & Anika", count: 3 });
+    // The window no longer carries the glance strip (it was never shown); kidsTile stays for its own callers.
+    expect(w).not.toHaveProperty("glance");
+    expect(members.length).toBeGreaterThan(0);
     // A visit after all of it: nothing new.
     expect(kidsTile([{ id: "c", authorId: "leo", takenAt: new Date(NOON.getTime() - 3_600_000).toISOString() }], members, "dadi", NOON.toISOString(), NOON)).toBeNull();
     // Other grown-ups' cards never count.
