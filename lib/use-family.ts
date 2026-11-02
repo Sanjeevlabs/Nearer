@@ -47,14 +47,16 @@ function subscribe(onChange: () => void): () => void {
  * snapshot (null, as the server rendered it) even if the fetch already landed,
  * so a page that hydrates late never mismatches (React error #418).
  */
-export function useFamilyCards(refreshKey = 0): { cards: Card[] | null } {
+export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] | null } {
   const cards = useSyncExternalStore(subscribe, () => cache, () => null);
   useEffect(() => {
+    // Not needed yet (the dock while it is hidden): read nothing.
+    if (!enabled) return;
     // Two mounts in the same moment (shell + room) share one fetch; a later mount revalidates.
     if (cache && refreshKey === loadedKey && Date.now() - loadedAt < 2000) return;
     loadedKey = refreshKey;
     void load();
-  }, [refreshKey]);
+  }, [refreshKey, enabled]);
   return { cards };
 }
 

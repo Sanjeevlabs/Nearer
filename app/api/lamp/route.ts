@@ -1,15 +1,16 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
-import { dbListCards, dbListMembers, dbListRelationships } from "@/lib/db";
-import { withDemoShelf } from "@/lib/demo";
-import { getDoc, listDocs, putDoc } from "@/lib/family-docs";
+import { dbListMembers, dbListRelationships } from "@/lib/db";
+import { getDoc, listDocsMany, putDoc } from "@/lib/family-docs";
 import { households } from "@/lib/households";
-import { BEAT_TTL_MS, glowFrom, lastContact, pendingBeats } from "@/lib/lamp";
+import { BEAT_TTL_MS, lampView } from "@/lib/lamp";
 import { guardWrites } from "@/lib/api-guard";
 import { pushBeat } from "@/lib/push/events";
 
 // The light in the window (SPEC §30.1, §30.4). One lamp per home.
-// GET: every home's lamp + heartbeats waiting for you.
+// GET: every home's lamp + heartbeats waiting for you. Bounded: the lamp and
+// care-settings documents only (one per home / per person), never the cards.
+// A lamp is lit only by a tap (light) or a heartbeat (beat), never by a card.
 // POST light: light your home's lamp. beat: send a heartbeat to another home
 // (played on their next open). felt: you've felt the waiting heartbeats.
 
@@ -27,21 +28,9 @@ async function homesOf(familyId: string) {
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [{ members, homes }, lamps, stored] = await Promise.all([homesOf(auth.familyId), listDocs(auth.familyId, "lamp"), dbListCards(auth.familyId)]);
-  const cards = withDemoShelf(stored, auth.familyId);
-  const hidden = new Set((await listDocs(auth.familyId, "care_settings")).filter((s) => s.shareVisits === false && s.memberId !== auth.memberId).map((s) => s.memberId));
-  const now = Date.now();
-  const mine = homes.find((h) => h.members.some((m) => m.id === auth.memberId));
-  const myLamp = lamps.find((l) => l.id === mine?.id);
-  return Response.json({
-    lamps: homes.map((h) => {
-      const lamp = lamps.find((l) => l.id === h.id);
-      const ids = h.members.map((m) => m.id).filter((id) => !hidden.has(id));
-      const c = lastContact(lamp && lamp.litBy && hidden.has(lamp.litBy) ? undefined : lamp, ids, cards, now);
-      return { homeKey: h.id, memberIds: h.members.map((m) => m.id), litAt: c.at, litBy: c.by, glow: glowFrom(c.at, now) };
-    }),
-    beats: pendingBeats(myLamp, auth.memberId, now).filter((b) => members.some((m) => m.id === b.from)),
-  });
+  const [{ homes }, docs] = await Promise.all([homesOf(auth.familyId), listDocsMany(auth.familyId, ["lamp", "care_settings"] as const)]);
+  const hidden = new Set(docs.care_settings.filter((s) => s.shareVisits === false && s.memberId !== auth.memberId).map((s) => s.memberId));
+  return Response.json(lampView(homes, docs.lamp, auth.memberId, hidden, Date.now()));
 }
 
 async function postHandler(req: Request): Promise<Response> {

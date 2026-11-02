@@ -4,7 +4,7 @@
 // count. Server only.
 import { RITUAL_FILES } from "@/rituals";
 import { daysUntilBirthday } from "./family";
-import { countryForZones, holidaysFor, DEFAULT_LAMP_HOUR, type HolidayItem, type HolidayDeps, type HolidaySource } from "./holidays";
+import { bundledHolidays, cachedHolidays, countryForZones, holidaysFor, DEFAULT_LAMP_HOUR, type HolidayItem, type HolidayDeps, type HolidaySource } from "./holidays";
 import { cleanTitle, visibleHolidays, type CalHoliday, type OccasionConfig } from "./occasion-calendar";
 import { getRitualSettings, type RitualSettings } from "./occasion-settings";
 import { loadRitualConfig } from "./rituals";
@@ -73,6 +73,24 @@ export async function familyHolidays(familyId: string, members: Pick<Member, "tz
   const [settings, feed] = await Promise.all([preloaded.settings ?? getRitualSettings(familyId), holidaysFor(country, deps)]);
   const all = withRitualLampHours(feed.items, ritualConfigs());
   return { country, source: feed.source, settings, all, visible: visibleHolidays(all, settings) };
+}
+
+/**
+ * familyHolidays for the first screen: never waits on the calendar feed. What
+ * this isolate has cached (or the bundled calendar) answers now; a stale or
+ * missing feed is refreshed in the background (`refresh`, default: just start
+ * it) so the next request has it.
+ */
+export async function familyHolidaysNow(familyId: string, members: Pick<Member, "tz">[], settings: Promise<RitualSettings> | RitualSettings, refresh: (work: () => Promise<unknown>) => void = (w) => void w().catch(() => undefined)): Promise<FamilyHolidays> {
+  const country = countryForZones(members.map((m) => m.tz));
+  let feed = cachedHolidays(country);
+  if (!feed) {
+    refresh(() => holidaysFor(country));
+    feed = bundledHolidays(country);
+  }
+  const s = await settings;
+  const all = withRitualLampHours(feed.items, ritualConfigs());
+  return { country, source: feed.source, settings: s, all, visible: visibleHolidays(all, s) };
 }
 
 /**

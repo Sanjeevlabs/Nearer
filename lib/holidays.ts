@@ -181,6 +181,17 @@ async function defaultFetch(url: string, signal: AbortSignal): Promise<string> {
   return res.text();
 }
 
+/** What this isolate already has for a country (fresh), else null. Never waits on the network. */
+export function cachedHolidays(country: string, now = Date.now()): { items: HolidayItem[]; source: HolidaySource } | null {
+  const hit = cache.get(country);
+  return hit && now - hit.at < hit.ttl ? { items: hit.items, source: hit.source } : null;
+}
+
+/** The bundled calendar for a country (what a failed fetch uses anyway). Synchronous. */
+export function bundledHolidays(country: string): { items: HolidayItem[]; source: HolidaySource } {
+  return { items: mapHolidays(fallbackEvents(country, "all"), country), source: "fallback" };
+}
+
 /** Holidays for a country: Google's public calendar (cached 24 h), else the bundled list. */
 export async function holidaysFor(country: string, deps: HolidayDeps = {}): Promise<{ items: HolidayItem[]; source: HolidaySource }> {
   const now = deps.now ?? Date.now();

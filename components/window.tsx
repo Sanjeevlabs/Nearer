@@ -16,8 +16,6 @@ import { awakeCities, type Glance } from "@/lib/glance";
 import type { DayRhythm } from "@/lib/rhythm";
 import { ALIVE_LOOK, type Alive } from "@/lib/status";
 import { invalidateJson, postJson, useJson } from "@/lib/use-json";
-import { sinceLabel } from "@/lib/since";
-import { useFamilyCards } from "@/lib/use-family";
 import { cn } from "@/lib/utils";
 import type { Weather } from "@/lib/weather";
 import { badgeParts, clockWord, dayWord, lampToday, type DayMoment } from "@/lib/window-words";
@@ -54,7 +52,9 @@ interface WindowData {
   weather: Weather | null;
   line: string;
   people: WindowPersonData[];
-  since?: { at: string | null; lines: string[]; line?: string };
+  since?: { at: string | null };
+  lamp?: LampData;
+  voice?: Card | null;
   chosen?: boolean;
   joined?: boolean;
   km: number | null;
@@ -458,10 +458,8 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const { openAdd, refreshKey } = useShell();
   const { play, current, isPlaying, toggle } = usePlayer();
   const win = useJson<WindowData>("/api/window", { every: 60_000 });
-  const lamp = useJson<LampData>("/api/lamp");
   const sit = useJson<{ knocks: Knock[] }>("/api/sit");
   const safety = useJson<{ checkins: SafetyCheckin[] }>("/api/safety");
-  const { cards } = useFamilyCards(refreshKey);
   const [, setTick] = useState(0);
   const [calling, setCalling] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -471,6 +469,10 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const [pulse, setPulse] = useState(0);
   const [lampOpen, setLampOpen] = useState(false);
   const data = win.data;
+  // The lamp and their latest voice come with the window (one request on first paint).
+  // A light just tapped shows at once, before the server answers.
+  const [litNow, setLitNow] = useState<string | null>(null);
+  const lamp = { data: data?.lamp ?? null, failed: win.failed, reload: win.reload };
   const farIds = useMemo(() => new Set(data?.far?.ids ?? []), [data?.far?.ids]);
   const atWindow = useMemo(() => (data?.people ?? []).map((p) => members.find((mm) => mm.id === p.id)).filter((mm): mm is Member => Boolean(mm)), [data?.people, members]);
   const statusOf = (id: string) => data?.people.find((p) => p.id === id);
@@ -520,7 +522,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lamp.data?.beats?.length]);
 
-  const latestVoice: Card | undefined = (cards ?? []).find((c) => c.type === "audio" && c.authorId && farIds.has(c.authorId));
+  const latestVoice: Card | undefined = data?.voice ?? undefined;
   const voiceBy = members.find((mm) => mm.id === latestVoice?.authorId);
   const knock = (sit.data?.knocks ?? []).find((k) => farIds.has(k.memberId));
 
@@ -533,12 +535,12 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
   // The light between your home and theirs: whoever reached out last.
   const pair = useMemo(() => {
-    const ls = lamp.data?.lamps ?? [];
+    const ls = (lamp.data?.lamps ?? []).map((l) => (litNow && l.memberIds.includes(viewer.id) ? { ...l, litAt: litNow, litBy: viewer.id, glow: 1 } : l));
     const theirs = ls.find((l) => l.memberIds.some((id) => farIds.has(id)));
     const mine = ls.find((l) => l.memberIds.includes(viewer.id));
     const last = [theirs, mine].filter((l): l is NonNullable<typeof l> => Boolean(l?.litAt)).sort((a, b) => (b.litAt ?? "").localeCompare(a.litAt ?? ""))[0];
     return { glow: Math.max(theirs?.glow ?? 0, mine?.glow ?? 0), last };
-  }, [lamp.data, farIds, viewer.id]);
+  }, [lamp.data, farIds, viewer.id, litNow]);
   const lastBy = members.find((mm) => mm.id === pair.last?.litBy);
   const today = lampToday(pair.last, pair.last?.litBy === viewer.id ? "you" : callName(lastBy), now);
   // Who lit it today, in both homes (the sheet).
@@ -563,9 +565,10 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const light = async () => {
     setPulse((k) => k + 1);
     setLampNote(`You lit it just now · it's glowing in ${data?.far?.city || "their home"}`);
+    setLitNow(new Date().toISOString());
     void haptic("medium");
+    // The write refetches only the lamp and the window (lib/use-json.ts scopeOfWrite).
     await postJson("/api/lamp", { action: "light" });
-    void lamp.reload();
   };
   const heartbeat = async () => {
     const to = atWindow[0];
@@ -576,14 +579,14 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
       setPulse((k) => k + 1);
       if (++n >= 4) window.clearInterval(iv);
     }, 1000);
+    setLitNow(new Date().toISOString());
     await postJson("/api/lamp", { action: "beat", toMemberId: to.id });
-    void lamp.reload();
   };
 
   const playing = latestVoice && current?.id === latestVoice.id && isPlaying;
   const clock = data?.far ? timeIn(data.far.tz, now) : "";
   const lampLoading = !lamp.data && !lamp.failed;
-  const cardsLoading = cards === null;
+  const cardsLoading = !data;
 
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-paper text-ink" style={{ overscrollBehavior: "contain" }}>
@@ -711,24 +714,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
               {/* 3. The glance strip, two by two */}
               {!win.failed && <GlanceStrip glance={data.glance ?? null} members={members} />}
-
-              {/* 4. Since you were here */}
-              {data.since?.at && data.since.lines.length > 0 && (
-                <section data-ui="window-since" className={cn(CARD, "px-4 py-3")} style={EDGE} aria-label="Since you were here">
-                  <p className="m-0 text-footnote font-medium text-ink-soft">{sinceLabel(data.since.at, now, viewer.tz)}</p>
-                  {data.since.line ? (
-                    <p className="m-0 mt-1 text-callout leading-snug">{data.since.line}</p>
-                  ) : (
-                    <ul className="m-0 mt-1 list-none p-0">
-                      {data.since.lines.map((l) => (
-                        <li key={l} className="text-callout leading-snug">
-                          {l}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              )}
 
               {/* 5. The call row */}
               <section data-ui="window-call" className={cn(CARD, "flex items-center gap-2.5 px-4 py-3")} style={EDGE} aria-label="Call">

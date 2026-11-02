@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { DEFAULT_VIEWER_ID, DEMO_FAMILY, DEMO_MEMBERS, signalLineFor } from "@/lib/family";
 import { normalizeDisplayLang, type SupportedLang } from "@/lib/i18n";
 import type { Member, Relationship } from "@/lib/schemas";
+import { prefetchJson } from "@/lib/use-json";
 import { Waiting } from "@/components/waiting";
 
 interface ViewerState {
@@ -91,6 +92,8 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         setWaiting(null);
+        // The first screen's one payload starts now, alongside members and relationships (not after them).
+        if (window.location.pathname === "/") prefetchJson("/api/window");
         const [fresh, rels] = await Promise.all([fetchMembers().catch(() => [] as Member[]), fetchRelationships().catch(() => [] as Relationship[])]);
         if (fresh.length > 0) setMembers(fresh);
         setRelationships(rels);
