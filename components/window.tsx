@@ -20,7 +20,8 @@ import { ALIVE_LOOK } from "@/lib/status";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import type { Weather } from "@/lib/weather";
-import { badgeParts, clockWord, dayWord, firstNameOf, LAMP_GLOW_HOURS, lampState, lampWhy, moonLine, statusLine } from "@/lib/window-words";
+import { LAMP_GLOW_HOURS } from "@/lib/lamp";
+import { arrivedLine, badgeParts, clockWord, dayWord, firstNameOf, lampState, lampWhy, moonLine, statusLine } from "@/lib/window-words";
 import { timeIn } from "@/lib/zones";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import dynamic from "next/dynamic";
@@ -249,6 +250,11 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
   // Their light arrived since you last looked: it shows in the state line; tell them you felt it.
   const arrivedAt = lamp.data?.arrived?.at ?? null;
+  // "Arjun is thinking of you" stays for this visit even after "felt" is posted and the server stops reporting it.
+  const [arrivedSeen, setArrivedSeen] = useState<{ from: string; at: string } | null>(null);
+  useEffect(() => {
+    if (lamp.data?.arrived) setArrivedSeen(lamp.data.arrived);
+  }, [lamp.data?.arrived]);
   useEffect(() => {
     if (!arrivedAt || lamp.data?.beats?.length) return;
     setPulse((k) => k + 1);
@@ -278,6 +284,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   }, [lamp.data, farIds, viewer.id, litNow]);
   const nameOf = (id: string) => firstNameOf([callName(members.find((mm) => mm.id === id))]);
   const lampNow = lampState({ theirs: pair.theirs, mine: pair.mine, viewerId: viewer.id, nameOf, felt: lamp.data?.felt ?? null, now, tz: viewer.tz, forName: first });
+  const arrivedWords = arrivedLine(arrivedSeen, nameOf, now);
   // The real sky over their city, now; the lamp glows from whoever lit it last.
   const sky = skyState({ lat: data?.place?.lat, lon: data?.place?.lon, tz: data?.far?.tz ?? viewer.tz, now, weatherCode: data?.weather?.code ?? null, lampLitAt: pair.last?.litAt ?? null });
   const moon = moonLine(sky.moonVisible, data?.far?.city ?? "", sky.moon.illumination);
@@ -420,11 +427,11 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
               {/* The lamp: one line (and a small "?" for the rest). Shown even before they join. */}
               <section data-ui="window-lamp" aria-label="The lamp" aria-live="polite" className="flex min-h-[44px] items-center gap-2 px-1">
-                <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", lampNow.lit ? "bg-accent text-accent-ink" : "bg-tint text-ink-soft")} aria-hidden="true">
+                <span data-arrived={arrivedWords && !lampNote ? "true" : undefined} className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", lampNow.lit || (arrivedWords && !lampNote) ? "bg-accent text-accent-ink" : "bg-tint text-ink-soft", arrivedWords && !lampNote && "lamp-arrive")} aria-hidden="true">
                   <Icon name="lamp" size={16} />
                 </span>
                 <p className="m-0 min-w-0 flex-1 text-callout font-medium leading-snug" suppressHydrationWarning>
-                  {lampNote ?? lampNow.line}
+                  {lampNote ?? arrivedWords ?? lampNow.line}
                   {lampNow.felt && <span className="block text-footnote font-normal text-ink-soft">{lampNow.felt}</span>}
                 </p>
                 <button type="button" data-ui="window-info" onClick={() => setInfo(true)} aria-label="About the lamp and Safe and sound" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft">

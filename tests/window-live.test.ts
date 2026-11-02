@@ -10,7 +10,7 @@ import { RENDERER_COMPONENT, SCENE_RENDERER, isRetiredHero, photoSceneCandidates
 import { glowFrom, lampView } from "@/lib/lamp";
 import { moonPhase, sunPosition } from "@/lib/sky";
 import { phaseFromSun, skyState, weatherLayer } from "@/lib/sky-state";
-import { firstNameOf, lampState, moonLine, statusLine } from "@/lib/window-words";
+import { arrivedLine, firstNameOf, lampState, moonLine, statusLine } from "@/lib/window-words";
 import { resetDemo } from "@/lib/store";
 import { authedGet, authedJson } from "./auth-helper";
 
@@ -63,11 +63,21 @@ describe("the lamp is lit only by an explicit tap", () => {
     expect(lampState({ ...base, theirs: { litAt: "2026-11-02T02:40:00Z", litBy: "dadi" }, mine: undefined, felt: null }).line).toBe("Maa lit it for you · 8:10 AM");
     const mine = lampState({ ...base, theirs: undefined, mine: { litAt: "2026-11-02T02:40:00Z", litBy: "arjun" }, felt: { by: "dadi", at: "2026-11-02T03:12:00Z" }, forName: "Maa" });
     expect(mine.line).toBe("Glowing for Maa · 40 m");
-    expect(mine.felt).toBe("Maa felt it · 8:42 AM");
+    expect(mine.felt).toBe("Maa saw it · 8:42 AM");
     // The glow lasts 2 hours: after that the lamp asks again.
     const gone = lampState({ ...base, theirs: { litAt: "2026-11-02T01:00:00Z", litBy: "dadi" }, mine: undefined, felt: null });
     expect(gone).toEqual({ lit: false, line: "Light the lamp \u2014 they\u2019ll know you\u2019re thinking of them", felt: null });
     expect(lampState({ ...base, theirs: undefined, mine: { litAt: "2026-11-02T04:00:00Z", litBy: "arjun" }, felt: null, forName: "Maa" }).line).toBe("Glowing for Maa · 2 h");
+  });
+});
+
+describe("a light that arrived", () => {
+  it("says who is thinking of you for 24 h, then nothing", () => {
+    const nameOf = (id: string) => (id === "dadi" ? "Maa" : "");
+    const now = new Date("2026-11-02T12:00:00Z");
+    expect(arrivedLine({ from: "dadi", at: "2026-11-02T06:00:00Z" }, nameOf, now)).toBe("Maa is thinking of you");
+    expect(arrivedLine({ from: "dadi", at: "2026-11-01T06:00:00Z" }, nameOf, now)).toBeNull();
+    expect(arrivedLine(null, nameOf, now)).toBeNull();
   });
 });
 

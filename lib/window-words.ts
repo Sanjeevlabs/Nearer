@@ -1,7 +1,7 @@
 // The words on the first screen. Pure (client + server), so each sentence can be
 // tested: every one states only what the data says, and says nothing when the
 // data is missing (no weather fetched, no lamp lit, nothing shared yet).
-import { FADE_HOURS } from "./lamp";
+import { FADE_HOURS, LAMP_ARRIVED_HOURS, LAMP_GLOW_HOURS } from "./lamp";
 import type { SafetyCheckin } from "./kinds";
 import { answeredAt } from "./safety";
 import type { Weather } from "./weather";
@@ -56,9 +56,6 @@ export function lampToday(last: { litAt: string | null } | undefined, who: strin
   return { lit: true, line: `Lit by ${who || "someone"} · ${ago}` };
 }
 
-/** How long a lit lamp glows. TODO(lamp backend): import LAMP_GLOW_HOURS from "./lamp" once it lands on main, and delete this. */
-export const LAMP_GLOW_HOURS = 2;
-
 /** "2 h", "1 h 20 m", "45 m": time left on the glow, never a bare "0". */
 export function glowLeft(litAt: string, now: Date, hours = LAMP_GLOW_HOURS): string {
   const mins = Math.max(1, Math.ceil(hours * 60 - (now.getTime() - Date.parse(litAt)) / 60_000));
@@ -76,7 +73,7 @@ export const lampWhy = (hours = LAMP_GLOW_HOURS) => `Tap the lamp to say you’r
 /**
  * The lamp's single line. Whoever lit it last, while it still glows:
  * "Glowing for Maa · 1 h 20 m" (you lit it) / "Maa lit it for you · 8:10 AM",
- * else the invitation. `felt`: the sender also sees "Maa felt it · 7:12 AM". Clocks are in the viewer's zone.
+ * else the invitation. `felt`: the sender also sees "Maa saw it · 7:12 AM". Clocks are in the viewer's zone.
  */
 export function lampState(i: {
   theirs: { litAt: string | null; litBy: string | null } | undefined;
@@ -98,7 +95,7 @@ export function lampState(i: {
   const last = cands[0];
   if (!last) return { lit: false, line: LAMP_ASK, felt: null };
   if (last.by === i.viewerId) {
-    const felt = i.felt && i.felt.at >= last.at ? `${i.nameOf(i.felt.by) || "They"} felt it · ${clockWord(i.felt.at, i.tz)}` : null;
+    const felt = i.felt && i.felt.at >= last.at ? `${i.nameOf(i.felt.by) || "They"} saw it · ${clockWord(i.felt.at, i.tz)}` : null;
     return { lit: true, line: `Glowing for ${i.forName || "them"} · ${glowLeft(last.at, i.now)}`, felt };
   }
   return { lit: true, line: `${i.nameOf(last.by) || "Someone"} lit it for you · ${clockWord(last.at, i.tz)}`, felt: null };
@@ -174,4 +171,15 @@ export function composedLine(input: { who: string; moment: { label: string; at: 
 /** The small badge on the photo: their time always; the weather only if it was fetched; a glyph only by the sun's real place. */
 export function badgeParts(input: { time: string; weather: Weather | null; glyph: "sun" | "moon" | null }): { time: string; weather: { kind: Weather["kind"]; tempC: number; label: string } | null; glyph: "sun" | "moon" | null } {
   return { time: input.time, weather: input.weather ? { kind: input.weather.kind, tempC: input.weather.tempC, label: input.weather.label } : null, glyph: input.glyph };
+}
+
+/**
+ * A light that arrived while the viewer was away: "Arjun is thinking of you", shown once for
+ * LAMP_ARRIVED_HOURS after it was lit (the glow itself is shorter). null when there is none or it is too old.
+ */
+export function arrivedLine(arrived: { from: string; at: string } | null | undefined, nameOf: (id: string) => string, now: Date): string | null {
+  if (!arrived) return null;
+  const h = (now.getTime() - Date.parse(arrived.at)) / 3_600_000;
+  if (!(h >= 0 && h < LAMP_ARRIVED_HOURS)) return null;
+  return `${nameOf(arrived.from) || "Someone"} is thinking of you`;
 }

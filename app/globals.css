@@ -608,3 +608,13 @@ html[data-entered="1"] .pre-mark, html[data-door="open"] .pre-mark { display: no
 }
 /* Slanted Arabic and Urdu read poorly: keep the human-voice serif upright in right-to-left scripts. */
 [dir="rtl"] .voice, .voice:lang(ar), .voice:lang(ur), .voice:lang(fa), .voice:lang(he) { font-style: normal; }
+
+/* A light that arrived while you were away: a gentle halo that breathes. Reduced motion: the halo stays, still. */
+.lamp-arrive {
+  box-shadow: 0 0 0 4px var(--marigold-glow), 0 0 18px 4px var(--marigold-glow);
+  animation: lamp-arrive 2.6s ease-in-out infinite;
+}
+@keyframes lamp-arrive {
+  0%, 100% { box-shadow: 0 0 0 3px var(--marigold-glow), 0 0 10px 2px var(--marigold-glow); }
+  50% { box-shadow: 0 0 0 6px var(--marigold-glow), 0 0 22px 6px var(--marigold-glow); }
+}
