@@ -15,7 +15,7 @@ async function getHandler(req: Request): Promise<Response> {
   // Start the shared reads now, in the same wave as the session lookup (lib/request-data.ts).
   const claimed = sessionFromRequest(req);
   if (claimed) {
-    preloadCore(req, claimed.familyId);
+    preloadCore(req, claimed);
     void relationshipsFor(req, claimed.familyId).catch(() => undefined);
     prefetchDocs(req, claimed.familyId, ["kid_ask", "bedtime_story", "story", "today_task", "chitthi"]);
   }

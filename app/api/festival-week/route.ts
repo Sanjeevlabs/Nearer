@@ -15,7 +15,7 @@ import { guardWrites } from "@/lib/api-guard";
 async function getHandler(req: Request): Promise<Response> {
   // The shared reads start with the auth lookup, not after it (lib/request-data.ts).
   const claimed = sessionFromRequest(req);
-  if (claimed) preloadCore(req, claimed.familyId);
+  if (claimed) preloadCore(req, claimed);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const [members, me] = await Promise.all([membersFor(req, auth.familyId), memberFor(req, auth.memberId)]);

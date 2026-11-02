@@ -1,13 +1,18 @@
 import { CreateRelationshipRequestSchema } from "@/lib/schemas";
-import { dbAddRelationship, dbGetMember, dbListMembers, dbListRelationships } from "@/lib/db";
-import { requireCan, requireSession } from "@/lib/auth";
+import { dbAddRelationship, dbGetMember, dbListMembers } from "@/lib/db";
+import { requireCan, requireSession, sessionFromRequest } from "@/lib/auth";
+import { relationshipsFor } from "@/lib/request-data";
 import { familyFull } from "@/lib/roles";
 import { guardWrites } from "@/lib/api-guard";
 
 async function getHandler(req: Request): Promise<Response> {
+  // The list starts with the session check, not after it (a refused request throws it away).
+  const claimed = sessionFromRequest(req);
+  const early = claimed ? relationshipsFor(req, claimed.familyId) : null;
+  early?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  return Response.json({ relationships: await dbListRelationships(auth.familyId) });
+  return Response.json({ relationships: await relationshipsFor(req, auth.familyId) });
 }
 
 // Guided add: "Add Meera as Dad's mother" creates the person and the edge in

@@ -4,9 +4,9 @@ import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
 import { dbListCards, dbListMembers, dbListRelationships } from "./db";
-import { listDocs, listDocsMany } from "./family-docs";
+import { listDocs, listDocsManyWith } from "./family-docs";
 import { withDeadline } from "./deadline";
-import { getRitualSettings } from "./occasion-settings";
+import { RITUAL_SETTINGS_KIND, ritualSettingsFromBatch } from "./occasion-settings";
 import type { Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
 import { households } from "./households";
@@ -30,7 +30,7 @@ import { isMockMode } from "./config";
 import { nextLine, nextUp } from "./glance";
 import { doorsFor, type Door } from "./doors";
 import { touchChannel } from "./touch-channel";
-import { listEvents } from "./gather-store";
+import { eventsFromRows } from "./gather-store";
 import type { FamilyEvent } from "./events";
 import { familyHolidaysNow } from "./occasions-server";
 import { occasionsInRange, addDays, type CalHoliday } from "./occasion-calendar";
@@ -191,7 +191,7 @@ const CARD_WINDOW_LIMIT = 200;
  */
 export const WEATHER_DEADLINE_MS = 600;
 
-type WindowDocs = Awaited<ReturnType<typeof listDocsMany<typeof WINDOW_KINDS>>>;
+type WindowDocs = Awaited<ReturnType<typeof listDocsManyWith<typeof WINDOW_KINDS>>>["docs"];
 
 export interface WindowReads {
   members: Member[];
@@ -211,11 +211,13 @@ export interface WindowReads {
  * another read, in a single Promise.all. A route may start this before it
  * knows the session is good (alongside the auth lookup): it only reads.
  */
-export function readWindow(familyId: string, now: Date = new Date(), viewerId?: string): Promise<WindowReads> {
+export function readWindow(familyId: string, now: Date = new Date(), viewerId?: string, members?: Promise<Member[]>): Promise<WindowReads> {
   const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
-  const settings = getRitualSettings(familyId);
+  // The documents, the family's events and its calendar settings: one query (lib/family-docs.ts listDocsManyWith).
+  const batch = listDocsManyWith(familyId, WINDOW_KINDS, ["event", RITUAL_SETTINGS_KIND]);
+  const settings = batch.then((b) => ritualSettingsFromBatch(familyId, b.extra?.get(RITUAL_SETTINGS_KIND)));
   settings.catch(() => undefined);
-  const membersP = dbListMembers(familyId);
+  const membersP = members ?? dbListMembers(familyId);
   const since = new Date(now.getTime() - CARD_WINDOW_DAYS * 86_400_000).toISOString();
   // Holidays need the members' zones for the country, but the settings read does not wait for them.
   // The live calendar feed is never awaited here: the cached feed (or the bundled calendar) answers
@@ -227,10 +229,10 @@ export function readWindow(familyId: string, now: Date = new Date(), viewerId?: 
   return Promise.all([
     membersP,
     dbListRelationships(familyId),
-    listDocsMany(familyId, WINDOW_KINDS),
+    batch.then((b) => b.docs),
     safe(listDocs(familyId, "presence", { sinceMs: PRESENCE_WINDOW_MS }), [] as Presence[]),
     dbListCards(familyId, { since, limit: CARD_WINDOW_LIMIT }),
-    safe(listEvents(familyId), [] as FamilyEvent[]),
+    safe(batch.then((b) => eventsFromRows(familyId, b.extra?.get("event"))), [] as FamilyEvent[]),
   ]).then(([members, relationships, docs, presence, cards, events]) => ({ members, relationships, docs, presence, cards, events, holidays }));
 }
 

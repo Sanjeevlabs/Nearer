@@ -23,6 +23,14 @@ export function memberFor(req: Request, id: string): Promise<Member | undefined>
   return once(req, `member:${id}`, () => dbGetMember(id));
 }
 
+/**
+ * Answer memberFor(req, id) from `find` (a family list the route reads anyway) when it has the
+ * row, else from the usual lookup by id. Call before the first memberFor for that id.
+ */
+export function seedMember(req: Request, id: string, find: () => Promise<Member | null>): void {
+  void once(req, `member:${id}`, async () => (await find().catch(() => null)) ?? (await dbGetMember(id))).catch(() => undefined);
+}
+
 /** Run `make` the first time `key` is asked for on this request; every later ask (concurrent or not) gets the same promise. */
 export function once<T>(req: Request, key: string, make: () => Promise<T>): Promise<T> {
   const memo = memoOf(req);

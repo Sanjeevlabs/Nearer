@@ -21,7 +21,8 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const since = Date.now() - 8 * 86_400_000; // a week of rhythm, for "usual"
-  const [presence, settings] = await Promise.all([listDocs(auth.familyId, "presence", { sinceMs: 9 * 86_400_000 }), listDocs(auth.familyId, "care_settings")]);
+  // Care settings ride the courtyard's one documents query when this runs inside it (lib/request-data.ts).
+  const [presence, settings] = await Promise.all([listDocs(auth.familyId, "presence", { sinceMs: 9 * 86_400_000 }), docsFor(req, auth.familyId, "care_settings")]);
   // Someone who turned off "Show my lamp and activity" shares no visits with anyone but themselves.
   const hidden = new Set(settings.filter((c) => c.shareVisits === false && c.memberId !== auth.memberId).map((c) => c.memberId));
   return Response.json({ presence: presence.filter((p) => Date.parse(p.at) >= since && !(p.moment === "here" && hidden.has(p.memberId))), settings });

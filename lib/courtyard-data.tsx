@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { fetchFirst } from "./early";
 
 // The courtyard reads a dozen small payloads on first paint. Inside
 // <CourtyardProvider> they arrive in one GET /api/courtyard instead, and
@@ -37,6 +38,35 @@ export interface CourtyardValue {
 
 const Ctx = createContext<CourtyardValue | null>(null);
 
+// One first load per person/family, shared: the provider remounts when the family changes (a side
+// switch), and that remount must not ask again for what the switch already asked for.
+let gen = 0;
+let first: { gen: number; at: number; p: Promise<Record<string, unknown>> } | null = null;
+const SHARE_MS = 3000;
+
+function firstLoad(): Promise<Record<string, unknown>> {
+  if (first && first.gen === gen && Date.now() - first.at < SHARE_MS) return first.p;
+  const p = fetchFirst("/api/courtyard").then(async (res) => {
+    if (!res.ok) throw new Error(String(res.status));
+    return (await res.json()) as Record<string, unknown>;
+  });
+  p.catch(() => undefined);
+  first = { gen, at: Date.now(), p };
+  return p;
+}
+
+async function refresh(): Promise<Record<string, unknown>> {
+  const res = await fetch("/api/courtyard", { cache: "no-store" });
+  if (!res.ok) throw new Error(String(res.status));
+  return (await res.json()) as Record<string, unknown>;
+}
+
+if (typeof window !== "undefined")
+  window.addEventListener("aangan:auth", () => {
+    gen++;
+    first = null;
+  });
+
 /** What useJson should do for `url`: read the shared payload, or fetch alone. */
 export function useCourtyardSlice(url: string | null): { shared: boolean; data: unknown; failed: boolean; reload: () => Promise<void> } | null {
   const ctx = useContext(Ctx);
@@ -51,14 +81,15 @@ export function CourtyardProvider({ children, every = 60_000 }: { children: Reac
   const [state, setState] = useState<{ status: CourtyardValue["status"]; data: Record<string, unknown> }>({ status: "loading", data: {} });
   const live = useRef(true);
   const load = useCallback(async (quiet: boolean) => {
+    const asked = gen;
     try {
-      const res = await fetch("/api/courtyard", { cache: "no-store" });
-      if (!res.ok) throw new Error(String(res.status));
-      const data = (await res.json()) as Record<string, unknown>;
-      if (live.current) setState({ status: "ok", data });
+      // The first load may already be on its way (the page's inline script, or the switch that remounted this).
+      const data = quiet ? await refresh() : await firstLoad();
+      // An answer for the last person or family is dropped.
+      if (live.current && asked === gen) setState({ status: "ok", data });
     } catch {
       // A failed quiet refresh keeps what's shown; a failed first load hands every hook back its own fetch.
-      if (live.current && !quiet) setState((s) => (s.status === "ok" ? s : { status: "failed", data: {} }));
+      if (live.current && !quiet && asked === gen) setState((s) => (s.status === "ok" ? s : { status: "failed", data: {} }));
     }
   }, []);
   useEffect(() => {
@@ -93,4 +124,9 @@ export function CourtyardProvider({ children, every = 60_000 }: { children: Reac
 /** The shared courtyard state, or null outside <CourtyardProvider>. */
 export function useCourtyard(): CourtyardValue | null {
   return useContext(Ctx);
+}
+
+/** Start the courtyard's first load now (the door is swinging open); the provider that mounts after it shares it. */
+export function prefetchCourtyard(): void {
+  void firstLoad().catch(() => undefined);
 }

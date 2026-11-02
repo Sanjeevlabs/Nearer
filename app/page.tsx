@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { Courtyard } from "@/components/courtyard";
-import { CourtyardProvider } from "@/lib/courtyard-data";
+import { CourtyardProvider, prefetchCourtyard } from "@/lib/courtyard-data";
 import { useShell } from "@/components/shell";
 import { useViewer } from "@/components/viewer";
 import { WindowLoading } from "@/components/window-hero";
@@ -147,8 +147,17 @@ export default function Page() {
   if (view === "kid") return <KidHome />;
   return (
     <>
-      {view === "lite" ? <LiteWindow onOpenDoor={() => setMoving("opening")} /> : (
-        <CourtyardProvider>
+      {view === "lite" ? (
+        <LiteWindow
+          onOpenDoor={() => {
+            // The courtyard's payload is read while the door swings, not after it.
+            prefetchCourtyard();
+            setMoving("opening");
+          }}
+        />
+      ) : (
+        // Keyed by family: switching sides starts the courtyard afresh, so nothing of the last side stays.
+        <CourtyardProvider key={viewer.familyId}>
           <Courtyard onCloseDoor={() => setMoving("closing")} />
         </CourtyardProvider>
       )}

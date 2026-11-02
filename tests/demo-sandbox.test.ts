@@ -80,7 +80,7 @@ import { POST as session, GET as whoami } from "@/app/api/session/route";
 import { POST as switchTo } from "@/app/api/session/switch/route";
 import { requireSession } from "@/lib/auth";
 import { dbAddCard, dbListCards, dbListMembers, dbListRelationships } from "@/lib/db";
-import { buildSandbox, createSandbox, purgeSandboxes, sandboxFamilyId, seedSnapshot, visitorOf } from "@/lib/demo-sandbox";
+import { SANDBOX_LATER_TABLES, buildSandbox, createSandbox, purgeSandboxes, sandboxFamilyId, sandboxIdle, seedSnapshot, visitorOf } from "@/lib/demo-sandbox";
 import { isDemoFamily, isSandboxFamily, isSeedFamily } from "@/lib/family";
 import { dbFor } from "@/lib/family-db";
 import { listDocs } from "@/lib/family-docs";
@@ -168,6 +168,24 @@ describe("entering the demo with the database live", () => {
     expect((await createUploadUrl(path, "image/jpeg")).mock).toBe(false);
     await dbAddCard({ familyId, type: "photo", caption: "Chai", lang: "en", takenAt: new Date().toISOString(), source: "upload", mediaRef: `storage:${path}`, authorId: memberId });
     expect((await dbListCards(familyId)).length).toBe(before + 1);
+  });
+
+  it("answers before the tables the first screens never read; those land right after, every one of them", async () => {
+    const res = await enter();
+    expect(res.status).toBe(200);
+    const { familyId } = (await res.json()) as { familyId: string };
+    // What the courtyard reads is there when the visitor is let in.
+    for (const t of ["families", "members", "relationships", "cards", "family_docs", "ritual_runs", "suggestions"]) expect(h.tables.get(t)?.some((r) => String(r.family_id ?? r.id).startsWith(familyId)), t).toBe(true);
+    await sandboxIdle();
+    const snap = buildSandbox(seedSnapshot(), "000000000000").snapshot;
+    const count = (t: string) => (h.tables.get(t) ?? []).filter((r) => String(r.family_id).startsWith(familyId)).length;
+    expect(count("plays")).toBe(snap.plays.length);
+    expect(count("reactions")).toBe(snap.reactions.length);
+    expect(count("wishes")).toBe(snap.wishes.length);
+    expect(count("daily_roles")).toBe(snap.dailyRoles.length);
+    expect(count("consents")).toBe(snap.consents.length);
+    // Every later table is one the first screens never wait on.
+    expect([...SANDBOX_LATER_TABLES].every((t) => !["families", "members", "relationships", "cards", "family_docs", "ritual_runs", "suggestions"].includes(t))).toBe(true);
   });
 
   it("re-entering with the cookie reuses the same copy; persona switch stays inside it", async () => {

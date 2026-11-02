@@ -11,6 +11,7 @@
 // Server only. Pure helpers (buildSandbox, sandbox ids) are unit-tested; the
 // writes need a live database.
 import { createHash } from "node:crypto";
+import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cardRow, memberRow } from "./db";
 import { DEMO_SHELF_CARDS } from "./demo";
@@ -22,6 +23,7 @@ import { MEDIA_BUCKET } from "./storage";
 import type { AgentRun, Card, Consent, DailyRole, GatherSession, Member, Play, Reaction, Relationship, RitualRun, Suggestion, Wish } from "./schemas";
 import {
   familyName,
+  getMember,
   listAgentRuns,
   listCards,
   listConsents,
@@ -83,6 +85,12 @@ export function sandboxFamilyId(seedFamilyId: string, vid: string): string {
 /** The visitor's copy of a seed id (member, card, relationship…). Database ids are global, so every copy gets its own. */
 export function sandboxId(seedId: string, vid: string): string {
   return `${vid}-${seedId}`;
+}
+
+/** A member of the seed (either side), from memory: entering the demo looks the seed person up without a round trip. */
+export function seedMemberOf(id: string): Member | undefined {
+  const m = getMember(id);
+  return m && isSeedFamily(m.familyId) ? m : undefined;
 }
 
 /** A pristine, fresh-dated snapshot of the seed (both sides), straight from the demo store. */
@@ -207,47 +215,97 @@ async function dropSandbox(sb: SupabaseClient, familyIds: string[]): Promise<voi
   await sb.from("families").delete().in("id", familyIds);
 }
 
-export type CreateSandboxResult = { ok: true; vid: string; idMap: Map<string, string> } | { ok: false; error: "busy" | "failed" };
+export type CreateSandboxResult = { ok: true; vid: string; idMap: Map<string, string>; members: Member[] } | { ok: false; error: "busy" | "failed" };
 
 /**
- * Copy the seed into the database for one visitor. About six round trips;
- * well under the Worker subrequest limit. A required table failing removes
- * the partial copy.
+ * Tables the first screens never read: copied after the visitor is already in
+ * (lib/push/background.ts inBackground, which keeps the Worker alive for them).
+ * Plays, reactions and wishes also wait on the cards and ritual runs, so they
+ * go last either way.
+ */
+export const SANDBOX_LATER_TABLES = new Set(["daily_roles", "gather_sessions", "agent_runs", "consents", "plays", "reactions", "wishes"]);
+
+const later = new Set<Promise<unknown>>();
+
+/** Tests: wait for the copies createSandbox left running after it answered. */
+export async function sandboxIdle(): Promise<void> {
+  while (later.size) await Promise.allSettled(Array.from(later));
+}
+
+async function copyStage(sb: SupabaseClient, stage: { table: string; rows: Record<string, unknown>[]; required: boolean }[]): Promise<{ table: string; required: boolean }[]> {
+  const results = await Promise.all(stage.map(async (t) => ({ t, err: await insertAll(sb, t.table, t.rows) })));
+  const failed: { table: string; required: boolean }[] = [];
+  for (const { t, err } of results) {
+    if (!err) continue;
+    console.error(`[demo-sandbox] ${t.table} copy failed`, err);
+    failed.push({ table: t.table, required: t.required });
+  }
+  return failed;
+}
+
+/**
+ * Copy the seed into the database for one visitor, both sides. The visitor
+ * waits for three waves of round trips: the abuse brakes counted alongside the
+ * family rows, the members, then everything the first screens read (each wave
+ * at most five requests, under the Worker's six open connections). The rest
+ * (SANDBOX_LATER_TABLES) is copied after the answer. A required table failing
+ * removes the partial copy.
  */
 export async function createSandbox(sb: SupabaseClient, callerKey: string | null): Promise<CreateSandboxResult> {
   const since = new Date(Date.now() - 3_600_000).toISOString();
   const caller = callerKey ? callerHash(callerKey) : null;
-  if (caller) {
-    // Per-caller brake: one address can't fill the table with copies.
-    const mine = await sb.from("families").select("id", { count: "exact", head: true }).eq("demo_caller", caller).gte("created_at", since);
-    if ((mine.count ?? 0) >= SANDBOX_CALLER_CAP) return { ok: false, error: "busy" };
-  }
-  const { count } = await sb.from("families").select("id", { count: "exact", head: true }).like("id", `${SANDBOX_PREFIX}%`).gte("created_at", since);
-  if ((count ?? 0) >= SANDBOX_HOURLY_CAP) return { ok: false, error: "busy" };
-
   const vid = newVisitorId();
   const { snapshot, idMap } = buildSandbox(seedSnapshot(), vid);
   const families = snapshot.families.map((f) => f.id);
-  const runIds = new Set(snapshot.ritualRuns.map((r) => r.id));
-  for (let i = 0; i < 4; i++) {
-    // Built per stage: a failed ritual-run copy changes the wishes rows below.
-    const stage = sandboxRows(snapshot)[i];
-    // Only the main copy carries the caller (the column is sent only when there is one).
-    if (i === 0 && caller) stage[0].rows[0] = { ...stage[0].rows[0], demo_caller: caller };
-    const results = await Promise.all(stage.map(async (t) => ({ t, err: await insertAll(sb, t.table, t.rows) })));
-    for (const { t, err } of results) {
-      if (!err) continue;
-      console.error(`[demo-sandbox] ${t.table} copy failed`, err);
-      if (t.table === "ritual_runs") runIds.clear();
-      if (t.required) {
-        await dropSandbox(sb, families).catch(() => null);
-        return { ok: false, error: "failed" };
-      }
+  const stages = sandboxRows(snapshot);
+  // Only the main copy carries the caller (the column is sent only when there is one).
+  if (caller) stages[0][0].rows[0] = { ...stages[0][0].rows[0], demo_caller: caller };
+
+  // Wave 1: the brakes are counted while the family rows go in; this copy's own rows are never counted.
+  let mineQ = sb.from("families").select("id", { count: "exact", head: true }).eq("demo_caller", caller ?? "").gte("created_at", since);
+  let allQ = sb.from("families").select("id", { count: "exact", head: true }).like("id", `${SANDBOX_PREFIX}%`).gte("created_at", since);
+  for (const id of families) {
+    mineQ = mineQ.neq("id", id);
+    allQ = allQ.neq("id", id);
+  }
+  const [mine, all, famFailed] = await Promise.all([
+    // Per-caller brake: one address can't fill the table with copies.
+    caller ? mineQ : Promise.resolve({ count: 0 }),
+    allQ,
+    copyStage(sb, stages[0]),
+  ]);
+  const busy = (mine.count ?? 0) >= SANDBOX_CALLER_CAP || (all.count ?? 0) >= SANDBOX_HOURLY_CAP;
+  if (busy || famFailed.length) {
+    if (!famFailed.length) await dropSandbox(sb, families).catch(() => null);
+    return { ok: false, error: busy ? "busy" : "failed" };
+  }
+
+  // Wave 2: the people. Wave 3: what the first screens read.
+  const now = stages[2].filter((t) => !SANDBOX_LATER_TABLES.has(t.table));
+  for (const stage of [stages[1], now]) {
+    const failed = await copyStage(sb, stage);
+    if (failed.some((f) => f.required)) {
+      await dropSandbox(sb, families).catch(() => null);
+      return { ok: false, error: "failed" };
     }
     // Wishes point at ritual runs; if those didn't copy, keep the wishes without the link.
-    if (runIds.size === 0 && snapshot.ritualRuns.length > 0) snapshot.wishes = snapshot.wishes.map((w) => ({ ...w, ritualRunId: null }));
+    if (failed.some((f) => f.table === "ritual_runs")) snapshot.wishes = snapshot.wishes.map((w) => ({ ...w, ritualRunId: null }));
   }
-  return { ok: true, vid, idMap };
+
+  // After the answer: the tables nothing on the first screens reads, then the ones that point at cards.
+  const rest = sandboxRows(snapshot);
+  const run = (async () => {
+    await copyStage(sb, rest[2].filter((t) => SANDBOX_LATER_TABLES.has(t.table)));
+    await copyStage(sb, rest[3]);
+  })().catch((e: unknown) => console.error("[demo-sandbox] later copy failed", String(e)));
+  later.add(run);
+  void run.finally(() => later.delete(run));
+  try {
+    after(() => run);
+  } catch {
+    /* not inside a request (tests, scripts): the promise simply runs */
+  }
+  return { ok: true, vid, idMap, members: snapshot.members };
 }
 
 /** Storage paths a sandbox's rows point at (`storage:<family>/…`). */

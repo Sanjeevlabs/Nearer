@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCourtyardSlice } from "./courtyard-data";
+import { dropEarly, takeEarly } from "./early";
 
 // Last good payload per URL: a route paints from it at once and refreshes in
 // the background. Kept in memory and (small payloads) in sessionStorage.
@@ -43,7 +44,16 @@ export function clearJsonCache(): void {
     /* ignore */
   }
 }
-if (typeof window !== "undefined") window.addEventListener("aangan:auth", clearJsonCache);
+// Which person/family the answers in flight belong to: a sign-in or a side switch moves it on,
+// and an answer that arrives after that is thrown away (it was read for the last one).
+let authGen = 0;
+if (typeof window !== "undefined")
+  window.addEventListener("aangan:auth", () => {
+    authGen++;
+    clearJsonCache();
+    flights.clear();
+    dropEarly();
+  });
 
 // Mounted readers (one per useJson on screen), so a write can make them refetch.
 // A reader with a url is only told about writes that touch that url (or about every write).
@@ -110,7 +120,7 @@ export function scopeOfWrite(url: string): string[] | null {
 }
 
 /** Writes that are not a change to anything shown: the "I opened Nearer" heartbeat and pure computations. */
-const QUIET_WRITES = /^\/api\/(transcribe|stickers\/cutout|muse\/|translate|kitchen\/scan|auth\/start|media\/upload-url)/;
+const QUIET_WRITES = /^\/api\/(transcribe|stickers\/cutout|muse\/|translate|kitchen\/scan|auth\/start|media\/upload-url|session\/switch$)/;
 
 export function isChangingWrite(url: string, method: string | undefined, body: unknown): boolean {
   const m = (method ?? "GET").toUpperCase();
@@ -124,6 +134,8 @@ export function isChangingWrite(url: string, method: string | undefined, body: u
   if (!path.startsWith("/api/")) return false;
   // Only the "here" heartbeat on /api/presence is quiet; sharing a moment changes the window.
   if (path === "/api/presence" && typeof body === "string" && body.includes('"here"')) return false;
+  // Moving to another side (or person) changes nothing: the caller announces it with "aangan:auth", which re-reads everything once.
+  if (path === "/api/sides" && typeof body === "string" && body.includes('"switch"')) return false;
   return !QUIET_WRITES.test(path);
 }
 
@@ -156,7 +168,7 @@ export function watchWrites(): () => void {
   };
 }
 
-// A fetch started early (prefetchJson), shared with the hook that mounts a moment later.
+// A fetch started early (prefetchJson), shared with every hook that mounts a moment later.
 const flights = new Map<string, Promise<{ data: unknown; stale: boolean; failed: boolean }>>();
 
 /** Start fetching `url` now (before the screen that reads it has mounted); the hook picks up the same request. */
@@ -177,8 +189,11 @@ export function prefetchJson(url: string): void {
 const RETRYABLE = new Set([502, 503, 504]);
 
 export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fetch(...a)): Promise<{ data: T | null; stale: boolean; failed: boolean }> {
+  const gen = authGen;
   try {
-    let res = await f(url, { cache: "no-store" });
+    // The first screen's request may already be on its way (lib/early.ts).
+    const early = takeEarly(url);
+    let res = early ? await early.catch(() => f(url, { cache: "no-store" })) : await f(url, { cache: "no-store" });
     // The host sometimes cuts one request off (a 503 under its CPU limit): one quiet retry.
     if (RETRYABLE.has(res.status)) {
       await new Promise((r) => setTimeout(r, 250));
@@ -186,6 +201,8 @@ export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fet
     }
     if (!res.ok) throw new Error(String(res.status));
     const json = (await res.json()) as T;
+    // Read for the last person or family: never cached, never shown.
+    if (gen !== authGen) return { data: null, stale: false, failed: false };
     writeCache(url, json);
     return { data: json, stale: false, failed: false };
   } catch {
@@ -215,10 +232,11 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
   const load = useCallback(async (quiet: boolean) => {
     if (!url) return;
     if (!quiet) setFailed(false);
-    const early = flights.get(url) as Promise<{ data: T | null; stale: boolean; failed: boolean }> | undefined;
-    if (early) flights.delete(url);
+    const gen = authGen;
+    // A first load shares a request already in flight (prefetchJson); a refresh always asks again.
+    const early = quiet ? undefined : (flights.get(url) as Promise<{ data: T | null; stale: boolean; failed: boolean }> | undefined);
     const r = early ? await early : await revalidate<T>(url);
-    if (!live.current) return;
+    if (!live.current || gen !== authGen) return;
     if (r.data !== null) setData(r.data);
     setStale(r.stale);
     setFailed(!quiet && r.failed);
@@ -233,6 +251,18 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
     };
   }, [load, url]);
   const reload = useCallback(() => load(false), [load]);
+  // Another person or side: nothing of the last one may stay on screen; read it again (one request, shared).
+  useEffect(() => {
+    if (!url) return;
+    const onAuth = () => {
+      setData(null);
+      setStale(false);
+      prefetchJson(url);
+      void load(false);
+    };
+    window.addEventListener("aangan:auth", onAuth);
+    return () => window.removeEventListener("aangan:auth", onAuth);
+  }, [url, load]);
   // A write elsewhere on the page: refetch quietly so nothing shown is stale.
   useEffect(() => {
     if (!url) return;

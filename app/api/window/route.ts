@@ -6,6 +6,7 @@ import { defaultView, homePhotoOk, photoRefFor, readWindow, windowState } from "
 import { FIRST_SCENES, POTS, WALLS } from "@/lib/kinds";
 import { can } from "@/lib/permissions";
 import { guardWrites } from "@/lib/api-guard";
+import { membersFor, preloadSessionMember } from "@/lib/request-data";
 
 // The window (LITE): your view into the other home, one still photograph.
 // Each person may pick a family photo or a photo of their home. The old
@@ -16,8 +17,10 @@ async function getHandler(req: Request): Promise<Response> {
   // The window's reads start with the auth lookup, not after it: the signed
   // session already names the family, and the reads only read. A refused
   // request throws them away.
+  // The session's own row comes out of the same family list (no lookup of its own).
   const claimed = sessionFromRequest(req);
-  const preread = claimed ? readWindow(claimed.familyId) : undefined;
+  if (claimed) preloadSessionMember(req, claimed);
+  const preread = claimed ? readWindow(claimed.familyId, new Date(), claimed.memberId, membersFor(req, claimed.familyId)) : undefined;
   preread?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;

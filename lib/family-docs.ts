@@ -64,26 +64,45 @@ export async function listDocs<K extends DocKind>(familyId: string, kind: K, opt
  * listDocs per kind, so the answer never differs from separate calls.
  */
 export async function listDocsMany<const Ks extends readonly DocKind[]>(familyId: string, kinds: Ks): Promise<{ [K in Ks[number]]: DocOf<K>[] }> {
+  return (await listDocsManyWith(familyId, kinds, [])).docs;
+}
+
+/** Raw rows of other family_docs kinds (stores with their own schema: events, ritual settings), newest first. */
+export type RawDocRows = Map<string, { id: string; data: unknown }[]>;
+
+/**
+ * listDocsMany, plus the raw rows of `extraKinds` read in the SAME query, so
+ * the stores that keep their own kinds in family_docs (lib/gather-store.ts,
+ * lib/occasion-settings.ts) ride along instead of costing round trips of their
+ * own. `extra` is null when they weren't read (no database, an error, or a
+ * full answer): the caller then asks those stores as usual.
+ */
+export async function listDocsManyWith<const Ks extends readonly DocKind[]>(familyId: string, kinds: Ks, extraKinds: readonly string[]): Promise<{ docs: { [K in Ks[number]]: DocOf<K>[] }; extra: RawDocRows | null }> {
   const out = {} as { [K in Ks[number]]: DocOf<K>[] };
   const unique = Array.from(new Set(kinds)) as Ks[number][];
+  const extras = Array.from(new Set(extraKinds)).filter((k) => !(unique as readonly string[]).includes(k));
   const sb = dbFor(familyId);
   const separately = async () => {
     const lists = await Promise.all(unique.map((k) => listDocs(familyId, k)));
     unique.forEach((k, i) => ((out as Record<string, unknown>)[k] = lists[i]));
-    return out;
+    return { docs: out, extra: null };
   };
   if (!sb) return separately();
-  const limit = 500 * unique.length;
-  const { data, error } = await sb.from("family_docs").select("kind, data").eq("family_id", familyId).in("kind", unique).order("created_at", { ascending: false }).limit(limit);
+  const limit = 500 * (unique.length + extras.length);
+  const { data, error } = await sb.from("family_docs").select("id, kind, data").eq("family_id", familyId).in("kind", [...unique, ...extras]).order("created_at", { ascending: false }).limit(limit);
   if (error || !data || data.length >= limit) return separately();
   const by = new Map<string, unknown[]>(unique.map((k) => [k, []]));
-  for (const r of data as { kind: string; data: unknown }[]) by.get(r.kind)?.push(r.data);
+  const extra: RawDocRows = new Map(extras.map((k) => [k, []]));
+  for (const r of data as { id: string; kind: string; data: unknown }[]) {
+    by.get(r.kind)?.push(r.data);
+    extra.get(r.kind)?.push({ id: r.id, data: r.data });
+  }
   for (const k of unique) {
     // Rows that are in the database are the answer; memory only stands in on error (as listDocs).
     const rows = (by.get(k) ?? []).slice(0, 500).map((d) => parse(k, d)).filter((d): d is DocOf<typeof k> => d !== null);
     (out as Record<string, unknown>)[k] = newest(rows);
   }
-  return out;
+  return { docs: out, extra };
 }
 
 /**

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Kalam, Literata, Onest } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Shell } from "@/components/shell";
+import { EARLY_FETCH } from "@/lib/early";
 import "./globals.css";
 
 const onest = Onest({ subsets: ["latin"], variable: "--font-body", display: "swap" });
@@ -11,7 +12,8 @@ const kalam = Kalam({ subsets: ["latin", "devanagari"], weight: ["400"], variabl
 
 // Before any script: which view is likely (stepped inside? door open?), so the server-sent shell
 // (app/page.tsx CheckingShell) paints that view's drawn frame at once. Never a photo.
-const VIEW_HINT = `try{var s=sessionStorage,d=document.documentElement;if(s.getItem("aangan:door")==="open")d.dataset.door="open";if(s.getItem("aangan:entered")==="1")d.dataset.entered="1"}catch(e){}`;
+// Then, for someone already inside, the first screen's data is asked for at once (lib/early.ts), not after the bundle.
+const VIEW_HINT = `try{var s=sessionStorage,d=document.documentElement,o=s.getItem("aangan:door")==="open",e=s.getItem("aangan:entered")==="1";if(o)d.dataset.door="open";if(e)d.dataset.entered="1";${EARLY_FETCH}}catch(x){}`;
 
 export const metadata: Metadata = {
   title: "Nearer — the window between two homes",

@@ -21,7 +21,7 @@ import { useShell } from "./shell";
 import { SafetyWatch } from "./safety";
 import { PersonDay, lampFor } from "./person-day";
 import { PersonSheet, type WindowPersonData } from "./person-sheet";
-import { SideSwitch, useSides } from "./sides";
+import { SideSwitch, doneOpening, useOpeningSide, useSides } from "./sides";
 import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
 import { EventPrompts } from "./event-prompts";
@@ -215,8 +215,14 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const thisYear = new Date().getFullYear();
   const yearsAgo = (cards ?? []).find((c) => c.type === "photo" && new Date(c.takenAt).getFullYear() < thisYear);
   const story = stories.data?.stories[0];
-  const familyName = sides.find((s) => s.familyId === current)?.name;
-  const homePhoto = resolveMediaUrl(familyHomePhoto(viewer.familyId, resolveMediaUrl(viewer.homeImageRef))) ?? "/demo/home-courtyard.jpg";
+  // A side being opened shows its name and home at once; its own answer takes over when it lands.
+  const opening = useOpeningSide();
+  const settled = opening && current === opening.familyId && viewer.familyId === opening.familyId;
+  useEffect(() => {
+    if (opening && settled) doneOpening(opening.familyId);
+  }, [opening, settled]);
+  const familyName = opening && !settled ? opening.name : sides.find((s) => s.familyId === current)?.name;
+  const homePhoto = resolveMediaUrl(opening && !settled ? familyHomePhoto(opening.familyId, null) : familyHomePhoto(viewer.familyId, resolveMediaUrl(viewer.homeImageRef))) ?? "/demo/home-courtyard.jpg";
   const lampData = { presence: pres.data?.presence ?? [], settings: pres.data?.settings ?? [], cards: cards ?? [] };
   const dayPerson = members.find((mm) => mm.id === dayOfId);
   const sheetPerson = members.find((mm) => mm.id === sheetId) ?? null;
