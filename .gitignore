@@ -39,3 +39,7 @@ docs/private/
 .open-next/
 .wrangler/
 .dev.vars
+
+# Generated product demo video (npm run demo:reel)
+out/
+__pycache__/
