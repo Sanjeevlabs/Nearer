@@ -42,7 +42,7 @@ describe("waitingForYou", () => {
 
   it("is null when nothing waits", () => expect(waitingForYou(base)).toBeNull());
   it("an unplayed voice note addressed to you, until you play it", () => {
-    expect(waitingForYou({ ...base, cards: [card] })).toEqual({ kind: "voice", text: "Maa's voice note", href: "/lane", fromId: "dadi" });
+    expect(waitingForYou({ ...base, cards: [card] })).toEqual({ kind: "voice", text: "Maa's voice note", href: "/lane?card=c1", fromId: "dadi" });
     expect(waitingForYou({ ...base, cards: [card], plays: [{ cardId: "c1", memberId: "arjun" }] })).toBeNull();
     // someone else playing it does not clear it for you
     expect(waitingForYou({ ...base, cards: [card], plays: [{ cardId: "c1", memberId: "dada" }] })?.kind).toBe("voice");

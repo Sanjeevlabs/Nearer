@@ -69,3 +69,8 @@ export function failoverProvider(p: ProviderName): ProviderName | null {
 export function isMockMode(): boolean {
   return process.env.MOCK === "true" || !providerKey(activeProvider());
 }
+
+/** Sample partner data and pretend connections: only when MOCK=true. A missing Muse key does not make partner stores pretend; they are searched live. */
+export function isSampleMode(): boolean {
+  return process.env.MOCK === "true";
+}

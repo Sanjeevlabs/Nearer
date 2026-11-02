@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlbumCover } from "@/components/albums";
 import { LaneViewer } from "@/components/lane-viewer";
 import { usePlayer } from "@/components/player";
@@ -113,6 +113,26 @@ export default function LanePage() {
   // Only people with something on this page get a chip.
   const authors = useMemo(() => new Set((shown ?? []).filter((c) => !skip?.has(c.id)).map((c) => c.authorId)), [shown, skip]);
   const people = members.filter((m) => authors.has(m.id));
+  // /lane?card=<id> (the inbox, "Waiting for you"): open that memory, or play it if it lives in another room.
+  const { play } = usePlayer();
+  const deepLinked = useRef(false);
+  useEffect(() => {
+    if (deepLinked.current || !groups || !cards) return;
+    let id: string | null = null;
+    try {
+      id = new URLSearchParams(window.location.search).get("card");
+    } catch {
+      /* no location */
+    }
+    deepLinked.current = true;
+    if (!id) return;
+    for (const r of LANE_ROWS) {
+      const index = groups[r.kind].findIndex((c) => c.id === id);
+      if (index >= 0) return setOpen({ kind: r.kind, index });
+    }
+    const card = cards.find((c) => c.id === id);
+    if (card) play(card);
+  }, [groups, cards, play]);
   const viewing = open && groups ? { list: groups[open.kind], title: LANE_ROWS.find((r) => r.kind === open.kind)?.title ?? "" } : null;
 
   const sortOlder = async () => {

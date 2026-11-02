@@ -2,7 +2,7 @@
 // validated once at load. Named partners only; nothing here is a listing by
 // an unknown seller (SPEC §9).
 import { z } from "zod";
-import { isMockMode } from "../config";
+import { isSampleMode } from "../config";
 import partnersRaw from "../../data/partners.json";
 import storesRaw from "../../data/gift-stores.json";
 
@@ -99,7 +99,7 @@ export function getStore(id: string): GiftStore | undefined {
 
 /** Live only when its env flag says so (or it is on by default and the flag is unset). Mock mode enables all. */
 export function isEnabled(p: Pick<Partner, "envFlag" | "defaultOn">, env: NodeJS.ProcessEnv = process.env): boolean {
-  if (isMockMode()) return true;
+  if (isSampleMode()) return true;
   const flag = env[p.envFlag];
   if (flag === undefined || flag === "") return p.defaultOn;
   return flag === "true";

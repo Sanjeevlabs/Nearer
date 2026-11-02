@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tint behind the small notification icon (the app's blue, as in the splash). -->
+    <color name="notification_accent">#2f5684</color>
+</resources>

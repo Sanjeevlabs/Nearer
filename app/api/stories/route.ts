@@ -8,6 +8,7 @@ import { canChange } from "@/lib/permissions";
 import { labelStory } from "@/lib/stories";
 import { ideaFor } from "@/lib/story-ideas";
 import { guardWrites } from "@/lib/api-guard";
+import { pushAsk } from "@/lib/push/events";
 import { nudgeShared } from "@/lib/nudge-producers";
 
 // Stories, the kids' corner.
@@ -94,6 +95,7 @@ async function postHandler(req: Request): Promise<Response> {
     madeBy: "family",
     createdAt: now,
   });
+  pushAsk(auth.familyId, { fromId: auth.memberId, toIds: [to.id], topic: "story", tagId: `ask-${question.id}` });
   return Response.json({ question }, { status: 201 });
 }
 

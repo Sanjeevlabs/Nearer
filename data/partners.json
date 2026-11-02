@@ -126,7 +126,7 @@
       "transport": "mcp-public",
       "envFlag": "PARTNER_SHOPIFY_GIFTS",
       "defaultOn": true,
-      "countries": ["IN"],
+      "countries": ["IN", "US", "GB"],
       "sendable": true,
       "verified": true,
       "queries": { "occasion": [], "need": [] },

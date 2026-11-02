@@ -18,7 +18,9 @@ import { keepRender } from "@/lib/muse-canvas";
 import { RestoreOffer, type Restored } from "./muse-restore";
 import { useShell } from "./shell";
 import { Avatar, Button, Icon, LiveDot, PlayButton } from "./ui/kit";
+import { PeoplePicker } from "./people-picker";
 import { useViewer } from "./viewer";
+import { useJson } from "@/lib/use-json";
 
 export type AddTab = "photos" | "voice" | "video" | "ask";
 
@@ -171,53 +173,38 @@ function useMicLevels(stream: MediaStream | null, bars = 40): number[] {
 }
 
 /* ------------------------------------------------------------- recipients */
-/** Who a voice note is for: whole homes first ("Maa & Papa"), then any mix of people, or everyone. */
+/** Who a voice note is for: the same picker as the dock's mic. Here it picks any mix; none = everyone. */
 function Recipients({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
   const { viewer, members, relationships } = useViewer();
-  const homes = households(members, relationships).filter((h) => !h.members.some((m) => m.id === viewer.id) && h.members.length > 1);
-  const others = members.filter((mm) => mm.id !== viewer.id);
-  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
-  const isHome = (ids: string[]) => ids.length === value.length && ids.every((id) => value.includes(id));
+  const [open, setOpen] = useState(false);
+  const { data: wait } = useJson<{ items: { fromId?: string }[] }>("/api/waiting");
+  const waitingIds = useMemo(() => (wait?.items ?? []).flatMap((i) => (i.fromId ? [i.fromId] : [])), [wait]);
+  const others = useMemo(() => members.filter((mm) => mm.id !== viewer.id && mm.status !== "pending"), [members, viewer.id]);
+  const chosen = value.length ? others.filter((mm) => value.includes(mm.id)) : others;
+  const home = households(members, relationships).find((h) => value.length > 1 && h.members.length === value.length && h.members.every((mm) => value.includes(mm.id)));
+  const label = value.length === 0 ? "Everyone" : home ? householdName(home, (mm) => callName(mm)) : chosen.length <= 2 ? chosen.map((mm) => callName(mm)).join(" & ") : `${chosen.slice(0, 2).map((mm) => callName(mm)).join(", ")} +${chosen.length - 2}`;
   return (
-    <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Who is this for">
-      {homes.map((h) => {
-        const ids = h.members.map((m) => m.id);
-        const on = isHome(ids);
-        return (
-          <button key={h.id} type="button" aria-pressed={on} onClick={() => onChange(on ? [] : ids)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-black text-white" : "bg-surface text-ink")}>
-            <span className="flex -space-x-2">
-              {h.members.slice(0, 2).map((m) => (
-                <Avatar key={m.id} src={memberPhoto(m)} name={callName(m)} size={30} />
-              ))}
+    <>
+      <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label={`Who is this for: ${label}. Change`} className="press flex min-h-[48px] w-full items-center gap-3 rounded-full bg-surface py-1 pl-1.5 pr-4 text-start">
+        <span className="flex -space-x-2">
+          {chosen.slice(0, 3).map((mm) => (
+            <span key={mm.id} className="rounded-full ring-2 ring-white">
+              <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />
             </span>
-            {householdName(h, (m) => callName(m))}
-          </button>
-        );
-      })}
-      {others.map((mm) => {
-        const on = value.includes(mm.id) && !homes.some((h) => isHome(h.members.map((m) => m.id)));
-        return (
-          <button
-            key={mm.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => toggle(mm.id)}
-            className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-black text-white" : "bg-surface text-ink")}
-          >
-            <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />
-            {callName(mm)}
-          </button>
-        );
-      })}
-      <button
-        type="button"
-        aria-pressed={value.length === 0}
-        onClick={() => onChange([])}
-        className={cn("press h-11 shrink-0 rounded-full px-4 text-body font-medium", value.length === 0 ? "bg-black text-white" : "bg-surface text-ink")}
-      >
-        Everyone
+          ))}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-body font-semibold">{label}</span>
+        <span className="text-callout font-medium text-ink-soft">Change</span>
       </button>
-    </div>
+      <PeoplePicker
+        open={open}
+        people={others}
+        waitingIds={waitingIds}
+        multi={{ selected: value, onDone: (ids) => { onChange(ids.length === others.length ? [] : ids); setOpen(false); } }}
+        onPick={() => undefined}
+        onClose={() => setOpen(false)}
+      />
+    </>
   );
 }
 

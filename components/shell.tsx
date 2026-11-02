@@ -18,9 +18,11 @@ import type { AddTab, ReplyContribution } from "./add-sheet";
 
 import { PlayerProvider, usePlayer } from "./player";
 import { Icon, type IconName } from "./ui/kit";
+import { ForYouGlyph, HouseGlyph } from "./ui/glyphs";
 import { ViewerProvider, useViewer } from "./viewer";
 import { DocumentLangOnly } from "@/lib/use-t";
-import { onAppUrlOpen, setStatusBar } from "@/lib/native";
+import { onAppUrlOpen, setStatusBar, watchPush } from "@/lib/native";
+import { refreshSubscription } from "@/lib/web-push";
 
 // The composer (mic, EXIF, media processing) loads only when first opened.
 // Sheets nobody needs until they tap: fetched when first opened, then kept mounted so they can animate out.
@@ -166,20 +168,21 @@ function Dock() {
               {others.length ? (
                 <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice note to ${callName(pagePerson)}` : "Voice note"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-black text-white">
                   <Icon name="mic" size={23} strokeWidth={1.9} />
-                  {waitingList.length > 0 && !pagePerson && (
-                    <span className="absolute right-0 top-0 h-3 w-3 rounded-full bg-marigold ring-2 ring-white" role="img" aria-label={`Waiting for you: ${waitingList[0].text}`} />
-                  )}
                 </button>
               ) : (
                 <button type="button" onClick={() => setInviting(true)} aria-label="Invite family" className="press grid h-12 w-12 place-items-center rounded-full bg-black text-white">
                   <Icon name="plus" size={23} />
                 </button>
               )}
-              <button type="button" onClick={() => openAdd("photos")} aria-label="Share a photo or video" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
+              <Link href="/inbox" aria-label={waitingList.length ? `For you, ${waitingList.length} waiting: ${waitingList[0].text}` : "For you"} className="press relative grid h-12 w-12 place-items-center rounded-full text-ink">
+                <ForYouGlyph size={26} />
+                {waitingList.length > 0 && <span className="absolute right-1.5 top-1.5 h-3 w-3 rounded-full bg-marigold ring-2 ring-white" aria-hidden="true" />}
+              </Link>
+              <button type="button" onClick={() => openAdd("photos")} aria-label="Photo" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
                 <Icon name="camera" size={23} strokeWidth={1.9} />
               </button>
               <button type="button" onClick={openRooms} aria-label="Open the house" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
-                <Icon name="rooms" size={23} strokeWidth={1.9} />
+                <HouseGlyph size={26} />
               </button>
             </div>
           </m.div>
@@ -188,10 +191,8 @@ function Dock() {
       {pickerEver && (
         <PeoplePicker
           open={picking}
-          title="Voice note to"
           people={others}
-          everyoneLabel="The whole family"
-          status={(p) => (waiting.has(p.id) ? { text: "Waiting for your reply", dot: "#e8402a" } : { text: p.city || "" })}
+          waitingIds={waiting}
           onPick={(ids) => {
             setPicking(false);
             openAdd("voice", null, ids.length === others.length ? null : ids);
@@ -235,6 +236,13 @@ function ShellInner({ children }: { children: React.ReactNode }) {
     void setStatusBar();
     return onAppUrlOpen((route) => nativeRouter.push(route));
   }, [nativeRouter]);
+  // Push: in the app, keep this phone's token fresh and open the page a tapped notification names;
+  // on the web, re-save the browser's subscription if the person already said yes. Never asks.
+  useEffect(() => {
+    if (!signedIn) return;
+    void refreshSubscription();
+    return watchPush((route) => nativeRouter.push(route));
+  }, [signedIn, nativeRouter]);
   const [large] = useLargeText(viewer.role === "elder");
   const [addOpen, setAddOpen] = useState(false);
   // Mount the composer on first open, then keep it mounted so its exit animation runs.

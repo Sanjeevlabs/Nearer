@@ -2,16 +2,18 @@
 // candidate is a real catalogue row (or, in MOCK mode, a labelled sample);
 // Muse may only choose among them, never add to them. Server only.
 import { z } from "zod";
-import { isMockMode } from "../config";
+import { isSampleMode } from "../config";
 import { NeedsConnect, openPartner } from "./adapter";
-import { McpClient, toolJson } from "./mcp-client";
+import { McpClient, McpError, toolJson } from "./mcp-client";
 import { parseAddresses, parseMcpProducts, parseUcpProducts, type ParsedAddress, type ParsedItem } from "./parse";
 import { partnersForCountry, storeMcpUrl, storesForCountry, type GiftStore, type Partner, type SampleItem } from "./registry";
 import { seal, unseal } from "./seal";
 import { loadToken } from "./tokens";
 
-/** The UCP agent profile Shopify asks every catalogue call to carry. Override with UCP_AGENT_PROFILE. */
-const UCP_PROFILE = "https://shopify.dev/ucp/agent-profiles/examples/2026-08-25/valid-with-capabilities.json";
+/** The UCP agent profile Shopify asks every catalogue call to carry: our own (app/.well-known/ucp). Override with UCP_AGENT_PROFILE. */
+export const UCP_PROFILE = "https://nearer.site/.well-known/ucp";
+/** Shopify's published example, tried once if a store cannot fetch ours (for example before the site is deployed). */
+export const UCP_EXAMPLE_PROFILE = "https://shopify.dev/ucp/agent-profiles/examples/2026-08-25/valid-with-capabilities.json";
 
 export type ContextKind = "occasion" | "need";
 
@@ -114,10 +116,14 @@ export function pickAddress(addresses: ParsedAddress[], city: string, wanted?: s
 async function liveStore(p: Partner, st: GiftStore, kind: ContextKind, title: string, country: string): Promise<Candidate[]> {
   const q = kind === "need" ? title : [title, st.queries.occasion[0] ?? "gift"].join(" ");
   const client = new McpClient(storeMcpUrl(st));
-  const res = await client.callTool("search_catalog", {
-    meta: { "ucp-agent": { profile: process.env.UCP_AGENT_PROFILE || UCP_PROFILE } },
-    catalog: { query: q.slice(0, 80), context: { address_country: country }, pagination: { limit: 3 } },
-  });
+  const search = (profile: string) =>
+    client.callTool("search_catalog", {
+      meta: { "ucp-agent": { profile } },
+      catalog: { query: q.slice(0, 80), context: { address_country: country }, pagination: { limit: 3 } },
+    });
+  const own = process.env.UCP_AGENT_PROFILE || UCP_PROFILE;
+  // A store that cannot read our profile answers with an rpc error: try the published example once.
+  const res = await search(own).catch((e: unknown) => (e instanceof McpError && e.code === "rpc" ? search(UCP_EXAMPLE_PROFILE) : Promise.reject(e)));
   return parseUcpProducts(toolJson(res))
     .filter((i) => i.available)
     .map((i) => fromParsed(p, i, st));
@@ -153,7 +159,7 @@ export async function searchCandidates(input: { familyId: string; memberId: stri
     const seen = new Set<string>();
     return cs.filter((c) => !isBlockedText(c.name) && !seen.has(c.id) && (seen.add(c.id), true)).slice(0, 12);
   };
-  if (isMockMode()) return { candidates: clean(mockSearch(partners, stores, input.kind, input.title)), connectable: [], sample: true };
+  if (isSampleMode()) return { candidates: clean(mockSearch(partners, stores, input.kind, input.title)), connectable: [], sample: true };
 
   const connectable = new Set<string>(Array.from(connected).filter(([, ok]) => !ok).map(([a]) => a));
   const jobs = partners.flatMap((p): Promise<Candidate[]>[] => {

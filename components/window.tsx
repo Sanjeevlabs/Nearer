@@ -24,6 +24,7 @@ import { badgeParts, clockWord, dayWord, lampToday, type DayMoment } from "@/lib
 import { timeIn } from "@/lib/zones";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import { PeoplePicker } from "./people-picker";
+import { PushAsk } from "./push-ask";
 import { usePlayer } from "./player";
 import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
@@ -744,6 +745,9 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                   {knock && <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 animate-ping rounded-full bg-[#3ccf7a]" />}
                 </button>
               </section>
+
+              {/* 6. A soft ask for gentle notes: only when this server can push and this device has not said yes */}
+              <PushAsk />
             </>
           )}
         </div>

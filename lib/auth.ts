@@ -127,7 +127,7 @@ export function requireMember(session: Session, memberId: unknown): Response | n
   return null;
 }
 
-// ---- Per-session rate limiting for model routes (30/min). ----
+// ---- Per-session rate limiting for model routes (30/min) and a few write-heavy ones (push device routes, with their own limit). ----
 
 const MODEL_ROUTES = new Set([
   "/api/transcribe",
@@ -149,6 +149,8 @@ const MODEL_ROUTES = new Set([
   "/api/today",
   "/api/partners/suggest",
   "/api/letters/weekly",
+  "/api/push/register",
+  "/api/push/test",
 ]);
 
 const buckets = new Map<string, number[]>();

@@ -34,6 +34,8 @@ KID_ROOMS = {
     "Celebrations": ["/gather", "/gather/play"],
     "Family": ["/bond"],
 }
+# Pages that are in no room: For you (the bell on the dock).
+EXTRA = ["/inbox"]
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "child")]
 # Console noise that isn't ours (dev tooling, a blocked third-party font).
 IGNORE = re.compile(r"Download the React DevTools|fonts\.g(static|oogleapis)|favicon", re.I)
@@ -200,7 +202,7 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
     page.get_by_role("link", name=re.compile(r"^Memories\b")).first.click()
     page.wait_for_url(f"**{first}", timeout=15_000)
 
-    for room, tabs in rooms.items():
+    for room, tabs in [*rooms.items(), ("", EXTRA)]:
         for href in tabs:
             if href == "/portrait" and kind == "child":
                 continue  # grown-ups only (lib/muse-portrait canStartPortrait)

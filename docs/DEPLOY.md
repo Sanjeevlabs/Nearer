@@ -38,6 +38,8 @@ For local `cf:preview`, put runtime values in `.dev.vars` (gitignored, same `KEY
 | `SAM_URL`, `SAM_API_KEY` | runtime (key is secret) | optional | Sticker cut-outs with Meta SAM (`modal/sam_server.py`, see below). Without both, and always with `MOCK=true`, stickers use a clean circle/rounded crop. Each cut-out counts ~USD 0.002 against the spend cap. |
 | `JAAS_APP_ID`, `JAAS_KID`, `JAAS_PRIVATE_KEY` | runtime (key is secret) | optional | Video rooms on 8x8 Jitsi as a Service, so grandparents never meet a moderator sign-in. All three or none; without them "Sit together" uses public meet.jit.si. See the JaaS section below. |
 | `RESEND_API_KEY`, `MAIL_FROM` | runtime (key is secret) | optional | The morning email: one digest a day per person (the weekly letter on Sunday, plus up to 3 small nudges a week), sent through Resend. `MAIL_FROM` like `Nearer <hello@yourdomain>` on a verified domain. Without the key, or with `MOCK=true`, nothing is mailed and nudges show only in the app. Delivery happens when the daily scan runs after each person's 8 AM; with one daily cron (09:00 UTC) a nudge waits for the next run, so an hourly trigger gives true 8 AM local. |
+| `FCM_SERVICE_ACCOUNT` | runtime secret | optional | The Firebase service-account JSON (one string) for push to the Android/iOS apps. Without it app pushes are skipped. See docs/NATIVE.md, Push notifications. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | runtime (private is a secret) | optional | Push to the installed web app. `node scripts/vapid-keys.mjs` makes the pair; the subject is `mailto:hello@nearer.site`. Without them web notifications are not offered. |
 | `SUPABASE_SECRET_KEY` | runtime secret | live mode | Service-role key. Never prefix with `NEXT_PUBLIC_`. |
 | `NEXT_PUBLIC_SUPABASE_URL` | **build time** | live mode | Also read server-side, so set it as a runtime var too. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **build time** | live mode | Also set as a runtime var. |
@@ -103,7 +105,7 @@ Link previews use static images (`app/opengraph-image.png`, `app/r/[token]/openg
 
 ## 8. Cron
 
-`wrangler.jsonc` declares a Cron Trigger (`0 9 * * *`, UTC), replacing the `crons` entry in `vercel.json`. `cf-worker.mjs` handles it by calling `GET <APP_ORIGIN>/api/ritual-scan` inside the worker with `Authorization: Bearer <CRON_SECRET>`. Test locally with `npx wrangler dev --test-scheduled` and `curl "http://localhost:8787/__scheduled?cron=0+9+*+*+*"`. Cron Triggers run in the dashboard under the worker's Settings → Triggers.
+`wrangler.jsonc` declares two Cron Triggers: `0 9 * * *` (UTC), the daily scan, replacing the `crons` entry in `vercel.json`; and `*/15 * * * *`, which calls `/api/push/sweep` so an overdue Safe & sound check-in reaches the people she chose within minutes (remove it to go back to once a day). `cf-worker.mjs` handles the daily one by calling `GET <APP_ORIGIN>/api/ritual-scan` inside the worker with `Authorization: Bearer <CRON_SECRET>`. Test locally with `npx wrangler dev --test-scheduled` and `curl "http://localhost:8787/__scheduled?cron=0+9+*+*+*"`. Cron Triggers run in the dashboard under the worker's Settings → Triggers.
 
 ## Things that behave differently on Workers
 

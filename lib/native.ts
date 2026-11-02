@@ -160,9 +160,61 @@ export async function setStatusBar(opts: { dark?: boolean } = {}): Promise<void>
   }
 }
 
+const PUSH_TOKEN_KEY = "aangan:push-token";
+
+function rememberToken(token: string | null): void {
+  try {
+    if (token) localStorage.setItem(PUSH_TOKEN_KEY, token);
+    else localStorage.removeItem(PUSH_TOKEN_KEY);
+  } catch {
+    /* private mode: the token just is not remembered */
+  }
+}
+
+function rememberedToken(): string | null {
+  try {
+    return localStorage.getItem(PUSH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Tell the server about this device (for the signed-in person). Resolves true when it was saved. */
+async function sendPushToken(token: string): Promise<boolean> {
+  try {
+    const res = await fetch("/api/push/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: "fcm", token, platform: platform() === "ios" ? "ios" : "android" }),
+    });
+    if (res.ok) rememberToken(token);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** The Android channel the server's messages name ("family"), made before the first push arrives. */
+async function ensureChannel(): Promise<void> {
+  if (platform() !== "android") return;
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    await PushNotifications.createChannel({ id: "family", name: "Family", description: "Notes from your family", importance: 3, visibility: 0 });
+  } catch {
+    /* channel exists, or the plugin is unavailable */
+  }
+}
+
+/** A tap on a notification carries `data.url`: only a path inside the app is ever followed. */
+export function pushRoute(data: unknown): string | null {
+  const url = (data as { url?: unknown } | null | undefined)?.url;
+  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\") ? url : null;
+}
+
 /**
- * Ask for notification permission and register with FCM (Android) / APNs (iOS).
- * Resolves to the device token, or null on the web, on refusal, or on error.
+ * Ask for notification permission and register with FCM (Android) / APNs (iOS), then
+ * save the token on the server for the signed-in person. Call it from a tap ("Turn on"),
+ * never on load. Resolves to the device token, or null on the web, on refusal, or on error.
  */
 export async function registerPush(timeoutMs = 10_000): Promise<string | null> {
   if (!isNative()) return null;
@@ -171,6 +223,7 @@ export async function registerPush(timeoutMs = 10_000): Promise<string | null> {
     let perm = await PushNotifications.checkPermissions();
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") return null;
+    await ensureChannel();
     const token = await new Promise<string | null>((resolve) => {
       const handles: { remove: () => Promise<void> }[] = [];
       const done = (v: string | null) => {
@@ -183,11 +236,72 @@ export async function registerPush(timeoutMs = 10_000): Promise<string | null> {
       void PushNotifications.addListener("registrationError", () => done(null)).then((h) => handles.push(h));
       void PushNotifications.register().catch(() => done(null));
     });
-    // TODO(push): POST the token to the server (e.g. /api/push/register) once FCM sending exists.
-    if (token) console.info("[nearer] push token ready (server registration is a TODO)");
+    if (token) await sendPushToken(token);
     return token;
   } catch {
     return null;
+  }
+}
+
+/**
+ * While signed in, in the app: keep the server's copy of this device's token fresh
+ * (FCM rotates tokens; the plugin reports each new one) and route a tap on a
+ * notification to the page it names. Never asks for permission; it only registers
+ * quietly when the person already said yes. Returns an unsubscribe function.
+ */
+export function watchPush(onOpen: (route: string) => void): () => void {
+  if (!isNative()) return () => undefined;
+  let cancelled = false;
+  const handles: { remove: () => Promise<void> }[] = [];
+  void (async () => {
+    try {
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      const keep = (h: { remove: () => Promise<void> }) => {
+        if (cancelled) void h.remove().catch(() => undefined);
+        else handles.push(h);
+      };
+      keep(await PushNotifications.addListener("registration", (t: { value: string }) => void sendPushToken(t.value)));
+      keep(
+        await PushNotifications.addListener("pushNotificationActionPerformed", (a: { notification?: { data?: unknown } }) => {
+          const route = pushRoute(a.notification?.data);
+          if (route) onOpen(route);
+        }),
+      );
+      const perm = await PushNotifications.checkPermissions();
+      if (!cancelled && perm.receive === "granted") {
+        await ensureChannel();
+        await PushNotifications.register();
+      }
+    } catch {
+      /* no push plugin */
+    }
+  })();
+  return () => {
+    cancelled = true;
+    for (const h of handles) void h.remove().catch(() => undefined);
+  };
+}
+
+/** Is notification permission already granted in the app? (false on the web) */
+export async function nativePushGranted(): Promise<boolean> {
+  if (!isNative()) return false;
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    return (await PushNotifications.checkPermissions()).receive === "granted";
+  } catch {
+    return false;
+  }
+}
+
+/** Sign-out or turning notifications off: this device stops being pushed to. Never throws. */
+export async function unregisterPush(): Promise<void> {
+  const token = rememberedToken();
+  if (!token) return;
+  try {
+    const res = await fetch("/api/push/register", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ token }) });
+    if (res.ok || res.status === 401) rememberToken(null);
+  } catch {
+    /* offline: the server drops it when the push service says it is gone */
   }
 }
 

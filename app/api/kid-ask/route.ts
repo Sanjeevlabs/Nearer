@@ -6,6 +6,7 @@ import { getDoc, newId, putDoc } from "@/lib/family-docs";
 import { guardianMap, guardiansOf, isKid, openAsksFor } from "@/lib/kids";
 import { callName } from "@/lib/people";
 import { guardWrites } from "@/lib/api-guard";
+import { pushAsk } from "@/lib/push/events";
 
 // "Ask Dadi": a child's question or "another story" (voice or a few words) waits for a
 // grandparent (or parent) to answer by voice. The answer is a voice card AND a Story, titled
@@ -64,6 +65,7 @@ async function postHandler(req: Request): Promise<Response> {
     if (twin) return Response.json({ ask: twin }, { status: 200 });
     if (open.length >= OPEN_MAX) return Response.json({ error: "too-many-open" }, { status: 409 });
     const ask = await putDoc(auth.familyId, "kid_ask", { id: newId("ask"), fromMemberId: auth.memberId, toMemberId: to, cardId: card?.id ?? null, text: body.text, askedAt: now, answeredCardId: null, answeredAt: null, topic: body.topic });
+    pushAsk(auth.familyId, { fromId: auth.memberId, toIds: to ? [to] : guardiansOf(auth.memberId, rels), topic: body.topic, tagId: card ? `voice-${card.id}` : `ask-${ask.id}` });
     return Response.json({ ask }, { status: 201 });
   }
 

@@ -61,6 +61,7 @@ import {
   type Invite as MemInvite,
 } from "./store";
 import { DbWriteError, dbFor } from "./family-db";
+import { removeAllForMember } from "./push/store";
 import { DEMO_FAMILY_IDS, isDemoFamily, isSeedFamily } from "./family";
 import { baseLang } from "./languages";
 import type { MemberPatch } from "./store";
@@ -979,7 +980,10 @@ export async function dbDeleteMemberTraces(memberId: string): Promise<Record<str
 }
 
 export async function dbRemoveMember(memberId: string): Promise<boolean> {
-  const sb = dbFor(memberFamily(memberId));
+  const fam = memberFamily(memberId);
+  // Their phones stop receiving at once (the database cascades too, memory does not).
+  if (fam) await removeAllForMember(fam, memberId).catch(() => undefined);
+  const sb = dbFor(fam);
   if (!sb) return memRemoveMember(memberId);
   await sb.from("relationships").delete().or(`member_id.eq.${memberId},relation_member_id.eq.${memberId}`);
   const tables = ["wishes", "reactions", "plays", "daily_roles"];

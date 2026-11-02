@@ -6,6 +6,7 @@ import { COURSES, IngredientSchema, StepSchema } from "@/lib/kinds";
 import { canChange } from "@/lib/permissions";
 import { recipeFromVoice } from "@/lib/kitchen";
 import { guardWrites } from "@/lib/api-guard";
+import { pushAsk } from "@/lib/push/events";
 import { nudgeShared } from "@/lib/nudge-producers";
 
 // The family Kitchen.
@@ -184,6 +185,7 @@ async function postHandler(req: Request): Promise<Response> {
     madeBy: "family",
     createdAt: now,
   });
+  pushAsk(auth.familyId, { fromId: auth.memberId, toIds: [to.id], topic: "recipe", tagId: `ask-${question.id}` });
   return Response.json({ question }, { status: 201 });
 }
 

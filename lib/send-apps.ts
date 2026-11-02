@@ -30,10 +30,21 @@ export const SEND_APPS: SendApps = SendAppsSchema.parse(raw);
 
 const ZONES = (traditions as { zones: { match: string; country: string }[] }).zones.map((z) => ({ re: new RegExp(z.match), country: z.country }));
 
-/** The country code for a time zone (data/traditions.json zones), or null. */
+// Countries with link-out apps but no festival calendar (so not in data/traditions.json zones).
+const LINK_ZONES = [{ re: /^Europe\/(Berlin|Busingen)$/, country: "DE" }];
+
+/** The country code for a time zone (data/traditions.json zones, plus the link-out-only ones), or null. */
 export function countryForTz(tz: string | null | undefined): string | null {
   if (!tz) return null;
-  return ZONES.find((z) => z.re.test(tz))?.country ?? null;
+  return ZONES.find((z) => z.re.test(tz))?.country ?? LINK_ZONES.find((z) => z.re.test(tz))?.country ?? null;
+}
+
+/**
+ * THE country for "Send something", for both the app links and Muse's ideas: the recipient's own,
+ * from their time zone. An unknown zone is '*' (generic), never India.
+ */
+export function sendCountry(tz: string | null | undefined): string {
+  return countryForTz(tz) ?? "*";
 }
 
 /** Categories with their apps for a country (falling back to '*'); empty categories are left out. */

@@ -119,7 +119,7 @@ export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] 
     // Answering the sender is acting on it: something of yours to them (or to everyone) since.
     const replied = mine.some((r) => r.takenAt > c.takenAt && past(r.takenAt) && (addressees(r).length === 0 || addressees(r).includes(c.authorId as string)));
     if (replied) continue;
-    found.push({ at: c.takenAt, kind: "voice", text: `${name(c.authorId)}'s ${THING[c.type] ?? "card"}`, href: "/lane", fromId: c.authorId });
+    found.push({ at: c.takenAt, kind: "voice", text: `${name(c.authorId)}'s ${THING[c.type] ?? "card"}`, href: `/lane?card=${encodeURIComponent(c.id)}`, fromId: c.authorId });
   }
   for (const q of i.questions) {
     if (q.toMemberId !== i.viewerId || q.answeredCardId || !past(q.createdAt)) continue;
