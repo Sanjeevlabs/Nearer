@@ -10,10 +10,10 @@ import { useEffect, useState } from "react";
 // code that opens the demo family on a phone. The installed app skips it (components/welcome.tsx).
 
 const FEATURES: { img: string; title: string; line: string }[] = [
-  { img: "/home/window.webp", title: "A window into their day", line: "Their sky right now, their city's moon, the light you keep lit for each other, and what they chose to share today." },
-  { img: "/home/family.webp", title: "The whole family, one place", line: "Who's around today, glowing. Their day in photos with captions. Today's question, answered by both homes." },
+  { img: "/home/window.webp", title: "A window into their day", line: "Their sky and the time there, the lamp you keep lit for each other, and what they chose to share today." },
+  { img: "/home/together.webp", title: "A little time together", line: "Open your door for chai, dinner or a story. They join when they can, by voice or video, and only when they tap." },
   { img: "/home/chorus.webp", title: "Everyone wishes, together", line: "A week before a birthday or a festival, everyone records a wish. On the day, the Chorus plays them one after another." },
-  { img: "/home/send.webp", title: "Care, sent in a tap", line: "Muse knows it's Maa's birthday on Friday and what she likes. Groceries, a cake or a gift, from partners, in one tap." },
+  { img: "/home/memories.webp", title: "Memories that stay", line: "Their voices, photos and stories, kept by the family. Recipes taught by voice, in the Kitchen." },
 ];
 
 function useQr(path: string): string | null {
