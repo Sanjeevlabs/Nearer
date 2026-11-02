@@ -127,7 +127,7 @@ export default async function SharedRecipe(props: { params: Promise<{ token: str
             </span>
             <div className="pt-1">
               <p className="m-0 text-headline leading-snug">{st.text}</p>
-              {st.tip && <p className="voice m-0 mt-1.5 text-headline text-[#8a4b00]">&ldquo;{st.tip}&rdquo; — {r.from}</p>}
+              {st.tip && <p className="voice m-0 mt-1.5 text-headline text-ink-soft">&ldquo;{st.tip}&rdquo; — {r.from}</p>}
             </div>
           </li>
         ))}

@@ -90,8 +90,8 @@ function Stories() {
           {toMe.map((q) => {
             const by = q.askedBy ? byId(q.askedBy) : undefined;
             return (
-              <div key={q.id} className="rounded-card bg-[#fff6e6] p-4">
-                <p className="m-0 text-footnote font-medium text-[#8a4b00]">{callName(by)} asked you</p>
+              <div key={q.id} className="rounded-card bg-well p-4">
+                <p className="m-0 text-footnote font-medium text-ink-soft">{callName(by)} asked you</p>
                 <p className="voice m-0 mt-1 text-title leading-snug">&ldquo;{q.text}&rdquo;</p>
                 <div className="mt-3 flex gap-2">
                   <Button className="flex-1" onClick={() => openAdd("voice", { kind: "story", questionId: q.id, prompt: q.text })}>

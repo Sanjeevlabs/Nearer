@@ -130,13 +130,13 @@ export function BothSides() {
                   }}
                   className={cn("press flex w-full items-center gap-3 rounded-card p-3 text-left", here ? "bg-accent text-accent-ink" : "bg-surface")}
                 >
-                  <span className={cn("relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-headline font-bold", here ? "bg-white/15" : "bg-white")}>
+                  <span className={cn("relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-headline font-bold", here ? "bg-accent-ink/15" : "bg-well")}>
                     {s.name.slice(0, 1)}
                     {!here && (s.fresh ?? 0) > 0 && <span className="tnum absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-caption font-semibold text-accent-ink">{s.fresh}</span>}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body font-semibold">{s.name}</span>
-                    <span className={cn("block truncate text-caption", here ? "text-white/70" : "text-ink-soft")}>
+                    <span className={cn("block truncate text-caption", here ? "text-accent-ink/70" : "text-ink-soft")}>
                       {busy === s.familyId ? "Opening…" : here ? "You're here" : s.addedBy ? `Added by ${s.addedBy}` : `${s.people} people`}
                     </span>
                   </span>

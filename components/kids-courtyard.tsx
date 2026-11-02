@@ -63,7 +63,7 @@ function KidsPointer() {
   if (n === 0) return null;
   return (
     <Link href="/inbox" data-ui="courtyard-kid-asks" className="press mt-5 flex min-h-[48px] items-center gap-3 rounded-tile bg-surface px-4 text-callout font-semibold text-ink no-underline" style={{ boxShadow: "var(--surface-edge)" }}>
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--petal-1-soft)] text-[color:var(--petal-1-ink)]">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-well text-ink">
         <Icon name="mic" size={16} />
       </span>
       <span className="min-w-0 flex-1">{n === 1 ? "1 question from the kids" : `${n} questions from the kids`}</span>

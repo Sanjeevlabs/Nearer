@@ -87,13 +87,13 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
       <RoomHeader title={recipe ? "Edit recipe" : scan ? "Check the recipe" : "Add a recipe"} subtitle={recipe ? "Fix anything. The cook's words win." : scan ? "Nothing is saved until you add it" : "Your own, or one you're writing down for someone"} />
 
       {scan && (
-        <figure className="m-0 mb-5 flex items-center gap-3 rounded-card bg-[#fff6e6] p-3">
+        <figure className="m-0 mb-5 flex items-center gap-3 rounded-card bg-well p-3">
           {scan.url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={scan.url} alt="The recipe card" className="h-[84px] w-[68px] shrink-0 rounded-[12px] object-cover" />
           )}
           <figcaption className="min-w-0">
-            <span className="block font-hand text-title leading-tight text-[#8a4b00]">In {d.cookId === viewer.id ? "your" : `${callName(members.find((m) => m.id === d.cookId))}'s`} handwriting</span>
+            <span className="block font-hand text-title leading-tight text-ink-soft">In {d.cookId === viewer.id ? "your" : `${callName(members.find((m) => m.id === d.cookId))}'s`} handwriting</span>
             <span className="mt-0.5 block text-footnote text-ink-soft">{scan.fromMuse ? "Muse read this card. Check every line against it, then add it." : "Muse couldn't read this one. Type it in from the photo; it stays with the recipe."}</span>
           </figcaption>
         </figure>

@@ -19,7 +19,7 @@ function HomeCard({ home, labels, viewerId }: { home: Household; labels: Map<str
   const night = h < 6 || h >= 19;
   const people = [...home.members].sort((a, b) => (a.role === "elder" ? 0 : a.role === "adult" ? 1 : 2) - (b.role === "elder" ? 0 : b.role === "adult" ? 1 : 2));
   return (
-    <li className={home.elders ? "rounded-card bg-[#fff6e6] p-4" : "rounded-card bg-surface p-4"}>
+    <li className={home.elders ? "rounded-card bg-well p-4" : "rounded-card bg-surface p-4"}>
       <div className="flex items-baseline justify-between gap-3">
         <p className="m-0 min-w-0 truncate text-body font-semibold">{home.members.some((m) => m.id === viewerId) ? "Your home" : householdName(home, (m) => callName(m))}</p>
         <p className="m-0 flex shrink-0 items-center gap-1 text-footnote text-ink-soft">

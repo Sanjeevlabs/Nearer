@@ -74,7 +74,7 @@ export function ScanRecipeButton({ onScanned }: { onScanned: (r: ScanResult) => 
           // eslint-disable-next-line @next/next/no-img-element
           <img src={busy} alt="" className="h-10 w-10 shrink-0 animate-pulse rounded-[10px] object-cover" />
         ) : (
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-[#fff6e6] text-[#8a4b00]">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] bg-well text-ink-soft">
             <Icon name="camera" size={20} />
           </span>
         )}

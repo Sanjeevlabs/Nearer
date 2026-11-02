@@ -134,14 +134,14 @@ export function VisitCountdown({ visit }: { visit: Project }) {
 
 export function KnockBanner({ knock, member }: { knock: Knock; member: Member | undefined }) {
   return (
-    <div className="flex items-center gap-3 rounded-card bg-[#fff6e6] p-3.5">
+    <div className="flex items-center gap-3 rounded-card bg-well p-3.5">
       <Avatar src={memberPhoto(member)} name={callName(member)} size={44} ring />
       <div className="min-w-0 flex-1">
         <p className="m-0 flex items-center gap-1.5 text-body font-semibold">
           <LiveDot />
           {callName(member)}&rsquo;s door is open
         </p>
-        <p className="voice m-0 truncate text-body text-[#8a4b00]">{knock.note || "Come sit with me?"}</p>
+        <p className="voice m-0 truncate text-body text-ink-soft">{knock.note || "Come sit with me?"}</p>
       </div>
       <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
         Come sit
@@ -170,7 +170,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
   const quiet = rows.filter((r) => r.quiet);
 
   return (
-    <div className={cn("rounded-card p-3.5", quiet.length ? "bg-[#fff6e6]" : "bg-surface")}>
+    <div className={cn("rounded-card p-3.5", quiet.length ? "bg-well" : "bg-surface")}>
       <Link href="/care" className="flex items-center gap-3 text-ink no-underline">
         <span className="flex shrink-0 -space-x-3">
           {elders.slice(0, 2).map((m) => (
@@ -278,8 +278,8 @@ export function MyQuestions() {
       {open.map((q) => {
         const by = q.askedBy ? members.find((m) => m.id === q.askedBy) : undefined;
         return (
-          <section key={q.id} aria-label="A question for you" className="rounded-card bg-[#fff6e6] p-4">
-            <p className="m-0 text-footnote font-medium text-[#8a4b00]">{by ? `${callName(by)} asked you` : "This week's question"}</p>
+          <section key={q.id} aria-label="A question for you" className="rounded-card bg-well p-4">
+            <p className="m-0 text-footnote font-medium text-ink-soft">{by ? `${callName(by)} asked you` : "This week's question"}</p>
             <p className="voice m-0 mt-1 text-title leading-snug">
               “<QuestionLine q={q} />”
             </p>

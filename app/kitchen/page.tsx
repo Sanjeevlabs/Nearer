@@ -94,14 +94,14 @@ export default function KitchenPage() {
           {mine.map((q) => {
             const by = q.askedBy ? byId(q.askedBy) : undefined;
             return (
-              <div key={q.id} className="rounded-card bg-[#fff6e6] p-4">
-                <p className="m-0 text-footnote font-medium text-[#8a4b00]">{by ? `${callName(by)} asked you` : "This week's question"}</p>
+              <div key={q.id} className="rounded-card bg-well p-4">
+                <p className="m-0 text-footnote font-medium text-ink-soft">{by ? `${callName(by)} asked you` : "This week's question"}</p>
                 <p className="voice m-0 mt-1 text-title leading-snug">“{q.text}”</p>
                 <Button className="mt-3 w-full" onClick={() => openAdd("voice", { kind: "recipe", questionId: q.id, title: q.text.replace(/^How do you make your /i, "").replace(/\?$/, "") })}>
                   <Icon name="mic" size={18} />
                   Teach it in your voice
                 </Button>
-                <button type="button" className="mt-1 h-10 w-full text-callout font-medium text-[#8a4b00]" onClick={async () => { await postJson("/api/keeper", { action: "remove", questionId: q.id }); await asks.reload(); }}>
+                <button type="button" className="mt-1 h-10 w-full text-callout font-medium text-ink-soft" onClick={async () => { await postJson("/api/keeper", { action: "remove", questionId: q.id }); await asks.reload(); }}>
                   Not this one
                 </button>
               </div>
@@ -222,10 +222,10 @@ function RecipeTile({ recipe, attempts, canManage, onDeleted }: { recipe: Recipe
         <p className="m-0 mt-0.5 flex items-center gap-1 text-caption text-ink-soft">
           <span style={{ color: look.ink }}>{look.label}</span>
           {time && <span>· {time}</span>}
-          {recipe.voiceCardId && <Icon name="mic" size={12} className="ml-0.5 text-[#8a4b00]" />}
-          {recipe.videoCardId && <Icon name="camera" size={12} className="text-[#8a4b00]" />}
+          {recipe.voiceCardId && <Icon name="mic" size={12} className="ml-0.5 text-ink-soft" />}
+          {recipe.videoCardId && <Icon name="camera" size={12} className="text-ink-soft" />}
         </p>
-        {recipe.scanRef && <p className="m-0 font-hand text-body leading-tight text-[#8a4b00]">from the handwritten card</p>}
+        {recipe.scanRef && <p className="m-0 font-hand text-body leading-tight text-ink-soft">from the handwritten card</p>}
         {attempts.length > 0 && <p className="m-0 text-caption text-ink-faint">cooked {attempts.length}×</p>}
       </Link>
       {canManage && (

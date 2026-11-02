@@ -33,12 +33,12 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
       <p className="m-0 mb-3 text-callout text-ink-soft">
         {members.length} people · {gens} generation{gens === 1 ? "" : "s"} · {cities} {cities === 1 ? "city" : "cities"}
       </p>
-      <div ref={box} className="no-scrollbar -mx-4 overflow-x-auto rounded-[28px] bg-[#faf7f2] ring-1 ring-[var(--line)]" style={{ scrollBehavior: "smooth" }}>
+      <div ref={box} className="no-scrollbar -mx-4 overflow-x-auto rounded-[28px] bg-card ring-1 ring-[var(--line)]" style={{ scrollBehavior: "smooth" }}>
         <div className="relative" style={{ width: W, height: H }}>
           <svg className="absolute inset-0" width={W} height={H} aria-hidden="true">
-            <g transform={`translate(${PAD},${PAD / 2})`} fill="none" stroke="#c9b9a3" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <g transform={`translate(${PAD},${PAD / 2})`} fill="none" stroke="#c4c4c4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               {t.couples.map((c) => (
-                <line key={c.a + c.b} x1={c.x1 + NODE / 2 - 2} x2={c.x2 - NODE / 2 + 2} y1={c.y} y2={c.y} stroke="#d9a441" strokeWidth={2.5} />
+                <line key={c.a + c.b} x1={c.x1 + NODE / 2 - 2} x2={c.x2 - NODE / 2 + 2} y1={c.y} y2={c.y} stroke="#8c8c8c" strokeWidth={2.5} />
               ))}
               {t.links.map((l, i) => {
                 const mid = l.from.y + (Math.min(...l.to.map((c) => c.y)) - l.from.y) / 2 + 14;
@@ -56,7 +56,7 @@ export function FamilyTree({ members, relationships, viewerId, onAdd }: { member
             return (
               <div key={n.id} className="absolute flex w-[88px] -translate-x-1/2 flex-col items-center" style={{ left: n.x + PAD, top: n.y + PAD / 2 - NODE / 2 }}>
                 <Link href={`/people/${m.id}`} className="press block rounded-full no-underline" aria-label={`${callName(m)}${you ? " (you)" : ""}`}>
-                  <span className={cn("relative block overflow-hidden rounded-full bg-white", you ? "ring-[3px] ring-ink ring-offset-2 ring-offset-[#faf7f2]" : "ring-2 ring-white shadow-[0_8px_18px_-10px_rgba(60,40,20,.6)]")} style={{ width: NODE, height: NODE }}>
+                  <span className={cn("relative block overflow-hidden rounded-full bg-white", you ? "ring-[3px] ring-ink ring-offset-2 ring-offset-[var(--paper)]" : "ring-2 ring-white shadow-[0_8px_18px_-10px_rgba(60,40,20,.6)]")} style={{ width: NODE, height: NODE }}>
                     {photo ? <Photo src={photo} alt="" sizes="128px" position="center 30%" /> : <Monogram name={callName(m)} size={NODE} />}
                   </span>
                 </Link>

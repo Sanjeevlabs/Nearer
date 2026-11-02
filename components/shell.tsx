@@ -72,9 +72,6 @@ export function useShell(): ShellState {
 }
 
 
-/** One petal colour per room: a category accent, never an action colour. */
-const ROOM_PETAL: Record<string, number> = { memories: 3, kitchen: 5, care: 4, family: 2, celebrations: 1 };
-
 /** The rooms of the house: five tiles, nothing nested. A tile opens the room on its first page; inside, the tab row moves sideways. */
 function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { viewer, members } = useViewer();
@@ -86,7 +83,7 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
         {all.map((g) => (
           <li key={g.id}>
             <Link href={roomHref(g)} onClick={onClose} data-room={g.id} className="press flex w-full items-center gap-3.5 rounded-tile bg-surface px-4 py-3 text-left text-ink no-underline" style={{ boxShadow: "var(--surface-edge)" }}>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: `var(--petal-${ROOM_PETAL[g.id]}-soft)`, color: `var(--petal-${ROOM_PETAL[g.id]}-ink)` }}>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well">
                 <Icon name={g.icon as IconName} size={20} strokeWidth={1.8} />
               </span>
               <span className="min-w-0 flex-1">

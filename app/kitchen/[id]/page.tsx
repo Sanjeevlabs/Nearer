@@ -135,11 +135,11 @@ export default function RecipePage() {
       {(voice || videoUrl) && (
         <section aria-label="Taught by" className="mt-4 space-y-2">
           {voice && (
-            <div className="flex items-center gap-3 rounded-card bg-[#fff6e6] p-3.5">
+            <div className="flex items-center gap-3 rounded-card bg-well p-3.5">
               <PlayButton playing={Boolean(active && isPlaying)} onClick={() => (active ? toggle() : play(voice))} label={`Hear ${callName(cook)} teach it`} />
               <span className="min-w-0">
                 <span className="block text-body font-semibold">Hear {callName(cook)} teach it</span>
-                <span className="block text-footnote text-[#8a4b00]">In their own words, step by step</span>
+                <span className="block text-footnote text-ink-soft">In their own words, step by step</span>
               </span>
             </div>
           )}
@@ -207,7 +207,7 @@ export default function RecipePage() {
               <div className="pt-1">
                 <p className="m-0 text-headline leading-snug">{st.text}</p>
                 {st.tip && (
-                  <p className="voice m-0 mt-1.5 text-headline text-[#8a4b00]">
+                  <p className="voice m-0 mt-1.5 text-headline text-ink-soft">
                     &ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-faint">— {callName(cook)}</span>
                   </p>
                 )}
@@ -294,7 +294,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <span className="text-footnote text-ink-soft">{blessed.length ? `${blessed.map((m) => callName(m)).join(", ")} blessed this` : ""}</span>
                   {blessedByMe && (
-                    <button type="button" onClick={async () => { await postJson("/api/kitchen", { action: "unbless", attemptId: a.id }); onChange(); }} className="press flex h-10 items-center gap-1.5 rounded-full bg-[#fff6e6] px-4 text-callout font-semibold text-[#8a4b00]">
+                    <button type="button" onClick={async () => { await postJson("/api/kitchen", { action: "unbless", attemptId: a.id }); onChange(); }} className="press flex h-10 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink-soft">
                       <Icon name="bless" size={16} />
                       Blessed
                     </button>

@@ -120,7 +120,7 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
   }, [onOpen]);
   const p = Math.min(1, x / max());
   return (
-    <div ref={track} data-ui="window-key" className="relative mx-auto w-full max-w-[280px] select-none overflow-hidden rounded-full bg-[#174e4a]" style={{ height: BAR_H, touchAction: "none" }}>
+    <div ref={track} data-ui="window-key" className="relative mx-auto w-full max-w-[280px] select-none overflow-hidden rounded-full bg-deep" style={{ height: BAR_H, touchAction: "none" }}>
       {/* Chevrons centred on the whole track */}
       <span className="pointer-events-none absolute inset-0 flex items-center justify-center gap-1 text-white/50" style={{ opacity: 1 - p * 1.4 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
@@ -155,7 +155,7 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
         style={{ left: 0, top: 0, width: KNOB + INSET * 2, height: BAR_H, transform: `translateX(${x}px)`, transition: start.current === null ? "transform 260ms cubic-bezier(.2,.9,.3,1.2)" : "none" }}
       >
         <span className="sr-only">Slide to open the house</span>
-        <span className="grid place-items-center rounded-full bg-white text-[#174e4a] shadow-[0_6px_18px_rgba(0,0,0,.35)]" style={{ width: KNOB, height: KNOB }} aria-hidden="true">
+        <span className="grid place-items-center rounded-full bg-white text-[#1c1c1c] shadow-[0_6px_18px_rgba(0,0,0,.35)]" style={{ width: KNOB, height: KNOB }} aria-hidden="true">
           <m.span animate={done ? { rotate: 90 } : { rotate: 0 }} transition={{ duration: 0.2 }} className="grid place-items-center">
             <Icon name={done ? "lockOpen" : "key"} size={19} strokeWidth={2} />
           </m.span>
@@ -420,7 +420,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
               {/* The lamp: one line (and a small "?" for the rest). Shown even before they join. */}
               <section data-ui="window-lamp" aria-label="The lamp" aria-live="polite" className="flex min-h-[44px] items-center gap-2 px-1">
-                <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", lampNow.lit ? "bg-[var(--petal-5-soft)] text-[color:var(--petal-5-ink)]" : "bg-tint text-ink-soft")} aria-hidden="true">
+                <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-full", lampNow.lit ? "bg-accent text-accent-ink" : "bg-tint text-ink-soft")} aria-hidden="true">
                   <Icon name="lamp" size={16} />
                 </span>
                 <p className="m-0 min-w-0 flex-1 text-callout font-medium leading-snug" suppressHydrationWarning>

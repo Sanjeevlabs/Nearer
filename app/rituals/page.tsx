@@ -118,7 +118,7 @@ function Group({ g, members, albums, onOpen }: { g: OccasionGroup; members: Memb
                     <span className="voice block truncate text-callout text-ink-soft">{c.caption || "A voice note"}</span>
                   </span>
                   <span className="tnum text-caption text-ink-faint">{formatDuration(cardDuration(c))}</span>
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-marigold text-black" : "bg-accent text-accent-ink"}`}>
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-tint text-ink" : "bg-accent text-accent-ink"}`}>
                     <Icon name={on ? "pause" : "play"} size={13} />
                   </span>
                 </button>
