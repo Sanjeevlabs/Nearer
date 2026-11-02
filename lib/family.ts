@@ -13,7 +13,8 @@ export interface DemoFamily {
 export const DEMO_FAMILY: DemoFamily = {
   id: "demo-family",
   name: "Sharma",
-  defaultHomeImageRef: null,
+  // Muse-made (scripts/gen-courtyard.mjs): an old courtyard in morning light, no people.
+  defaultHomeImageRef: "/demo/home-courtyard.jpg",
 };
 
 type Seed = Omit<Member, "status">;
@@ -238,7 +239,8 @@ export const DEMO_MEMBERS: Member[] = active([
   },
 ]);
 
-export const DEMO_IYER: DemoFamily = { id: "demo-iyer", name: "Iyer", defaultHomeImageRef: null };
+// Muse-made (scripts/gen-courtyard.mjs): a city balcony of plants at sunset, no people.
+export const DEMO_IYER: DemoFamily = { id: "demo-iyer", name: "Iyer", defaultHomeImageRef: "/demo/home-balcony.jpg" };
 
 // Priya's side: her parents in Chennai, her brother's family in Pune. Priya,
 // Arjun and the children belong here too (same personId as on the Sharma side).
@@ -289,6 +291,18 @@ export const isSandboxFamily = (familyId: string): boolean => /^demo-v-[0-9a-f]{
 export const isDemoFamily = (familyId: string): boolean => isSeedFamily(familyId) || isSandboxFamily(familyId);
 
 export const DEFAULT_VIEWER_ID = "arjun";
+
+/**
+ * The photo behind a family's courtyard header: the viewer's own home photo
+ * when they set one, else a Muse-made home (each demo side has its own; a
+ * visitor's sandbox copy keeps its seed's). Always a photo, never blank.
+ */
+export function familyHomePhoto(familyId: string | null | undefined, own: string | null | undefined): string {
+  if (own) return own;
+  const id = familyId ?? "";
+  const seed = [DEMO_FAMILY, DEMO_IYER].find((f) => f.id === id || (isSandboxFamily(id) && f.id !== DEMO_FAMILY.id && id.endsWith(f.id.replace(/^demo/, ""))));
+  return seed?.defaultHomeImageRef ?? DEMO_FAMILY.defaultHomeImageRef ?? "/demo/home-courtyard.jpg";
+}
 
 // Signal + role lines per viewer display_lang (data, not logic).
 // en, hi-latn (Latin script), hi-deva (Devanagari).
