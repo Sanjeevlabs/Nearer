@@ -1,139 +1,93 @@
-// The sound of the door (SPEC §29.2): a key goes in, turns twice, the bolt
-// drops, and an old wooden door creaks open. Synthesised with WebAudio, so
-// there is no audio file to license or download. Client only.
+// The sound of the door: a recorded key turning in a lock, the latch, a soft creak
+// (public/sound/door-unlock.*, credits in public/sound/CREDITS.md). Played with an
+// HTMLAudioElement that is preloaded on the first user interaction, so it is ready by the
+// time the door moves. Silent when the person asked for reduced motion. If the file cannot
+// play (no Audio, a load error, a blocked play()) the old WebAudio synthesis in
+// lib/door-synth.ts plays instead. Client only.
+import { synthDoorClose, synthDoorOpen } from "@/lib/door-synth";
 
-let ctx: AudioContext | null = null;
+export const DOOR_SOUND = {
+  mp3: "/sound/door-unlock.mp3",
+  ogg: "/sound/door-unlock.ogg",
+} as const;
+const VOLUME = 0.6;
+/** Where the key turns in the recording; the phone ticks once here. */
+export const KEY_TURN_MS = 350;
 
-function audio(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AC) return null;
-  ctx ??= new AC();
-  if (ctx.state === "suspended") void ctx.resume();
-  return ctx;
-}
+let el: HTMLAudioElement | null = null;
+let broken = false;
+let armed = false;
 
-function noise(ac: AudioContext, seconds: number): AudioBuffer {
-  const buf = ac.createBuffer(1, Math.ceil(ac.sampleRate * seconds), ac.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  return buf;
-}
-
-/** A short filtered burst: a click, a scrape, a thud. */
-function burst(ac: AudioContext, out: AudioNode, at: number, dur: number, type: BiquadFilterType, freq: number, gain: number, q = 1): void {
-  const src = ac.createBufferSource();
-  src.buffer = noise(ac, dur);
-  const f = ac.createBiquadFilter();
-  f.type = type;
-  f.frequency.value = freq;
-  f.Q.value = q;
-  const g = ac.createGain();
-  g.gain.setValueAtTime(gain, at);
-  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-  src.connect(f).connect(g).connect(out);
-  src.start(at);
-  src.stop(at + dur);
-}
-
-/** A metallic ring: a few inharmonic partials, decaying fast. */
-function ring(ac: AudioContext, out: AudioNode, at: number, base: number, gain: number, dur = 0.25): void {
-  for (const [ratio, amp] of [
-    [1, 1],
-    [2.76, 0.5],
-    [5.4, 0.25],
-  ] as const) {
-    const o = ac.createOscillator();
-    o.type = "sine";
-    o.frequency.value = base * ratio;
-    const g = ac.createGain();
-    g.gain.setValueAtTime(gain * amp, at);
-    g.gain.exponentialRampToValueAtTime(0.0001, at + dur / ratio);
-    o.connect(g).connect(out);
-    o.start(at);
-    o.stop(at + dur);
+function reduced(): boolean {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
   }
 }
 
-/** Low body of the bolt dropping into place. */
-function thud(ac: AudioContext, out: AudioNode, at: number, gain: number): void {
-  const o = ac.createOscillator();
-  o.type = "sine";
-  o.frequency.setValueAtTime(140, at);
-  o.frequency.exponentialRampToValueAtTime(55, at + 0.16);
-  const g = ac.createGain();
-  g.gain.setValueAtTime(gain, at);
-  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
-  o.connect(g).connect(out);
-  o.start(at);
-  o.stop(at + 0.25);
-  burst(ac, out, at, 0.08, "lowpass", 900, gain * 0.8);
-}
-
-/** Wood on an old hinge: stick-slip friction, a resonant band that drifts. */
-function creak(ac: AudioContext, out: AudioNode, at: number, dur: number, gain: number): void {
-  const o = ac.createOscillator();
-  o.type = "sawtooth";
-  o.frequency.setValueAtTime(95, at);
-  o.frequency.linearRampToValueAtTime(140, at + dur * 0.6);
-  o.frequency.linearRampToValueAtTime(110, at + dur);
-  const wobble = ac.createOscillator();
-  wobble.frequency.value = 7;
-  const wobbleDepth = ac.createGain();
-  wobbleDepth.gain.value = 9;
-  wobble.connect(wobbleDepth).connect(o.frequency);
-  const bp = ac.createBiquadFilter();
-  bp.type = "bandpass";
-  bp.Q.value = 9;
-  bp.frequency.setValueAtTime(650, at);
-  bp.frequency.linearRampToValueAtTime(1150, at + dur * 0.7);
-  bp.frequency.linearRampToValueAtTime(900, at + dur);
-  // Stick-slip: the hinge catches ~28 times a second.
-  const trem = ac.createOscillator();
-  trem.type = "square";
-  trem.frequency.value = 28;
-  const tremDepth = ac.createGain();
-  tremDepth.gain.value = 0.45;
-  const g = ac.createGain();
-  g.gain.setValueAtTime(0.0001, at);
-  g.gain.linearRampToValueAtTime(gain, at + 0.12);
-  g.gain.setValueAtTime(gain, at + dur * 0.7);
-  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-  trem.connect(tremDepth).connect(g.gain);
-  o.connect(bp).connect(g).connect(out);
-  for (const n of [o, wobble, trem]) {
-    n.start(at);
-    n.stop(at + dur + 0.05);
+/** The audio element, created once; null when this browser has no Audio or it already failed. */
+function element(): HTMLAudioElement | null {
+  if (broken) return null;
+  if (el) return el;
+  try {
+    if (typeof Audio === "undefined") return null;
+    const a = new Audio();
+    a.preload = "auto";
+    a.volume = VOLUME;
+    // mp3 first; ogg for the browsers that answer no to it.
+    const mp3 = a.canPlayType("audio/mpeg") !== "";
+    a.src = mp3 ? DOOR_SOUND.mp3 : DOOR_SOUND.ogg;
+    a.addEventListener("error", () => {
+      if (mp3 && a.src.endsWith(".mp3")) a.src = DOOR_SOUND.ogg;
+      else broken = true;
+    });
+    el = a;
+    return a;
+  } catch {
+    broken = true;
+    return null;
   }
 }
 
-/** Key in, two turns, bolt, creak. ~1.7 s. Silent if audio isn't available. */
+/** Preload the recording on the first tap, key press or touch. Safe to call more than once. */
+export function armDoorSound(): void {
+  if (armed || typeof window === "undefined") return;
+  armed = true;
+  const go = () => {
+    for (const ev of ["pointerdown", "keydown", "touchstart"])
+      window.removeEventListener(ev, go);
+    try {
+      element()?.load();
+    } catch {
+      /* the fallback will cover it */
+    }
+  };
+  for (const ev of ["pointerdown", "keydown", "touchstart"])
+    window.addEventListener(ev, go, { passive: true, once: true });
+}
+
+function play(fallback: () => void): void {
+  const a = element();
+  if (!a) return fallback();
+  try {
+    a.currentTime = 0;
+    const p = a.play();
+    if (p && typeof p.catch === "function") p.catch(fallback);
+  } catch {
+    fallback();
+  }
+}
+
+/** Key, latch, creak. ~1.5 s. Silent under reduced motion. */
 export function playDoorOpen(): void {
-  const ac = audio();
-  if (!ac) return;
-  const out = ac.createGain();
-  out.gain.value = 0.55;
-  out.connect(ac.destination);
-  const t = ac.currentTime + 0.02;
-  burst(ac, out, t, 0.09, "bandpass", 3200, 0.5, 2); // key slides in
-  ring(ac, out, t + 0.07, 2300, 0.08);
-  burst(ac, out, t + 0.32, 0.03, "highpass", 2500, 0.7); // first turn
-  ring(ac, out, t + 0.32, 1700, 0.07, 0.15);
-  burst(ac, out, t + 0.5, 0.03, "highpass", 2200, 0.7); // second turn
-  thud(ac, out, t + 0.62, 0.6); // the bolt
-  ring(ac, out, t + 0.64, 900, 0.06, 0.3);
-  creak(ac, out, t + 0.82, 0.95, 0.22); // the door swings
+  if (typeof window === "undefined" || reduced()) return;
+  play(synthDoorOpen);
+  window.setTimeout(() => navigator.vibrate?.(12), KEY_TURN_MS);
 }
 
-/** Door pulled shut: a soft swing and the latch. */
+/** The door pulled shut: the soft synthesised swing and latch (the recording is of unlocking). */
 export function playDoorClose(): void {
-  const ac = audio();
-  if (!ac) return;
-  const out = ac.createGain();
-  out.gain.value = 0.5;
-  out.connect(ac.destination);
-  const t = ac.currentTime + 0.02;
-  creak(ac, out, t, 0.45, 0.12);
-  thud(ac, out, t + 0.45, 0.5);
-  burst(ac, out, t + 0.47, 0.03, "highpass", 2600, 0.6);
+  if (typeof window === "undefined" || reduced()) return;
+  synthDoorClose();
 }
