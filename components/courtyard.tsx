@@ -10,7 +10,9 @@ import { useDisplayText } from "@/lib/use-display-text";
 import { useCourtyard } from "@/lib/courtyard-data";
 import { useFamilyCards } from "@/lib/use-family";
 import { ago, postJson, useJson } from "@/lib/use-json";
-import { isAwake, placeFromTz, timeIn } from "@/lib/zones";
+import { placeFromTz, timeIn } from "@/lib/zones";
+import { localTimeLine } from "@/lib/window-words";
+import dynamic from "next/dynamic";
 import { DEFAULT_VENUE, venueOf, type VenueId } from "@/lib/venues";
 import { Carousel } from "./carousel";
 import { MyNeeds, MyQuestions, StoryDoor, VisitCountdown, useNextVisit } from "./home-presence";
@@ -38,6 +40,8 @@ import { useViewer } from "./viewer";
 // together, a visit, a birthday, a memory).
 // The five rooms open from the house in the dock, beside the mic and the camera.
 
+const OpenDoorSheet = dynamic(() => import("./open-door-sheet").then((m) => m.OpenDoorSheet), { ssr: false });
+
 const SLIDE_H = "h-[236px]";
 
 /* --------------------------------------------------------- sit together */
@@ -55,7 +59,8 @@ function SitSlide() {
     return () => clearInterval(t);
   }, []);
   const adults = members.filter((mm) => mm.role !== "child");
-  const awake = now ? adults.filter((mm) => isAwake(mm.tz, now)) : [];
+  // A far home's clock, as a fact ("It's 11:40 PM in Amritsar"): never "awake" or "asleep".
+  const far = adults.find((mm) => mm.id !== viewer.id && mm.tz !== viewer.tz) ?? adults.find((mm) => mm.id !== viewer.id);
   const knock = (sit.data?.knocks ?? [])[0];
   const host = members.find((mm) => mm.id === knock?.memberId);
   const next = (sit.data?.sittings ?? []).filter((s) => Date.parse(s.startsAt) > Date.now()).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
@@ -72,7 +77,7 @@ function SitSlide() {
       <div className="flex items-center justify-between">
         <p className="m-0 flex items-center gap-2 text-caption uppercase tracking-[0.14em] text-white/60">
           <span className={`h-2 w-2 rounded-full ${knock ? "animate-pulse bg-[#3ccf7a]" : "bg-white/50"}`} />
-          {knock ? "Live now" : "Sit together"}
+          {knock ? "Door open" : "Sit together"}
         </p>
       </div>
       {picking && !knock ? (
@@ -82,13 +87,13 @@ function SitSlide() {
         </div>
       ) : (
       <div>
-        <p className="m-0 text-title font-light leading-tight">{knock ? `${host?.id === viewer.id ? "You're" : `${callName(host)} is`} on a video call` : awake.length > 1 ? `${awake.length} of you are awake now` : "Everyone's asleep somewhere"}</p>
+        <p className="m-0 text-title font-light leading-tight">{knock ? (host?.id === viewer.id ? "Your door is open" : `${callName(host)}'s door is open`) : far && now ? localTimeLine(far.tz, far.city || placeFromTz(far.tz), now) : "Sit together"}</p>
         <p className="m-0 mt-1 text-footnote text-white/60">{knock ? `Until ${now ? timeIn(viewer.tz, new Date(knock.until)) : ""}` : next ? `Next: ${next.title} · ${relativeDay(next.startsAt)} · ${venueOf(next.venue).name}` : "Leave the camera on, like sitting in one room"}</p>
       </div>
       )}
       <div className="flex items-center justify-between gap-3">
-        <ul className="m-0 flex list-none -space-x-2.5 p-0" aria-label="Awake now">
-          {(awake.length ? awake : adults).slice(0, 6).map((mm) => (
+        <ul className="m-0 flex list-none -space-x-2.5 p-0" aria-label="Family">
+          {adults.slice(0, 6).map((mm) => (
             <li key={mm.id} className="relative rounded-full ring-2 ring-[var(--deep)]" title={`${callName(mm)} · ${placeFromTz(mm.tz)}`}>
               <Avatar src={memberPhoto(mm)} name={callName(mm)} size={36} />
             </li>
@@ -212,10 +217,11 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const lampData = { presence: pres.data?.presence ?? [], settings: pres.data?.settings ?? [], cards: cards ?? [] };
   const dayPerson = members.find((mm) => mm.id === dayOfId);
   const sheetPerson = members.find((mm) => mm.id === sheetId) ?? null;
-  const callThem = async () => {
+  // "Can I sit with you?": a door for that one person (it never drops anyone into a live room).
+  const [doorFor, setDoorFor] = useState<string | null | undefined>(undefined);
+  const callThem = () => {
+    setDoorFor(sheetId);
     setSheetId(null);
-    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: 45, note: "Come sit with me" });
-    if (out?.knock) router.push(`/call/${out.knock.id}`);
   };
   const muse = useMuseSlot(cards ?? []);
   // Everything under the header appears in one step, once the cards and the one
@@ -308,13 +314,14 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
           setSheetId(null);
           openAdd("voice", null, [sheetPerson.id]);
         }}
-        onCall={() => void callThem()}
+        onCall={callThem}
         onSeeDay={() => {
           setDayOfId(sheetId);
           setSheetId(null);
         }}
         onClose={() => setSheetId(null)}
       />
+      {doorFor !== undefined && <OpenDoorSheet open={doorFor !== null} preset={doorFor ? { only: doorFor } : undefined} onClose={() => setDoorFor(null)} />}
       {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} onClose={() => setDayOfId(null)} />}
     </div>
   );

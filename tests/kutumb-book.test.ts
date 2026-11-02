@@ -26,8 +26,8 @@ describe("the book of Maa & Papa", () => {
     expect(chapters.every((c) => c.card.authorId === "dadi")).toBe(true);
     // Old tasks store only the prompt id: the title is the real question.
     expect(chapters.every((c) => /\s/.test(c.title))).toBe(true);
-    // Today's answer is still sealed for Arjun (he hasn't answered yet).
-    expect(chapters.some((c) => c.card.id === "demo-today-maa")).toBe(false);
+    // Today's answer is open to Arjun even before he answers (nothing is sealed).
+    expect(chapters.some((c) => c.card.id === "demo-today-maa")).toBe(true);
     const own = (await (await bookGet(authedGet("http://test/api/book?member=dadi", "dadi"))).json()) as { chapters: Chapter[] };
     expect(own.chapters.some((c) => c.card.id === "demo-today-maa")).toBe(true);
     // Every chapter is a daily answer: advice and blessings stay on Advice.
@@ -64,8 +64,9 @@ describe("Kutumb: the lamp-glow ring and their day", () => {
     expect(lamp).toEqual({ glow: true, line: "shared today" });
   });
 
-  it("glows when they were in Nearer today, and says so in words", () => {
-    expect(lampFor(maa, { presence: [pres("2026-10-30T10:00:00.000Z")], settings: [], cards: [] }, now)).toEqual({ glow: true, line: "here today" });
+  it("glows for a moment they shared today; just opening Nearer is never shown", () => {
+    expect(lampFor(maa, { presence: [pres("2026-10-30T10:00:00.000Z", "chai")], settings: [], cards: [] }, now)).toEqual({ glow: true, line: "shared today" });
+    expect(lampFor(maa, { presence: [pres("2026-10-30T10:00:00.000Z")], settings: [], cards: [] }, now).glow).toBe(false);
   });
 
   it("stays dim after their midnight, even if they were around a few hours ago", () => {

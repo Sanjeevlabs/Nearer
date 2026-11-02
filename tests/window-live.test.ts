@@ -10,9 +10,10 @@ import { RENDERER_COMPONENT, SCENE_RENDERER, isRetiredHero, photoSceneCandidates
 import { glowFrom, lampView } from "@/lib/lamp";
 import { moonPhase, sunPosition } from "@/lib/sky";
 import { phaseFromSun, skyState, weatherLayer } from "@/lib/sky-state";
-import { arrivedLine, firstNameOf, lampState, moonLine, statusLine } from "@/lib/window-words";
+import { arrivedLine, firstNameOf, lampState, localTimeLine, moonLine, theirDayRows } from "@/lib/window-words";
 import { resetDemo } from "@/lib/store";
 import { authedGet, authedJson } from "./auth-helper";
+import { callHint } from "@/lib/window-server";
 
 const AMRITSAR = { lat: 31.63, lon: 74.87, tz: "Asia/Kolkata" };
 const H = 3_600_000;
@@ -81,18 +82,23 @@ describe("a light that arrived", () => {
   });
 });
 
-describe("the one status line", () => {
-  const P = (name: string, state: "active" | "quiet" | "asleep" | "unknown" | "private", lastActive: string | null = null, alarm: string | null = null) => ({ name, state, lastActive, tz: "Asia/Kolkata", alarm });
-  it("says all is well, or names the one person", () => {
-    expect(statusLine([P("Maa", "active"), P("Papa", "active")])?.text).toBe("Both active in Nearer today \u00b7 all good");
-    expect(statusLine([P("Maa", "active"), P("Papa", "quiet", "2026-11-02T04:30:00Z")])).toMatchObject({ text: "Papa quiet since 10 AM", tone: "quiet", subject: 1 });
-    expect(statusLine([P("Maa", "active")])?.text).toBe("Maa active in Nearer today \u00b7 all good");
-    expect(statusLine([P("Maa", "asleep"), P("Papa", "asleep")])?.text).toBe("Night-time there \u00b7 all good");
-    expect(statusLine([P("Maa", "active"), P("Papa", "active", null, "Home late")])).toMatchObject({ text: "Papa \u00b7 Home late", tone: "alarm", subject: 1 });
+describe("their day (literal facts only)", () => {
+  const P = (id: string, name: string, latest: { label: string; at: string } | null = null, alarm: string | null = null) => ({ id, name, tz: "Asia/Kolkata", latest, alarm });
+  it("says what each person shared today, or that nothing is shared yet; a self-made check-in alarm wins", () => {
+    expect(theirDayRows([P("m", "Maa", { label: "Chai", at: "2026-11-02T01:40:00Z" }), P("p", "Papa")]).map((r) => r.text)).toEqual(["Maa \u00b7 chai, 7:10 AM", "Papa \u00b7 nothing shared yet today"]);
+    expect(theirDayRows([P("p", "Papa", null, "Home late")])).toEqual([{ id: "p", text: "Papa \u00b7 Home late", alarm: true }]);
+    expect(theirDayRows([])).toEqual([]);
   });
-  it("says nothing for nobody or for people who keep their activity private", () => {
-    expect(statusLine([])).toBeNull();
-    expect(statusLine([P("Maa", "private")])).toBeNull();
+  it("never infers wellbeing or readiness", () => {
+    const words = [...theirDayRows([P("m", "Maa"), P("p", "Papa", { label: "Walk", at: "2026-11-02T00:30:00Z" })]).map((r) => r.text), localTimeLine("Asia/Kolkata", "Amritsar", new Date("2026-11-02T18:10:00Z")), callHint("Asia/Kolkata", "America/New_York", ["Maa"], new Date("2026-11-02T18:10:00Z")).text].join(" | ");
+    expect(words).not.toMatch(/all good|asleep|awake|on a (video )?call|quiet since|usually|active in Nearer|good time/i);
+    expect(localTimeLine("Asia/Kolkata", "Amritsar", new Date("2026-11-02T18:10:00Z"))).toBe("It's 11:40 PM in Amritsar");
+  });
+  it("no copy builder or window component keeps the old inferred words", () => {
+    const code = (f: string) => readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    for (const f of ["lib/window-words.ts", "lib/window-server.ts", "components/window.tsx", "components/person-sheet.tsx", "components/courtyard.tsx", "components/kid-home.tsx", "components/today.tsx", "components/home-site.tsx"]) {
+      expect(code(f), f).not.toMatch(/all good|"Asleep|Asleep"|asleep somewhere|awake now|on a video call|quiet since|against their usual day|usually up by/i);
+    }
   });
 });
 

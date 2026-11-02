@@ -16,12 +16,11 @@ import { callName, memberPhoto } from "@/lib/people";
 import { stateOf, type SafetyState } from "@/lib/safety";
 import { useFamilyCards } from "@/lib/use-family";
 import type { Card, Member } from "@/lib/schemas";
-import { ALIVE_LOOK } from "@/lib/status";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import type { Weather } from "@/lib/weather";
 import { LAMP_GLOW_HOURS } from "@/lib/lamp";
-import { arrivedLine, badgeParts, clockWord, dayWord, firstNameOf, lampState, lampWhy, moonLine, statusLine } from "@/lib/window-words";
+import { arrivedLine, badgeParts, clockWord, dayWord, firstNameOf, lampState, lampWhy, moonLine, theirDayRows } from "@/lib/window-words";
 import { timeIn } from "@/lib/zones";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import dynamic from "next/dynamic";
@@ -45,7 +44,7 @@ const OpenDoorSheet = dynamic(() => import("./open-door-sheet").then((m) => m.Op
 // The first screen. A real photograph of their home, full width and about half
 // the screen, with one small badge on it (their time, weather, sun or moon).
 // Everything else is under the photo, in boxes of one size and one background:
-// the lamp and their latest voice, Safe & sound (tap a person for their day),
+// the lamp and their latest voice, Their day (tap a person for it),
 // the glance strip, since you were here, and the call row.
 
 interface WindowData {
@@ -301,12 +300,14 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     return s && (s.tone !== "calm" || Date.now() - Date.parse(s.at) < 24 * 3_600_000) ? s : null;
   };
 
-  const status = statusLine(
+  // Their day: what each person chose to share today, or a check-in they made that needs a look.
+  const dayRows = theirDayRows(
     atWindow.map((p) => {
       const st = statusOf(p.id);
       const chk = checkOf(p.id);
       const alarm = chk && (chk.tone === "overdue" || chk.tone === "help") ? `${chk.label} \u00b7 ${clockWord(chk.at, p.tz)}` : null;
-      return { name: callName(p), state: st?.state ?? "unknown", lastActive: st?.lastActive ?? null, tz: p.tz, alarm };
+      const last = st?.moments?.[st.moments.length - 1];
+      return { id: p.id, name: callName(p), tz: p.tz, latest: last ? { label: last.label, at: last.at } : null, alarm };
     }),
   );
 
@@ -448,27 +449,20 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
           {data && (
             <>
-              {/* ONE status line (Safe & sound): everyone is fine, or the one person to look at. Tap a face for their day. */}
-              <section data-ui="window-safe" className={cn(CARD, "flex min-h-[56px] items-center gap-2 py-1 pl-2 pr-3")} style={EDGE} aria-label="Safe and sound">
+              {/* Their day: one row per person, only what they chose to share (and their own check-ins). Tap for more. */}
+              <section data-ui="window-day" className={cn(CARD, "flex min-h-[56px] flex-col justify-center py-1 pl-2 pr-3")} style={EDGE} aria-label="Their day">
                 {atWindow.length > 0 ? (
-                  <>
-                    <div className="flex shrink-0 items-center">
-                      {atWindow.map((p) => {
-                        const st = statusOf(p.id);
-                        return (
-                          <button key={p.id} type="button" onClick={() => setOpen(p)} aria-label={`${callName(p)}: ${st?.line ?? ""}. Open`} className="press relative grid h-11 w-11 place-items-center rounded-full">
-                            <Avatar src={memberPhoto(p)} name={callName(p)} size={36} />
-                            <span className={cn("absolute bottom-1 right-1 h-3 w-3 rounded-full ring-2 ring-[var(--surface,#fff)]", st?.state === "active" && "alive-breathe")} style={{ background: ALIVE_LOOK[st?.state ?? "unknown"].dot, color: ALIVE_LOOK[st?.state ?? "unknown"].dot }} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button type="button" onClick={() => setOpen(atWindow[status?.subject ?? 0] ?? atWindow[0])} className={cn("press min-h-[44px] min-w-0 flex-1 px-1 text-left text-callout leading-snug", status?.tone === "alarm" ? "font-semibold text-[#c2343a]" : "font-medium text-ink")} suppressHydrationWarning>
-                      {status?.text ?? "…"}
-                    </button>
-                  </>
+                  dayRows.map((r) => {
+                    const p = atWindow.find((x) => x.id === r.id)!;
+                    return (
+                      <button key={r.id} type="button" onClick={() => setOpen(p)} className={cn("press flex min-h-[44px] w-full items-center gap-2 text-left text-callout leading-snug", r.alarm ? "font-semibold text-[#c2343a]" : "font-medium text-ink")} suppressHydrationWarning>
+                        <Avatar src={memberPhoto(p)} name={callName(p)} size={32} />
+                        <span className="min-w-0 flex-1">{r.text}</span>
+                      </button>
+                    );
+                  })
                 ) : (
-                  <p className="m-0 px-2 py-2 text-callout text-ink-soft">Add the people on the other side, and how they are shows here.</p>
+                  <p className="m-0 px-2 py-2 text-callout text-ink-soft">Add the people on the other side, and what they share shows here.</p>
                 )}
               </section>
               {waiting && <WaitingNote names={first} />}
@@ -482,7 +476,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                   {lampNote ?? arrivedWords ?? lampNow.line}
                   {lampNow.felt && <span className="block text-footnote font-normal text-ink-soft">{lampNow.felt}</span>}
                 </p>
-                <button type="button" data-ui="window-info" onClick={() => setInfo(true)} aria-label="About the lamp and Safe and sound" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft">
+                <button type="button" data-ui="window-info" onClick={() => setInfo(true)} aria-label="About the lamp and their day" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft">
                   <Icon name="info" size={18} />
                 </button>
               </section>
@@ -532,10 +526,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
         open={picking}
         title="Voice note to"
         people={atWindow}
-        status={(p) => {
-          const st = statusOf(p.id);
-          return st ? { text: st.line, dot: ALIVE_LOOK[st.state].dot } : null;
-        }}
         onPick={(ids) => talk(ids)}
         onClose={() => setPicking(false)}
       />
@@ -572,7 +562,7 @@ function WaitingNote({ names }: { names: string }) {
 }
 
 /* ------------------------------------------------------- the small "?" */
-/** The lamp and Safe & sound in a few lines, so the first screen needn't say them. */
+/** The lamp and Their day in a few lines, so the first screen needn't say them. */
 function InfoSheet({ open, onClose, onHand }: { open: boolean; onClose: () => void; onHand: () => void }) {
   return (
     <BottomSheet open={open} onClose={onClose} title="How this works">
@@ -586,8 +576,8 @@ function InfoSheet({ open, onClose, onHand }: { open: boolean; onClose: () => vo
           </button>
         </section>
         <section>
-          <h3 className="m-0 text-body font-semibold">Safe &amp; sound</h3>
-          <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">From their time in Nearer: opening it, a voice note, a check-in. Nothing outside Nearer is watched.</p>
+          <h3 className="m-0 text-body font-semibold">Their day</h3>
+          <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">Only what they chose to share today, like chai or a morning walk, and the check-ins they make themselves. Nothing is guessed from when they open Nearer.</p>
         </section>
         <Link href="/safe" onClick={onClose} className="press flex min-h-[44px] items-center gap-1 text-callout font-semibold text-accent no-underline">
           See check-ins <Icon name="chevron" size={14} />

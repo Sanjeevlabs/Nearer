@@ -19,8 +19,6 @@ import { countryOfMember } from "./place";
 import { checkinEvents, composedLine, type DayMoment } from "./window-words";
 import { cityOf, farHomeFor } from "./window";
 import { hourIn } from "./zones";
-import { aliveState, type Alive } from "./status";
-import { dayRhythm, rhythmLine, type DayRhythm } from "./rhythm";
 import { isNightAt, moonPhase, skyGlyph } from "./sky";
 import type { Wall } from "./kinds";
 import { withDemoShelf } from "./demo";
@@ -38,12 +36,12 @@ import { familyHolidaysNow } from "./occasions-server";
 import { occasionsInRange, addDays, type CalHoliday } from "./occasion-calendar";
 import { dateIn } from "./today";
 
+/**
+ * Their day, per person at the window: only facts they chose to share. Nothing here is
+ * worked out from when they opened Nearer, the lamp, the clock or silence.
+ */
 export interface WindowPerson {
   id: string;
-  lastActive: string | null;
-  state: Alive;
-  line: string;
-  rhythm: DayRhythm;
   /** What they shared today (their local day), oldest first: chai, a walk, the temple. */
   moments: DayMoment[];
   /** Today's safety check-ins, oldest first. */
@@ -62,9 +60,9 @@ export interface WindowState {
   line: string;
   /** What they shared today, newest first, in words ("is having chai"). */
   moments: { memberId: string; label: string; at: string }[];
-  /** Safe & sound at a glance, per person at the window (at most two). */
+  /** Their day, per person at the window (at most two): what they shared today, and their check-ins. */
   people: WindowPerson[];
-  /** This viewer's amber threshold, in hours. */
+  /** A stored setting from the old amber dot; kept for older clients, it changes nothing on screen. */
   quietAfterHours: number;
   /** The viewer's previous visit (the inbox holds what happened since; the window no longer lists it). */
   since: { at: string | null };
@@ -278,11 +276,11 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     return m?.displayName || m?.firstName || "";
   };
   const shelf = withDemoShelf(recent, familyId);
-  // Last sign of life in Nearer: any moment (opening the app included), a
-  // voice or photo they sent, a safety check-in. Only what they already share.
+  // Something they did and chose to share: a moment, a voice or photo they sent, a safety
+  // check-in. The automatic "here" (just opening Nearer) is never shown to anyone else.
   const signs = (id: string): string[] =>
     [
-      ...presence.filter((p) => p.memberId === id).map((p) => p.at),
+      ...presence.filter((p) => p.memberId === id && p.moment !== "here").map((p) => p.at),
       ...shelf.filter((c) => c.authorId === id && Date.parse(c.takenAt) <= now.getTime()).map((c) => c.takenAt),
       ...checkins.filter((c) => c.memberId === id).map((c) => answeredAt(c) ?? c.at),
     ].filter((t) => Date.parse(t) <= now.getTime());
@@ -291,22 +289,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     .filter((m) => m.role !== "child")
     .map((m) => {
       const shares = settings.find((s) => s.memberId === m.id)?.shareVisits ?? true;
-      const lastActive = shares ? lastSeen(m.id) : null;
-      const state = aliveState(lastActive, m.tz, { shares, now, quietAfter: view?.quietAfterHours });
-      const rhythm = dayRhythm(shares ? signs(m.id) : [], m.tz, now);
-      // The only sign being the app heartbeat (just opening Nearer) is not "active" for long.
-      const latestShared = presence.find((p) => p.memberId === m.id && p.at === lastActive);
-      const heartbeatOnly = Boolean(lastActive) && latestShared?.moment === "here";
       const shared = dayOf(m.id, m.tz);
-      return {
-        id: m.id,
-        lastActive,
-        state,
-        rhythm,
-        line: rhythmLine(state, lastActive, rhythm, m.tz, (iso) => agoWords(iso, now), { heartbeatOnly, now }),
-        moments: shares ? shared.moments : [],
-        checkins: shared.checkins,
-      };
+      return { id: m.id, moments: shares ? shared.moments : [], checkins: shared.checkins };
     })
     .slice(0, 2);
   function dayOf(id: string, mtz: string): { moments: DayMoment[]; checkins: { at: string; label: string }[] } {
@@ -397,14 +381,6 @@ export function distanceKm(a: { lat: number; lon: number } | null, b: { lat: num
   return km < 15 ? null : Math.round(km / 10) * 10;
 }
 
-function agoWords(iso: string, now: Date): string {
-  const min = Math.max(0, Math.round((now.getTime() - Date.parse(iso)) / 60_000));
-  if (min < 2) return "just now";
-  if (min < 60) return `${min} min ago`;
-  const h = Math.round(min / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
-}
-
 /** The sky over their home from real coordinates; without them, no glyph (never a guess). */
 export function skyOver(far: { lat: number; lon: number } | null, here: { lat: number; lon: number } | null, now: Date): WindowState["sky"] {
   const m = moonPhase(now);
@@ -423,18 +399,14 @@ function clockIn(tz: string, d: Date): string {
   }
 }
 
-/** Both awake and not in the dead of night on either side: say so. Otherwise, when. */
+/** Both homes' clocks, as facts: their time and yours. Never "they're asleep" or "a good time". */
 export function callHint(theirTz: string, myTz: string, names: string[], now = new Date()): { good: boolean; text: string } {
   const them = hourIn(theirTz, now);
   const me = hourIn(myTz, now);
-  const who = names.length <= 1 ? (names[0] ?? "them") : `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
-  if (them >= 8 && them < 21.5 && me >= 7 && me < 23) return { good: true, text: `Good time to call ${who}` };
-  if (them < 8 || them >= 21.5) {
-    // Next 8 AM there, in your time.
-    const wait = ((8 - them + 24) % 24) * 3_600_000;
-    return { good: false, text: `They're asleep · best from 8 AM their time (${clockIn(myTz, new Date(now.getTime() + wait))} yours)` };
-  }
-  return { good: false, text: `It's late for you · ${clockIn(theirTz, now)} there` };
+  const who = names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+  // `good` is kept for older clients; it is only the clock (daytime on both sides), never a claim about anyone.
+  const good = them >= 8 && them < 21.5 && me >= 7 && me < 23;
+  return { good, text: `It's ${clockIn(theirTz, now)}${who ? ` for ${who}` : " there"} · ${clockIn(myTz, now)} for you` };
 }
 
 /** A photo card from this family, as the window's image. */

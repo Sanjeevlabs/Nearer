@@ -108,31 +108,26 @@ export function moonLine(visible: boolean, city: string, illumination: number): 
 }
 
 /**
- * The one status line under the names: all well, or the one person to look at.
- * "Both active in Nearer today · all good" / "Papa quiet since 10 AM". `tone` colours its dot,
- * `subject` is the person the line is about (a tap opens their day).
- * `alarm` (a check-in that is overdue or asked for help) wins over everything.
+ * Their day, one row per person at the window: literal facts only. The latest thing they
+ * chose to share today ("Maa · chai, 7:10 AM"), else "nothing shared yet today". A safety
+ * check-in they made themselves that is overdue or asked for help comes first. Nothing is
+ * read from when they opened Nearer, the lamp, the clock or silence: no "all good", no
+ * "asleep", no "quiet since".
  */
-export function statusLine(
-  people: { name: string; state: "active" | "quiet" | "asleep" | "unknown" | "private"; lastActive: string | null; tz: string; alarm?: string | null }[],
-): { text: string; tone: "good" | "quiet" | "alarm" | "idle"; subject: number } | null {
-  const shown = people.filter((p) => p.state !== "private");
-  if (!shown.length) return null;
-  const alarm = shown.findIndex((p) => p.alarm);
-  if (alarm >= 0) return { text: `${shown[alarm].name} · ${shown[alarm].alarm}`, tone: "alarm", subject: alarm };
-  const quiet = shown.findIndex((p) => p.state === "quiet");
-  if (quiet >= 0) {
-    const q = shown[quiet];
-    return { text: q.lastActive ? `${q.name} quiet since ${clockWord(q.lastActive, q.tz).replace(":00", "")}` : `${q.name} quiet for a while`, tone: "quiet", subject: quiet };
-  }
-  if (shown.every((p) => p.state === "asleep")) return { text: "Night-time there · all good", tone: "good", subject: 0 };
-  const active = shown.filter((p) => p.state === "active");
-  if (active.length === shown.length) {
-    const who = shown.length === 1 ? shown[0].name : shown.length === 2 ? "Both" : "All";
-    return { text: `${who} active in Nearer today · all good`, tone: "good", subject: 0 };
-  }
-  if (active.length) return { text: `${active.map((p) => p.name).join(" & ")} active in Nearer today · all good`, tone: "good", subject: shown.indexOf(active[0]) };
-  return { text: "Not seen in Nearer yet", tone: "idle", subject: 0 };
+export function theirDayRows(
+  people: { id: string; name: string; tz: string; latest: { label: string; at: string } | null; alarm?: string | null }[],
+): { id: string; text: string; alarm: boolean }[] {
+  return people.map((p) => {
+    if (p.alarm) return { id: p.id, text: `${p.name} \u00b7 ${p.alarm}`, alarm: true };
+    if (p.latest) return { id: p.id, text: `${p.name} \u00b7 ${p.latest.label.toLowerCase()}, ${clockWord(p.latest.at, p.tz)}`, alarm: false };
+    return { id: p.id, text: `${p.name} \u00b7 nothing shared yet today`, alarm: false };
+  });
+}
+
+/** "It's 11:40 PM in Amritsar": a place's local time, nothing read into it. */
+export function localTimeLine(tz: string, place: string, now: Date = new Date()): string {
+  const t = clockWord(now.toISOString(), tz);
+  return place ? `It's ${t} in ${place}` : `It's ${t} there`;
 }
 
 /** The first person's own name, for lines about one person ("Maa", never "Maa, Papa"). */

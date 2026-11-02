@@ -143,10 +143,10 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
   const name = householdName(home, (m) => callName(m));
   const rows = elders.map((parent) => {
     const shared = latestFor(parent.id, presence.filter((p) => p.moment !== "here"));
-    const visit = latestFor(parent.id, presence.filter((p) => p.moment === "here"));
     const quiet = quietDay(settings.find((x) => x.memberId === parent.id), viewerId, presence, parent.tz);
     const fresh = Boolean(shared && Date.now() - Date.parse(shared.at) < 8 * 3_600_000);
-    return { parent, shared, visit, quiet: quiet.quiet, fresh };
+    // Only what they shared: just opening Nearer ("here") is never shown to anyone else.
+    return { parent, shared, quiet: quiet.quiet, fresh };
   });
   const quiet = rows.filter((r) => r.quiet);
 
@@ -167,7 +167,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
         <Icon name="chevron" size={18} className="text-ink-faint" />
       </Link>
       <ul className="m-0 mt-2.5 list-none space-y-1.5 p-0 pl-1">
-        {rows.map(({ parent, shared, visit, fresh }) => (
+        {rows.map(({ parent, shared, fresh }) => (
           <li key={parent.id} className="flex items-baseline gap-2 text-callout">
             <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rounded-full bg-marigold" aria-hidden="true" />
             <span className="min-w-0 truncate">
@@ -178,8 +178,6 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
                   {shared.note ? <span className="voice text-body text-ink-soft"> · {shared.note}</span> : null}
                   <span className="text-ink-faint"> · {ago(shared.at)}</span>
                 </>
-              ) : visit && Date.now() - Date.parse(visit.at) < 24 * 3_600_000 ? (
-                <span className="text-ink-soft">stopped by today</span>
               ) : shared ? (
                 <span className="text-ink-soft">
                   {MOMENT_LABEL[shared.moment].line} · {ago(shared.at)}

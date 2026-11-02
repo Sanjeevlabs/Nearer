@@ -91,8 +91,8 @@ def main() -> int:
 
         # ---- Window
         tab("Window")
-        page.get_by_role("radiogroup", name="Amber after").get_by_role("radio", name="8 h").click()
-        expect_no_writes("amber choice")
+        page.locator("[aria-label$='at your window']:not([disabled])").first.click()
+        expect_no_writes("window people choice")
         shot("2-window")
         # ---- Privacy (the window edit stays; a banner reminds)
         tab("Privacy")

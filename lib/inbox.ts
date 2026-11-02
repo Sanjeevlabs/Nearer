@@ -143,7 +143,7 @@ export function buildInbox(i: InboxInput): InboxItem[] {
     const others = side === "parents" ? t.children : t.parents;
     const theirs = t.answers.filter((a) => others.includes(a.memberId) && recent(a.at)).sort((a, b) => b.at.localeCompare(a.at))[0];
     if (!theirs) continue;
-    out.push({ ...base, id: `today-${t.id}`, kind: "today", badge: "today", at: theirs.at, text: `${name(theirs.memberId)}'s answer is waiting for yours`, fromId: theirs.memberId, href: "/", waiting: true, action: "answer", replyTo: theirs.memberId });
+    out.push({ ...base, id: `today-${t.id}`, kind: "today", badge: "today", at: theirs.at, text: `${name(theirs.memberId)} answered today's question`, fromId: theirs.memberId, href: "/", waiting: true, action: "answer", replyTo: theirs.memberId });
   }
   // Waiting first (newest first within), then Earlier; the cap never drops a waiting item for an old one.
   return out.sort((a, b) => Number(b.waiting) - Number(a.waiting) || b.at.localeCompare(a.at)).slice(0, INBOX_MAX);

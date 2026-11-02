@@ -71,31 +71,3 @@ function hourWord(h: number): string {
   return m >= 15 && m < 45 ? `${h12}:30 ${ap}` : `${h12} ${ap}`;
 }
 
-/** The sentence under a name. */
-/** An app heartbeat (just opening Nearer) older than this no longer says "active": it says "quiet since". */
-export const HEARTBEAT_FRESH_MS = 6 * 3_600_000;
-
-export function rhythmLine(
-  state: "active" | "quiet" | "asleep" | "unknown" | "private",
-  lastActive: string | null,
-  r: DayRhythm,
-  tz: string,
-  ago: (iso: string) => string,
-  opts: { heartbeatOnly?: boolean; now?: Date } = {},
-): string {
-  if (state === "private") return "Keeps their activity private";
-  if (state === "asleep") return r.usual ? `Asleep · usually up by ${hourWord(axisHour(r.usual[0]))}` : "Asleep";
-  if (!lastActive) return "Not seen yet today";
-  if (state === "active") {
-    // The only sign is the app heartbeat and it is old: don't call that "active".
-    const stale = opts.heartbeatOnly && (opts.now ?? new Date()).getTime() - Date.parse(lastActive) > HEARTBEAT_FRESH_MS;
-    if (stale) return r.firstToday ? `Up since ${clock(r.firstToday, tz)} · quiet since ${clock(lastActive, tz)}` : `Quiet since ${clock(lastActive, tz)}`;
-    // Presence comes only from their time in Nearer: say so.
-    return r.firstToday ? `Up since ${clock(r.firstToday, tz)} · active in Nearer ${ago(lastActive)}` : `Active in Nearer ${ago(lastActive)}`;
-  }
-  if (state === "quiet") {
-    const usuallyBusy = r.usual && r.now !== null && r.now >= r.usual[0] && r.now <= r.usual[1];
-    return `Quiet since ${clock(lastActive, tz)}${usuallyBusy ? ", usually busy by now" : ""}`;
-  }
-  return `Last in Nearer ${ago(lastActive)}`;
-}

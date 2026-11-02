@@ -138,7 +138,7 @@ export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] 
     if (!side || t.answers.some((a) => a.memberId === i.viewerId)) continue;
     const others = side === "parents" ? t.children : t.parents;
     const theirs = t.answers.filter((a) => others.includes(a.memberId) && past(a.at)).sort((a, b) => b.at.localeCompare(a.at))[0];
-    if (theirs) found.push({ at: theirs.at, kind: "today", text: `${name(theirs.memberId)}'s answer is waiting for yours`, href: "/", fromId: theirs.memberId });
+    if (theirs) found.push({ at: theirs.at, kind: "today", text: `${name(theirs.memberId)} answered today's question`, href: "/", fromId: theirs.memberId });
   }
   for (const n of i.needs) {
     if (n.claimedBy !== i.viewerId || n.doneAt || (n.status !== "claimed" && n.status !== "progress")) continue;

@@ -8,7 +8,6 @@ import { isKid } from "@/lib/kids";
 import { eventFromText, fileCard, titleAlbum, type EventKind } from "@/lib/albums";
 import { listDocs, putDoc } from "@/lib/family-docs";
 import { checkRateLimit, requireSession } from "@/lib/auth";
-import { sealedCardIds } from "@/lib/today";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAddressed } from "@/lib/push/events";
@@ -18,8 +17,8 @@ async function getHandler(req: Request): Promise<Response> {
   if (auth instanceof Response) return auth;
   const [stored, tasks, letters] = await Promise.all([dbListCards(auth.familyId), listDocs(auth.familyId, "today_task"), listDocs(auth.familyId, "chitthi")]);
   const cards = withDemoShelf(stored, auth.familyId);
-  // Today's answers from the other home stay sealed until you add yours.
-  const sealed = sealedCardIds(tasks, auth.memberId);
+  // Today's answers are open to everyone at once. Only morning letters wait:
+  const sealed = new Set<string>();
   // Morning letters stay in the envelope until their morning (the author can always see theirs).
   const now = Date.now();
   for (const l of letters) if (l.authorId !== auth.memberId && Date.parse(l.deliverAt) > now) sealed.add(l.id);

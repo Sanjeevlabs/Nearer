@@ -67,6 +67,8 @@ describe("the sweep", () => {
     await dbUpdateMemberProfile("dadi", { tz: KOLKATA });
     for (const p of await listDocs(FAM, "presence")) if (p.memberId === "dadi") await deleteDoc(FAM, "presence", p.id);
     for (const p of HABIT) await putDoc(FAM, "presence", p);
+    // The parent turned the quiet-morning note on herself (it is never on by default).
+    await putDoc(FAM, "care_settings", { id: "dadi", memberId: "dadi", quietAlert: true, tellMemberId: null, graceHours: 3, shareVisits: true, updatedAt: LATE_AFTERNOON.toISOString() });
   });
   afterEach(() => vi.useRealTimers());
 
@@ -89,24 +91,18 @@ describe("the sweep", () => {
     delete process.env.CRON_SECRET;
   });
 
-  it("stays quiet when the parent lit the lamp today", async () => {
-    vi.setSystemTime(new Date("2026-10-28T02:00:00.000Z")); // 07:30 in Kolkata
-    expect((await lampPost(authedJson("http://t/api/lamp", { action: "light" }, "dadi"))).status).toBe(200);
-    await pushIdle();
-    vi.setSystemTime(LATE_AFTERNOON);
-    clearOutbox();
+  it("never by default: a parent who did not turn it on is never reported quiet", async () => {
+    await putDoc(FAM, "care_settings", { id: "dadi", memberId: "dadi", quietAlert: false, tellMemberId: null, graceHours: 3, shareVisits: true, updatedAt: LATE_AFTERNOON.toISOString() });
     expect(await sweepQuietMornings(FAM, LATE_AFTERNOON)).toBe(0);
     expect(invites()).toEqual([]);
   });
 
-  it("the parent's first lamp each day is recorded as a moment, once", async () => {
-    vi.setSystemTime(new Date("2026-10-28T02:00:00.000Z"));
-    await lampPost(authedJson("http://t/api/lamp", { action: "light" }, "dadi"));
-    vi.setSystemTime(new Date("2026-10-28T02:30:00.000Z"));
-    await lampPost(authedJson("http://t/api/lamp", { action: "light" }, "dadi"));
+  it("the lamp only means 'thinking of you': lighting it writes no moment and is no 'I'm okay'", async () => {
+    vi.setSystemTime(new Date("2026-10-28T02:00:00.000Z")); // 07:30 in Kolkata
+    expect((await lampPost(authedJson("http://t/api/lamp", { action: "light" }, "dadi"))).status).toBe(200);
+    await pushIdle();
     const today = (await listDocs(FAM, "presence")).filter((p) => p.memberId === "dadi" && p.at.startsWith("2026-10-28"));
-    expect(today).toHaveLength(1);
-    expect(today[0].moment).toBe("thinking");
+    expect(today).toHaveLength(0);
   });
 
   it("never at night: the child asleep (23:00) hears nothing, and no mark is left so a later sweep can still invite", async () => {

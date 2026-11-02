@@ -80,48 +80,12 @@ export function isComplete(task: TodayTask): boolean {
 }
 
 /**
- * What a viewer may see. The other side's answers stay sealed until you add
- * yours: hearing them is the reward, not a spoiler.
+ * What a viewer sees: every answer, from both homes, at once (past days too). Nothing is
+ * sealed behind answering: an answer is never a price for hearing someone else's.
  */
-export function viewFor(task: TodayTask, memberId: string): TodayTask & { side: Side; mine: boolean; theirs: boolean; sealed: number; sealedBy: string[] } {
+export function viewFor(task: TodayTask, memberId: string): TodayTask & { side: Side; mine: boolean; theirs: boolean } {
   const side = sideOf(task, memberId);
   const mine = task.answers.some((a) => a.memberId === memberId) || (side !== null && answeredBy(task, side));
   const other = side === "parents" ? "children" : "parents";
-  const theirs = answeredBy(task, other);
-  const otherIds = other === "parents" ? task.parents : task.children;
-  const sealedAnswers = mine ? [] : task.answers.filter((a) => otherIds.includes(a.memberId));
-  return {
-    ...task,
-    answers: task.answers.filter((a) => !sealedAnswers.includes(a)),
-    side,
-    mine,
-    theirs,
-    sealed: sealedAnswers.length,
-    sealedBy: sealedAnswers.map((a) => a.memberId),
-  };
-}
-
-/** Days in a row both homes showed up, counting back from the latest finished day. */
-export function streak(tasks: TodayTask[], today: string): number {
-  const done = new Set(tasks.filter((t) => t.completedAt).map((t) => t.date));
-  let n = 0;
-  const d = new Date(`${today}T00:00:00Z`);
-  // Today counts only if it's done; an unfinished today doesn't break the run.
-  if (!done.has(today)) d.setUTCDate(d.getUTCDate() - 1);
-  while (done.has(d.toISOString().slice(0, 10))) {
-    n++;
-    d.setUTCDate(d.getUTCDate() - 1);
-  }
-  return n;
-}
-
-/** Card ids this viewer can't hear yet: the other side's answers to tasks they haven't answered. */
-export function sealedCardIds(tasks: TodayTask[], memberId: string): Set<string> {
-  const out = new Set<string>();
-  for (const t of tasks) {
-    const side = sideOf(t, memberId);
-    if (!side || answeredBy(t, side)) continue;
-    for (const a of t.answers) out.add(a.cardId);
-  }
-  return out;
+  return { ...task, side, mine, theirs: answeredBy(task, other) };
 }
