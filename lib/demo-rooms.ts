@@ -441,5 +441,9 @@ export function seedDemoRooms(now = Date.now()): void {
  */
 function seedKids(now: number): void {
   seedDoc(FAM, "kid_ask", { id: "ask-leo-meet", fromMemberId: "leo", toMemberId: "dadi", cardId: "demo-kid-leo-ask", text: "", askedAt: ago(180, now), answeredCardId: null, answeredAt: null, topic: "question" });
+  // Vihaan asks his Papa (Arjun) a question by voice; the card is seeded in lib/store.ts.
+  seedDoc(FAM, "kid_ask", { id: "ask-leo-moon", fromMemberId: "leo", toMemberId: "arjun", cardId: "demo-kid-leo-ask2", text: "", askedAt: ago(90, now), answeredCardId: null, answeredAt: null, topic: "question" });
+  // Maa lit the lamp for Arjun's home (Arjun and Priya) and left a heartbeat he has not felt yet.
+  seedDoc(FAM, "lamp", { id: "home-arjun-priya", litAt: ago(45, now), litBy: "dadi", beats: [{ from: "dadi", at: ago(45, now) }], felt: {}, updatedAt: ago(45, now) });
   seedDoc(FAM, "bedtime_story", { id: "bed-dadi-aria", forMemberId: "aria", byMemberId: "dadi", cardId: "demo-bedtime-dadi-aria", at: ago(20 * 60, now), title: "The little elephant and the moon" });
 }

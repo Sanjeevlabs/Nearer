@@ -41,7 +41,7 @@ describe("staleness", () => {
     // kavya (other home) holds the lamp for arjun's home
     const sent = await lampPOST(authedJson("http://t/api/lamp", { action: "beat", toMemberId: "arjun" }, "kavya"));
     expect(sent.status).toBe(200);
-    const read = async () => ((await (await lampGET(authedGet("http://t/api/lamp", "arjun"))).json()) as { beats: unknown[] }).beats.length;
+    const read = async () => ((await (await lampGET(authedGet("http://t/api/lamp", "arjun"))).json()) as { beats: { from: string }[] }).beats.filter((b) => b.from === "kavya").length;
     expect(await read()).toBe(1);
     vi.setSystemTime(new Date(T0.getTime() + BEAT_TTL_MS + 60_000));
     expect(await read()).toBe(0);
