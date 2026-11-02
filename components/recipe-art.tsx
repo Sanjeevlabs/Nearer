@@ -73,7 +73,7 @@ function Motif({ course, accent, ink }: { course: Recipe["course"]; accent: stri
 export function RecipeCover({ recipe, photo, className, label = false }: { recipe: Pick<Recipe, "course" | "title">; photo?: string | null; className?: string; label?: boolean }) {
   const look = COURSE_LOOK[recipe.course] ?? COURSE_LOOK.other;
   return (
-    <div className={cn("relative overflow-hidden", className)} style={{ background: look.bg }}>
+    <div className={cn("relative overflow-hidden", className)} style={{ background: look.bg, contain: "layout paint" }}>
       {photo ? (
         <Photo src={photo} alt={recipe.title} sizes="360px" />
       ) : (

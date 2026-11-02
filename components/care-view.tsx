@@ -28,6 +28,7 @@ import { placeFromTz, timeIn } from "@/lib/zones";
 interface CareData {
   needs: Need[];
   helpers: Helper[];
+  pets?: Pet[];
 }
 type Kind = (typeof NEED_KINDS)[number];
 type Filter = "all" | "mine" | "unassigned" | "urgent";
@@ -72,8 +73,8 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
   // Times and "2 h ago" differ between server and client render: client only.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const care = useJson<CareData>("/api/care");
-  const petsQ = useJson<{ pets: Pet[] }>("/api/pets");
+  // Tasks, helpers and pets arrive in one call.
+  const care = useJson<CareData>("/api/care?pets=1");
   const homes = households(members, relationships).filter((h) => h.elders);
   const [chosen, setChosen] = useState<string | null>(null);
   const home = homes.find((h) => h.id === chosen) ?? (viewer.role === "elder" ? householdOf(viewer.id, homes) : undefined) ?? homes.find((h) => !h.members.some((x) => x.id === viewer.id)) ?? homes[0];
@@ -103,7 +104,7 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
   const data = care.data;
   const needs = (data?.needs ?? []).filter((n) => ids.includes(n.forMemberId));
   const helpers = (data?.helpers ?? []).filter((h) => ids.includes(h.forMemberId));
-  const pets = (petsQ.data?.pets ?? []).filter((p) => ids.includes(p.livesWith));
+  const pets = (data?.pets ?? []).filter((p) => ids.includes(p.livesWith));
 
   return (
     <div>
@@ -131,7 +132,7 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
             Try again
           </Button>
         </div>
-      ) : !data || (!petsQ.data && !petsQ.failed) ? (
+      ) : !data ? (
         <div key="loading" className="skeleton h-[320px] rounded-card" aria-busy="true" aria-label="Loading care" />
       ) : tab === "tasks" ? (
         <Tasks home={home} parent={parent} isParent={isParent} needs={needs} helpers={helpers} pets={pets} onChange={care.reload} />
