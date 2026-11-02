@@ -56,8 +56,24 @@ function BedtimePrompt() {
   );
 }
 
-/** What the kids asked you: play the question, answer by voice (the answer also lands in Stories). */
-function AskedByKids() {
+/** On the house screen, only a pointer: the questions themselves (and "Answer by voice") live in the inbox and Family > Kids. */
+function KidsPointer() {
+  const q = useJson<{ asks: KidAsk[] }>("/api/kid-ask");
+  const n = q.data?.asks.length ?? 0;
+  if (n === 0) return null;
+  return (
+    <Link href="/inbox" data-ui="courtyard-kid-asks" className="press mt-5 flex min-h-[48px] items-center gap-3 rounded-tile bg-surface px-4 text-callout font-semibold text-ink no-underline" style={{ boxShadow: "var(--surface-edge)" }}>
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--petal-1-soft)] text-[color:var(--petal-1-ink)]">
+        <Icon name="mic" size={16} />
+      </span>
+      <span className="min-w-0 flex-1">{n === 1 ? "1 question from the kids" : `${n} questions from the kids`}</span>
+      <Icon name="chevron" size={16} className="text-ink-faint" />
+    </Link>
+  );
+}
+
+/** What the kids asked you: play the question, answer by voice (the answer also lands in Stories). The inbox shows it in full. */
+export function AskedByKids({ className = "mt-5" }: { className?: string }) {
   const { members } = useViewer();
   const { openAdd, refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
@@ -66,7 +82,7 @@ function AskedByKids() {
   const asks = q.data?.asks ?? [];
   if (asks.length === 0) return null;
   return (
-    <section data-ui="courtyard-kid-asks" aria-label="Asked by the kids" className="mt-5 rounded-[26px] bg-surface p-4">
+    <section data-ui="inbox-kid-asks" aria-label="Asked by the kids" className={`${className} rounded-[26px] bg-surface p-4`}>
       <Label>Asked by the kids</Label>
       <ul className="m-0 mt-2 list-none space-y-3 p-0">
         {asks.slice(0, 3).map((a) => {
@@ -187,7 +203,7 @@ export function KidsCourtyard() {
   return (
     <div data-ui="courtyard-kids">
       {mine.length > 0 && <BedtimePrompt />}
-      <AskedByKids />
+      <KidsPointer />
       <Fridge />
     </div>
   );

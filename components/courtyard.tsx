@@ -18,6 +18,7 @@ import { MuseSlide, useMuseSlot } from "./muse-slot";
 import { useShell } from "./shell";
 import { SafetyWatch } from "./safety";
 import { PersonDay, lampFor } from "./person-day";
+import { PersonSheet, type WindowPersonData } from "./person-sheet";
 import { SideSwitch, useSides } from "./sides";
 import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
@@ -189,14 +190,19 @@ function CourtyardSkeleton() {
 /* ----------------------------------------------------------------- page */
 export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const { viewer, members } = useViewer();
-  const { refreshKey } = useShell();
+  const { refreshKey, openAdd } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const { sides, current } = useSides();
   const pres = useJson<{ presence: Presence[]; settings: CareSettings[] }>("/api/presence", { every: 60_000 });
   const elder = viewer.role === "elder";
   const visit = useNextVisit();
   const stories = useJson<{ stories: { id: string; tellerId: string; title: string }[] }>(viewer.role === "child" ? "/api/stories" : null);
+  const router = useRouter();
+  // One pattern for a person: tap them and the person sheet opens (the window's); "See their day" opens the full day.
+  // Your own chip goes straight to your day, where you add to it.
   const [dayOfId, setDayOfId] = useState<string | null>(null);
+  const [sheetId, setSheetId] = useState<string | null>(null);
+  const win = useJson<{ people: WindowPersonData[] }>("/api/window", { every: 60_000 });
 
   const people = useMemo(() => peopleByRecency(viewer.id, members, cards ?? []), [viewer.id, members, cards]);
   const thisYear = new Date().getFullYear();
@@ -205,6 +211,12 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const familyName = sides.find((s) => s.familyId === current)?.name;
   const lampData = { presence: pres.data?.presence ?? [], settings: pres.data?.settings ?? [], cards: cards ?? [] };
   const dayPerson = members.find((mm) => mm.id === dayOfId);
+  const sheetPerson = members.find((mm) => mm.id === sheetId) ?? null;
+  const callThem = async () => {
+    setSheetId(null);
+    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: 45, note: "Come sit with me" });
+    if (out?.knock) router.push(`/call/${out.knock.id}`);
+  };
   const muse = useMuseSlot(cards ?? []);
   // Everything under the header appears in one step, once the cards and the one
   // courtyard payload are in, so nothing slides down as the pieces arrive.
@@ -253,7 +265,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
             <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2 overflow-x-auto px-4 pb-1 pt-2" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 16 }}>
               <MyDayChip member={viewer} onOpen={() => setDayOfId(viewer.id)} />
               {people.map((mm) => (
-                <PersonChip key={mm.id} member={mm} lamp={lampFor(mm, lampData)} onOpen={() => setDayOfId(mm.id)} />
+                <PersonChip key={mm.id} member={mm} lamp={lampFor(mm, lampData)} onOpen={() => setSheetId(mm.id)} />
               ))}
             </ul>
           )}
@@ -287,6 +299,22 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
         </>
       )}
 
+      <PersonSheet
+        person={sheetPerson}
+        st={win.data?.people.find((x) => x.id === sheetId)}
+        fallback={sheetPerson ? lampFor(sheetPerson, lampData).line : undefined}
+        onTalk={() => {
+          if (!sheetPerson) return;
+          setSheetId(null);
+          openAdd("voice", null, [sheetPerson.id]);
+        }}
+        onCall={() => void callThem()}
+        onSeeDay={() => {
+          setDayOfId(sheetId);
+          setSheetId(null);
+        }}
+        onClose={() => setSheetId(null)}
+      />
       {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} onClose={() => setDayOfId(null)} />}
     </div>
   );

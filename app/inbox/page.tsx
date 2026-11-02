@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
+import { AskedByKids } from "@/components/kids-courtyard";
 import { PushAsk } from "@/components/push-ask";
 import { Avatar, EmptyLine, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import type { InboxItem } from "@/lib/inbox";
+import { isKid } from "@/lib/kids";
 import { callName, memberPhoto } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
 import { useJson } from "@/lib/use-json";
@@ -109,6 +111,8 @@ export default function InboxPage() {
     <div>
       <RoomHeader title="For you" subtitle="What people sent you in the last 30 days" />
       <PushAsk className="mb-6" />
+      {/* Questions from the kids: answered here (and in Family > Kids); the house screen only points here. */}
+      {!isKid(viewer) && <AskedByKids className="mb-6" />}
       {failed && !data ? (
         <div className="rounded-card bg-card p-4 text-center shadow-card" role="alert">
           <p className="m-0 text-headline font-semibold">Couldn&rsquo;t load what&rsquo;s for you.</p>
