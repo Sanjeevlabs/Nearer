@@ -44,8 +44,7 @@ export function InviteSheet({ open, onClose }: { open: boolean; onClose: () => v
   }, [open, allowed]);
 
   return (
-    <BottomSheet open={open} onClose={onClose} label="Invite family">
-      <p className="m-0 text-title font-semibold">Invite family</p>
+    <BottomSheet open={open} onClose={onClose} title="Invite family">
       {!allowed ? (
         <p className="m-0 mt-2 text-body text-ink-soft">Ask a grown-up in the family to invite people.</p>
       ) : (

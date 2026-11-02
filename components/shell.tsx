@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import type { AddTab, ReplyContribution } from "./add-sheet";
 
 import { PlayerProvider, usePlayer } from "./player";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { Icon, type IconName } from "./ui/kit";
 import { ForYouGlyph, HouseGlyph } from "./ui/glyphs";
 import { ViewerProvider, useViewer } from "./viewer";
@@ -75,49 +76,26 @@ export function useShell(): ShellState {
 function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { viewer, members } = useViewer();
   const all = roomsFor(viewer.role === "elder", canStartPortrait(viewer), isKid(viewer), members.some((m) => isKid(m)));
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="The house">
-          <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <m.nav
-            data-ui="house-sheet"
-            aria-label="The house"
-            className="frost relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3"
-            style={{ maxHeight: "88vh", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 60, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 38 }}
-          >
-            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            {/* Settings live behind your own photo only, not here. */}
-            <ul className="m-0 list-none space-y-1.5 p-0">
-              {all.map((g) => (
-                <li key={g.id}>
-                  <Link href={roomHref(g)} onClick={onClose} data-room={g.id} className="press flex w-full items-center gap-3.5 rounded-[20px] bg-white/80 px-3.5 py-3 text-left text-ink no-underline ring-1 ring-black/[.05]">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[.05]">
-                      <Icon name={g.icon as IconName} size={20} strokeWidth={1.8} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-body font-semibold leading-tight">{g.title}</span>
-                      <span className="mt-0.5 block truncate text-footnote text-ink-soft">{g.note}</span>
-                    </span>
-                    <Icon name="chevron" size={17} className="text-ink-faint" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </m.nav>
-        </div>
-      )}
-    </AnimatePresence>
+    <BottomSheet open={open} onClose={onClose} title="The house" dataUi="house-sheet" z={50}>
+      {/* Settings live behind your own photo only, not here. */}
+      <ul className="m-0 list-none space-y-1.5 p-0">
+        {all.map((g) => (
+          <li key={g.id}>
+            <Link href={roomHref(g)} onClick={onClose} data-room={g.id} className="press flex w-full items-center gap-3.5 rounded-[20px] bg-white/80 px-3.5 py-3 text-left text-ink no-underline ring-1 ring-black/[.05]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[.05]">
+                <Icon name={g.icon as IconName} size={20} strokeWidth={1.8} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-body font-semibold leading-tight">{g.title}</span>
+                <span className="mt-0.5 block truncate text-footnote text-ink-soft">{g.note}</span>
+              </span>
+              <Icon name="chevron" size={17} className="text-ink-faint" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </BottomSheet>
   );
 }
 

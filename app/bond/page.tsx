@@ -93,7 +93,7 @@ function GuidedAdd({ onAdded, anchor: preset }: { onAdded: () => void; anchor?: 
   };
 
   return (
-    <section aria-label="Add someone">
+    <section aria-title="Add someone">
       <h2 className="m-0 mb-1 text-title">Add someone</h2>
       <p className="m-0 mb-4 text-body text-ink-soft">Tell Nearer how they&rsquo;re related to someone already here.</p>
       <p className="m-0 mb-4 rounded-[16px] bg-surface px-4 py-3 text-callout text-ink-soft">
@@ -306,7 +306,7 @@ export default function BondPage() {
           </div>
           <BothSides />
           {mayAdd && (
-            <BottomSheet open={adding} onClose={() => setAdding(false)} label="Add someone">
+            <BottomSheet open={adding} onClose={() => setAdding(false)} title="Add someone">
               <GuidedAdd
                 anchor={anchor}
                 onAdded={() => {

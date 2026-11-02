@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useShell } from "@/components/shell";
@@ -17,6 +17,7 @@ import { callName, memberPhoto } from "@/lib/people";
 import type { Member } from "@/lib/schemas";
 import { ago, postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { placeFromTz, timeIn } from "@/lib/zones";
 
 // Care: one shared task list for each parent's home. Anyone (the parents too)
@@ -383,38 +384,24 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={need ? need.title : "New task"} data-ui="care-task-sheet">
-      <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-      <m.div
-        className="frost relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3"
-        style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", stiffness: 340, damping: 36 }}
-      >
-        <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
+    <BottomSheet open onClose={onClose} title={need ? "Task" : "New task"} dataUi="care-task-sheet" z={50}>
+      <div>
         <div className="mb-2 flex items-center justify-between">
-          <p className="m-0 text-footnote font-semibold uppercase tracking-[0.06em] text-ink-faint">{need ? STATUS_LABEL[need.status] : "New task"}</p>
-          <div className="flex items-center">
-            {need && mayEdit && (
-              <button
-                type="button"
-                aria-label="Delete task"
-                disabled={busy}
-                onClick={async () => {
-                  await act({ action: "need-delete", needId: need.id });
-                  onClose();
-                }}
-                className="press grid h-10 w-10 place-items-center rounded-full text-ink-soft"
-              >
-                <Icon name="trash" size={18} />
-              </button>
-            )}
-            <button type="button" onClick={onClose} aria-label="Close" className="press grid h-10 w-10 place-items-center rounded-full text-ink-soft">
-              <Icon name="close" />
+          <p className="m-0 text-footnote font-semibold uppercase tracking-[0.06em] text-ink-faint">{need ? STATUS_LABEL[need.status] : "Add it to the list"}</p>
+          {need && mayEdit && (
+            <button
+              type="button"
+              aria-label="Delete task"
+              disabled={busy}
+              onClick={async () => {
+                await act({ action: "need-delete", needId: need.id });
+                onClose();
+              }}
+              className="press grid h-11 w-11 place-items-center rounded-full text-ink-soft"
+            >
+              <Icon name="trash" size={18} />
             </button>
-          </div>
+          )}
         </div>
 
         <input
@@ -575,8 +562,8 @@ function TaskSheet({ need, home, draft, draftKind, helpers, pets, onClose, onCha
             {busy ? "Adding…" : assignee && manage ? `Add and give to ${name(assignee)}` : "Add task"}
           </Button>
         )}
-      </m.div>
-    </div>
+      </div>
+    </BottomSheet>
   );
 }
 

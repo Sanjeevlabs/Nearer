@@ -8,6 +8,7 @@ import type { Member, Relationship } from "@/lib/schemas";
 import { resetFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { Avatar, Button, Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
 
@@ -159,13 +160,11 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<{ familyId: string; invite: { code: string } } | null>(null);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Add your family's side">
-      <button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" onClick={onClose} />
-      <div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-4 pt-5 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+    <BottomSheet open onClose={onClose} title={made ? `The ${name.trim()} Nearer is ready` : "Add your family\u2019s side"} z={50}>
+      <div>
         {made ? (
           <>
-            <p className="m-0 text-title font-semibold">The {name.trim()} Nearer is ready</p>
-            <p className="m-0 mt-1 text-body text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
+            <p className="m-0 text-body text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
             <p data-display className="tnum m-0 mt-4 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{made.invite.code}</p>
             <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
               <Icon name="whatsapp" size={20} />
@@ -184,8 +183,7 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
           </>
         ) : (
           <>
-            <p className="m-0 text-title font-semibold">Add your family&rsquo;s side</p>
-            <p className="m-0 mt-1 text-body text-ink-soft">A separate home for your parents&rsquo; family. Nothing from this side shows there unless you share it.</p>
+            <p className="m-0 text-body text-ink-soft">A separate home for your parents&rsquo; family. Nothing from this side shows there unless you share it.</p>
             <label className="mt-4 block">
               <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Family name</span>
               <input value={name} onChange={(e) => setName(e.target.value.slice(0, 40))} placeholder="Your parents' family name" className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-black/15" />
@@ -232,6 +230,6 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
           </>
         )}
       </div>
-    </div>
+    </BottomSheet>
   );
 }

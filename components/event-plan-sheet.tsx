@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { eventTypeLabel, type EventType, type FamilyEvent } from "@/lib/events";
 import { eventAction } from "@/lib/gather-client";
@@ -11,6 +10,7 @@ import type { Member } from "@/lib/schemas";
 import { isAdmin } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { Avatar, Button, Icon, type IconName } from "./ui/kit";
+import { BottomSheet } from "./ui/bottom-sheet";
 
 // Visits are planned on Celebrations → Visits, so they are not offered here.
 const OTHER: { type: EventType; icon: IconName; placeholder: string }[] = [
@@ -100,26 +100,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
   };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Plan an event">
-          <motion.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <motion.div
-            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3 shadow-frost backdrop-blur-xl"
-            style={{ background: "rgba(246,243,238,.94)", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 340, damping: 36 }}
-          >
-            <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <div className="mb-3 flex items-center">
-              <h2 className="m-0 flex-1 text-title font-normal">Plan an event</h2>
-              <button type="button" onClick={onClose} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
-                <Icon name="close" />
-              </button>
-            </div>
-
+    <BottomSheet open={open} onClose={onClose} title="Plan an event" dataUi="event-plan-sheet" z={50}>
             {busy ? (
               <div aria-busy="true" aria-label="Drafting the plan" className="space-y-3 pb-4">
                 <p className="voice m-0 text-headline text-ink-soft">Drafting the plan, the tasks and the songs…</p>
@@ -203,10 +184,7 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                 </Button>
               </>
             )}
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+    </BottomSheet>
   );
 }
 
