@@ -1,6 +1,6 @@
 // Tabs inside a room (SPEC §29.3): once you're in a room, its pages show as
-// tabs so you can move sideways without going back. Derived from the five
-// rooms in lib/menu.ts. A room with one page (Kitchen) has no tab row.
+// tabs so you can move sideways without going back. Derived from the four
+// rooms in lib/menu.ts. A room with one page would have no tab row.
 import { roomsFor, type Room } from "./menu";
 
 export interface Space {
@@ -27,7 +27,7 @@ export function spaceFor(pathname: string): { space: Space; room: string } | nul
   return best;
 }
 
-/** The room a tab page belongs to, one-page rooms (Kitchen) included: the eyebrow above its title. */
+/** The room a tab page belongs to, one-page rooms included: the eyebrow above its title. */
 export function roomOf(pathname: string): Space | null {
   const at = spaceFor(pathname);
   return at && at.room === pathname ? at.space : null;

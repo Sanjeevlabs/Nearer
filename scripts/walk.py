@@ -21,21 +21,21 @@ from playwright.sync_api import sync_playwright
 
 # Mirrors lib/menu.ts roomsFor(); the walk fails if the house sheet disagrees.
 ROOMS = {
-    "Memories": ["/lane", "/stories", "/ask-family"],
-    "Kitchen": ["/kitchen"],
-    "Care": ["/care", "/care/helpers", "/nearby"],
+    "Together": ["/gather/play", "/gather", "/rituals"],
+    "Keepsakes": ["/lane", "/stories", "/kitchen", "/book", "/advice", "/ask-family"],
     # Kids (/bond/kids) is there because the demo family has children.
-    "Family": ["/bond", "/bond/homes", "/bond/kids", "/book", "/advice", "/portrait"],
-    "Celebrations": ["/gather", "/rituals", "/together/visits", "/together/holidays", "/gather/play"],
+    "Family": ["/bond", "/bond/homes", "/bond/kids", "/together/visits"],
+    "Care": ["/care", "/care/helpers", "/nearby"],
 }
 # Kid mode (lib/menu.ts roomsFor(..., kid)): a child's house has three rooms, and fewer tabs in them.
 KID_ROOMS = {
-    "Memories": ["/lane", "/stories"],
-    "Celebrations": ["/gather", "/gather/play"],
+    "Together": ["/gather/play", "/gather"],
+    "Keepsakes": ["/lane", "/stories"],
     "Family": ["/bond"],
 }
-# Pages that are in no room: For you (the bell on the dock).
-EXTRA = ["/inbox"]
+# Pages that are in no room: For you (the bell on the dock); Portrait (from the Family tree) and
+# Holidays (from Visits) left the tabs but still resolve.
+EXTRA = ["/inbox", "/portrait", "/together/holidays"]
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "child")]
 # Console noise that isn't ours (dev tooling, a blocked third-party font).
 IGNORE = re.compile(r"Download the React DevTools|fonts\.g(static|oogleapis)|favicon", re.I)
@@ -195,11 +195,11 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
         if tile.count() == 0:
             problems.append(f"{person}: no '{room}' tile in the house")
     if kind == "child":
-        for room in ("Kitchen", "Care"):
+        for room in ("Care",):
             if page.get_by_role("link", name=re.compile(rf"^{room}\b")).count():
                 problems.append(f"{person}: kid mode shows '{room}'")
-    first = rooms["Memories"][0]
-    page.get_by_role("link", name=re.compile(r"^Memories\b")).first.click()
+    first = rooms["Keepsakes"][0]
+    page.get_by_role("link", name=re.compile(r"^Keepsakes\b")).first.click()
     page.wait_for_url(f"**{first}", timeout=15_000)
 
     for room, tabs in [*rooms.items(), ("", EXTRA)]:

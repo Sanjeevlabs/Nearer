@@ -32,21 +32,25 @@ describe("parents first", () => {
   });
 
   it("keeps the parent's menu about what they give; children share their day too", () => {
-    expect(spacesFor(false).map((s) => s.id)).toEqual(["memories", "kitchen", "care", "family", "celebrations"]);
+    expect(spacesFor(false).map((s) => s.id)).toEqual(["together", "keepsakes", "family", "care"]);
     expect(spacesFor(true).find((s) => s.id === "care")?.rooms.map((r) => r.href)).not.toContain("/around");
     expect(shareableFor("adult")).toContain("work");
     expect(shareableFor("child")).toContain("school");
   });
 
-  it("keeps every family feature in five rooms, with no duplicate Ask", () => {
+  it("keeps every family feature in four rooms, with no duplicate Ask", () => {
     const kid = roomsFor(false);
-    expect(kid.map((r) => r.title)).toEqual(["Memories", "Kitchen", "Care", "Family", "Celebrations"]);
+    expect(kid.map((r) => r.title)).toEqual(["Together", "Keepsakes", "Family", "Care"]);
     const hrefs = kid.flatMap((r) => r.tabs.map((t) => t.href));
-    for (const h of ["/care", "/care/helpers", "/nearby", "/kitchen", "/stories", "/advice", "/bond", "/bond/homes", "/lane", "/rituals", "/book", "/portrait", "/together/visits", "/together/holidays", "/gather", "/gather/play"]) expect(hrefs).toContain(h);
+    for (const h of ["/care", "/care/helpers", "/nearby", "/kitchen", "/stories", "/advice", "/bond", "/bond/homes", "/lane", "/rituals", "/book", "/together/visits", "/gather", "/gather/play"]) expect(hrefs).toContain(h);
+    // Portrait and Holidays left the tabs; they open from the Family tree and Visits.
+    expect(hrefs).not.toContain("/portrait");
+    expect(hrefs).not.toContain("/together/holidays");
     expect(hrefs).not.toContain("/ask");
     expect(hrefs).not.toContain("/send");
     expect(hrefs).not.toContain("/around");
     expect(hrefs).not.toContain("/safe");
-    expect(kid.find((r) => r.id === "kitchen")?.tabs.map((t) => t.href)).toEqual(["/kitchen"]);
+    // Care contacts stay two taps away: the house, then Care (Nearby is a Care tab).
+    expect(kid.find((r) => r.id === "care")?.tabs.map((t) => t.href)).toContain("/nearby");
   });
 });
