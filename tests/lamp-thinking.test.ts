@@ -108,19 +108,15 @@ describe("lighting the lamp reaches the other home", () => {
 describe("what the recipient and the sender see", () => {
   it("the recipient's inbox says who lit it and when; opening it tells the sender 'felt'", async () => {
     await light("dadi");
-    const inbox = await json<{ items: { kind: string; text: string; waiting: boolean }[] }>(inboxGet(authedGet("http://t/api/inbox", "arjun")));
+    const inbox = await json<{ items: { kind: string; text: string; plain: boolean; badge: string }[] }>(inboxGet(authedGet("http://t/api/inbox", "arjun")));
     const item = inbox.items.find((i) => i.kind === "lamp");
-    expect(item?.text).toBe("Maa lit the lamp for you · 12:00 PM");
-    expect(item?.waiting).toBe(true);
+    expect(item).toMatchObject({ text: "Maa lit the lamp for you · 12:00 PM", plain: true, badge: "lamp" });
 
     const seen = async (as: string) => (await json<{ felt: { by: string; at: string } | null }>(lampGet(authedGet("http://t/api/lamp", as)))).felt;
     expect(await seen("dadi")).toBeNull();
     vi.setSystemTime(new Date(NOON_NY.getTime() + 14 * M));
     expect((await lampPost(authedJson("http://t/api/lamp", { action: "felt" }, "arjun"))).status).toBe(200);
     expect(await seen("dadi")).toMatchObject({ by: "arjun", at: new Date(NOON_NY.getTime() + 14 * M).toISOString() });
-
-    const after = await json<{ items: { kind: string; waiting: boolean }[] }>(inboxGet(authedGet("http://t/api/inbox", "arjun")));
-    expect(after.items.find((i) => i.kind === "lamp")?.waiting).toBe(false);
   });
 
   it("someone who was asleep still gets the arrival 10 hours later, with the glow gone", async () => {

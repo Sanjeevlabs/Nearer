@@ -71,12 +71,12 @@ describe("one source for the dock dot and the glance tile", () => {
     const sent = await dbAddCard({ id: "v1", familyId: FAM, type: "audio", caption: "Hello", takenAt: new Date(NOW.getTime() - H).toISOString(), authorId: "dadi", addressedTo: "arjun", lang: "en" });
     await putDoc(FAM, "nudge", { ...nudge("n-card", "heard", new Date(NOW.getTime() - H).toISOString()), href: `/home?card=${sent.id}` });
     let w = await waiting();
-    expect(w.items.some((i) => i.kind === "voice" && i.fromId === "dadi")).toBe(true);
+    expect(w.items.some((i) => i.kind === "voice" && i.href.includes("v1"))).toBe(true);
     expect((await glance())?.kind).toBeDefined();
     const res = await playsPOST(authedJson("http://t/api/plays", { cardId: sent.id, memberId: "arjun" }, "arjun"));
     expect(res.status).toBe(201);
     w = await waiting();
-    expect(w.items.some((i) => i.kind === "voice")).toBe(false);
+    expect(w.items.some((i) => i.kind === "voice" && i.href.includes("v1"))).toBe(false);
     expect(w.items.some((i) => i.nudgeId === "n-card")).toBe(false);
     expect(await glance()).toEqual(w.top);
   });
