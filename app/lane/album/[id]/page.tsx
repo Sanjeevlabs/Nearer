@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { EVENT_LABEL, albumDates, cardImage } from "@/components/albums";
 import { useShell } from "@/components/shell";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ActionMenu, Button, EmptyLine, Icon, MuseMark, Photo, RoomHeader } from "@/components/ui/kit";
 import { EVENT_KINDS } from "@/lib/kind-values";
 import type { Album } from "@/lib/kinds";
@@ -129,11 +130,9 @@ export default function AlbumPage() {
         })}
       </ul>
 
-      <AnimatePresence>
+      <BottomSheet open={Boolean(picked)} onClose={() => setPicked(null)} title="Photo" z={50}>
         {picked && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Photo">
-            <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPicked(null)} />
-            <m.div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-4 pt-4 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }} initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", stiffness: 340, damping: 36 }}>
+          <div>
               <div className="relative h-[260px] overflow-hidden rounded-[22px] bg-surface">{cardImage(picked) && <Photo src={cardImage(picked) as string} alt={picked.caption} sizes="440px" />}</div>
               {picked.caption && <p className="m-0 mt-3 text-body">{picked.caption}</p>}
               <div className="mt-3 space-y-2">
@@ -166,10 +165,9 @@ export default function AlbumPage() {
                   Not part of this album
                 </Button>
               </div>
-            </m.div>
           </div>
         )}
-      </AnimatePresence>
+      </BottomSheet>
       <AnimatePresence>{playing && <Slideshow photos={photos} title={album.title} onClose={() => setPlaying(false)} />}</AnimatePresence>
     </div>
   );
@@ -185,6 +183,11 @@ function Slideshow({ photos, title, onClose }: { photos: Card[]; title: string; 
     return () => window.clearTimeout(t);
   }, [i, paused, photos.length, onClose]);
   const c = photos[i];
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   const src = cardImage(c);
   return (
     <m.div className="fixed inset-0 z-50 bg-black text-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${title}, slideshow`}>

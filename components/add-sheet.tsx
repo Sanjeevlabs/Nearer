@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addressTo, householdName, households } from "@/lib/households";
@@ -19,6 +18,7 @@ import { RestoreOffer, type Restored } from "./muse-restore";
 import { useShell } from "./shell";
 import { Avatar, Button, Icon, LiveDot, PlayButton } from "./ui/kit";
 import { PeoplePicker } from "./people-picker";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { useViewer } from "./viewer";
 import { useJson } from "@/lib/use-json";
 
@@ -760,50 +760,20 @@ export function AddSheet() {
   const { addOpen, addTab, replyTo, addressee, closeAdd, bumpRefresh } = useShell();
   const voice = addTab === "voice" || addTab === "ask";
 
-  useEffect(() => {
-    if (!addOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeAdd();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [addOpen, closeAdd]);
-
   const done = () => {
     bumpRefresh();
     closeAdd();
   };
 
   return (
-    <AnimatePresence>
-      {addOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={voice ? "Record a voice note" : "Share a photo or video"} data-ui="add-sheet">
-          <m.button
-            type="button"
-            aria-label="Close"
-            className="absolute inset-0 bg-black/25"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeAdd}
-          />
-          <m.div
-            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-4 pt-3 shadow-frost"
-            style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 340, damping: 36 }}
-          >
-            <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="m-0 text-title">{voice ? (purposeTitle(replyTo) ?? "New voice note") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}</h2>
-              <button type="button" onClick={closeAdd} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
-                <Icon name="close" />
-              </button>
-            </div>
-            {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} />}
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <BottomSheet
+      open={addOpen}
+      onClose={closeAdd}
+      title={voice ? (purposeTitle(replyTo) ?? "New voice note") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}
+      dataUi="add-sheet"
+      z={50}
+    >
+      {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} />}
+    </BottomSheet>
   );
 }

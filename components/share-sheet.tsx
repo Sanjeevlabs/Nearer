@@ -17,11 +17,9 @@ export function ShareSheet({ open, onClose, target, sticker }: { open: boolean; 
   const [making, setMaking] = useState(false);
   return (
     <>
-      <BottomSheet open={open && !making} onClose={onClose} label={target.title}>
-        <p className="m-0 text-title font-semibold">{target.title}</p>
-        {target.note && <p className="m-0 mb-3 mt-1 text-callout text-ink-soft">{target.note}</p>}
-        {!target.note && <div className="h-3" />}
-        <SharePanel target={target} lead={sticker ? { label: "Make a sticker", icon: "sticker", onClick: () => setMaking(true) } : undefined} />
+      <BottomSheet open={open && !making} onClose={onClose} title={target.title}>
+        {target.note && <p className="m-0 mb-3 text-callout text-ink-soft">{target.note}</p>}
+                <SharePanel target={target} lead={sticker ? { label: "Make a sticker", icon: "sticker", onClick: () => setMaking(true) } : undefined} />
       </BottomSheet>
       {sticker && (
         <StickerMaker

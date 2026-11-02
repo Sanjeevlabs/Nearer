@@ -1,12 +1,13 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
+import { m } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { callName } from "@/lib/people";
 import { postJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import { Button, Icon, type IconName } from "./ui/kit";
 import { useViewer } from "./viewer";
+import { BottomSheet } from "./ui/bottom-sheet";
 
 // "Send something to Maa": three things Muse picked from the curated
 // partners' own catalogues → a preview from your partner account → Send.
@@ -127,13 +128,6 @@ export function SendSheet({
     if (open) void load();
   }, [open, load]);
 
-  useEffect(() => {
-    if (!open || inline) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose, inline]);
-
   const preview = async (items: SuggestionView[], sample: boolean, picked: SuggestionView, addressId?: string) => {
     // Changing the address keeps the preview on screen while it refreshes.
     setStep((cur) => (addressId && cur.s === "preview" ? { ...cur, busy: true } : { s: "previewing", items, sample, picked }));
@@ -175,36 +169,15 @@ export function SendSheet({
     );
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={`Send something to ${name}`} data-ui="send-sheet">
-          <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <m.div
-            className="relative max-h-[92vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-4 pt-3 shadow-frost"
-            style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 340, damping: 36 }}
-          >
-            <span className="mx-auto mb-2 block h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <div className="mb-1 flex items-center gap-1">
-              {back && (
-                <button type="button" onClick={back} aria-label="Back" className="press -ml-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
-                  <Icon name="back" />
-                </button>
-              )}
-              <h2 className="m-0 min-w-0 flex-1 truncate text-title">Send something to {name}</h2>
-              <button type="button" onClick={onClose} aria-label="Close" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
-                <Icon name="close" />
+    <BottomSheet open={open} onClose={onClose} title={`Send something to ${name}`} dataUi="send-sheet" z={50}>
+            {back && (
+              <button type="button" onClick={back} aria-label="Back" className="press -ml-2 mb-1 grid h-11 w-11 place-items-center rounded-full text-ink-soft">
+                <Icon name="back" />
               </button>
-            </div>
+            )}
             {context?.title && step.s !== "done" && <p className="voice m-0 mb-3 text-body text-ink-soft">For {context.title}</p>}
             <Body step={step} name={name} onPick={preview} onSend={send} onRetry={load} onClose={onClose} />
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+    </BottomSheet>
   );
 }
 

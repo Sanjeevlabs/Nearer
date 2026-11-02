@@ -1,11 +1,11 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { holidayVisible, whenLabel, daysBetween, type CalHoliday, type OccasionChoices } from "@/lib/occasion-calendar";
 import { postJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import { Button, Icon } from "./ui/kit";
+import { BottomSheet } from "./ui/bottom-sheet";
 
 // "Which traditions does your family celebrate?": one optional,
 // family-level choice, used only to show festivals on the calendar. Each
@@ -51,12 +51,6 @@ export function TraditionsSheet({
       setByHand(false);
     }
   }, [open, value]);
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
 
   const toggleTradition = (c: TraditionChoice) =>
     setPicked((p) => {
@@ -91,22 +85,7 @@ export function TraditionsSheet({
   const shown = nextUp.filter((h) => holidayVisible(h, picked));
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="traditions-title">
-          <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <m.div
-            className="frost relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-3"
-            style={{ maxHeight: "86vh", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 60, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 38 }}
-          >
-            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <h2 id="traditions-title" className="m-0 text-title leading-tight">
-              Our traditions
-            </h2>
+    <BottomSheet open={open} onClose={onClose} title="Our traditions" z={50}>
             <p className="m-0 mt-1.5 text-callout text-ink-soft">Which ones does your family celebrate? Used only to show your festivals; change it anytime.</p>
 
             <div className="mt-4 grid grid-cols-2 gap-2" role="group" aria-label="Traditions">
@@ -192,9 +171,6 @@ export function TraditionsSheet({
             ) : (
               <p className="m-0 mt-4 text-center text-footnote text-ink-faint">A grown-up in the family can change this.</p>
             )}
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+    </BottomSheet>
   );
 }

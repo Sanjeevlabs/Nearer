@@ -73,7 +73,7 @@ export default function BondPage() {
           </div>
           <BothSides />
           {mayAdd && everAdded && (
-            <BottomSheet open={adding} onClose={() => setAdding(false)} label="Add someone">
+            <BottomSheet open={adding} onClose={() => setAdding(false)} title="Add someone">
               <GuidedAdd
                 anchor={anchor}
                 onAdded={() => {

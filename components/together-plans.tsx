@@ -13,6 +13,7 @@ import type { Member } from "@/lib/schemas";
 import type { TogetherTemplate } from "@/lib/together-templates";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
+import { BottomSheet } from "./ui/bottom-sheet";
 
 // Visits (/together/visits) and family holidays (/together/holidays): each
 // its own page over the same plans, filtered by template — dates, who's
@@ -201,17 +202,12 @@ function PlanSheet({ t, onClose }: { t: TogetherTemplate; onClose: () => void })
     </div>
   );
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={t.title}>
-      <button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" onClick={onClose} />
-      <div className="frost relative max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-[32px] px-4 pt-4" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
-        <div className="flex items-center gap-3">
+    <BottomSheet open onClose={onClose} title={t.title} z={50}>
+      <div>
+        <div className="flex items-start gap-3">
           <PlanBadge holiday={holiday} />
-          <p className="m-0 min-w-0 flex-1 text-title font-semibold leading-tight">{t.title}</p>
-          <button type="button" onClick={onClose} aria-label="Close" className="press grid h-10 w-10 place-items-center rounded-full text-ink-soft">
-            <Icon name="close" />
-          </button>
+          <p className="m-0 min-w-0 flex-1 text-body text-ink-soft">{t.blurb}</p>
         </div>
-        <p className="m-0 mt-2 text-body text-ink-soft">{t.blurb}</p>
         {holiday && (
           <label className="mt-4 block">
             <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Where to?</span>
@@ -259,6 +255,6 @@ function PlanSheet({ t, onClose }: { t: TogetherTemplate; onClose: () => void })
           {busy ? "Saving…" : countdownWords(daysUntil(date ? new Date(`${date}T12:00:00`).toISOString() : null)) ? `Start the countdown · ${countdownWords(daysUntil(new Date(`${date}T12:00:00`).toISOString()))}` : "Start the countdown"}
         </Button>
       </div>
-    </div>
+    </BottomSheet>
   );
 }

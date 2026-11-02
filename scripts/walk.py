@@ -3,7 +3,7 @@
 
 Signs in to the demo (NEARER-DEMO) as a parent, an adult child and two children (the kids' first screen is kid-home),
 opens the house from the dock, then visits every tab of every room
-(lib/menu.ts). At 360x740 and 390x844 it also fails on sideways overflow, display-size text without data-display, and text under 12px. Fails on a page error, an error-level console message, a
+(lib/menu.ts). It also opens every reachable sheet at 360x640 and checks how it closes (close button on screen and 44pt, Escape, focus back). At 360x740 and 390x844 it also fails on sideways overflow, display-size text without data-display, and text under 12px. Fails on a page error, an error-level console message, a
 4xx/5xx document or a 5xx API call, a missing page title, or a room tile
 that doesn't open its first tab.
 
@@ -224,6 +224,97 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
     return problems
 
 
+# Every popup closes the same easy way (components/ui/bottom-sheet.tsx): at 360x640 the close control is on screen and 44pt,
+# Escape closes, the close button closes, and focus goes back to what opened it.
+SHEET_SIZE = (360, 640)
+CLOSE_RECT_JS = """() => {
+  const d = [...document.querySelectorAll('[role=dialog]')].pop();
+  if (!d) return null;
+  const b = d.querySelector('button[aria-label=Close]');
+  if (!b) return { missing: true };
+  const r = b.getBoundingClientRect();
+  return { missing: false, top: r.top, left: r.left, right: r.right, bottom: r.bottom, w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, named: Boolean(d.getAttribute('aria-labelledby') || d.getAttribute('aria-label')) };
+}"""
+
+
+def check_sheet(page, name: str, opener, problems: list[str], person: str) -> bool:
+    """Open one sheet from `opener` and check how it closes. False if the opener isn't there (the caller notes it)."""
+    if opener.count() == 0:
+        return False
+    opener.first.scroll_into_view_if_needed()
+    opener.first.click()
+    try:
+        page.locator("[role=dialog]").last.wait_for(timeout=8_000)
+    except Exception:
+        problems.append(f"{person} sheet '{name}': did not open")
+        return True
+    page.wait_for_timeout(500)  # the spring settles
+    r = page.evaluate(CLOSE_RECT_JS)
+    if not r or r.get("missing"):
+        problems.append(f"{person} sheet '{name}': no close button (aria-label=Close)")
+    else:
+        if r["top"] < 0 or r["left"] < 0 or r["right"] > r["vw"] or r["bottom"] > r["vh"]:
+            problems.append(f"{person} sheet '{name}': the close button is outside the {r['vw']:.0f}x{r['vh']:.0f} screen")
+        if r["w"] < 43.5 or r["h"] < 43.5:
+            problems.append(f"{person} sheet '{name}': the close button is {r['w']:.0f}x{r['h']:.0f}, under 44")
+        if not r["named"]:
+            problems.append(f"{person} sheet '{name}': the dialog has no name")
+    if page.evaluate("document.documentElement.scrollWidth - innerWidth") > 0:
+        problems.append(f"{person} sheet '{name}': sideways overflow while open")
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(600)
+    if page.locator("[role=dialog]").count():
+        problems.append(f"{person} sheet '{name}': Escape did not close it")
+        return True
+    if not opener.first.evaluate("(el) => el === document.activeElement"):
+        problems.append(f"{person} sheet '{name}': focus did not go back to what opened it")
+    opener.first.click()
+    try:
+        page.locator("[role=dialog]").last.wait_for(timeout=8_000)
+        page.wait_for_timeout(500)
+        page.locator("[role=dialog] button[aria-label=Close]").last.click()
+        page.wait_for_timeout(600)
+        if page.locator("[role=dialog]").count():
+            problems.append(f"{person} sheet '{name}': the close button did not close it")
+    except Exception:
+        problems.append(f"{person} sheet '{name}': did not reopen")
+    return True
+
+
+def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
+    """Open every sheet that is reachable without typing, as a grown-up, at 360x640. Returns the sheets whose opener wasn't there."""
+    skipped: list[str] = []
+    ctx = browser.new_context(viewport={"width": SHEET_SIZE[0], "height": SHEET_SIZE[1]}, base_url=base)
+    ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
+    res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
+    if not res.ok:
+        problems.append(f"{person}: sheets: sign-in failed {res.status}")
+        ctx.close()
+        return skipped
+    page = ctx.new_page()
+    plan = [
+        ("/", "the house", lambda: page.get_by_role("button", name="Open the house")),
+        ("/", "photo / moment", lambda: page.get_by_role("button", name="Photo", exact=True)),
+        ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Voice note"))),
+        ("/", "invite family", lambda: page.get_by_role("button", name="Invite family")),
+        ("/bond", "invite (family page)", lambda: page.get_by_role("button", name=re.compile(r"^Invite$"))),
+        ("/bond", "add someone", lambda: page.get_by_role("button", name=re.compile(r"^Add someone"))),
+        ("/care", "new task", lambda: page.get_by_role("button", name="New task with details")),
+        ("/gather", "plan an event", lambda: page.get_by_role("button", name="Plan an event").first),
+        ("/rituals", "our traditions", lambda: page.get_by_role("button", name=re.compile(r"Our traditions"))),
+    ]
+    here = ""
+    for url, name, opener in plan:
+        if url != here:
+            page.goto(url, wait_until="load")
+            page.wait_for_timeout(1200)
+            here = url
+        if not check_sheet(page, name, opener(), problems, person):
+            skipped.append(f"{url} {name}")
+    ctx.close()
+    return skipped
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:3100")
@@ -239,6 +330,10 @@ def main() -> int:
                     first_screen(args.base, person, browser, found, size)
                 print(f"{person:6} {size[0]}x{size[1]} {'ok' if not found else f'{len(found)} problem(s)'}")
                 problems += found
+        found: list[str] = []
+        skipped = sheets(args.base, "arjun", browser, found)
+        print(f"sheets 360x640 {'ok' if not found else f'{len(found)} problem(s)'}" + (f" (no opener for: {', '.join(skipped)})" if skipped else ""))
+        problems += found
         browser.close()
     for line in problems:
         print("  " + line)

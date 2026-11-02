@@ -175,9 +175,8 @@ function EditSheet({ kind, habit, onClose, onSave }: { kind: "rename" | "time"; 
     else setState("failed");
   };
   return (
-    <BottomSheet open onClose={onClose} label={kind === "rename" ? "Rename the habit" : "Change the time"}>
-      <p className="m-0 text-title font-semibold">{kind === "rename" ? "Rename" : "Change the time"}</p>
-      <p className="m-0 mt-1 text-callout text-ink-soft">{kind === "rename" ? "Everyone in the family sees the new name." : "Each person's own morning: 7 AM is 7 AM wherever they are."}</p>
+    <BottomSheet open onClose={onClose} title={kind === "rename" ? "Rename the habit" : "Change the time"}>
+      <p className="m-0 text-callout text-ink-soft">{kind === "rename" ? "Everyone in the family sees the new name." : "Each person's own morning: 7 AM is 7 AM wherever they are."}</p>
       {kind === "rename" ? (
         <label className="mt-4 block">
           <span className="sr-only">Name</span>
