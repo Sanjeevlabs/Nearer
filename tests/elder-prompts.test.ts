@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { containsDevanagari, translateText } from "@/lib/llm";
 import { FAMILY_STORY_IDEAS, STORY_IDEAS, resolveIdea } from "@/lib/story-ideas";
 import { DEMO_MEMBERS } from "@/lib/family";
+import { POST as translatePOST } from "@/app/api/translate/route";
+import { sessionCookie } from "./auth-helper";
 
 // Story and question prompts reach an elder in their own language. Dadi
 // (lang hi, display hi-deva) reads them in Devanagari; in mock mode the demo's
@@ -47,5 +49,20 @@ describe("prompts for an elder, in Hindi", () => {
     // English first: the original shows until the translation lands, so recording never waits.
     expect(tp).toMatch(/: \{ text, lang: sourceLang \}/);
     for (const f of [join("app", "stories", "page.tsx"), join("components", "today.tsx")]) expect(readFileSync(join(root, f), "utf8")).toMatch(/<PromptText /);
+  });
+});
+
+describe("a screen of prompts is one translate request", () => {
+  const ask = (body: unknown) => translatePOST(new Request("http://test/api/translate", { method: "POST", headers: { cookie: sessionCookie("dadi", "demo-family"), "content-type": "application/json" }, body: JSON.stringify(body) }));
+
+  it("translates a batch in order", async () => {
+    const res = await ask({ texts: ["The thirsty crow", "The blue jackal"], targetLang: "hi-deva" });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { translations: { text: string }[] };
+    expect(body.translations.map((t) => t.text)).toEqual(["प्यासा कौआ", "नीला सियार"]);
+  });
+
+  it("refuses more than 40 at once", async () => {
+    expect((await ask({ texts: Array(41).fill("x"), targetLang: "hi-deva" })).status).toBe(400);
   });
 });
