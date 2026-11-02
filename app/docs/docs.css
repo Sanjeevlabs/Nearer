@@ -1,0 +1,173 @@
+/* Build docs. Tokens come from app/tokens.css; dark mode is local to the docs (the app itself is light only). */
+.docs-root {
+  --docs-link: #2f5684;
+  --docs-code: var(--well);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(64rem, calc(100vw - 2rem));
+  margin-bottom: -9rem; /* the app shell reserves room for its dock; docs have none */
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  body:has(.docs-root) {
+    background: #171513;
+  }
+  .docs-root {
+    --ink: rgba(255, 255, 255, 0.92);
+    --ink-soft: rgba(255, 255, 255, 0.68);
+    --line: rgba(255, 255, 255, 0.14);
+    --well: #25221f;
+    --docs-link: #9dbbe6;
+  }
+}
+.docs-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.docs-nav ul {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.docs-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: var(--text-callout);
+}
+.docs-nav a[aria-current="page"] {
+  background: var(--well);
+  color: var(--ink);
+  font-weight: 600;
+}
+.docs-nav a:hover {
+  color: var(--ink);
+}
+@media (min-width: 768px) {
+  .docs-layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-5);
+  }
+  .docs-nav {
+    position: sticky;
+    top: var(--space-3);
+    flex: 0 0 13rem;
+  }
+  .docs-nav ul {
+    flex-direction: column;
+    overflow: visible;
+  }
+}
+.docs-article {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: 45rem;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.docs-article h1 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-display);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.docs-article h2 {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: var(--text-title);
+  line-height: 1.25;
+}
+.docs-article h3 {
+  margin: var(--space-3) 0 4px;
+  font-size: var(--text-headline);
+}
+.docs-article h4 {
+  margin: var(--space-2) 0 4px;
+  font-size: var(--text-body);
+}
+.docs-article p,
+.docs-article ul,
+.docs-article ol,
+.docs-article blockquote,
+.docs-article pre {
+  margin: 0 0 var(--space-2);
+}
+.docs-article ul,
+.docs-article ol {
+  padding-left: 1.4em;
+}
+.docs-article li {
+  margin: 4px 0;
+}
+.docs-article a {
+  color: var(--docs-link);
+  text-underline-offset: 3px;
+}
+.docs-article code {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--docs-code);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+.docs-article pre {
+  padding: var(--space-2);
+  border-radius: 12px;
+  background: var(--docs-code);
+  overflow-x: auto;
+}
+.docs-article pre code {
+  padding: 0;
+  background: none;
+  overflow-wrap: normal;
+}
+.docs-article blockquote {
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--line);
+  color: var(--ink-soft);
+}
+.docs-article hr {
+  margin: var(--space-4) 0 var(--space-2);
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.docs-table {
+  margin: 0 0 var(--space-2);
+  overflow-x: auto;
+}
+.docs-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-callout);
+  line-height: 1.4;
+}
+.docs-table th,
+.docs-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: normal;
+}
+.docs-table th {
+  color: var(--ink-soft);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.docs-byline {
+  margin-top: var(--space-3);
+  color: var(--ink-soft);
+  font-size: var(--text-footnote);
+}

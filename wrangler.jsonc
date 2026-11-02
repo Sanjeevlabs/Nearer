@@ -17,8 +17,10 @@
   "triggers": { "crons": ["0 9 * * *", "*/15 * * * *"] },
   "observability": { "enabled": true },
   // Production origin (DNS on Cloudflare). Must match APP_ORIGIN and CAP_SERVER_URL.
+  // A deploy REPLACES the custom domains with this list: keep every host here. docs.nearer.site serves /docs at its root (cf-worker.mjs).
   "routes": [
     { "pattern": "nearer.site", "custom_domain": true },
-    { "pattern": "www.nearer.site", "custom_domain": true }
+    { "pattern": "www.nearer.site", "custom_domain": true },
+    { "pattern": "docs.nearer.site", "custom_domain": true }
   ]
 }
