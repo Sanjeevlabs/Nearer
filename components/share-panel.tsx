@@ -177,7 +177,7 @@ export function SharePanel({ target, renderKey = 0, lead }: { target: ShareTarge
             type="button"
             disabled={Boolean(busy) || (!blob && a.key !== "link")}
             onClick={() => void run(a.key, a.onClick)}
-            className={cn("press flex h-16 flex-col items-center justify-center gap-1.5 rounded-[20px] text-callout font-semibold disabled:opacity-50", i === 0 ? "bg-black text-white" : "bg-surface text-ink")}
+            className={cn("press flex h-16 flex-col items-center justify-center gap-1.5 rounded-[20px] text-callout font-semibold disabled:opacity-50", i === 0 ? "bg-accent text-accent-ink" : "bg-surface text-ink")}
           >
             <Icon name={a.icon} size={22} />
             {busy === a.key ? "One moment…" : a.label}

@@ -145,7 +145,7 @@ function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSave
             Cancel
           </button>
         )}
-        <button type="submit" disabled={busy || !text.trim()} className="press h-12 flex-[1.4] rounded-full bg-black text-body font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={busy || !text.trim()} className="press h-12 flex-[1.4] rounded-full bg-accent text-body font-semibold text-accent-ink disabled:opacity-40">
           {busy ? "Saving…" : "Show it today"}
         </button>
       </div>

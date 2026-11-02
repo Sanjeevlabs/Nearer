@@ -138,7 +138,7 @@ export function LaneViewer({ cards, start, title, onClose }: { cards: Card[]; st
 
   if (!card) return null;
   return (
-    <m.div className="fixed inset-0 z-[60] bg-black text-white" role="dialog" aria-modal="true" aria-label={title} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+    <m.div className="fixed inset-0 z-[60] bg-accent text-accent-ink" role="dialog" aria-modal="true" aria-label={title} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
       <div
         ref={strip}
         className="no-scrollbar flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-contain"

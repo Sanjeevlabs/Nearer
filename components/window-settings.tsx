@@ -33,7 +33,7 @@ export function WindowSettings() {
               await reload();
               setBusy(false);
             }}
-            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", data.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", data.quietAfterHours === h ? "bg-accent text-accent-ink" : "bg-surface text-ink-soft")}
           >
             {h} h
           </button>

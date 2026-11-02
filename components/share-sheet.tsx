@@ -62,9 +62,9 @@ export function ShareButton({
   const [built, setBuilt] = useState<{ t: ShareTarget; s: StickerSpec | null } | null>(null);
   const tones = {
     soft: "bg-surface text-ink",
-    dark: "bg-black text-white",
+    dark: "bg-accent text-accent-ink",
     glass: "bg-white/20 text-white backdrop-blur",
-    paper: "bg-black/[.05] text-[#4a413a]",
+    paper: "bg-tint text-[#4a413a]",
   } as const;
   return (
     <>

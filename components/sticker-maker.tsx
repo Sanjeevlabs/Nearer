@@ -161,7 +161,7 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
           {!mask && (
             <div className="mt-2 flex justify-center gap-1.5" role="radiogroup" aria-label="Shape">
               {(["circle", "rounded"] as const).map((s) => (
-                <button key={s} type="button" role="radio" aria-checked={shape === s} onClick={() => setShape(s)} className={cn("press h-10 rounded-full px-4 text-callout font-semibold", shape === s ? "bg-black text-white" : "bg-surface")}>
+                <button key={s} type="button" role="radio" aria-checked={shape === s} onClick={() => setShape(s)} className={cn("press h-10 rounded-full px-4 text-callout font-semibold", shape === s ? "bg-accent text-accent-ink" : "bg-surface")}>
                   {s === "circle" ? "Circle" : "Rounded"}
                 </button>
               ))}

@@ -39,7 +39,7 @@ export default function NearbyPage() {
       {failed && !data ? (
         <div className="rounded-card bg-surface px-4 py-8 text-center">
           <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load the list right now.</p>
-          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-white" onClick={() => void reload()}>
+          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-surface" onClick={() => void reload()}>
             Try again
           </Button>
         </div>
@@ -84,7 +84,7 @@ function HomeNearby({ home, helpers, onChange }: { home: Household; helpers: Hel
             {city} · <span className="tnum">{helpers.length}/{MAX_NEARBY}</span>
           </p>
         </div>
-        <a href={`tel:${sos}`} className="press flex h-10 items-center gap-1.5 rounded-full bg-black px-3.5 text-callout font-semibold text-white no-underline" aria-label={`Emergency services in ${city}: ${sos}`}>
+        <a href={`tel:${sos}`} className="press flex h-10 items-center gap-1.5 rounded-full bg-accent px-3.5 text-callout font-semibold text-accent-ink no-underline" aria-label={`Emergency services in ${city}: ${sos}`}>
           <span className="h-2 w-2 rounded-full bg-[#d92d20]" aria-hidden="true" />
           {sos}
         </a>
@@ -98,7 +98,7 @@ function HomeNearby({ home, helpers, onChange }: { home: Household; helpers: Hel
           {helpers.map((h, i) => (
             <li key={h.id}>
               <div className="flex items-center gap-2 py-2.5 pl-3 pr-1.5">
-                <span className={cn("tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-callout font-bold", i === 0 ? "bg-black text-white" : "bg-white text-ink")} aria-label={`Number ${i + 1}`}>
+                <span className={cn("tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-callout font-bold", i === 0 ? "bg-accent text-accent-ink" : "bg-surface text-ink")} aria-label={`Number ${i + 1}`}>
                   {i + 1}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -107,10 +107,10 @@ function HomeNearby({ home, helpers, onChange }: { home: Household; helpers: Hel
                 </span>
                 {h.phone && (
                   <>
-                    <a href={waHref(h.phone)} target="_blank" rel="noreferrer" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-ink" aria-label={`WhatsApp ${h.name}`}>
+                    <a href={waHref(h.phone)} target="_blank" rel="noreferrer" className="press grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-ink" aria-label={`WhatsApp ${h.name}`}>
                       <Icon name="whatsapp" size={17} />
                     </a>
-                    <a href={telHref(h.phone)} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black text-white" aria-label={`Call ${h.name}, number ${i + 1}`}>
+                    <a href={telHref(h.phone)} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink" aria-label={`Call ${h.name}, number ${i + 1}`}>
                       <Icon name="phone" size={18} />
                     </a>
                   </>
@@ -171,7 +171,7 @@ function NearbyForm({ helper, forMemberId, onDone }: { helper?: Helper; forMembe
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const phoneOk = isDialable(phone);
-  const input = "h-12 w-full rounded-[14px] bg-white px-4 text-body outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30";
+  const input = "h-12 w-full rounded-[14px] bg-surface px-4 text-body outline-none ring-1 ring-[var(--line)] focus:ring-2 focus:ring-black/30";
   const save = async () => {
     setBusy(true);
     const fields = { name: name.trim(), role, phone: phone.trim(), note: note.trim(), emergency: true, consent };
@@ -215,7 +215,7 @@ function NearbyForm({ helper, forMemberId, onDone }: { helper?: Helper; forMembe
         <Button className="h-11 flex-1 text-body" disabled={busy || !name.trim() || !consent || !phoneOk} onClick={() => void save()}>
           {helper ? "Save" : "Add"}
         </Button>
-        <Button variant="secondary" className="h-11 flex-1 !bg-white text-body" onClick={() => void onDone()}>
+        <Button variant="secondary" className="h-11 flex-1 !bg-surface text-body" onClick={() => void onDone()}>
           Cancel
         </Button>
       </div>

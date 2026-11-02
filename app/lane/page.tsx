@@ -150,16 +150,16 @@ export default function LanePage() {
 
       {!loading && (people.length > 1 || kidsOnly) && (
         <div className="no-scrollbar -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Show memories from">
-          <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-medium", who === null && !kidsOnly ? "bg-ink text-white" : "bg-surface")}>
+          <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-medium", who === null && !kidsOnly ? "bg-accent text-accent-ink" : "bg-surface")}>
             Everyone
           </button>
           {kidsOnly && (
-            <button type="button" role="radio" aria-checked onClick={() => setKidsOnly(false)} className="press h-10 shrink-0 rounded-full bg-ink px-4 text-callout font-medium text-white">
+            <button type="button" role="radio" aria-checked onClick={() => setKidsOnly(false)} className="press h-10 shrink-0 rounded-full bg-accent px-4 text-callout font-medium text-accent-ink">
               From the kids
             </button>
           )}
           {people.map((m) => (
-            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", who === m.id ? "bg-ink text-white" : "bg-surface")}>
+            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", who === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
               <Avatar src={memberPhoto(m)} name={callName(m)} size={32} />
               {callName(m)}
             </button>

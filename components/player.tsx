@@ -279,8 +279,8 @@ function MiniPlayer() {
         <button type="button" onClick={closePlayer} aria-label="Stop and close" className="press grid h-11 w-11 place-items-center rounded-full text-ink-soft">
           <Icon name="close" size={20} />
         </button>
-        <span className="absolute inset-x-4 bottom-0 h-[2px] rounded-full bg-black/5" aria-hidden="true">
-          <span className="block h-full rounded-full bg-marigold" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
+        <span className="absolute inset-x-4 bottom-0 h-[2px] rounded-full bg-tint" aria-hidden="true">
+          <span className="block h-full rounded-full bg-white" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }} />
         </span>
       </div>
     </div>

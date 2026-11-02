@@ -132,7 +132,7 @@ function PortraitInner() {
           <p className="m-0 mt-3 text-title font-semibold">Kept for the family</p>
           <p className="mx-auto mt-1 max-w-[300px] text-body text-ink-soft">It&rsquo;s in Memory Lane, marked &ldquo;Painted by Muse&rdquo;.</p>
           <div className="mt-5 flex justify-center gap-2">
-            <Link href="/lane" className="press flex h-12 items-center rounded-full bg-black px-6 text-body font-semibold text-white no-underline">
+            <Link href="/lane" className="press flex h-12 items-center rounded-full bg-accent px-6 text-body font-semibold text-accent-ink no-underline">
               Open Memory Lane
             </Link>
           </div>
@@ -197,7 +197,7 @@ function PortraitInner() {
                   aria-pressed={on}
                   disabled={!usable}
                   onClick={() => toggle(m.id)}
-                  className={cn("press relative flex w-full flex-col items-center rounded-[20px] px-1 pb-2.5 pt-3", on ? "bg-black text-white" : "bg-surface text-ink", !usable && "opacity-45")}
+                  className={cn("press relative flex w-full flex-col items-center rounded-[20px] px-1 pb-2.5 pt-3", on ? "bg-accent text-accent-ink" : "bg-surface text-ink", !usable && "opacity-45")}
                 >
                   <span className="relative">
                     <Avatar src={srcFor(m)} name={callName(m)} size={48} />
@@ -241,7 +241,7 @@ function PortraitInner() {
       <SectionTitle>Style</SectionTitle>
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Style">
         {PORTRAIT_STYLES.map((s) => (
-          <button key={s} type="button" role="radio" aria-checked={style === s} onClick={() => setStyle(s)} className={cn("press flex items-center gap-3 rounded-[20px] p-2.5 text-left", style === s ? "bg-black text-white" : "bg-surface text-ink")}>
+          <button key={s} type="button" role="radio" aria-checked={style === s} onClick={() => setStyle(s)} className={cn("press flex items-center gap-3 rounded-[20px] p-2.5 text-left", style === s ? "bg-accent text-accent-ink" : "bg-surface text-ink")}>
             <span className="h-11 w-11 shrink-0 rounded-[12px]" style={{ background: SWATCH[s] }} aria-hidden="true" />
             <span className="min-w-0">
               <span className="block text-body font-semibold leading-tight">{STYLE_LOOK[s].label}</span>

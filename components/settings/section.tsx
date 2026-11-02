@@ -66,7 +66,7 @@ export function SettingsSection<T>({
           disabled={!dirty || saving}
           onClick={() => void save(onSave)}
           aria-label={`Save ${title}`}
-          className="press h-11 min-w-[88px] rounded-full bg-ink px-6 text-body font-semibold text-white disabled:opacity-35"
+          className="press h-11 min-w-[88px] rounded-full bg-accent px-6 text-body font-semibold text-accent-ink disabled:opacity-35"
         >
           {saving ? "Saving…" : justSaved ? "Saved" : "Save"}
         </button>

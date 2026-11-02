@@ -143,7 +143,7 @@ export function ReactionBar({ cardId, tone = "light", onReply }: { cardId: strin
               title={labelFor(kind)}
               className={cn(
                 "press flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-body font-medium",
-                on ? (glass ? "bg-white text-black" : "bg-black text-white") : glass ? "text-white" : "text-ink",
+                on ? (glass ? "bg-white text-black" : "bg-accent text-accent-ink") : glass ? "text-accent-ink" : "text-ink",
               )}
             >
               <ReactionGlyph kind={kind} selected={on} size={22} />

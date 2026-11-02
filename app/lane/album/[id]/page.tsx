@@ -53,7 +53,7 @@ export default function AlbumPage() {
   return (
     <div>
       <RoomHeader
-        title=""
+        title={album.title}
         action={
           <ActionMenu
             label="Album options"
@@ -74,10 +74,10 @@ export default function AlbumPage() {
 
       {renaming && (
         <div className="mt-3 space-y-2 rounded-card bg-surface p-3">
-          <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} className="h-[48px] w-full rounded-[14px] bg-white px-4 text-body font-semibold outline-none" aria-label="Album name" />
+          <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} className="h-[48px] w-full rounded-[14px] bg-surface px-4 text-body font-semibold outline-none" aria-label="Album name" />
           <div className="flex flex-wrap gap-1.5">
             {EVENT_KINDS.map((e) => (
-              <button key={e} type="button" aria-pressed={kind === e} onClick={() => setKind(e)} className={cn("press h-9 rounded-full px-3 text-footnote", kind === e ? "bg-black text-white" : "bg-white")}>
+              <button key={e} type="button" aria-pressed={kind === e} onClick={() => setKind(e)} className={cn("press h-9 rounded-full px-3 text-footnote", kind === e ? "bg-accent text-accent-ink" : "bg-surface")}>
                 {EVENT_LABEL[e]}
               </button>
             ))}
@@ -86,7 +86,7 @@ export default function AlbumPage() {
             <Button className="h-11 flex-1" disabled={!title.trim()} onClick={async () => { await act({ action: "rename", title: title.trim(), event: kind }); setRenaming(false); }}>
               Save
             </Button>
-            <Button variant="secondary" className="h-11 flex-1 !bg-white" onClick={() => setRenaming(false)}>
+            <Button variant="secondary" className="h-11 flex-1 !bg-surface" onClick={() => setRenaming(false)}>
               Cancel
             </Button>
           </div>
@@ -98,7 +98,7 @@ export default function AlbumPage() {
           <ul className="m-0 list-none space-y-1.5 p-0">
             {others.map((o) => (
               <li key={o.id}>
-                <button type="button" onClick={async () => { await postJson("/api/albums", { action: "merge", albumId: album.id, intoAlbumId: o.id }); router.replace(`/lane/album/${o.id}${home === "/rituals" ? "?from=rituals" : ""}`); }} className="press flex h-11 w-full items-center justify-between rounded-[14px] bg-white px-4 text-left text-body">
+                <button type="button" onClick={async () => { await postJson("/api/albums", { action: "merge", albumId: album.id, intoAlbumId: o.id }); router.replace(`/lane/album/${o.id}${home === "/rituals" ? "?from=rituals" : ""}`); }} className="press flex h-11 w-full items-center justify-between rounded-[14px] bg-surface px-4 text-left text-body">
                   {o.title}
                   <span className="text-footnote text-ink-faint">{albumDates(o)}</span>
                 </button>
@@ -190,7 +190,7 @@ function Slideshow({ photos, title, onClose }: { photos: Card[]; title: string; 
   }, [onClose]);
   const src = cardImage(c);
   return (
-    <m.div className="fixed inset-0 z-50 bg-black text-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${title}, slideshow`}>
+    <m.div className="fixed inset-0 z-50 bg-accent text-accent-ink" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={`${title}, slideshow`}>
       <button type="button" className="absolute inset-0" aria-label={paused ? "Play" : "Pause"} onClick={() => setPaused((p) => !p)}>
         <AnimatePresence mode="popLayout">
           <m.div key={c.id} className="absolute inset-0" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1.0 }} exit={{ opacity: 0 }} transition={{ opacity: { duration: 0.8 }, scale: { duration: 4.2, ease: "linear" } }}>
@@ -200,7 +200,7 @@ function Slideshow({ photos, title, onClose }: { photos: Card[]; title: string; 
       </button>
       <div className="pointer-events-none absolute inset-x-0 top-0 flex gap-1 px-4" style={{ paddingTop: "calc(12px + env(safe-area-inset-top))" }}>
         {photos.map((p, n) => (
-          <span key={p.id} className={cn("h-1 flex-1 rounded-full", n <= i ? "bg-white" : "bg-white/30")} />
+          <span key={p.id} className={cn("h-1 flex-1 rounded-full", n <= i ? "bg-surface" : "bg-white/30")} />
         ))}
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,.7))] px-4 pb-8 pt-16" style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}>

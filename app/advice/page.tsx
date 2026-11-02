@@ -56,7 +56,7 @@ export default function AdvicePage() {
       {failed && !data ? (
         <div className="rounded-card bg-surface px-4 py-8 text-center">
           <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load advice right now.</p>
-          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-white" onClick={() => void reload()}>
+          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-surface" onClick={() => void reload()}>
             Try again
           </Button>
         </div>
@@ -66,17 +66,17 @@ export default function AdvicePage() {
         <>
           <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1" role="radiogroup" aria-label="Shelves">
             {!parent && (
-              <button type="button" onClick={() => setAsking((v) => !v)} aria-expanded={asking} className={cn("press flex h-9 shrink-0 items-center gap-1 rounded-full px-3.5 text-callout font-semibold", asking ? "bg-black text-white" : "frost")}>
+              <button type="button" onClick={() => setAsking((v) => !v)} aria-expanded={asking} className={cn("press flex h-9 shrink-0 items-center gap-1 rounded-full px-3.5 text-callout font-semibold", asking ? "bg-accent text-accent-ink" : "frost")}>
                 <Icon name="plus" size={15} /> Ask
               </button>
             )}
             {shelves.length > 1 && (
-              <button type="button" role="radio" aria-checked={!shelf} onClick={() => setShelf(null)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", !shelf ? "bg-black text-white" : "bg-surface")}>
+              <button type="button" role="radio" aria-checked={!shelf} onClick={() => setShelf(null)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", !shelf ? "bg-accent text-accent-ink" : "bg-surface")}>
                 All <span className={cn("tnum ml-1", !shelf ? "text-white/70" : "text-ink-faint")}>{items.length}</span>
               </button>
             )}
             {shelves.map((s) => (
-              <button key={s.id} type="button" role="radio" aria-checked={shelf === s.id} onClick={() => setShelf(shelf === s.id ? null : s.id)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", shelf === s.id ? "bg-black text-white" : "bg-surface")}>
+              <button key={s.id} type="button" role="radio" aria-checked={shelf === s.id} onClick={() => setShelf(shelf === s.id ? null : s.id)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", shelf === s.id ? "bg-accent text-accent-ink" : "bg-surface")}>
                 {s.label} <span className={cn("tnum ml-1", shelf === s.id ? "text-white/70" : "text-ink-faint")}>{s.items.length}</span>
               </button>
             ))}
@@ -175,7 +175,7 @@ function AskForm({ initial, onDone }: { initial: string; onDone: () => Promise<v
     <div className="frost mt-3 space-y-2.5 rounded-[22px] p-3">
       <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3" role="radiogroup" aria-label="Ask whom">
         {elders.map((m) => (
-          <button key={m.id} type="button" role="radio" aria-checked={to === m.id} onClick={() => setTo(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-2 rounded-full pl-1 pr-3.5 text-callout font-semibold", to === m.id ? "bg-black text-white" : "bg-surface")}>
+          <button key={m.id} type="button" role="radio" aria-checked={to === m.id} onClick={() => setTo(m.id)} className={cn("press flex h-10 shrink-0 items-center gap-2 rounded-full pl-1 pr-3.5 text-callout font-semibold", to === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
             <Avatar src={memberPhoto(m)} name={callName(m)} size={30} />
             {callName(m)}
           </button>
@@ -190,8 +190,8 @@ function AskForm({ initial, onDone }: { initial: string; onDone: () => Promise<v
       </select>
       {spec?.note && <p className="m-0 px-1 text-caption text-ink-faint">{spec.note}</p>}
       <div className="flex gap-2">
-        <input value={text} onChange={(e) => setText(e.target.value.slice(0, 180))} onKeyDown={(e) => e.key === "Enter" && void send()} placeholder={spec?.placeholder || "What would you like to ask?"} aria-label={blessing ? "A blessing for what?" : "Your question"} className="h-12 min-w-0 flex-1 rounded-[14px] bg-white px-4 text-body outline-none ring-1 ring-black/5 focus:ring-2 focus:ring-black/30" />
-        <button type="button" disabled={busy || text.trim().length < 5} onClick={() => void send()} aria-label="Send" className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-black text-white disabled:opacity-40">
+        <input value={text} onChange={(e) => setText(e.target.value.slice(0, 180))} onKeyDown={(e) => e.key === "Enter" && void send()} placeholder={spec?.placeholder || "What would you like to ask?"} aria-label={blessing ? "A blessing for what?" : "Your question"} className="h-12 min-w-0 flex-1 rounded-[14px] bg-surface px-4 text-body outline-none ring-1 ring-[var(--line)] focus:ring-2 focus:ring-black/30" />
+        <button type="button" disabled={busy || text.trim().length < 5} onClick={() => void send()} aria-label="Send" className="press grid h-12 w-12 shrink-0 place-items-center rounded-full bg-accent text-accent-ink disabled:opacity-40">
           <Icon name="send" size={18} />
         </button>
       </div>

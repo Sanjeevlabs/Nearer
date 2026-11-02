@@ -115,8 +115,8 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                     {wishable.map((o) => {
                       const on = what?.kind === "occasion" && what.o.key === o.key;
                       return (
-                        <button key={o.key} type="button" aria-pressed={on} onClick={() => choose({ kind: "occasion", o })} className={cn("press flex w-[136px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
-                          {o.memberId ? <Avatar src={memberPhoto(members.find((m) => m.id === o.memberId))} name={o.label} size={30} /> : <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-black/[.05]")}><Icon name="lamp" size={16} /></span>}
+                        <button key={o.key} type="button" aria-pressed={on} onClick={() => choose({ kind: "occasion", o })} className={cn("press flex w-[136px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-deep text-white" : "bg-white")}>
+                          {o.memberId ? <Avatar src={memberPhoto(members.find((m) => m.id === o.memberId))} name={o.label} size={30} /> : <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-tint")}><Icon name="lamp" size={16} /></span>}
                           <span className="mt-2 line-clamp-2 text-callout font-semibold leading-tight">{o.label}</span>
                           <span className={cn("mt-0.5 text-caption", on ? "text-white/60" : "text-ink-faint")}>{whenLabel(o.days, o.date)}</span>
                         </button>
@@ -125,8 +125,8 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
                     {OTHER.map((x) => {
                       const on = what?.kind === "other" && what.type === x.type;
                       return (
-                        <button key={x.type} type="button" aria-pressed={on} onClick={() => choose({ kind: "other", type: x.type })} className={cn("press flex w-[112px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
-                          <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-black/[.05]")}><Icon name={x.icon} size={16} /></span>
+                        <button key={x.type} type="button" aria-pressed={on} onClick={() => choose({ kind: "other", type: x.type })} className={cn("press flex w-[112px] shrink-0 flex-col items-start rounded-[20px] p-3 text-left", on ? "bg-deep text-white" : "bg-white")}>
+                          <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full", on ? "bg-white/15" : "bg-tint")}><Icon name={x.icon} size={16} /></span>
                           <span className="mt-2 text-callout font-semibold leading-tight">{eventTypeLabel(x.type)}</span>
                         </button>
                       );
@@ -139,12 +139,12 @@ export function PlanSheet({ open, onClose, occasions, members, viewer, preset, o
 
                 <Step n={2} label="For whom">
                   <div className="no-scrollbar -mx-4 flex gap-1 overflow-x-auto px-4" role="radiogroup" aria-label="For whom">
-                    <button type="button" role="radio" aria-checked={forId === null} onClick={() => setForId(null)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-caption font-semibold", forId === null ? "bg-[#1c1b1a] text-white" : "")}>
+                    <button type="button" role="radio" aria-checked={forId === null} onClick={() => setForId(null)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-caption font-semibold", forId === null ? "bg-deep text-white" : "")}>
                       <span className={cn("grid h-11 w-11 place-items-center rounded-full", forId === null ? "bg-white/15" : "bg-white")}><Icon name="gather" size={20} /></span>
                       Everyone
                     </button>
                     {members.map((m) => (
-                      <button key={m.id} type="button" role="radio" aria-checked={forId === m.id} onClick={() => setForId(m.id)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-caption font-semibold", forId === m.id ? "bg-[#1c1b1a] text-white" : "")}>
+                      <button key={m.id} type="button" role="radio" aria-checked={forId === m.id} onClick={() => setForId(m.id)} className={cn("press flex w-[64px] shrink-0 flex-col items-center gap-1 rounded-[16px] p-1.5 text-caption font-semibold", forId === m.id ? "bg-deep text-white" : "")}>
                         <Avatar src={memberPhoto(m)} name={callName(m)} size={44} />
                         <span className="w-full truncate text-center">{m.id === viewer.id ? "You" : callName(m)}</span>
                       </button>
@@ -192,7 +192,7 @@ function Step({ n, label, children }: { n: number; label: string; children: Reac
   return (
     <div className="mt-4 first:mt-0">
       <p className="m-0 mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.08em] text-ink-faint">
-        <span className="tnum grid h-5 w-5 place-items-center rounded-full bg-black/[.06] text-caption">{n}</span>
+        <span className="tnum grid h-5 w-5 place-items-center rounded-full bg-tint text-caption">{n}</span>
         {label}
       </p>
       {children}
@@ -202,7 +202,7 @@ function Step({ n, label, children }: { n: number; label: string; children: Reac
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" aria-pressed={on} onClick={onClick} className={cn("press h-10 rounded-full px-4 text-callout font-semibold", on ? "bg-[#1c1b1a] text-white" : "bg-white")}>
+    <button type="button" aria-pressed={on} onClick={onClick} className={cn("press h-10 rounded-full px-4 text-callout font-semibold", on ? "bg-deep text-white" : "bg-white")}>
       {children}
     </button>
   );

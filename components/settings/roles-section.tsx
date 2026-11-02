@@ -90,7 +90,7 @@ export function PeopleAndRoles({ onMessage }: { onMessage: (m: string) => void }
                         aria-checked={on}
                         disabled={busy === m.id}
                         onClick={() => pick(m, a)}
-                        className={cn("press h-11 shrink-0 rounded-full px-4 text-footnote font-semibold disabled:opacity-40", on ? "bg-ink text-white" : "bg-white text-ink")}
+                        className={cn("press h-11 shrink-0 rounded-full px-4 text-footnote font-semibold disabled:opacity-40", on ? "bg-accent text-accent-ink" : "bg-white text-ink")}
                       >
                         {ACCESS_LABEL[a].label}
                       </button>

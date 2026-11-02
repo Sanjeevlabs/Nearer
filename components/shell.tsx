@@ -82,8 +82,8 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
       <ul className="m-0 list-none space-y-1.5 p-0">
         {all.map((g) => (
           <li key={g.id}>
-            <Link href={roomHref(g)} onClick={onClose} data-room={g.id} className="press flex w-full items-center gap-3.5 rounded-[20px] bg-white/80 px-3.5 py-3 text-left text-ink no-underline ring-1 ring-black/[.05]">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[.05]">
+            <Link href={roomHref(g)} onClick={onClose} data-room={g.id} className="press flex w-full items-center gap-3.5 rounded-tile bg-surface px-4 py-3 text-left text-ink no-underline" style={{ boxShadow: "var(--surface-edge)" }}>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well">
                 <Icon name={g.icon as IconName} size={20} strokeWidth={1.8} />
               </span>
               <span className="min-w-0 flex-1">
@@ -146,11 +146,11 @@ function Dock() {
           >
             <div data-ui="dock" className="frost glass-pill flex items-center gap-1 p-1.5">
               {others.length ? (
-                <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice note to ${callName(pagePerson)}` : "Voice note"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-black text-white">
+                <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice note to ${callName(pagePerson)}` : "Voice note"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink">
                   <Icon name="mic" size={23} strokeWidth={1.9} />
                 </button>
               ) : (
-                <button type="button" onClick={() => setInviting(true)} aria-label="Invite family" className="press grid h-12 w-12 place-items-center rounded-full bg-black text-white">
+                <button type="button" onClick={() => setInviting(true)} aria-label="Invite family" className="press grid h-12 w-12 place-items-center rounded-full bg-accent text-accent-ink">
                   <Icon name="plus" size={23} />
                 </button>
               )}

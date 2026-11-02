@@ -90,8 +90,8 @@ function Stories() {
           {toMe.map((q) => {
             const by = q.askedBy ? byId(q.askedBy) : undefined;
             return (
-              <div key={q.id} className="rounded-card bg-[#fff6e6] p-4">
-                <p className="m-0 text-footnote font-medium text-[#8a4b00]">{callName(by)} asked you</p>
+              <div key={q.id} className="rounded-card bg-well p-4">
+                <p className="m-0 text-footnote font-medium text-ink-soft">{callName(by)} asked you</p>
                 <p className="voice m-0 mt-1 text-title leading-snug">&ldquo;{q.text}&rdquo;</p>
                 <div className="mt-3 flex gap-2">
                   <Button className="flex-1" onClick={() => openAdd("voice", { kind: "story", questionId: q.id, prompt: q.text })}>
@@ -110,7 +110,7 @@ function Stories() {
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         {canTell && (
-          <button type="button" onClick={() => openAdd("voice", { kind: "story" })} className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-black text-callout font-semibold text-white">
+          <button type="button" onClick={() => openAdd("voice", { kind: "story" })} className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-accent text-callout font-semibold text-accent-ink">
             <Icon name="mic" size={18} />
             Tell a story
           </button>
@@ -174,7 +174,7 @@ function Stories() {
                     <button type="button" data-card={card.id} onClick={() => (on ? toggle() : play(card))} className="press block w-full text-left" aria-label={`${on && isPlaying ? "Pause" : "Play"} ${s.title}, told by ${callName(teller)}`}>
                       <span className="relative block">
                         <StoryCover theme={s.theme} className="h-[136px] rounded-[22px]" />
-                        <span className="absolute bottom-2 right-2 grid h-10 w-10 place-items-center rounded-full bg-white text-ink shadow-frost">
+                        <span className="absolute bottom-2 right-2 grid h-10 w-10 place-items-center rounded-full bg-surface text-ink shadow-frost">
                           <Icon name={on && isPlaying ? "pause" : "play"} size={18} />
                         </span>
                       </span>
@@ -266,7 +266,7 @@ function OnlyYouCanTell({ onTell }: { onTell: (prompt: string) => void }) {
                 <span className="block text-body font-semibold leading-snug">{i.title}</span>
                 <span className="mt-0.5 block text-footnote text-ink-soft">{i.beats[0]}</span>
               </span>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black text-white" aria-hidden="true">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink" aria-hidden="true">
                 <Icon name="mic" size={18} />
               </span>
               <span className="sr-only">Record this story</span>
@@ -336,7 +336,7 @@ function AskStory({ onDone }: { onDone: () => void }) {
       <p className="m-0 mb-2 text-footnote font-medium text-ink-soft">Who should tell it?</p>
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
         {tellers.map((x) => (
-          <button key={x.id} type="button" aria-pressed={to === x.id} onClick={() => setTo(x.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", to === x.id ? "bg-black text-white" : "bg-white")}>
+          <button key={x.id} type="button" aria-pressed={to === x.id} onClick={() => setTo(x.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", to === x.id ? "bg-accent text-accent-ink" : "bg-surface")}>
             <Avatar src={memberPhoto(x)} name={callName(x)} size={34} />
             {callName(x)}
           </button>
@@ -345,12 +345,12 @@ function AskStory({ onDone }: { onDone: () => void }) {
       <p className="m-0 mb-2 mt-4 text-footnote font-medium text-ink-soft">A story about…</p>
       <div className="flex flex-wrap gap-1.5">
         {ASK_ABOUT.map((a) => (
-          <button key={a} type="button" aria-pressed={about === a} onClick={() => setAbout(a)} className={cn("press rounded-full px-3 py-2 text-callout", about === a ? "bg-black text-white" : "bg-white")}>
+          <button key={a} type="button" aria-pressed={about === a} onClick={() => setAbout(a)} className={cn("press rounded-full px-3 py-2 text-callout", about === a ? "bg-accent text-accent-ink" : "bg-surface")}>
             {a}
           </button>
         ))}
       </div>
-      <input value={about} onChange={(e) => setAbout(e.target.value.slice(0, 80))} placeholder="or type anything" className="mt-3 h-12 w-full rounded-full bg-white px-5 text-body outline-none focus:ring-2 focus:ring-marigold" aria-label="What the story should be about" />
+      <input value={about} onChange={(e) => setAbout(e.target.value.slice(0, 80))} placeholder="or type anything" className="mt-3 h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold" aria-label="What the story should be about" />
       <Button
         className="mt-3 w-full"
         disabled={!to || about.trim().length < 2}
@@ -480,14 +480,14 @@ function EditStory({ story, onDone }: { story: Story; onDone: () => void }) {
         <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} className="mt-3 h-12 w-full rounded-[16px] bg-surface px-4 text-headline font-semibold outline-none" aria-label="Title" />
         <div className="mt-3 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Theme">
           {STORY_THEMES.map((t) => (
-            <button key={t} type="button" role="radio" aria-checked={theme === t} onClick={() => setTheme(t)} className={cn("press h-9 rounded-full px-3 text-footnote", theme === t ? "bg-black text-white" : "bg-surface")}>
+            <button key={t} type="button" role="radio" aria-checked={theme === t} onClick={() => setTheme(t)} className={cn("press h-9 rounded-full px-3 text-footnote", theme === t ? "bg-accent text-accent-ink" : "bg-surface")}>
               {THEME_LOOK[t].label}
             </button>
           ))}
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Ages">
           {STORY_AGES.map((a) => (
-            <button key={a} type="button" role="radio" aria-checked={ages === a} onClick={() => setAges(a)} className={cn("press h-9 rounded-full px-3 text-footnote", ages === a ? "bg-black text-white" : "bg-surface")}>
+            <button key={a} type="button" role="radio" aria-checked={ages === a} onClick={() => setAges(a)} className={cn("press h-9 rounded-full px-3 text-footnote", ages === a ? "bg-accent text-accent-ink" : "bg-surface")}>
               {AGE_LABEL[a]}
             </button>
           ))}

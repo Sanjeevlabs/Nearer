@@ -218,6 +218,21 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
             if page.get_by_text(re.compile(r"something went wrong|application error", re.I)).count():
                 problems.append(f"{person} {href}: error screen")
             page.wait_for_timeout(400)
+            # The header: the room's name beside the back chevron (lib/menu.ts, verbatim), the pills in the room's order, <= 104px.
+            if room:
+                head = page.locator("[data-ui=room-header]")
+                if head.count() == 0:
+                    problems.append(f"{person} {href}: no room header")
+                else:
+                    name = page.locator("[data-ui=room-header] h1").first.inner_text().strip()
+                    if name != room:
+                        problems.append(f"{person} {href}: header says {name!r}, the room is {room!r}")
+                    pills = page.locator("[data-ui=room-tabs] a").count()
+                    if (pills > 0) != (len(tabs) > 1):
+                        problems.append(f"{person} {href}: {pills} tab pills for a room with {len(tabs)} pages")
+                    h = head.first.bounding_box()
+                    if h and h["height"] > 104:
+                        problems.append(f"{person} {href}: header is {h['height']:.0f}px, over 104")
             fit_check(page, href, problems, person)
             dock_overlaps(page, href, problems, person)
     ctx.close()

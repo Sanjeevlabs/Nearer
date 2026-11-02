@@ -29,9 +29,10 @@ its controls (play, scrub, lyrics) and its tone (warm, intimate, never a feed).
 
 ## 3. Visual tokens
 
-- **Ground:** warm paper `#F7F5F1` (`--paper`); cards are white (`--card`, `--surface`) lifted by a soft shadow (`--card-shadow`) or a hairline (`--surface-edge`); fills inside a white card use `--well` `#F1EEE9`. Sheets and the dock are paper too, so white blocks read as cards everywhere. Text: `rgba(0,0,0,.88)` primary, `.60` secondary (≥ 4.5:1 on paper and white), `.42` tertiary (icons, decoration). Hairline `rgba(0,0,0,.08)`.
-- **Rooms:** 16px side gutter, cards full width or a 2-column grid that fills the row, 14-16px card padding, body text 15px. A room with nothing in it shows an empty state (a calm photo band, one line of why, one action) and what it can start next, never a lone sentence on blank paper.
-- **Signal:** marigold `#F5A524`, used only for live states: heard, playing now, recording. Never decorative.
+- **Ground:** neutral `#FAFAFA` (`--paper`); cards are pure white `--card`/`--surface`, lifted by a neutral hairline and a soft neutral shadow (`--card-shadow`, `--surface-edge`), 20-24px radius; fills inside a card use `--well` `#F2F2F2`, quiet fills on any ground use `--tint`. Sheets and the dock are paper too. Text: `--ink` `#111`, `--ink-soft` (64%, >= 4.5:1 on paper and cards), `--ink-faint` for icons and decoration. All greys are neutral (no warm tint). Dark mode (`prefers-color-scheme`) redefines the same tokens: paper `#0E0E0E`, cards `#181818`. Spacing is the 8pt grid (`--space-*`).
+- **One accent: black.** `--accent` `#111` with white text (18:1) carries primary buttons, the open tab pill, links, focus rings and selected states. Dark mode inverts it: `#F5F5F5` with black text (18:1). `bg-accent text-accent-ink` is the primary button; `bg-accent-soft` a quiet selected fill. `--deep` (`#1C1C1C`, dark `#262626`) is the dark panel (Today, a call, a live event).
+- **Petals:** the five colours of the mark appear only in the logo and a person's monogram fallback (`petalFor`). No coloured category accents elsewhere.
+- **Status:** green/amber dots for how someone is (`ALIVE_LOOK`), red for an alarm. Not brand colours.
 - **Per-card colour:** each photo card derives its tint and its shadow (`0 24px 50px -18px <dominant colour>`) from the photo, so the page gets colour from the family, not from the brand.
 - **Glass:** `rgba(255,255,255,.16)`, `backdrop-filter: blur(22px) saturate(1.7)`, `1px rgba(255,255,255,.32)` border, `inset 0 1px 0 rgba(255,255,255,.45)` highlight. Dock variant on white: `rgba(255,255,255,.62)`, hairline border, `0 12px 40px rgba(0,0,0,.14)`. Max two glass layers on screen at once (performance and legibility).
 - **Type:** Onest, weights 400/500/600/700. One semantic scale (`tailwind.config.ts`, `app/tokens.css`): `text-display` clamp(26-34px) for page and room titles only; `text-title` clamp(19-22px); `text-headline` 17px; `text-body` 15px; `text-callout` 14px; `text-footnote` 13px; `text-caption` 12px (the floor). No `text-[Npx]`. Fields stay 16px on phones (iOS zoom). Literata italic for spoken words only. Tabular numerals for durations. `scripts/walk.py` fails on sideways overflow, text over 34px outside `data-display`, and text under 12px at 360 and 390pt.
@@ -58,13 +59,13 @@ A floating glass **dock** at the bottom of Home:
 | Family | Family tree `/bond` · The Book `/book` · Advice `/advice` · Portrait `/portrait` (grown-ups only) |
 | Celebrations | Coming up `/gather` · Occasions `/rituals` · Visits `/together/visits` · Holidays `/together/holidays` · Play `/gather/play` |
 
-`lib/menu.ts` is the single source. Each tab is its own page with its own content, and no card shows on two tab pages: Memory Lane is the everyday photos and voices; what an occasion, a story, the Book or Advice holds stays there. Its title is the tab label (or a fuller one: Helpers → "Local helpers", Nearby → "Trusted nearby"), with the room's name above it (Kitchen too: KITCHEN over "Recipes"). The open tab always scrolls into view. Invite family opens a sheet in place; Settings is only behind your own photo. Pages outside the rooms (Safe & sound, Settings, a person, an event, an album) have no tab row.
+`lib/menu.ts` is the single source. Each tab is its own page with its own content, and no card shows on two tab pages: Memory Lane is the everyday photos and voices; what an occasion, a story, the Book or Advice holds stays there. The header (`RoomHeader`, sticky, 93px) has two rows: back chevron + the **room's name** ("Family", "Care", "Memories", "Kitchen", "Celebrations", verbatim from `lib/menu.ts`) in the title size, then the room's pages as a scrollable pill row with the open one filled with the accent. A one-page room (Kitchen) has the first row only. A page opened from a room (a recipe, an album, a person, Settings, Send) shows back + its own title. The open tab always scrolls into view. Invite family opens a sheet in place; Settings is only behind your own photo. Pages outside the rooms (Safe & sound, Settings, a person, an event, an album) have no tab row.
 
 **Why not tabs.** Tabs give five destinations equal weight and turn the app into a utility. Nearer has one loop, so it gets one big button.
 
 **What it costs.** Rooms are one extra tap away. Mitigation: each room surfaces on Home as content with a door into it (the next occasion, the next celebration, a memory from years ago).
 
-Inside a room: a large title, a back chevron, no dock. Rooms are places you visit, then return to the courtyard from.
+Inside a room: the two-row header, no dock. Rooms are places you visit, then return to the courtyard from.
 
 ## 5. Screen map
 

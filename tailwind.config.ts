@@ -9,11 +9,16 @@ const config: Config = {
         paper: "var(--paper)",
         card: "var(--card)",
         well: "var(--well)",
+        tint: "var(--tint)",
+        deep: "var(--deep)",
         surface: "var(--surface)",
         ink: "var(--ink)",
         "ink-soft": "var(--ink-soft)",
         line: "var(--line)",
         accent: "var(--accent)",
+        "accent-ink": "var(--accent-ink)",
+        "accent-soft": "var(--accent-soft)",
+        "accent-soft-ink": "var(--accent-soft-ink)",
         espresso: "var(--espresso)",
         "espresso-ink": "var(--espresso-ink)",
         "ink-faint": "var(--ink-faint)",
@@ -22,7 +27,7 @@ const config: Config = {
       // Semantic type scale (docs/DESIGN.md): mobile-first, fluid where it matters. Never below 12px.
       fontSize: {
         display: ["var(--text-display)", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
-        title: ["var(--text-title)", { lineHeight: "1.25", letterSpacing: "-0.01em" }],
+        title: ["var(--text-title)", { lineHeight: "1.25", letterSpacing: "-0.015em" }],
         headline: ["var(--text-headline)", { lineHeight: "1.3" }],
         body: ["var(--text-body)", { lineHeight: "1.45" }],
         callout: ["var(--text-callout)", { lineHeight: "1.4" }],
@@ -39,6 +44,7 @@ const config: Config = {
         card: "var(--radius-card)",
         hero: "var(--radius-hero)",
         cover: "var(--radius-cover)",
+        tile: "var(--radius-tile)",
         pill: "var(--radius-pill)",
       },
       boxShadow: {

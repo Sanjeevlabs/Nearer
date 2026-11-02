@@ -42,7 +42,7 @@ function AppCategories({ tz, name }: { tz: string | null | undefined; name: stri
             <ul className="m-0 list-none p-0">
               {c.apps.map((a) => (
                 <li key={a.url}>
-                  <a href={a.url} target="_blank" rel="noopener noreferrer" aria-label={`${a.name} (opens ${host(a.url)})`} className="press -mx-1 flex min-h-[44px] items-center gap-2 rounded-[12px] px-1 text-ink no-underline hover:bg-black/[.03]">
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" aria-label={`${a.name} (opens ${host(a.url)})`} className="press -mx-1 flex min-h-[44px] items-center gap-2 rounded-[12px] px-1 text-ink no-underline hover:bg-tint">
                     <span className="grid h-7 w-7 shrink-0 place-items-center rounded-[9px] bg-well text-caption font-bold text-ink-soft" aria-hidden="true">
                       {a.name.charAt(0)}
                     </span>
@@ -84,7 +84,7 @@ function Send() {
       {people.length > 1 && (
         <div className="no-scrollbar -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Send to">
           {people.map((m) => (
-            <button key={m.id} type="button" role="radio" aria-checked={m.id === forMemberId} onClick={() => pick(m.id)} className={cn("press flex h-11 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", m.id === forMemberId ? "bg-ink text-white" : "bg-card shadow-card")}>
+            <button key={m.id} type="button" role="radio" aria-checked={m.id === forMemberId} onClick={() => pick(m.id)} className={cn("press flex h-11 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", m.id === forMemberId ? "bg-accent text-accent-ink" : "bg-card shadow-card")}>
               <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
               {callName(m)}
             </button>

@@ -66,7 +66,7 @@ export function ProfileSection({ onMessage }: { onMessage: (m: string) => void }
       <div className="flex items-center gap-4">
         <button type="button" onClick={() => input.current?.click()} disabled={busy} className="press relative h-16 w-16 shrink-0 rounded-full" aria-label="Change your photo">
           <Avatar src={src} name={form.draft.firstName || viewer.firstName} size={64} ring />
-          <span className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full bg-black text-white">
+          <span className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full bg-accent text-accent-ink">
             <Icon name="camera" size={14} />
           </span>
         </button>
@@ -167,7 +167,7 @@ function LanguagePicker({ value, onPick }: { value: SupportedLang; onPick: (code
                     setOpen(false);
                     setQ("");
                   }}
-                  className={cn("press flex h-12 w-full items-center justify-between rounded-[14px] px-3 text-start", l.code === value && "bg-black text-white")}
+                  className={cn("press flex h-12 w-full items-center justify-between rounded-[14px] px-3 text-start", l.code === value && "bg-accent text-accent-ink")}
                 >
                   <span className="text-body font-medium" dir={"rtl" in l && l.rtl ? "rtl" : undefined}>
                     {l.native}
@@ -280,7 +280,7 @@ function NudgeForm({ initial, hasEmail, reload, onMessage }: { initial: NudgeDra
       <div className="mt-3 rounded-[22px] bg-surface px-4 py-4">
         <span className="block text-body font-medium">Nudges</span>
         <span className="block text-footnote text-ink-soft">Small notes like &ldquo;Maa heard your voice note&rdquo;. Never more than three a week.</span>
-        <div role="group" aria-label="Nudges" className="mt-3 grid grid-cols-3 gap-1 rounded-full bg-black/[.05] p-1">
+        <div role="group" aria-label="Nudges" className="mt-3 grid grid-cols-3 gap-1 rounded-full bg-tint p-1">
           {NUDGE_CHOICES.map(([label, n]) => (
             <button key={label} type="button" aria-pressed={d.maxPerWeek === n} onClick={() => form.set({ maxPerWeek: n })} className={cn("press h-11 rounded-full text-body font-semibold", d.maxPerWeek === n ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
               {label}

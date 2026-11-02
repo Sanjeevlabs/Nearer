@@ -99,7 +99,7 @@ export function TraditionsSheet({
                     aria-checked={on}
                     disabled={!canEdit}
                     onClick={() => toggleTradition(c)}
-                    className={cn("press flex h-12 items-center gap-2 rounded-[16px] px-4 text-left text-body font-semibold disabled:opacity-60", on ? "bg-ink text-white" : "bg-white text-ink")}
+                    className={cn("press flex h-12 items-center gap-2 rounded-[16px] px-4 text-left text-body font-semibold disabled:opacity-60", on ? "bg-accent text-accent-ink" : "bg-white text-ink")}
                   >
                     <span className="min-w-0 flex-1">{c.label}</span>
                     <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-full", on ? "bg-white text-black" : "ring-1 ring-black/20")} aria-hidden="true">

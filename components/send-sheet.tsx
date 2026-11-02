@@ -267,7 +267,7 @@ function Body({
         </span>
         <p className="m-0 text-body font-semibold">Connect your {step.name} account</p>
         <p className="m-0 mx-auto mt-1 max-w-[300px] text-callout text-ink-soft">Orders are placed from your own account. Nearer never sees your payment details.</p>
-        <a href={`/api/partners/${encodeURIComponent(step.account)}/connect`} className="press mx-auto mt-5 flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-black px-7 text-body font-semibold text-white no-underline">
+        <a href={`/api/partners/${encodeURIComponent(step.account)}/connect`} className="press mx-auto mt-5 flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-accent px-7 text-body font-semibold text-accent-ink no-underline">
           Connect {step.name}
         </a>
       </div>
@@ -298,7 +298,7 @@ function Body({
                 aria-checked={p.address?.id === a.id}
                 disabled={step.busy}
                 onClick={() => a.id !== p.address?.id && onPick(step.items, step.sample, picked, a.id)}
-                className={cn("press shrink-0 rounded-[18px] px-4 py-2.5 text-left", p.address?.id === a.id ? "bg-ink text-white" : "bg-surface text-ink")}
+                className={cn("press shrink-0 rounded-[18px] px-4 py-2.5 text-left", p.address?.id === a.id ? "bg-accent text-accent-ink" : "bg-surface text-ink")}
               >
                 <span className="block text-callout font-semibold">{a.label}</span>
                 <span className={cn("block max-w-[200px] truncate text-caption", p.address?.id === a.id ? "text-white/70" : "text-ink-soft")}>{a.line}</span>
@@ -337,7 +337,7 @@ function Body({
         : "Pay with UPI to finish";
   return (
     <div className="py-6 text-center">
-      <m.span initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-ink text-white" aria-hidden="true">
+      <m.span initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-accent text-accent-ink" aria-hidden="true">
         <Icon name={r.status === "placed" ? "check" : r.status === "handoff" ? "external" : "send"} size={28} />
       </m.span>
       <p className="m-0 text-title font-semibold" role="status">
@@ -351,7 +351,7 @@ function Body({
         <img src={r.qr} alt="UPI QR code to pay" className="mx-auto mt-4 h-48 w-48 rounded-[16px]" />
       )}
       {r.status === "awaiting-payment" && r.paymentUrl && (
-        <a href={r.paymentUrl} className="press mx-auto mt-4 flex h-[48px] w-fit items-center rounded-full bg-black px-6 text-body font-semibold text-white no-underline">
+        <a href={r.paymentUrl} className="press mx-auto mt-4 flex h-[48px] w-fit items-center rounded-full bg-accent px-6 text-body font-semibold text-accent-ink no-underline">
           Open UPI app
         </a>
       )}

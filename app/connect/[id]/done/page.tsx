@@ -20,14 +20,14 @@ export default async function ConnectDone(
         : `Something went wrong talking to ${name}. Please try again.`;
   return (
     <main className="mx-auto flex min-h-[100dvh] max-w-[480px] flex-col items-center justify-center bg-paper px-6 text-center">
-      <span className={`mb-5 grid h-16 w-16 place-items-center rounded-full ${status === "ok" ? "bg-ink text-white" : "bg-surface text-ink-soft"}`} aria-hidden="true">
+      <span className={`mb-5 grid h-16 w-16 place-items-center rounded-full ${status === "ok" ? "bg-accent text-accent-ink" : "bg-surface text-ink-soft"}`} aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           {status === "ok" ? <path d="M20 6 9 17l-5-5" /> : <path d="M18 6 6 18M6 6l12 12" />}
         </svg>
       </span>
       <h1 data-display className="m-0 text-display">{title}</h1>
       <p className="m-0 mt-3 max-w-[300px] text-body text-ink-soft">{line}</p>
-      <Link href="/settings#connected-apps" className="press mt-8 flex h-12 items-center justify-center rounded-full bg-black px-8 text-body font-semibold text-white no-underline">
+      <Link href="/settings#connected-apps" className="press mt-8 flex h-12 items-center justify-center rounded-full bg-accent px-8 text-body font-semibold text-accent-ink no-underline">
         Back to Nearer
       </Link>
     </main>

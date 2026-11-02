@@ -194,7 +194,7 @@ function PlanSheet({ t, onClose }: { t: TogetherTemplate; onClose: () => void })
   const chips = (selected: (id: string) => boolean, onTap: (id: string) => void, label: string) => (
     <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="group" aria-label={label}>
       {members.map((m) => (
-        <button key={m.id} type="button" aria-pressed={selected(m.id)} onClick={() => onTap(m.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", selected(m.id) ? "bg-ink text-white" : "bg-surface")}>
+        <button key={m.id} type="button" aria-pressed={selected(m.id)} onClick={() => onTap(m.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", selected(m.id) ? "bg-accent text-accent-ink" : "bg-surface")}>
           <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
           {m.id === viewer.id ? "Me" : callName(m)}
         </button>

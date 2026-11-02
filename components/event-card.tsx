@@ -123,7 +123,7 @@ export function EventHero({ e, members, viewer, now = new Date() }: { e: FamilyE
 export function EventMini({ e, members, viewer }: { e: FamilyEvent; members: Member[]; viewer: Member }) {
   const start = lockedStart(e);
   return (
-    <Link href={`/gather/${e.id}`} className="block h-full rounded-[22px] bg-black/[.04] p-4 text-ink no-underline">
+    <Link href={`/gather/${e.id}`} className="block h-full rounded-[22px] bg-tint p-4 text-ink no-underline">
       <p className="m-0 truncate text-body font-semibold">{e.title}</p>
       <p className="tnum m-0 mt-1 text-footnote text-ink-soft">
         {start ? fmtIn(viewer.tz, start, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : `Around ${new Date(`${e.date}T12:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", timeZone: "UTC" })} · picking a time`}

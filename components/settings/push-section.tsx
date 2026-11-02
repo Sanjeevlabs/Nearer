@@ -103,7 +103,7 @@ export function NotificationsSection({ onMessage }: { onMessage: (m: string) => 
                 Turn off here
               </button>
             ) : (
-              <button type="button" disabled={busy !== null || !canAsk} onClick={() => void turnOn()} className={`${pill} bg-black text-white`}>
+              <button type="button" disabled={busy !== null || !canAsk} onClick={() => void turnOn()} className={`${pill} bg-accent text-accent-ink`}>
                 {busy === "device" ? "Turning on…" : "Turn on"}
               </button>
             )}
