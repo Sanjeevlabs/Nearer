@@ -42,4 +42,4 @@ docs/private/
 
 # Generated product demo video (npm run demo:reel)
 out/
-scripts/__pycache__/
+__pycache__/
