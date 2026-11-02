@@ -285,6 +285,8 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
       <style>{LAMP_CSS}</style>
       <header data-ui="courtyard-header" className="pt-4">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-ink">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/window/courtyard-band.svg" alt="" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
           <span className="absolute left-4 top-4 opacity-90" aria-hidden="true">
             <Mark size={36} />
           </span>

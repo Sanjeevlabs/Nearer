@@ -7,6 +7,7 @@ import { CourtyardProvider } from "@/lib/courtyard-data";
 import { useShell } from "@/components/shell";
 import { useViewer } from "@/components/viewer";
 import { WindowLoading } from "@/components/window-hero";
+import { WINDOW_PHOTO_HEIGHT } from "@/lib/hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
 import { hasEntered, isInstalledApp, markEntered } from "@/lib/entered";
@@ -25,14 +26,26 @@ const HomeSite = dynamic(() => import("@/components/home-site").then((x) => x.Ho
 const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.DoorTransition), { ssr: false });
 
 /**
- * What the server sends and the phone paints before any script has run: plain paper and the
- * mark, nothing else. No photo here: the view (window, courtyard, landing, kid-home) is not
- * known yet, and a photo that turns out to be the wrong one is worse than none.
+ * What the server sends and the phone paints before any script has run. Never a photo.
+ * Plain paper and the mark, unless the inline hint in app/layout.tsx says this person already
+ * stepped inside: then the drawn window frame (no sky drawn yet, nothing claimed about it) in
+ * the box the window uses, or, behind the open door, the courtyard's drawn header band.
+ * Both are small static SVGs, so the first large paint does not wait for the bundle.
  */
 function CheckingShell() {
   return (
-    <div className="fixed inset-0 z-30 grid place-items-center bg-paper" aria-busy="true" aria-label="Opening Nearer">
-      <Mark size={72} />
+    <div className="fixed inset-0 z-30 bg-paper" aria-busy="true" aria-label="Opening Nearer">
+      <div className="pre-mark fixed inset-0 grid place-items-center" aria-hidden="true">
+        <Mark size={72} />
+      </div>
+      <div className="pre-window mx-auto w-full max-w-[480px] overflow-hidden" style={{ height: WINDOW_PHOTO_HEIGHT }} aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/window/frame-window.svg" alt="" fetchPriority="high" className="window-scene block h-full w-full object-cover" />
+      </div>
+      <div className="pre-court mx-auto w-full max-w-[480px] px-4" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }} aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/window/courtyard-band.svg" alt="" fetchPriority="high" className="block h-[150px] w-full rounded-[26px] object-cover" />
+      </div>
     </div>
   );
 }
