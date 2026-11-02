@@ -275,7 +275,7 @@ function PersonSheet({ person, st, onTalk, onCall, onClose }: { person: Member |
   const s = shown?.st;
   const look = ALIVE_LOOK[s?.state ?? "unknown"];
   return (
-    <BottomSheet open={Boolean(person)} onClose={onClose} label={p ? `${callName(p)}'s day` : "Their day"}>
+    <BottomSheet open={Boolean(person)} onClose={onClose} title={p ? `${callName(p)}'s day` : "Their day"}>
       {p && (
         <div>
           <div className="flex items-center gap-3">
@@ -284,7 +284,6 @@ function PersonSheet({ person, st, onTalk, onCall, onClose }: { person: Member |
               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full ring-2 ring-paper" style={{ background: look.dot }} />
             </span>
             <div className="min-w-0">
-              <p className="m-0 text-title font-semibold">{callName(p)}</p>
               <p className="m-0 text-callout leading-snug text-ink-soft">{s?.line ?? ""}</p>
             </div>
           </div>

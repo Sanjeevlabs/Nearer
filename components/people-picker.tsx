@@ -1,12 +1,12 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { pickerView, type PickerRow } from "@/lib/picker-rows";
 import { callName, memberPhoto } from "@/lib/people";
 import type { Member } from "@/lib/schemas";
 import { useT } from "@/lib/use-t";
 import { cn } from "@/lib/utils";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { Avatar, Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
 
@@ -46,28 +46,14 @@ export function PeoplePicker({
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [sel, setSel] = useState<string[]>(multi?.selected ?? []);
-  const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     setQuery("");
     setExpanded(false);
     setSel(multi?.selected ?? []);
-    panel.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
 
   const waiting = useMemo(() => new Set(waitingIds ?? people.filter((p) => status?.(p)?.text === "Waiting for your reply").map((p) => p.id)), [waitingIds, people, status]);
   const view = useMemo(
@@ -135,60 +121,40 @@ export function PeoplePicker({
     );
 
   return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Who is it for?" data-ui="people-picker">
-          <m.button type="button" tabIndex={-1} aria-label={t("picker.close")} className="absolute inset-0 bg-black/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <m.div
-            ref={panel}
-            tabIndex={-1}
-            className="frost relative flex max-h-[80vh] w-full max-w-[480px] flex-col rounded-t-[32px] text-ink outline-none"
-            style={{ maxHeight: "min(80vh, 80dvh)" }}
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 60, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 38 }}
-          >
-            <div className="sticky top-0 z-10 rounded-t-[32px] bg-[var(--frost-solid)] px-4 pb-2 pt-3">
-              <div className="mx-auto mb-1 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="m-0 min-w-0 flex-1 px-2 text-title">Who is it for?</h2>
-                <button type="button" onClick={onClose} aria-label={t("picker.close")} className="press -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft">
-                  <Icon name="close" size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-2">
-              {list(view.top)}
-              {view.searchable && (
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search family"
-                  aria-label="Search family"
-                  className="h-11 w-full rounded-full bg-card px-4 text-body text-ink ring-1 ring-black/[.06] placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-black/30"
-                />
-              )}
-              {list(view.rest)}
-              {query && view.rest.length === 0 && <p className="m-0 px-2 py-2 text-callout text-ink-soft">No one by that name.</p>}
-              {view.hidden > 0 && (
-                <button type="button" onClick={() => setExpanded(true)} className="press h-11 w-full rounded-full text-callout font-semibold text-ink-soft">
-                  Show everyone ({view.hidden} more)
-                </button>
-              )}
-            </div>
-            {multi && (
-              <div className="px-4 pt-2" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
-                <button type="button" onClick={() => multi.onDone(sel)} className="press h-12 w-full rounded-full bg-black text-body font-semibold text-white">
-                  Done
-                </button>
-              </div>
-            )}
-            {!multi && <div style={{ height: "calc(8px + env(safe-area-inset-bottom))" }} aria-hidden="true" />}
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title="Who is it for?"
+      z={60}
+      dataUi="people-picker"
+      footer={
+        multi ? (
+          <button type="button" onClick={() => multi.onDone(sel)} className="press h-12 w-full rounded-full bg-black text-body font-semibold text-white">
+            Done
+          </button>
+        ) : undefined
+      }
+    >
+      <div className="space-y-3">
+        {list(view.top)}
+        {view.searchable && (
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search family"
+            aria-label="Search family"
+            className="h-11 w-full rounded-full bg-card px-4 text-body text-ink ring-1 ring-black/[.06] placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-black/30"
+          />
+        )}
+        {list(view.rest)}
+        {query && view.rest.length === 0 && <p className="m-0 px-2 py-2 text-callout text-ink-soft">No one by that name.</p>}
+        {view.hidden > 0 && (
+          <button type="button" onClick={() => setExpanded(true)} className="press h-11 w-full rounded-full text-callout font-semibold text-ink-soft">
+            Show everyone ({view.hidden} more)
+          </button>
+        )}
+      </div>
+    </BottomSheet>
   );
 }

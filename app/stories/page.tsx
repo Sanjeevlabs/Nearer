@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
 import { StoryCover, THEME_LOOK } from "@/components/story-art";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ActionMenu, Avatar, Button, EmptyLine, Icon, MuseMark, RoomHeader, SectionTitle } from "@/components/ui/kit";
 import { ShareQuote } from "@/components/share-quote";
 import { useViewer } from "@/components/viewer";
@@ -402,6 +403,17 @@ function Bedtime({ stories, cardOf, tellers, onClose }: { stories: Story[]; card
     return () => window.clearTimeout(t);
   }, [isPlaying, playingHere, sleep, ending, toggle]);
 
+  // Escape closes, same as the close button (which also pauses what is playing).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (isPlaying && playingHere) toggle();
+      onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isPlaying, playingHere, toggle, onClose]);
+
   const start = () => {
     if (playingHere) return toggle();
     if (queue[0]) {
@@ -463,10 +475,8 @@ function EditStory({ story, onDone }: { story: Story; onDone: () => void }) {
   const [ages, setAges] = useState(story.ages);
   const [summary, setSummary] = useState(story.summary);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Edit story">
-      <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/25" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onDone} />
-      <m.div className="relative w-full max-w-[480px] rounded-t-[32px] bg-white px-4 pt-4 shadow-frost" style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }} initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", stiffness: 340, damping: 36 }}>
-        <p className="m-0 text-title font-semibold">Edit story</p>
+    <BottomSheet open onClose={onDone} title="Edit story" z={50}>
+      <div>
         <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} className="mt-3 h-12 w-full rounded-[16px] bg-surface px-4 text-headline font-semibold outline-none" aria-label="Title" />
         <div className="mt-3 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Theme">
           {STORY_THEMES.map((t) => (
@@ -498,7 +508,7 @@ function EditStory({ story, onDone }: { story: Story; onDone: () => void }) {
             Cancel
           </Button>
         </div>
-      </m.div>
-    </div>
+      </div>
+    </BottomSheet>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, m } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { daysInWords, pruneStepTicks, stepTicksKey, type FestivalWeek, type FestivalWeekPayload } from "@/lib/festival-week";
@@ -12,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useShell } from "./shell";
 import { Icon, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
+import { BottomSheet } from "./ui/bottom-sheet";
 
 // Festival Week (courtyard header, Occasions, Nearer suggests): the days
 // before a festival the family keeps. Title, steps, colour and greeting are
@@ -83,39 +83,11 @@ export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<Festiva
       /* private mode */
     }
   }, [week]);
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
   return (
-    <AnimatePresence>
-      {open && week && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="festival-steps-title" data-ui="festival-steps-sheet">
-          <m.button type="button" aria-label="Close" className="absolute inset-0 bg-black/30" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <m.div
-            className="relative w-full max-w-[480px] overflow-y-auto rounded-t-[32px] bg-white px-4 pt-3 shadow-frost"
-            style={{ maxHeight: "86vh", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 60, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 420, damping: 38 }}
-          >
-            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15" aria-hidden="true" />
-            <div className="flex items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <h2 id="festival-steps-title" className="m-0 text-title leading-tight">
-                  How we do {week.title}
-                </h2>
-                <p className="m-0 mt-1.5 text-callout text-ink-soft">Tap a mic to say how your family does each step. The children will hear you.</p>
-              </div>
-              <button type="button" onClick={onClose} aria-label="Close" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-well text-ink">
-                <Icon name="close" size={18} />
-              </button>
-            </div>
+    <BottomSheet open={open && Boolean(week)} onClose={onClose} title={week ? `How we do ${week.title}` : "How we do it"} dataUi="festival-steps-sheet" z={50}>
+      <p className="m-0 text-callout text-ink-soft">Tap a mic to say how your family does each step. The children will hear you.</p>
             <ol className="m-0 mt-4 list-none space-y-2 p-0">
-              {week.stepsForLead.map((step, i) => {
+              {(week?.stepsForLead ?? []).map((step, i) => {
                 const on = done.has(i);
                 return (
                   <li key={i} className="flex items-center gap-2 rounded-[20px] bg-card p-2 pl-3 shadow-card">
@@ -132,10 +104,7 @@ export function FestivalStepsSheet({ week, open, onClose }: { week: Pick<Festiva
                 );
               })}
             </ol>
-          </m.div>
-        </div>
-      )}
-    </AnimatePresence>
+    </BottomSheet>
   );
 }
 

@@ -143,9 +143,8 @@ export function StickerMaker({ open, onClose, spec }: { open: boolean; onClose: 
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} label={spec.title} z={85}>
-      <p className="m-0 text-title font-semibold">{spec.title}</p>
-      <p className="m-0 mb-3 mt-1 text-callout text-ink-soft">A sticker for any chat. It stays on your phone until you share it.</p>
+    <BottomSheet open={open} onClose={onClose} title={spec.title} z={85}>
+      <p className="m-0 mb-3 text-callout text-ink-soft">A sticker for any chat. It stays on your phone until you share it.</p>
 
       {photoSrc && (
         <div className="mb-3">
