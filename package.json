@@ -20,7 +20,8 @@
     "docs:muse": "node scripts/muse-docs.mjs",
     "ui:inventory": "python3 scripts/ui-inventory.py --serve 4600",
     "demo:reel": "python3 scripts/demo-reel/run.py",
-    "demo:film": "python3 scripts/demo-reel/film.py"
+    "demo:film": "python3 scripts/demo-reel/film.py",
+    "demo:movie": "python3 scripts/demo-reel/movie.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

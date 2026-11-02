@@ -26,7 +26,7 @@ SCENES=[
  {'kind':'end','title':'Far from home,\nnever far from them.','vo':'Nearer. Far from home, never far from them.'},
 ]
 
-def cmd(args):subprocess.run(args,check=True,stdout=subprocess.DEVNULL)
+def cmd(args):subprocess.run([args[0],'-nostdin',*args[1:]],check=True,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL)
 def duration(path):return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',str(path)]))
 def font(n,bold=False):return ImageFont.truetype(BOLD if bold else FONT,n)
 def cover(im,size):return ImageOps.fit(im,size,method=Image.Resampling.LANCZOS,centering=(.5,.5))
@@ -162,7 +162,7 @@ def assemble():
  for i,start in enumerate(starts):
   args+=['-i',str(OUT/f'vo-{i:02}.mp3')];delay=int((start+.4)*1000)
   filters.append(f'[{i}:a]aresample=48000,adelay={delay}|{delay}[v{i}]')
- filters.append(''.join(f'[v{i}]' for i in range(len(SCENES)))+f'amix=inputs={len(SCENES)}:normalize=0,apad,atrim=duration={total},loudnorm=I=-16:TP=-1.5:LRA=8[voice]')
+ filters.append(''.join(f'[v{i}]' for i in range(len(SCENES)))+f'amix=inputs={len(SCENES)}:normalize=0,apad,atrim=duration={total},loudnorm=I=-16:TP=-1.5:LRA=8,aresample=48000[voice]')
  cmd(['ffmpeg','-v','error','-y',*args,'-filter_complex',';'.join(filters),'-map','[voice]','-c:a','pcm_s16le',str(OUT/'narration.wav')])
  # Duck the original score under the narrator. No surprise sound spikes.
  cmd(['ffmpeg','-v','error','-y','-i',str(OUT/'narration.wav'),'-i',str(OUT/'score.wav'),'-filter_complex','[0:a]aformat=channel_layouts=stereo,asplit=2[v][side];[1:a][side]sidechaincompress=threshold=0.015:ratio=5:attack=20:release=400[m];[v][m]amix=inputs=2:normalize=0,alimiter=limit=0.95[a]','-map','[a]','-t',str(total),'-c:a','pcm_s16le',str(OUT/'mix.wav')])
