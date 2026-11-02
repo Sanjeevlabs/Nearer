@@ -1,23 +1,58 @@
 // The light in the window (SPEC §30.1). One lamp per home. It is lit ONLY by
 // someone tapping it (or holding it for a heartbeat): a voice note or a photo
 // does not light it, so a lit lamp always means "I was thinking of you".
-// Full glow for 24 h after it is lit, then it fades to nothing at 72 h.
+// "Thinking of you": the glow is full when it is lit and fades straight to nothing
+// at LAMP_GLOW_HOURS (2 h). The push, the inbox line and the window's "arrived"
+// moment outlast the glow, so someone asleep still hears it in the morning.
 // Pure helpers (client + server).
 import type { Household } from "./households";
 import type { Lamp } from "./kinds";
 
+/** The glow is full when lit and gone this many hours later. */
+export const LAMP_GLOW_HOURS = 2;
+/**
+ * How long the window's WORDS still say who lit it ("Lit by Maa, yesterday", lib/window-words.ts).
+ * That is history in words, not the glow: the glow is LAMP_GLOW_HOURS.
+ */
 export const FADE_HOURS = 72;
-/** Full glow this long after it is lit; the fade runs from here to FADE_HOURS. */
-export const FULL_HOURS = 24;
 /** A heartbeat waits this long to be felt, then it's gone (no backlog of old pulses). */
 export const BEAT_TTL_MS = 2 * 86_400_000;
+/** A light that arrived while the viewer was away still shows once ("Arjun is thinking of you") for this long. */
+export const LAMP_ARRIVED_HOURS = 24;
+/** One person can light the lamp this often (stops tapping from becoming spam). */
+export const LIGHT_COOLDOWN_MS = 10 * 60_000;
+/** At most one lamp push from one person to another within this window. */
+export const LAMP_PUSH_GAP_MS = LAMP_GLOW_HOURS * 3_600_000;
 
-/** 1 for the first 24 h after it was lit, then a straight fade to 0 at 72 h. */
+/** 1 when lit, then a straight fade to 0 at LAMP_GLOW_HOURS. */
 export function glowFrom(lastAt: string | null, now = Date.now()): number {
   if (!lastAt) return 0;
   const h = (now - Date.parse(lastAt)) / 3_600_000;
-  if (h <= FULL_HOURS) return 1;
-  return Math.max(0, Math.round((1 - (h - FULL_HOURS) / (FADE_HOURS - FULL_HOURS)) * 100) / 100);
+  if (!Number.isFinite(h)) return 0;
+  if (h <= 0) return 1;
+  if (h >= LAMP_GLOW_HOURS) return 0;
+  return Math.round((1 - h / LAMP_GLOW_HOURS) * 100) / 100;
+}
+
+/** Ms until this person may light the lamp again (0 = now). `lit` maps member id -> their last light. */
+export function lightCooldownLeft(lit: Record<string, string> | undefined, memberId: string, now = Date.now()): number {
+  const last = lit?.[memberId];
+  if (!last) return 0;
+  const left = Date.parse(last) + LIGHT_COOLDOWN_MS - now;
+  return left > 0 && left <= LIGHT_COOLDOWN_MS ? left : 0;
+}
+
+/** Has a lamp push already gone from `fromId` to `toId` within the gap? `pushed` maps "from>to" -> when. */
+export function lampPushedRecently(pushed: Record<string, string> | undefined, fromId: string, toId: string, now = Date.now()): boolean {
+  const at = pushed?.[`${fromId}>${toId}`];
+  if (!at) return false;
+  const age = now - Date.parse(at);
+  return age >= 0 && age < LAMP_PUSH_GAP_MS;
+}
+
+/** The pushed/lit maps without entries older than the gap, so the lamp document stays small. */
+export function trimStamps(map: Record<string, string>, keepMs: number, now = Date.now()): Record<string, string> {
+  return Object.fromEntries(Object.entries(map).filter(([, at]) => now - Date.parse(at) < keepMs)) as Record<string, string>;
 }
 
 export interface LampHome {
@@ -61,7 +96,7 @@ export function lampView(homes: Household[], lamps: Lamp[], viewerId: string, hi
         if (at && at >= reach && !hidden.has(m.id) && (!felt || at > felt.at)) felt = { by: m.id, at };
       }
     }
-    const lit = lamp.litAt && lamp.litBy && lamp.litBy !== viewerId && !hidden.has(lamp.litBy) && lamp.litAt > seen && Date.parse(lamp.litAt) <= now && glowFrom(lamp.litAt, now) > 0 ? { from: lamp.litBy, at: lamp.litAt } : null;
+    const lit = lamp.litAt && lamp.litBy && lamp.litBy !== viewerId && !hidden.has(lamp.litBy) && lamp.litAt > seen && Date.parse(lamp.litAt) <= now && now - Date.parse(lamp.litAt) < LAMP_ARRIVED_HOURS * 3_600_000 ? { from: lamp.litBy, at: lamp.litAt } : null;
     if (lit && (!arrived || lit.at > arrived.at)) arrived = lit;
   }
   return {

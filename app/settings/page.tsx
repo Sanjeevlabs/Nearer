@@ -8,7 +8,7 @@ import { Avatar, Button, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import { memberPhoto } from "@/lib/people";
 import { resetFamilyCards } from "@/lib/use-family";
-import { can, isGrownUp } from "@/lib/permissions";
+import { can, isAdmin, isGrownUp } from "@/lib/permissions";
 import type { Member } from "@/lib/schemas";
 import { callName } from "@/lib/people";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import { Group, UnsavedBanner } from "@/components/settings/section";
 import { LampSection, LanguageSection, NudgeSettingsSection, ProfileSection, ReadingSection, WhereSection } from "@/components/settings/account-sections";
 import { PeopleAndRoles } from "@/components/settings/roles-section";
 import { NotificationsSection } from "@/components/settings/push-section";
+import { HowWereDoing, ProblemsSeen, TellUsByVoice } from "@/components/settings/team-sections";
 import { forgetPushDevice } from "@/lib/web-push";
 import { getPendingTabs } from "@/lib/settings-pending";
 
@@ -301,6 +302,10 @@ export default function SettingsPage() {
           )}
         </div>
       </Group>
+
+      {isAdmin(viewer) && <HowWereDoing />}
+      {isAdmin(viewer) && <ProblemsSeen />}
+      <TellUsByVoice onMessage={flash} />
 
       {process.env.NODE_ENV !== "production" && (
       <Group title="Muse">

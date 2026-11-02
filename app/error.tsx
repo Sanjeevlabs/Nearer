@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportError } from "@/components/error-beacon";
 import { Button } from "@/components/ui/kit";
 
 // A load failure never leaves a blank screen, and says what to do next.
 export default function RootError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("Nearer failed to load:", error);
+    reportError(error);
   }, [error]);
   return (
     <div className="pt-16 text-center" role="alert">
