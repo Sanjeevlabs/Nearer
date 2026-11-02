@@ -113,6 +113,12 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
         <Who item={item} />
         <div className="min-w-0 flex-1">
           <p className="m-0 text-body font-semibold leading-snug">{item.text}</p>
+          {/* "How to listen": a wish from the sender, shown only to the people it was sent to. */}
+          {item.listen && (
+            <p data-ui="listen-label" className="m-0 text-footnote text-ink-soft">
+              {item.listen}
+            </p>
+          )}
           {meta}
         </div>
       </div>

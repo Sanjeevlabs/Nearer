@@ -1,5 +1,6 @@
 "use client";
 
+import { LISTEN_WORDS, type ListenWay } from "@/lib/listen";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addressTo, householdName, households } from "@/lib/households";
@@ -111,6 +112,8 @@ async function postVoice(input: {
   transcriptLang: string;
   segments: TranscriptSegment[];
   addressedTo: string | null;
+  /** "How to listen": only with addressees, never required. */
+  listen?: ListenWay | null;
   /** Posted after a retried send lands; a first-try success leaves these to the caller. */
   after?: (cardId: string) => { url: string; body: unknown }[];
 }): Promise<{ ok: boolean; id: string | null; queued: boolean }> {
@@ -131,6 +134,7 @@ async function postVoice(input: {
       transcriptLang: input.transcriptLang,
       segments: input.segments.slice(0, 64),
       addressedTo: input.addressedTo,
+      ...(input.listen && input.addressedTo ? { listen: input.listen } : {}),
     },
     upload: voiceBlob ? { blob: voiceBlob, filename: "voice.webm", mime: voiceBlob.type || "audio/webm" } : undefined,
     after: input.after?.(id),
@@ -223,6 +227,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
   const { viewer, members, relationships, displayLang } = useViewer();
   const purpose = contribution && contribution.kind !== "wish" && contribution.kind !== "blessing" ? PURPOSE[contribution.kind] : null;
   const [to, setTo] = useState<string[]>(addressee ?? []);
+  const [listen, setListen] = useState<ListenWay | null>(null);
   const [consent, setConsent] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<"idle" | "recording" | "working" | "ready">("idle");
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -358,7 +363,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       else if (contribution?.kind === "bedtime") steps.push({ url: "/api/bedtime", body: { action: "create", forMemberId: contribution.forMemberId, cardId } });
       return steps;
     };
-    const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), after });
+    const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), listen, after });
     if (!posted.ok) {
       setNotice(null);
       setError("Couldn't send that recording. Try again.");
@@ -450,6 +455,19 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         <>
           <p className="m-0 mb-3 text-footnote font-medium text-ink-soft">To</p>
           <Recipients value={to} onChange={setTo} />
+          {/* "How to listen" (optional): only when it is for particular people; only they see it. */}
+          {to.length > 0 && (
+            <div data-ui="listen-pick" className="mt-3" role="radiogroup" aria-label="How to listen (optional)">
+              <p className="m-0 mb-1.5 text-footnote font-medium text-ink-soft">How would you like it heard? (optional)</p>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(LISTEN_WORDS) as ListenWay[]).map((w) => (
+                  <button key={w} type="button" role="radio" aria-checked={listen === w} onClick={() => setListen(listen === w ? null : w)} className={cn("press min-h-[44px] rounded-full px-3.5 text-footnote font-semibold", listen === w ? "bg-accent text-accent-ink" : "bg-tint text-ink")}>
+                    {LISTEN_WORDS[w].replace(/^./, (c) => c.toUpperCase())}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
 

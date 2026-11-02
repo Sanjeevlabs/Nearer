@@ -13,6 +13,7 @@ import { isLive, lockedStart, participants, startsInLabel, type FamilyEvent } fr
 import { eventAction, useEvents } from "@/lib/gather-client";
 import { callName } from "@/lib/people";
 import { Boundary } from "@/components/ui/boundary";
+import { RemindMe } from "@/components/remind-sheet";
 
 type Tab = "plan" | "tasks" | "playlist";
 
@@ -70,6 +71,7 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
   const start = lockedStart(e);
   const live = isLive(e);
   const isHost = e.hostId === viewer.id;
+  const askAbout = [e.forMemberId, e.hostId].find((id): id is string => Boolean(id) && id !== viewer.id) ?? null;
   const invited = participants(e).includes(viewer.id);
   const host = members.find((m) => m.id === e.hostId);
   const actions = [
@@ -124,6 +126,13 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
           <AvailabilityPicker e={e} members={members} viewer={viewer} onChange={(next) => setLocal(next)} />
         </section>
       ) : null}
+
+      {/* A private note to yourself to ask the person it was for (or who set it up) how it went. */}
+      {askAbout && (
+        <div className="mb-3 mt-3">
+          <RemindMe aboutId={askAbout} href={`/gather/${encodeURIComponent(e.id)}`} what={e.title} />
+        </div>
+      )}
 
       <Boundary label="This celebration"><EventSections key={`${e.id}-${tab}`} e={e} members={members} viewer={viewer} initial={tab} onChange={(next) => setLocal(next)} /></Boundary>
     </div>

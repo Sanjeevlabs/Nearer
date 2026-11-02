@@ -15,6 +15,8 @@ import { useDisplayText } from "@/lib/use-display-text";
 import { ReactionBar } from "./reactions";
 import { useViewer } from "./viewer";
 import { VoiceControls, usePlayer } from "./player";
+import { RemindMe } from "./remind-sheet";
+import { LISTEN_WORDS } from "@/lib/listen";
 
 // The waveform IS the scrubber: played bars in warm amber, the rest dim.
 // Pointer down/drag seeks. Live analyser waves when real audio plays.
@@ -191,7 +193,7 @@ export default function FullPlayer({
   analyserRef: React.MutableRefObject<{ ctx: AudioContext; analyser: AnalyserNode } | null>;
 }) {
   const { current, open, currentTime, duration, toggle, collapse, playNext, playPrev } = usePlayer();
-  const { displayLang, members } = useViewer();
+  const { displayLang, members, viewer } = useViewer();
   const { openAdd } = useShell();
   const { translated } = useDisplayText(current?.caption ?? "", current?.lang, displayLang);
 
@@ -254,7 +256,14 @@ export default function FullPlayer({
               <div className="min-w-0">
                 <p className="m-0 truncate text-title font-bold leading-tight">{callName(author)}</p>
                 <p className="m-0 mt-0.5 text-body text-white/65">{translated ? "Translated for you" : "Voice note"}</p>
+                {/* "How to listen": the server adds it only for the people this note was sent to. */}
+                {current.listen && (
+                  <p data-ui="listen-label" className="m-0 mt-0.5 text-footnote text-white/80">
+                    {callName(author)}: {LISTEN_WORDS[current.listen]}
+                  </p>
+                )}
               </div>
+              {current.authorId && current.authorId !== viewer.id && <RemindMe aboutId={current.authorId} href={`/lane?card=${encodeURIComponent(current.id)}`} what={(current.caption || "their voice note").slice(0, 80)} tone="dark" className="shrink-0" />}
             </div>
 
             <div className="mt-4">

@@ -11,12 +11,15 @@ import { checkRateLimit, requireSession } from "@/lib/auth";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAddressed } from "@/lib/push/events";
+import { addressees } from "@/lib/households";
+import { withListen } from "@/lib/listen";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [stored, tasks, letters] = await Promise.all([dbListCards(auth.familyId), listDocs(auth.familyId, "today_task"), listDocs(auth.familyId, "chitthi")]);
-  const cards = withDemoShelf(stored, auth.familyId);
+  const [stored, letters, listen] = await Promise.all([dbListCards(auth.familyId), listDocs(auth.familyId, "chitthi"), listDocs(auth.familyId, "card_listen").catch(() => [])]);
+  // "How to listen" is added only for the people a note was sent to (lib/listen.ts).
+  const cards = withListen(withDemoShelf(stored, auth.familyId), listen, auth.memberId);
   // Today's answers are open to everyone at once. Only morning letters wait:
   const sealed = new Set<string>();
   // Morning letters stay in the envelope until their morning (the author can always see theirs).
@@ -220,7 +223,7 @@ async function postHandler(req: Request): Promise<Response> {
   // JSON path: client-supplied caption only — NEVER a model call. An empty
   // caption stays empty (the UI renders its untitled state); video cards that
   // need grounding must use the multipart upload with real bytes.
-  const { id: clientId, forMemberId, ...data } = parsed.data;
+  const { id: clientId, forMemberId, listen, ...data } = parsed.data;
   const fridge = await fridgeTarget(auth.familyId, auth.memberId, forMemberId);
   if (fridge instanceof Response) return fridge;
   const already = await existingOwnCard(auth.familyId, auth.memberId, clientId);
@@ -236,6 +239,11 @@ async function postHandler(req: Request): Promise<Response> {
   });
   // No model here: sorted from the words the person wrote.
   const album = card.type === "audio" ? null : await fileIntoAlbum(auth.familyId, card, eventFromText(card.caption));
+  // "How to listen": only with people it was sent to; kept apart from the card, best effort (never fails the upload).
+  const to = addressees(card).filter((id) => id !== auth.memberId);
+  if (listen && to.length) {
+    await putDoc(auth.familyId, "card_listen", { id: card.id, cardId: card.id, authorId: auth.memberId, listen, to, at: new Date().toISOString() }).catch((e: unknown) => console.error("[cards] listen label not kept", String(e)));
+  }
   // A note sent to particular people: a gentle push to them (background; never fails the upload).
   pushAddressed(auth.familyId, card);
   return Response.json({ card, album }, { status: 201 });

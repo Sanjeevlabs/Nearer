@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EVENT_KINDS } from "./kind-values";
+import { EVENT_KINDS, LISTEN_WAYS } from "./kind-values";
 import { ADDRESSED_TO_MAX, CARD_NOTE_MAX, CARD_PLACE_MAX } from "./card-limits";
 import { LANG_CODES } from "./languages";
 import { BIRTHDAY_RE, validBirthday } from "./birthday";
@@ -122,6 +122,8 @@ export const CardSchema = z.object({
   note: z.string().max(CARD_NOTE_MAX).default(""),
   /** A kid this belongs to on the fridge, set when a grown-up photographs their drawing for them (member id). Null otherwise. */
   forMemberId: z.string().nullable().optional(),
+  /** "How to listen", added by GET /api/cards only for the card's addressees (never stored on the card). */
+  listen: z.enum(LISTEN_WAYS).optional(),
 });
 
 export const MemberRoleSchema = z.enum(["elder", "adult", "child"]);
@@ -192,6 +194,8 @@ export const CreateCardRequestSchema = z.object({
   note: z.string().trim().max(CARD_NOTE_MAX).default(""),
   /** "Add to the fridge": the kid it is for. The route checks they are a kid of this family. */
   forMemberId: z.string().max(64).nullable().default(null),
+  /** "How to listen": only with addressees; kept apart from the card (family_docs card_listen). */
+  listen: z.enum(LISTEN_WAYS).optional(),
 });
 
 export const HomeImageRequestSchema = z.object({
