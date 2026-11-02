@@ -425,9 +425,26 @@ create table if not exists family_docs (
 -- Kinds are validated by lib/kinds.ts; the check keeps junk out of the table.
 -- height_mark: retired 1 Nov, kept in the list below so old rows parse (the app no longer reads or writes it).
 alter table family_docs drop constraint if exists family_docs_kind_check;
-alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','push_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark'));
+alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','push_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark','feedback','sweep_mark'));
 create index if not exists family_docs_family_kind_idx on family_docs (family_id, kind, created_at desc);
 alter table family_docs enable row level security;
+
+-- ------------------------------------------------------------ client_errors
+-- What the app hit on someone's phone (the error beacon, /api/beacon). Thin and impersonal on
+-- purpose: the page path (ids blanked), the message, the top of the stack, the build, a device
+-- class. Written and read by the server only; owners and admins see their family's last 50.
+create table if not exists client_errors (
+  id text primary key,
+  family_id text not null,
+  route text not null,
+  message text not null,
+  stack text not null default '',
+  build text not null default '',
+  ua text not null default 'other',
+  at timestamptz not null default now()
+);
+create index if not exists client_errors_family_idx on client_errors (family_id, at desc);
+alter table client_errors enable row level security;
 
 -- ---------------------------------------------------------- public_shares
 -- The only data that ever leaves a family: a frozen copy of one thing a

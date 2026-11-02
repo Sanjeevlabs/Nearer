@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { isNative } from "@/lib/native";
 import { startUploadQueue } from "@/lib/upload-queue";
 import { watchWrites } from "@/lib/use-json";
+import { ErrorBeacon } from "./error-beacon";
 import { ThemeProvider } from "./theme-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <ThemeProvider>
+      <ErrorBeacon />
       <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </ThemeProvider>
   );

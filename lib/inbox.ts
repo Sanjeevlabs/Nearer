@@ -57,8 +57,22 @@ export interface InboxInput {
   /** Heartbeats sent to the viewer's home, and when the viewer last felt one. */
   beats: { from: string; at: string }[];
   felt: string | null;
+  /** The lamp last lit in each other home: who, and when. A light is not a heartbeat; both can be here. */
+  lights?: { from: string; at: string }[];
+  /** The viewer's zone, for "8:10 PM" in a lamp line. */
+  tz?: string;
   nudges: { id: string; kind: string; text: string; href: string; at: string; seen: boolean; from?: string | null }[];
   today?: Pick<TodayTask, "id" | "date" | "parents" | "children" | "answers" | "completedAt">[];
+}
+
+/** "8:10 PM" in the viewer's zone ("" when there is no zone to say it in). */
+function clockIn(iso: string, tz: string | undefined): string {
+  if (!tz) return "";
+  try {
+    return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz }).format(new Date(iso));
+  } catch {
+    return "";
+  }
 }
 
 /** Nudges that are a person's receipt (someone heard, blessed or shared); the rest are reminders. */
@@ -108,6 +122,12 @@ export function buildInbox(i: InboxInput): InboxItem[] {
   for (const b of i.beats) {
     if (b.from === i.viewerId || !recent(b.at)) continue;
     out.push({ ...base, id: `beat-${b.from}-${b.at}`, kind: "lamp", badge: "lamp", plain: true, at: b.at, text: `${name(b.from)} is thinking of you`, fromId: b.from, href: "/", waiting: false, action: "open", replyTo: b.from });
+  }
+  const beatKeys = new Set(i.beats.map((b) => `${b.from}|${b.at}`));
+  for (const l of i.lights ?? []) {
+    if (l.from === i.viewerId || !recent(l.at) || beatKeys.has(`${l.from}|${l.at}`)) continue;
+    const clock = clockIn(l.at, i.tz);
+    out.push({ ...base, id: `light-${l.from}-${l.at}`, kind: "lamp", badge: "lamp", plain: true, at: l.at, text: `${name(l.from)} lit the lamp for you${clock ? ` · ${clock}` : ""}`, fromId: l.from, href: "/", waiting: false, action: "open", replyTo: l.from });
   }
   for (const n of i.nudges) {
     if (!recent(n.at)) continue;

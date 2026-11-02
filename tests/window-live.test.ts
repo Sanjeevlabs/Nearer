@@ -40,20 +40,20 @@ describe("the lamp is lit only by an explicit tap", () => {
       { id: "h1", members: [{ id: "a" }], tz: "UTC", elders: false },
       { id: "h2", members: [{ id: "b" }], tz: "UTC", elders: true },
     ] as unknown as Parameters<typeof lampView>[0];
-    const lamps = [{ id: "h2", litAt: new Date(now - 2 * H).toISOString(), litBy: "b", beats: [], felt: { b: new Date(now - H).toISOString() }, updatedAt: "" }] as Parameters<typeof lampView>[1];
+    const lamps = [{ id: "h2", litAt: new Date(now - H / 2).toISOString(), litBy: "b", beats: [], felt: { b: new Date(now - H).toISOString() }, lit: {}, pushed: {}, updatedAt: "" }] as Parameters<typeof lampView>[1];
     const v = lampView(homes, lamps, "a", new Set(), now);
-    expect(v.lamps.find((l) => l.homeKey === "h2")).toMatchObject({ litBy: "b", glow: 1 });
+    expect(v.lamps.find((l) => l.homeKey === "h2")).toMatchObject({ litBy: "b", glow: 0.75 });
     expect(v.arrived).toMatchObject({ from: "b" });
     expect(lampView(homes, lamps, "a", new Set(["b"]), now).lamps.find((l) => l.homeKey === "h2")?.litAt).toBeNull();
   });
 
-  it("glow is 1 within 24 h of being lit and fades to 0 at 72 h", () => {
+  it("glow is full when lit and fades straight to nothing at 2 h", () => {
     const lit = "2026-11-01T00:00:00Z";
     const t = Date.parse(lit);
-    expect(glowFrom(lit, t + 23 * H)).toBe(1);
-    expect(glowFrom(lit, t + 48 * H)).toBe(0.5);
-    expect(glowFrom(lit, t + 72 * H)).toBe(0);
-    expect(skyState({ ...AMRITSAR, now: new Date(t + 30 * H), lampLitAt: lit }).lampGlow).toBeCloseTo(0.88, 2);
+    expect(glowFrom(lit, t)).toBe(1);
+    expect(glowFrom(lit, t + H / 2)).toBe(0.75);
+    expect(glowFrom(lit, t + 2 * H)).toBe(0);
+    expect(skyState({ ...AMRITSAR, now: new Date(t + H / 2), lampLitAt: lit }).lampGlow).toBeCloseTo(0.75, 2);
   });
 
   it("the state lines say who lit it, when, and that it was felt", () => {

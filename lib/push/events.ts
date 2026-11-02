@@ -27,13 +27,15 @@ async function activeMember(familyId: string, id: string): Promise<Member | null
  * Decide and deliver one push to one person: now, held for the 8 AM summary, or not at all.
  * Returns what happened (the tests read it).
  */
-export async function routePush(familyId: string, to: Member, category: PushCategory, build: Build, now: Date = new Date(), deps: SendDeps = {}): Promise<"sent" | "held" | "skipped"> {
+export async function routePush(familyId: string, to: Member, category: PushCategory, build: Build, now: Date = new Date(), deps: SendDeps = {}, opts: { dropIfHeld?: boolean } = {}): Promise<"sent" | "held" | "skipped"> {
   if (!(await hasDevice(familyId, to.id, deps))) return "skipped";
   const settings = await getPushSettings(familyId, to.id);
   const clock = localClock(to.tz, now);
   const sentToday = settings.day === clock.day ? settings.sent : 0;
   const decision = decidePush({ category, tz: to.tz, now, prefs: settings, sentToday });
   if (decision === "skip") return "skipped";
+  // A note that is only good right now (an invitation) is dropped, not saved for the 8 AM summary.
+  if (decision === "batch" && opts.dropIfHeld) return "skipped";
   if (decision === "batch") {
     await saveTally(familyId, settings, { day: clock.day, sent: sentToday, overflow: Math.min(1000, settings.overflow + 1) });
     return "held";
@@ -70,6 +72,30 @@ export function pushBeat(familyId: string, fromId: string, toId: string): void {
     if (!from || !to) return;
     await routePush(familyId, to, "lamp", (w) => ({ body: w.beat(callName(from)), url: "/", tag: `lamp-${from.id}`, urgency: "high" }));
   });
+}
+
+/**
+ * Someone lit the lamp: "Arjun is thinking of you" to each person in the other homes.
+ * The caller has already applied the one-per-pair-per-2-hours rule (lib/lamp.ts lampPushedRecently)
+ * and passes only who is due. In quiet hours (22:00 to 07:00 where they are) routePush holds it
+ * for their 8 AM summary instead. Returns the outcome per person (the tests read it).
+ */
+export async function pushLight(familyId: string, fromId: string, toIds: string[], now: Date = new Date(), deps: SendDeps = {}): Promise<Record<string, "sent" | "held" | "skipped">> {
+  const out: Record<string, "sent" | "held" | "skipped"> = {};
+  const from = await activeMember(familyId, fromId);
+  if (!from) return out;
+  for (const id of Array.from(new Set(toIds)).filter((x) => x !== fromId).slice(0, 12)) {
+    const m = await activeMember(familyId, id);
+    if (!m) continue;
+    out[id] = await routePush(familyId, m, "lamp", (w) => ({ body: w.thinking(callName(from)), url: "/", tag: `lamp-${from.id}`, urgency: "high" }), now, deps);
+  }
+  return out;
+}
+
+/** Fire-and-forget pushLight, for the route. */
+export function pushLightInBackground(familyId: string, fromId: string, toIds: string[]): void {
+  if (toIds.length === 0) return;
+  inBackground(async () => void (await pushLight(familyId, fromId, toIds)));
 }
 
 /** A question, a request for a recipe or story, or a child's ask. `tagId` collapses it with the voice push of the same card. */

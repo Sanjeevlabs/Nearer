@@ -100,25 +100,27 @@ Entry,home-laptop,4,button,Open Nearer,,home-actions,arjun,,keep,
 Entry,home-laptop,5,badge,QR code: open the Nearer demo on your phone,,,arjun,,keep,
 Entry,home-laptop,6,button,Or try the demo here,,,arjun,,review,on more than 2 screens: one path per job?
 Entry,home-laptop,7,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun,,keep,
-Entry,home-laptop,8,heading,A window into their day,,,arjun,,keep,
-Entry,home-laptop,9,heading,"The whole family, one place",,,arjun,,keep,
-Entry,home-laptop,10,heading,"Everyone wishes, together",,,arjun,,keep,
-Entry,home-laptop,11,heading,"Care, sent in a tap",,,arjun,,keep,
-Entry,home-laptop,12,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
-Entry,home-laptop,13,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,home-laptop,14,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-laptop,8,heading,See it in a minute,,home-film,arjun,,keep,
+Entry,home-laptop,9,heading,A window into their day,,,arjun,,keep,
+Entry,home-laptop,10,heading,"The whole family, one place",,,arjun,,keep,
+Entry,home-laptop,11,heading,"Everyone wishes, together",,,arjun,,keep,
+Entry,home-laptop,12,heading,"Care, sent in a tap",,,arjun,,keep,
+Entry,home-laptop,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
+Entry,home-laptop,14,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-laptop,15,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
 Entry,home-phone,0,badge,Nearer,,,arjun,,keep,
 Entry,home-phone,1,button,Open Nearer,,,arjun,,keep,
 Entry,home-phone,3,h1,The window between two homes.,,,arjun,,keep,
 Entry,home-phone,4,button,Open Nearer,,home-actions,arjun,,keep,
 Entry,home-phone,5,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun,,keep,
-Entry,home-phone,6,heading,A window into their day,,,arjun,,keep,
-Entry,home-phone,7,heading,"The whole family, one place",,,arjun,,keep,
-Entry,home-phone,8,heading,"Everyone wishes, together",,,arjun,,keep,
-Entry,home-phone,9,heading,"Care, sent in a tap",,,arjun,,keep,
-Entry,home-phone,10,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
-Entry,home-phone,11,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,home-phone,12,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-phone,6,heading,See it in a minute,,home-film,arjun,,keep,
+Entry,home-phone,7,heading,A window into their day,,,arjun,,keep,
+Entry,home-phone,8,heading,"The whole family, one place",,,arjun,,keep,
+Entry,home-phone,9,heading,"Everyone wishes, together",,,arjun,,keep,
+Entry,home-phone,10,heading,"Care, sent in a tap",,,arjun,,keep,
+Entry,home-phone,11,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
+Entry,home-phone,12,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-phone,13,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
 Entry,landing,0,badge,Nearer,,,anon,,keep,
 Entry,landing,1,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing,2,link,Start your family,/create,,anon,dup,review,
@@ -127,13 +129,14 @@ Entry,landing,5,button,Try the demo family,,home-actions,anon,,keep,
 Entry,landing,6,link,Start your family,/create,home-actions,anon,dup,review,
 Entry,landing,7,link,Sign in,/signin,home-actions,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing,8,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,anon,,keep,
-Entry,landing,9,heading,A window into their day,,,anon,,keep,
-Entry,landing,10,heading,"The whole family, one place",,,anon,,keep,
-Entry,landing,11,heading,"Everyone wishes, together",,,anon,,keep,
-Entry,landing,12,heading,"Care, sent in a tap",,,anon,,keep,
-Entry,landing,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
-Entry,landing,14,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing,15,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,9,heading,See it in a minute,,home-film,anon,,keep,
+Entry,landing,10,heading,A window into their day,,,anon,,keep,
+Entry,landing,11,heading,"The whole family, one place",,,anon,,keep,
+Entry,landing,12,heading,"Everyone wishes, together",,,anon,,keep,
+Entry,landing,13,heading,"Care, sent in a tap",,,anon,,keep,
+Entry,landing,14,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
+Entry,landing,15,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,16,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,0,badge,Nearer,,,anon,,keep,
 Entry,landing-laptop,1,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,2,link,Start your family,/create,,anon,dup,review,
@@ -141,13 +144,14 @@ Entry,landing-laptop,4,h1,The window between two homes.,,,anon,,keep,
 Entry,landing-laptop,5,badge,QR code: open the Nearer demo on your phone,,,anon,,keep,
 Entry,landing-laptop,6,button,Or try the demo here,,,anon,,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,7,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,anon,,keep,
-Entry,landing-laptop,8,heading,A window into their day,,,anon,,keep,
-Entry,landing-laptop,9,heading,"The whole family, one place",,,anon,,keep,
-Entry,landing-laptop,10,heading,"Everyone wishes, together",,,anon,,keep,
-Entry,landing-laptop,11,heading,"Care, sent in a tap",,,anon,,keep,
-Entry,landing-laptop,12,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
-Entry,landing-laptop,13,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing-laptop,14,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing-laptop,8,heading,See it in a minute,,home-film,anon,,keep,
+Entry,landing-laptop,9,heading,A window into their day,,,anon,,keep,
+Entry,landing-laptop,10,heading,"The whole family, one place",,,anon,,keep,
+Entry,landing-laptop,11,heading,"Everyone wishes, together",,,anon,,keep,
+Entry,landing-laptop,12,heading,"Care, sent in a tap",,,anon,,keep,
+Entry,landing-laptop,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
+Entry,landing-laptop,14,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing-laptop,15,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,window,0,badge,"A drawing of their home, in daylight",,window-scene,arjun dadi,,keep,
 Entry,window,0,h1,"Hello, Anika",,kid-home,aria,,keep,
 Entry,window,1,button,The lamp is lit. Tap to light it for Arjun; hold to send a heartbeat,,window-lamp-button,dadi,icon-only,review,
@@ -319,13 +323,14 @@ Public,/home,5,button,Try the demo family,,home-actions,arjun dadi aria anon,,ke
 Public,/home,6,link,Start your family,/create,home-actions,arjun dadi aria anon,dup,review,
 Public,/home,7,link,Sign in,/signin,home-actions,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
 Public,/home,8,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun dadi aria anon,,keep,
-Public,/home,9,heading,A window into their day,,,arjun dadi aria anon,,keep,
-Public,/home,10,heading,"The whole family, one place",,,arjun dadi aria anon,,keep,
-Public,/home,11,heading,"Everyone wishes, together",,,arjun dadi aria anon,,keep,
-Public,/home,12,heading,"Care, sent in a tap",,,arjun dadi aria anon,,keep,
-Public,/home,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun dadi aria anon,dup,review,
-Public,/home,14,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
-Public,/home,15,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,9,heading,See it in a minute,,home-film,arjun dadi aria anon,,keep,
+Public,/home,10,heading,A window into their day,,,arjun dadi aria anon,,keep,
+Public,/home,11,heading,"The whole family, one place",,,arjun dadi aria anon,,keep,
+Public,/home,12,heading,"Everyone wishes, together",,,arjun dadi aria anon,,keep,
+Public,/home,13,heading,"Care, sent in a tap",,,arjun dadi aria anon,,keep,
+Public,/home,14,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun dadi aria anon,dup,review,
+Public,/home,15,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,16,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
 Public,/join,0,button,Back,,,anon,icon-only dup,review,icon-only control: its name is only an aria-label
 Public,/join,1,badge,Nearer,,,anon,,keep,
 Public,/join,2,h1,Join your family,,,anon,,keep,
@@ -995,7 +1000,14 @@ Settings,/settings#privacy,11,button,Save Your lamp,,~Your lamp,arjun dadi aria,
 Settings,/settings#privacy,12,link,"Download our family’s data Everyone, the tree, recipes, care and memories, as o…",/api/export,~Privacy,arjun dadi,,keep,
 Settings,/settings#privacy,13,button,"Delete my reactions, wishes and listens",,~Privacy,arjun dadi aria,,keep,
 Settings,/settings#privacy,14,button,Leave the family,,~Privacy,arjun dadi aria,,keep,
-Settings,/settings#privacy,15,button,Sign out,,,arjun dadi aria,,keep,
+Settings,/settings#privacy,15,section,How we're doing,,,arjun,,keep,
+Settings,/settings#privacy,16,heading,How we're doing,,~How we're doing,arjun,,keep,
+Settings,/settings#privacy,17,section,Problems the app ran into,,,arjun,,keep,
+Settings,/settings#privacy,18,heading,Problems the app ran into,,~Problems the app ran into,arjun,,keep,
+Settings,/settings#privacy,19,section,Tell us by voice,,,arjun dadi aria,,keep,
+Settings,/settings#privacy,20,heading,Tell us by voice,,~Tell us by voice,arjun dadi aria,,keep,
+Settings,/settings#privacy,21,button,Record a note,,~Tell us by voice,arjun dadi aria,,keep,
+Settings,/settings#privacy,22,button,Sign out,,,arjun dadi aria,,keep,
 Settings,/settings#window,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Settings,/settings#window,1,h1,Settings,,room-header,arjun dadi aria,,keep,
 Settings,/settings#window,2,nav,Settings sections,,settings-tabs,arjun dadi aria,,keep,
