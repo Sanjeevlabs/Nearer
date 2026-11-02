@@ -174,9 +174,16 @@ export function prefetchJson(url: string): void {
  * whatever was cached: `stale` is true (show a quiet "offline" hint), and
  * `failed` only when there is nothing at all to show.
  */
+const RETRYABLE = new Set([502, 503, 504]);
+
 export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fetch(...a)): Promise<{ data: T | null; stale: boolean; failed: boolean }> {
   try {
-    const res = await f(url, { cache: "no-store" });
+    let res = await f(url, { cache: "no-store" });
+    // The host sometimes cuts one request off (a 503 under its CPU limit): one quiet retry.
+    if (RETRYABLE.has(res.status)) {
+      await new Promise((r) => setTimeout(r, 250));
+      res = await f(url, { cache: "no-store" });
+    }
     if (!res.ok) throw new Error(String(res.status));
     const json = (await res.json()) as T;
     writeCache(url, json);

@@ -1,14 +1,15 @@
 // Nearer offline shell. Hand-written, no dependencies.
 //  - static files (/_next/static, /demo, /icons, /home, /window): stale-while-revalidate
-//  - pages: network first, then the last copy, then /offline.html
+//  - pages: network first (one retry on 502/503/504, the host's CPU cut-off), then the last copy, then /offline.html
 //  - /api GETs: network first, then the last copy (never media, session, auth or push)
 //  - push: shows the notification the server sent; a tap focuses Nearer (or opens it) at data.url
 // Pages and API copies are family data: the app posts "clear" on sign-in / sign-out.
-const VERSION = "v2"; // v2: drops the retired courtyard photos v1 cached
+const VERSION = "v3"; // v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
 const STATIC = `aangan-static-${VERSION}`;
 const DATA = `aangan-data-${VERSION}`;
 const SHELL = ["/offline.html", "/manifest.webmanifest", "/icons/icon-192.png"];
 const STATIC_PREFIXES = ["/_next/static/", "/demo/", "/icons/", "/home/", "/window/"];
+const RETRY = [502, 503, 504];
 const NEVER = ["/api/media", "/api/session", "/api/auth", "/api/transcribe", "/api/push"];
 
 self.addEventListener("install", (event) => {
@@ -43,7 +44,15 @@ async function staleWhileRevalidate(req) {
 async function networkFirst(req, fallback) {
   const cache = await caches.open(DATA);
   try {
-    const res = await fetch(req);
+    let res = await fetch(req);
+    if (RETRY.includes(res.status)) {
+      await new Promise((r) => setTimeout(r, 250));
+      res = await fetch(req);
+      if (RETRY.includes(res.status)) {
+        const kept = await cache.match(req);
+        if (kept) return kept;
+      }
+    }
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch {
