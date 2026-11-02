@@ -42,6 +42,7 @@ export function localMidnight(tz: string, now: number): number {
 }
 
 export function seedDemoRooms(now = Date.now()): void {
+  seedIyerRooms(now);
   // ---------- Today: one task, both homes. Maa answered; Arjun hasn't yet ----------
   const dayAgo = (n: number) => dateIn("Asia/Kolkata", new Date(now - n * 86_400_000));
   const sides = { parents: ["dadi", "dada"], children: ["arjun", "kavya", "rohan"], madeBy: "muse" };
@@ -444,4 +445,109 @@ function seedKids(now: number): void {
   // Maa lit the lamp for Arjun's home (Arjun and Priya) and left a heartbeat he has not felt yet.
   seedDoc(FAM, "lamp", { id: "home-arjun-priya", litAt: ago(45, now), litBy: "dadi", beats: [{ from: "dadi", at: ago(45, now) }], felt: {}, updatedAt: ago(45, now) });
   seedDoc(FAM, "bedtime_story", { id: "bed-dadi-aria", forMemberId: "aria", byMemberId: "dadi", cardId: "demo-bedtime-dadi-aria", at: ago(20 * 60, now), title: "The little elephant and the moon" });
+}
+
+/**
+ * The Iyer side's rooms (Priya's family): today's question, the Book, a story,
+ * Amma's recipes, a weekly question, advice. Invented, like the Sharma side.
+ * No presence, no open doors: nobody is shown as available who isn't.
+ */
+function seedIyerRooms(now: number): void {
+  const I = "demo-iyer";
+  const dayAgo = (n: number) => dateIn("Asia/Kolkata", new Date(now - n * 86_400_000));
+  const sides = { parents: ["iyer-nani", "iyer-nana"], children: ["iyer-priya", "iyer-karthik"], madeBy: "muse" };
+  seedDoc(I, "today_task", { id: `today-${dayAgo(0)}`, date: dayAgo(0), promptId: "miss", forParents: "One thing you miss about Priya & Karthik", forChildren: "One thing you miss about Amma & Appa", ...sides, answers: [{ memberId: "iyer-nani", cardId: "iyer-amma-today", at: ago(80, now) }], completedAt: null, createdAt: ago(300, now) });
+  seedDoc(I, "today_task", { id: `today-${dayAgo(1)}`, date: dayAgo(1), promptId: "best-day", forParents: "best-day", forChildren: "best-day", ...sides, answers: [{ memberId: "iyer-nana", cardId: "iyer-book-appa", at: ago(1440 + 40, now) }, { memberId: "iyer-priya", cardId: "iyer-book-priya", at: ago(1440 - 60, now) }], completedAt: ago(1440 - 60, now), createdAt: ago(1440 + 120, now) });
+
+  seedDoc(I, "story", { id: "story-iyer-crow", tellerId: "iyer-nani", cardId: "iyer-amma-story", title: "The crow and the sparrow", theme: "animals", ages: "under-5", summary: "A crow's mud house washes away; the sparrow he laughed at gives him a warm place by the fire.", lang: "en", questionId: null, madeBy: "muse", createdAt: ago(60 * 24 * 3, now) });
+  seedDoc(I, "question", { id: "tellme-anika-appa", toMemberId: "iyer-nana", text: "Tell Anika a story about the sea", lang: "en", askedBy: "iyer-priya", topic: "story", answeredCardId: null, madeBy: "family", createdAt: ago(60 * 9, now) });
+
+  const recipe = (r: Record<string, unknown>) => seedDoc(I, "recipe", { addedBy: null, videoCardId: null, coverRef: null, voiceCardId: null, lang: "en", madeBy: "family", ...r });
+  recipe({
+    id: "recipe-amma-rasam",
+    title: "Amma's tomato rasam",
+    cookId: "iyer-nani",
+    course: "main",
+    prepMins: 10,
+    cookMins: 20,
+    serves: "4, with rice",
+    memory: "On every rainy day, and on every day someone had a cold.",
+    prepWork: ["Soak a lemon-sized ball of tamarind in warm water", "Pound pepper and cumin fresh"],
+    outcome: "It froths up once and smells of pepper from the doorway.",
+    ingredients: [
+      { item: "tamarind", said: "the size of a lemon", approx: "≈ 20 g" },
+      { item: "tomatoes", said: "two, crushed by hand", approx: "2 medium" },
+      { item: "pepper and cumin", said: "pounded fresh", approx: "1 tsp each" },
+      { item: "toor dal water", said: "a ladle", approx: "≈ ½ cup" },
+      { item: "ghee, mustard, curry leaves", said: "for the tempering", approx: "1 tsp ghee" },
+      { item: "coriander", said: "at the end", approx: "a handful" },
+    ],
+    steps: [
+      { text: "Boil the tamarind water with the tomatoes, salt and the pounded spices.", tip: "" },
+      { text: "Add the dal water and let it froth once.", tip: "Never let it boil hard." },
+      { text: "Temper mustard and curry leaves in ghee and pour it over.", tip: "" },
+      { text: "Coriander on top, lid on, five minutes.", tip: "" },
+    ],
+    voiceCardId: "iyer-amma-rasam",
+    madeBy: "muse",
+    createdAt: ago(60 * 24 * 4 - 30, now),
+  });
+  recipe({
+    id: "recipe-meera-poha",
+    title: "Kanda poha",
+    cookId: "iyer-meera",
+    course: "breakfast",
+    prepMins: 5,
+    cookMins: 10,
+    serves: "3",
+    memory: "Pune Sunday mornings; Diya eats the peanuts first.",
+    prepWork: ["Rinse the poha and let it rest 5 min"],
+    outcome: "Soft, yellow, every flake separate.",
+    ingredients: [
+      { item: "thick poha", said: "", approx: "2 cups" },
+      { item: "onion", said: "", approx: "1" },
+      { item: "peanuts", said: "", approx: "¼ cup" },
+      { item: "mustard seeds, curry leaves", said: "", approx: "1 tsp" },
+      { item: "turmeric", said: "", approx: "½ tsp" },
+      { item: "lemon", said: "", approx: "½" },
+    ],
+    steps: [
+      { text: "Fry the peanuts, then mustard, curry leaves and onion.", tip: "" },
+      { text: "Add turmeric, salt and the poha; toss on low heat.", tip: "" },
+      { text: "Lemon and coriander on top.", tip: "" },
+    ],
+    createdAt: ago(60 * 24 * 15, now),
+  });
+  recipe({
+    id: "recipe-appa-coffee",
+    title: "Appa's filter coffee",
+    cookId: "iyer-nana",
+    course: "drink",
+    prepMins: 2,
+    cookMins: 15,
+    serves: "2 tumblers",
+    memory: "Six in the morning, before the newspaper, every day of his life.",
+    prepWork: ["Fill the top of the filter with coffee powder, press lightly"],
+    outcome: "A thick decoction, and froth from pouring from a height.",
+    ingredients: [
+      { item: "coffee powder", said: "", approx: "3 tbsp" },
+      { item: "boiling water", said: "", approx: "½ cup" },
+      { item: "milk", said: "", approx: "1 cup" },
+      { item: "sugar", said: "", approx: "to taste" },
+    ],
+    steps: [
+      { text: "Pour boiling water over the powder, close the lid and wait fifteen minutes.", tip: "Don't hurry it." },
+      { text: "Boil the milk; add two spoons of decoction and sugar.", tip: "" },
+      { text: "Pour between tumbler and dabarah till it froths.", tip: "" },
+    ],
+    createdAt: ago(60 * 24 * 21, now),
+  });
+  seedDoc(I, "attempt", { id: "cooked-priya-rasam", recipeId: "recipe-amma-rasam", memberId: "iyer-priya", photoRef: null, note: "Too sour the first time. Better the second.", blessedBy: ["iyer-nani"], createdAt: ago(60 * 30, now) });
+
+  // The weekly question for Amma, and an ask Appa answered by voice.
+  seedDoc(I, "question", { id: "q-amma-week", toMemberId: "iyer-nani", text: "What did you cook for the first Diwali after you were married?", askedBy: null, topic: "recipe", answeredCardId: null, madeBy: "muse", createdAt: ago(60 * 24 * 2, now) });
+  seedDoc(I, "question", { id: "ask-priya-appa-bless", toMemberId: "iyer-nana", text: "Will you bless Vihaan for his birthday?", lang: "en", askedBy: "iyer-priya", topic: "blessing", answeredCardId: "iyer-appa-bless", madeBy: "family", createdAt: ago(60 * 30, now) });
+
+  // A weekly call on the calendar (a time, not a claim that anyone is free now).
+  seedDoc(I, "weekly_call", { id: "weekly-call", weekday: 6, hour: 18, minute: 0, tz: "Asia/Kolkata", hostId: "iyer-nana", name: "Saturday coffee", updatedBy: "iyer-nana", updatedAt: ago(60 * 24 * 10, now) });
 }

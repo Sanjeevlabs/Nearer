@@ -248,6 +248,8 @@ export function seedDemo(): void {
   ] as const)
     addPlay({ id, familyId: "demo-family", cardId, memberId, playedAt: at });
 
+  seedIyer(mins);
+
   // This week's letter from the courtyard, waiting for a grown-up (invented; only the family's names).
   addSuggestion({
     id: "demo-weekly-letter",
@@ -263,6 +265,44 @@ export function seedDemo(): void {
       factCount: 8,
     },
   });
+}
+
+/**
+ * Priya's side, the Iyer family: as lived-in as the Sharma side (photos,
+ * voices, a story, recipes, Diwali last year), all invented. No presence and
+ * no open doors are seeded here: nobody is shown as available who isn't.
+ */
+function seedIyer(mins: (m: number) => string): void {
+  const I = "demo-iyer";
+  const photo = (id: string, authorId: string, takenAt: string, mediaRef: string, caption: string, extra: Partial<z.input<typeof CardSchema>> = {}) =>
+    addCard({ id, familyId: I, type: "photo", caption, lang: "en", takenAt, mediaRef, authorId, source: "upload", ...extra });
+  const voice = (id: string, authorId: string, takenAt: string, caption: string, transcript: string, extra: Partial<z.input<typeof CardSchema>> = {}) =>
+    addCard({ id, familyId: I, type: "audio", caption, lang: "en", takenAt, authorId, source: "upload", transcript, transcriptLang: "en", segments: [{ start: 0, end: 8, text: transcript }], ...extra });
+  // Everyday photos from the three homes.
+  photo("iyer-photo-sill", "iyer-nani", mins(60 * 30), "/demo/home-window.jpg", "Marigolds on the kitchen sill, ready for Diwali.", { place: "Chennai" });
+  photo("iyer-photo-sea", "iyer-nana", mins(60 * 75), "/demo/venues/deck.jpg", "My evening walk ended at the sea again.", { place: "Chennai", note: "Appa's walk, the long way round." });
+  photo("iyer-photo-balcony", "iyer-meera", mins(60 * 24 * 6), "/demo/home-balcony.jpg", "The balcony garden finally has a chair for Appa's visit.", { place: "Pune" });
+  photo("iyer-photo-anika", "iyer-priya", mins(60 * 24 * 9), "/demo/portrait-aria.webp", "Anika with Amma's jasmine in her hair.", { place: "Bengaluru" });
+  // Diwali in earlier years, from the Iyer homes (Occasions; the courtyard's festival card shows them).
+  photo("iyer-diwali-lamp-2025", "iyer-nani", "2025-10-20T13:10:00.000Z", "/demo/lamp-lit.jpg", "The first lamp at our door.", { ritualSlug: "diwali", place: "Chennai" });
+  photo("iyer-diwali-lights-2025", "iyer-karthik", "2025-10-20T14:40:00.000Z", "/demo/venues/pergola.jpg", "Diya strung every light we own.", { ritualSlug: "diwali", place: "Pune" });
+  photo("iyer-diwali-vihaan-2024", "iyer-priya", "2024-11-01T15:00:00.000Z", "/demo/family-leo.webp", "Vihaan, very brave with a sparkler.", { ritualSlug: "diwali", place: "Bengaluru" });
+  // Voices: Appa's blessing, Amma's rasam and her story, Priya to her mother, the daily question.
+  voice("iyer-appa-bless", "iyer-nana", mins(60 * 26), "A blessing for Vihaan's birthday", "Vihaan, eight years old next week. Be curious, be kind to your sister, and come and fly the kite with me on the terrace in December.", { coverRef: "/demo/portrait-leo.webp", addressedTo: "iyer-leo" });
+  voice("iyer-amma-rasam", "iyer-nani", mins(60 * 24 * 4), "How I make rasam", "Tamarind the size of a lemon, soaked in warm water. Tomato crushed by hand, pepper and cumin pounded fresh. Let it froth, never boil. Then the tempering, and coriander at the end.");
+  voice("iyer-amma-story", "iyer-nani", mins(60 * 24 * 3), "The crow and the sparrow", "A crow built his house of mud, and a sparrow built hers of wax. The rain came and washed the crow's house away. Shivering, he knocked at the sparrow's door. Wait, she said, I am feeding my little ones. Wait, I am bathing them. Then she opened the door and gave him a warm place by the fire, and he never forgot it. So, Anika, a friend in the rain is a friend for life.", { coverRef: "/demo/portrait-aria.webp" });
+  voice("iyer-amma-today", "iyer-nani", mins(80), "What I miss about Priya and Karthik", "I miss the noise. Two of them fighting over the last dosa, and me pretending not to see who took it.");
+  voice("iyer-priya-amma", "iyer-priya", mins(60 * 7), "Amma, keep the jasmine for us", "Amma, keep two strings of jasmine for December. Anika has already told her whole class.", { addressedTo: "iyer-nani" });
+  voice("iyer-book-appa", "iyer-nana", mins(60 * 24 + 40), "The best day of my life", "The day Priya was born it rained so hard the bus stopped halfway. I walked the rest, and I was the happiest wet man in Chennai.");
+  voice("iyer-book-priya", "iyer-priya", mins(60 * 24 - 60), "My best day", "The first time Appa let me ride the scooter to the beach, with him holding on at the back and pretending not to be scared.");
+  // The children's side: what Anika and Diya shared with Amma and Appa.
+  voice("iyer-kid-anika-song", "iyer-aria", mins(60 * 4), "I learnt your song, Amma!", "Amma, I learnt the moon song you sing. Listen: nila nila odi vaa. Did I say it right?", { coverRef: "/demo/portrait-aria.webp", addressedTo: "iyer-nani" });
+  voice("iyer-kid-diya-chess", "iyer-diya", mins(60 * 24 * 7), "Appa, I won!", "Appa, I won the chess match with the move you showed me. The knight jump!", { addressedTo: "iyer-nana" });
+  setReaction({ id: "react-nana-diya-chess", familyId: I, cardId: "iyer-kid-diya-chess", memberId: "iyer-nana", kind: "bless", createdAt: mins(60 * 24 * 6) });
+  setReaction({ id: "react-nani-priya-voice", familyId: I, cardId: "iyer-priya-amma", memberId: "iyer-nani", kind: "love", createdAt: mins(60 * 5) });
+  setReaction({ id: "react-priya-appa-bless", familyId: I, cardId: "iyer-appa-bless", memberId: "iyer-priya", kind: "bless", createdAt: mins(60 * 20) });
+  addPlay({ id: "play-priya-amma-story", familyId: I, cardId: "iyer-amma-story", memberId: "iyer-priya", playedAt: mins(60 * 30) });
+  addPlay({ id: "play-arjun-appa-bless", familyId: I, cardId: "iyer-appa-bless", memberId: "iyer-arjun", playedAt: mins(60 * 22) });
 }
 
 export function resetDemo(): void {

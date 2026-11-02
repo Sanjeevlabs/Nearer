@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { dbAddCard, dbAddSuggestion, dbListSuggestions } from "@/lib/db";
-import { listDocs } from "@/lib/family-docs";
+import { deleteDoc, listDocs, memDocsOf } from "@/lib/family-docs";
 import { POST as approvePOST } from "@/app/api/suggestions/[id]/approve/route";
 import { POST as scanPOST } from "@/app/api/ritual-scan/route";
 import { POST as weeklyPOST } from "@/app/api/letters/weekly/route";
 import { GET as lettersGET } from "@/app/api/letters/route";
 import { draftWeeklyLetter } from "@/lib/weekly-letter-run";
-import { resetDemo } from "@/lib/store";
+import { deleteCard, listCards, resetDemo } from "@/lib/store";
 import { sessionCookie } from "./auth-helper";
 
 const IYER = "demo-iyer";
@@ -24,7 +24,12 @@ const approve = (id: string, memberId = "dadi", fam = FAM, body?: unknown) => ap
 const scan = () => scanPOST(post("http://test/api/ritual-scan", "iyer-priya", IYER));
 
 describe("weekly letter: approve, cron, manual route", () => {
-  beforeEach(() => resetDemo());
+  // The Iyer side starts quiet here (its seeded week is set aside), so each test counts only its own cards.
+  beforeEach(async () => {
+    resetDemo();
+    for (const c of listCards().filter((x) => x.familyId === IYER)) deleteCard(c.id);
+    for (const d of memDocsOf(IYER)) await deleteDoc(IYER, d.kind, d.data.id);
+  });
 
   it("approving writes one written chitthi to the whole family; a second approve is 409", async () => {
     await addIyerCards(3);

@@ -30,7 +30,7 @@ interface StoriesData {
   idea?: StoryIdea;
 }
 
-const STARTERS = ["The day you got lost at the mela", "What Papa was like at my age", "An animal that lived near your home", "A story your grandmother told you", "The naughtiest thing you ever did", "A lullaby you sang to your children"];
+const STARTERS = ["The day you got lost at the fair", "What Papa was like at my age", "An animal that lived near your home", "A story your grandmother told you", "The naughtiest thing you ever did", "A lullaby you sang to your children"];
 const ASK_ABOUT = ["a tiger", "an elephant", "when Papa was small", "your village", "a clever monkey", "the moon"];
 const AGE_LABEL: Record<Story["ages"], string> = { all: "All ages", "under-5": "Under 5", "5-8": "5–8", "9-12": "9–12" };
 
@@ -67,6 +67,8 @@ function Stories() {
   const toMe = (data?.requests ?? []).filter((q) => q.toMemberId === viewer.id);
   const mine = (data?.requests ?? []).filter((q) => q.askedBy === viewer.id);
   const canTell = viewer.access !== "child";
+  // This family's own elders, by what the family calls them ("Amma or Appa").
+  const elderNames = members.filter((x) => x.role === "elder" && x.id !== viewer.id).map((x) => callName(x)).slice(0, 2).join(" or ");
 
   return (
     <div>
@@ -211,7 +213,7 @@ function Stories() {
       {data && stories.length === 0 && (
         <div className="mt-6 rounded-hero bg-surface px-6 py-10 text-center">
           <p className="m-0 text-title font-semibold">No stories yet</p>
-          <p className="mx-auto mt-2 max-w-[300px] text-body text-ink-soft">Ask Dadi or Nana for one. Their voice, at bedtime, wherever the children are.</p>
+          <p className="mx-auto mt-2 max-w-[300px] text-body text-ink-soft">{elderNames ? `Ask ${elderNames} for one.` : "Ask a grandparent for one."} Their voice, at bedtime, wherever the children are.</p>
         </div>
       )}
 
