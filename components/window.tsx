@@ -95,14 +95,19 @@ function Badge({ time, weather, glyph }: { time: string; weather: Weather | null
 }
 
 /* ------------------------------------------------------- slide the key home */
-/** Slide the key to the house to open home (or press Enter on the key). No words, nothing moves until you do. */
-function SlideHome({ onOpen }: { onOpen: () => void }) {
+// The bar: 280px at most, 48px tall, centred. The key (left) and the house (right) are both
+// 40px, 4px in from their ends, so the key lands exactly on the house.
+const BAR_H = 48;
+const KNOB = 40;
+const INSET = (BAR_H - KNOB) / 2;
+
+/** Slide the key to the house to open home (or press Enter / Space on the key). Nothing moves until you do. */
+export function SlideHome({ onOpen }: { onOpen: () => void }) {
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<number | null>(null);
   const [x, setX] = useState(0);
   const [done, setDone] = useState(false);
-  const KNOB = 46;
-  const max = () => Math.max(1, (track.current?.clientWidth ?? 200) - KNOB - 8);
+  const max = () => Math.max(1, (track.current?.clientWidth ?? 280) - KNOB - INSET * 2);
   const finish = useCallback(() => {
     setDone(true);
     setX(max());
@@ -115,18 +120,19 @@ function SlideHome({ onOpen }: { onOpen: () => void }) {
   }, [onOpen]);
   const p = Math.min(1, x / max());
   return (
-    <div ref={track} className="relative h-[56px] w-full select-none overflow-hidden rounded-full bg-ink" style={{ touchAction: "none" }}>
-      <span className="pointer-events-none absolute inset-y-0 left-[64px] right-[56px] flex items-center justify-center gap-1.5 text-white/50" style={{ opacity: 1 - p * 1.4 }} aria-hidden="true">
+    <div ref={track} data-ui="window-key" className="relative mx-auto w-full max-w-[280px] select-none overflow-hidden rounded-full bg-ink" style={{ height: BAR_H, touchAction: "none" }}>
+      {/* Chevrons centred on the whole track */}
+      <span className="pointer-events-none absolute inset-0 flex items-center justify-center gap-1 text-white/50" style={{ opacity: 1 - p * 1.4 }} aria-hidden="true">
         {[0, 1, 2].map((i) => (
-          <Icon key={i} name="chevron" size={15} />
+          <Icon key={i} name="chevron" size={14} />
         ))}
       </span>
-      <span className="pointer-events-none absolute right-1.5 top-1.5 grid h-[44px] w-[44px] place-items-center rounded-full text-white" style={{ background: `rgba(255,255,255,${0.1 + p * 0.25})` }} aria-hidden="true">
-        <Icon name="village" size={20} strokeWidth={1.8} />
+      <span className="pointer-events-none absolute grid place-items-center rounded-full text-white" style={{ right: INSET, top: INSET, width: KNOB, height: KNOB, background: `rgba(255,255,255,${0.1 + p * 0.25})` }} aria-hidden="true">
+        <Icon name="village" size={18} strokeWidth={1.8} />
       </span>
       <button
         type="button"
-        aria-label="Slide the key home to open your family"
+        aria-label="Slide to open the house"
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), finish())}
         onPointerDown={(e) => {
           if (done) return;
@@ -144,12 +150,16 @@ function SlideHome({ onOpen }: { onOpen: () => void }) {
           start.current = null;
           setX(0);
         }}
-        className="absolute left-[5px] top-[5px] grid place-items-center rounded-full bg-white text-ink shadow-[0_6px_18px_rgba(0,0,0,.35)]"
-        style={{ width: KNOB, height: KNOB, transform: `translateX(${x}px)`, transition: start.current === null ? "transform 260ms cubic-bezier(.2,.9,.3,1.2)" : "none" }}
+        // The visible knob is 40px; the hit area is the full 48px bar height (touch target >= 44px).
+        className="absolute grid place-items-center rounded-full motion-reduce:transition-none"
+        style={{ left: 0, top: 0, width: KNOB + INSET * 2, height: BAR_H, transform: `translateX(${x}px)`, transition: start.current === null ? "transform 260ms cubic-bezier(.2,.9,.3,1.2)" : "none" }}
       >
-        <m.span animate={done ? { rotate: 90 } : { rotate: 0 }} transition={{ duration: 0.2 }}>
-          <Icon name={done ? "lockOpen" : "key"} size={21} strokeWidth={2} />
-        </m.span>
+        <span className="sr-only">Slide to open the house</span>
+        <span className="grid place-items-center rounded-full bg-white text-ink shadow-[0_6px_18px_rgba(0,0,0,.35)]" style={{ width: KNOB, height: KNOB }} aria-hidden="true">
+          <m.span animate={done ? { rotate: 90 } : { rotate: 0 }} transition={{ duration: 0.2 }} className="grid place-items-center">
+            <Icon name={done ? "lockOpen" : "key"} size={19} strokeWidth={2} />
+          </m.span>
+        </span>
       </button>
     </div>
   );
