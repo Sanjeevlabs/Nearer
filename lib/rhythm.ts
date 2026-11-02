@@ -90,11 +90,12 @@ export function rhythmLine(
     // The only sign is the app heartbeat and it is old: don't call that "active".
     const stale = opts.heartbeatOnly && (opts.now ?? new Date()).getTime() - Date.parse(lastActive) > HEARTBEAT_FRESH_MS;
     if (stale) return r.firstToday ? `Up since ${clock(r.firstToday, tz)} · quiet since ${clock(lastActive, tz)}` : `Quiet since ${clock(lastActive, tz)}`;
-    return r.firstToday ? `Up since ${clock(r.firstToday, tz)} · active ${ago(lastActive)}` : `Active ${ago(lastActive)}`;
+    // Presence comes only from their time in Nearer: say so.
+    return r.firstToday ? `Up since ${clock(r.firstToday, tz)} · active in Nearer ${ago(lastActive)}` : `Active in Nearer ${ago(lastActive)}`;
   }
   if (state === "quiet") {
     const usuallyBusy = r.usual && r.now !== null && r.now >= r.usual[0] && r.now <= r.usual[1];
     return `Quiet since ${clock(lastActive, tz)}${usuallyBusy ? ", usually busy by now" : ""}`;
   }
-  return `Last seen ${ago(lastActive)}`;
+  return `Last in Nearer ${ago(lastActive)}`;
 }

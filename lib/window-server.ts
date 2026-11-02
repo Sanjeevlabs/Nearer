@@ -29,7 +29,7 @@ import { createDownloadUrl } from "./storage";
 import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
-import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
+import { awakeNow, callTile, nextLine, nextUp, waitingForYou, type Glance } from "./glance";
 import { askCardIds, guardianMap, kidsTile } from "./kids";
 import { renderNudgeText, unseenFor } from "./nudges";
 import { listEvents } from "./gather-store";
@@ -92,6 +92,8 @@ export interface WindowState {
   place: { lat: number; lon: number } | null;
   /** Which open space the drawn scene shows: window (default), balcony or courtyard. */
   scene: "window" | "balcony" | "courtyard";
+  /** The one "Next" line: the weekly call in both zones, or the next occasion / visit, whichever is first. */
+  next: { text: string; href: string } | null;
   /** Every home's lamp and the heartbeats waiting for the viewer (the same shape as GET /api/lamp). */
   lamp: LampView;
   /** The latest voice note from someone at the window (from the recent shelf), else null. */
@@ -330,6 +332,9 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const [[weather, farPlace, herePlace], hol] = await Promise.all([skyP, holidays]);
   const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   const own = view ?? defaultView(familyId, viewerId);
+  const glance = glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous });
+  const myTz = viewer?.tz ?? "UTC";
+  const next = nextLine({ call: docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, theirTz: home?.tz ?? null, next: glance.next, now, today: dateIn(myTz, now) });
   const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
   return {
     view: view ? { ...view, style: "still" } : null,
@@ -349,7 +354,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Nearer (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance: glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous }),
+    glance,
+    next,
     homePhoto: own.homePhoto,
     place: farPlace ? { lat: Math.round(farPlace.lat * 100) / 100, lon: Math.round(farPlace.lon * 100) / 100 } : null,
     scene: own.scene ?? "window",

@@ -151,9 +151,9 @@ describe("Safe & sound words", () => {
     const ago = () => "7 h ago";
     const last = "2026-10-31T02:00:00Z"; // 7:30 AM, 7 h before
     expect(rhythmLine("active", last, dr, tz, ago, { heartbeatOnly: true, now })).toBe("Up since 6:10 AM · quiet since 7:30 AM");
-    expect(rhythmLine("active", last, dr, tz, ago, { heartbeatOnly: false, now })).toBe("Up since 6:10 AM · active 7 h ago");
+    expect(rhythmLine("active", last, dr, tz, ago, { heartbeatOnly: false, now })).toBe("Up since 6:10 AM · active in Nearer 7 h ago");
     // A fresh heartbeat is still active.
-    expect(rhythmLine("active", "2026-10-31T08:00:00Z", dr, tz, () => "1 h ago", { heartbeatOnly: true, now })).toContain("active 1 h ago");
+    expect(rhythmLine("active", "2026-10-31T08:00:00Z", dr, tz, () => "1 h ago", { heartbeatOnly: true, now })).toContain("active in Nearer 1 h ago");
   });
   it("a check-in is a timed event, and a closed one adds its close", () => {
     expect(checkinEvents({ kind: "heading", at: "2026-10-31T05:00:00Z", closedAt: "2026-10-31T05:30:00Z" })).toEqual([

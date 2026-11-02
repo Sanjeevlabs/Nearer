@@ -7,6 +7,7 @@ import type { KidAsk, Need, Question, TodayTask, WeeklyCall } from "./kinds";
 import { cleanTitle, type CalOccasion } from "./occasion-calendar";
 import type { Card, Member, Play } from "./schemas";
 import { isAwake, placeFromTz } from "./zones";
+import { dateIn } from "./today";
 
 export type WaitingKind = "voice" | "question" | "today" | "care" | "nudge" | "kid";
 
@@ -24,8 +25,8 @@ export interface Glance {
   awake: { id: string; city: string }[];
   /** The one thing waiting for you; null hides the tile. */
   waiting: WaitingItem | null;
-  /** The next kept occasion or planned event; null = nothing coming. */
-  next: { text: string; href: string } | null;
+  /** The next kept occasion or planned event; null = nothing coming. `date` is its calendar day. */
+  next: { text: string; href: string; date?: string } | null;
   /** New things the kids shared since your last visit ("From the kids"); null hides the tile. */
   kids?: KidsTile | null;
   /** The fixed weekly call, in both zones; `set` false = a nudge to set one. */
@@ -242,7 +243,7 @@ export function nextUp(i: NextInput): Glance["next"] {
     }
   }
   cands.sort((a, b) => a.date.localeCompare(b.date) || a.rank - b.rank || a.text.localeCompare(b.text));
-  return cands[0] ? { text: cands[0].text, href: "/gather" } : null;
+  return cands[0] ? { text: cands[0].text, href: "/gather", date: cands[0].date } : null;
 }
 
 /* ------------------------------------------------------------- our call */
@@ -290,6 +291,19 @@ export function callBothZones(call: Pick<WeeklyCall, "weekday" | "hour" | "minut
   if (!theirClock || clockWords(myTz, at) === theirClock && weekdayIn(myTz, at) === weekdayIn(theirTz, at)) return `${mine} · yours and theirs`;
   const theirDay = weekdayIn(theirTz, at);
   return `${mine} yours · ${theirDay !== weekdayIn(myTz, at) ? `${theirDay} ` : ""}${theirClock} theirs`;
+}
+
+/**
+ * The window's one "Next" line: the weekly call (in both zones) or the next
+ * occasion / planned visit, whichever comes first. Null when neither is set.
+ */
+export function nextLine(i: { call: Pick<WeeklyCall, "weekday" | "hour" | "minute" | "tz"> | undefined; myTz: string; theirTz: string | null; next: { text: string; href: string; date?: string } | null; now: Date; today: string }): { text: string; href: string } | null {
+  const callAt = i.call ? nextCallAt(i.call, i.now) : null;
+  const callText = i.call && callAt ? callBothZones(i.call, i.myTz, i.theirTz ?? i.call.tz, i.now) : null;
+  const call = callText && callAt ? { text: `Weekly call · ${callText}`, href: "/gather", day: dateIn(i.myTz, callAt) } : null;
+  const next = i.next ? { text: i.next.text, href: i.next.href, day: i.next.date ?? "9999-12-31" } : null;
+  if (call && next) return next.day < call.day ? { text: next.text, href: next.href } : { text: call.text, href: call.href };
+  return call ? { text: call.text, href: call.href } : next ? { text: next.text, href: next.href } : null;
 }
 
 export function callTile(call: Pick<WeeklyCall, "id" | "weekday" | "hour" | "minute" | "tz" | "hostId"> | undefined, myTz: string, theirTz: string | null, now: Date): Glance["call"] {
