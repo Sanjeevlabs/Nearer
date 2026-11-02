@@ -354,24 +354,46 @@ def doors(base: str, browser, problems: list[str]) -> None:
     """Two (three) sessions: Arjun opens a chai door for Dadi only. Dadi sees it and joins with audio (no media
     before the tap, no camera after it); Leo sees nothing and cannot open it; Arjun closes it and Dadi's room
     says so within one 60 s re-check. The video provider is blocked: nothing leaves the machine."""
+    # One demo family for all three: Arjun signs in, then hands Dadi and Leo a demo pass
+    # (POST /api/session/pass), as a judge does with a second phone. Live, every demo visitor
+    # gets their own family copy with its own ids, so ids are looked up, never assumed.
     ctxs = {}
     for who in ("arjun", "dadi", "leo"):
         ctx = browser.new_context(viewport={"width": 360, "height": 740}, base_url=base)
         ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
         ctx.add_init_script(GUM_SPY)
         ctx.route(re.compile(r"https://(meet\.jit\.si|8x8\.vc)/.*"), lambda route: route.abort())
-        res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": who}), headers={"content-type": "application/json"})
-        if not res.ok:
-            problems.append(f"doors: {who} sign-in failed {res.status}")
-            return
         ctxs[who] = ctx
     a, d, l = ctxs["arjun"], ctxs["dadi"], ctxs["leo"]
+    res = a.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
+    if not res.ok:
+        problems.append(f"doors: arjun sign-in failed {res.status}")
+        return
+    family = res.json()["familyId"]
+    # Through a page (the browser's own cookie jar and origin), as the app does.
+    pa = a.new_page()
+    pa.goto("/gather/play", wait_until="load")
+    call = "async ([url, body]) => { const r = await fetch(url, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}); return { ok: r.ok, status: r.status, body: await r.json().catch(() => null) }; }"
+    got = pa.evaluate(call, ["/api/members", None])
+    people = (got["body"] or {}).get("members", []) if got["ok"] else []
+    ids = {}
+    for seed in ("dadi", "leo"):
+        hit = next((m for m in people if m.get("familyId", family) == family and (m["id"] == seed or m["id"].endswith("-" + seed))), None)
+        if not hit:
+            problems.append(f"doors: no {seed} in the demo family ({got['status']}, {len(people)} people)")
+            return
+        ids[seed] = hit["id"]
+        made_pass = pa.evaluate(call, ["/api/session/pass", {"memberId": hit["id"]}])
+        if not made_pass["ok"]:
+            problems.append(f"doors: demo pass for {seed} failed {made_pass['status']}")
+            return
+        landing = ctxs[seed].new_page()
+        landing.goto(made_pass["body"]["path"], wait_until="load")
+        landing.close()
     try:
         # Writes go through the page (its own cookies and origin), as the app's own buttons do.
         post = "async (b) => { const r = await fetch('/api/sit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) }); return { ok: r.ok, status: r.status, body: await r.json().catch(() => null) }; }"
-        pa = a.new_page()
-        pa.goto("/gather/play", wait_until="load")
-        made = pa.evaluate(post, {"action": "knock", "activity": "chai", "invites": ["dadi"]})
+        made = pa.evaluate(post, {"action": "knock", "activity": "chai", "invites": [ids["dadi"]]})
         if not made["ok"]:
             problems.append(f"doors: opening the door failed {made['status']}")
             return

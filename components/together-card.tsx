@@ -7,6 +7,7 @@ import { CHIP_ACTIVITIES, PRESETS, doorLine, togetherView, type Activity, type D
 import { postJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import { timeIn } from "@/lib/zones";
+import { DemoHandoff } from "./demo-handoff";
 import { Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
 
@@ -120,6 +121,7 @@ export function TogetherCard({
                 </button>
               </div>
             )}
+            {view.mine && <DemoHandoff />}
             {view.first && (
               <div data-ui="together-door" className="flex min-h-[44px] flex-wrap items-center gap-x-3 gap-y-2">
                 <p className="m-0 min-w-0 flex-1 basis-[180px] text-callout font-medium leading-snug" suppressHydrationWarning>
