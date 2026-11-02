@@ -19,6 +19,8 @@ import { museLabel } from "@/lib/muse-portrait";
 import { kidCards } from "@/lib/kids";
 import { isOccasionAlbum } from "@/lib/occasion-album";
 import { Boundary } from "@/components/ui/boundary";
+import { matchesSearch, starredFirst } from "@/lib/stars";
+import { useStars } from "@/lib/use-stars";
 
 // Memory Lane: the family's everyday photos and voices, by the years. Same
 // kind together: albums, photos, videos and voices each get one swipe row
@@ -39,12 +41,12 @@ function RowHead({ title, count, range, extra }: { title: string; count: number;
   );
 }
 
-function Tile({ card, kind, onOpen, eager = false }: { card: Card; kind: LaneKind; onOpen: () => void; eager?: boolean }) {
+function Tile({ card, kind, onOpen, eager = false, starred = false }: { card: Card; kind: LaneKind; onOpen: () => void; eager?: boolean; starred?: boolean }) {
   const { members } = useViewer();
   const { current, isPlaying } = usePlayer();
   const author = members.find((m) => m.id === card.authorId);
   const voice = kind === "audio";
-  const label = voice ? `${callName(author)}'s voice note, ${monthChip(card.takenAt)}` : card.caption || `${kind === "video" ? "Video" : "Photo"}, ${monthChip(card.takenAt)}`;
+  const label = (voice ? `${callName(author)}'s voice memory, ${monthChip(card.takenAt)}` : card.caption || `${kind === "video" ? "Video" : "Photo"}, ${monthChip(card.takenAt)}`) + (starred ? ", starred" : "");
   return (
     <button
       type="button"
@@ -56,6 +58,11 @@ function Tile({ card, kind, onOpen, eager = false }: { card: Card; kind: LaneKin
       <Photo src={cardCover(card, members)} alt="" sizes="240px" position="center 30%" priority={eager} />
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.28),transparent_38%,transparent_58%,rgba(0,0,0,.55))]" aria-hidden="true" />
       <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-caption font-semibold">{monthChip(card.takenAt)}</span>
+      {starred && (
+        <span className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-[#1c1b1a]" aria-hidden="true">
+          <Icon name="star" size={13} solid />
+        </span>
+      )}
       {kind !== "photo" && (
         <span className="glass absolute bottom-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full">
           <Icon name={voice && current?.id === card.id && isPlaying ? "pause" : "play"} size={11} />
@@ -85,6 +92,10 @@ export default function LanePage() {
   const { refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const [who, setWho] = useState<string | null>(null);
+  // Starred: only my favourites. Search: words from captions, transcripts, places, names and dates.
+  const [onlyStarred, setOnlyStarred] = useState(false);
+  const [query, setQuery] = useState("");
+  const stars = useStars();
   // /lane?from=kids (the window's "From the kids" tile): only what the children shared.
   const [kidsOnly, setKidsOnly] = useState(false);
   useEffect(() => {
@@ -102,13 +113,20 @@ export default function LanePage() {
 
   // Until we know what the other tabs show, nothing is drawn (no flash of their cards). A failed lookup shows everything.
   const skip = useMemo(() => (elsewhereQ.data ? new Set(elsewhereQ.data.elsewhere) : elsewhereQ.failed ? new Set<string>() : null), [elsewhereQ.data, elsewhereQ.failed]);
-  const groups = useMemo(() => (shown && skip ? laneGroups(shown, who, skip) : null), [shown, who, skip]);
+  const groups = useMemo(() => {
+    if (!shown || !skip) return null;
+    const g = laneGroups(shown, who, skip);
+    const keep = (c: Card) => (!onlyStarred || stars.starred.includes(c.id)) && matchesSearch(c, query, members);
+    // My starred memories always come first in their row ("always remembered").
+    return { photo: starredFirst(g.photo.filter(keep), stars.starred), video: starredFirst(g.video.filter(keep), stars.starred), audio: starredFirst(g.audio.filter(keep), stars.starred) };
+  }, [shown, who, skip, onlyStarred, query, members, stars.starred]);
+  const filtering = onlyStarred || query.trim() !== "";
   const albums = useMemo(() => {
     // Occasion albums (weddings, birthdays, festivals) live in Celebrations → Occasions, not here too.
     const all = (albumsQ.data?.albums ?? []).filter((a) => a.cardIds.length >= 2 && !isOccasionAlbum(a));
     const mine = who && cards ? all.filter((a) => a.cardIds.some((id) => cards.find((c) => c.id === id)?.authorId === who)) : all;
-    return kidsOnly ? [] : [...mine].sort((a, b) => b.endAt.localeCompare(a.endAt));
-  }, [albumsQ.data, who, cards, kidsOnly]);
+    return kidsOnly || filtering ? [] : [...mine].sort((a, b) => b.endAt.localeCompare(a.endAt));
+  }, [albumsQ.data, who, cards, kidsOnly, filtering]);
   // Albums sit above the rows: wait for them too, or the rows slide down when they arrive.
   const loading = groups === null || !ready || (albumsQ.data === null && !albumsQ.failed);
   const total = groups ? groups.photo.length + groups.video.length + groups.audio.length : 0;
@@ -148,10 +166,14 @@ export default function LanePage() {
     <div>
       <RoomHeader title="Memory Lane" subtitle="Everyday photos and voices, by the years" />
 
-      {!loading && (people.length > 1 || kidsOnly) && (
-        <div className="no-scrollbar -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Show memories from">
-          <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-medium", who === null && !kidsOnly ? "bg-accent text-accent-ink" : "bg-surface")}>
+      {!loading && (
+        <div className="no-scrollbar -mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Show memories from">
+          <button type="button" role="radio" aria-checked={who === null && !kidsOnly && !onlyStarred} onClick={() => { setWho(null); setKidsOnly(false); setOnlyStarred(false); }} className={cn("press h-11 shrink-0 rounded-full px-4 text-callout font-medium", who === null && !kidsOnly && !onlyStarred ? "bg-accent text-accent-ink" : "bg-surface")}>
             Everyone
+          </button>
+          <button type="button" role="radio" aria-checked={onlyStarred} onClick={() => { setOnlyStarred(true); setWho(null); setKidsOnly(false); }} className={cn("press flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-callout font-medium", onlyStarred ? "bg-accent text-accent-ink" : "bg-surface")}>
+            <Icon name="star" size={16} solid={onlyStarred} />
+            Starred
           </button>
           {kidsOnly && (
             <button type="button" role="radio" aria-checked onClick={() => setKidsOnly(false)} className="press h-10 shrink-0 rounded-full bg-accent px-4 text-callout font-medium text-accent-ink">
@@ -159,12 +181,30 @@ export default function LanePage() {
             </button>
           )}
           {people.map((m) => (
-            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); }} className={cn("press flex h-10 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", who === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
+            <button key={m.id} type="button" role="radio" aria-checked={who === m.id} onClick={() => { setWho(m.id); setKidsOnly(false); setOnlyStarred(false); }} className={cn("press flex h-11 shrink-0 items-center gap-1.5 rounded-full pl-1 pr-3.5 text-callout font-medium", who === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
               <Avatar src={memberPhoto(m)} name={callName(m)} size={32} />
               {callName(m)}
             </button>
           ))}
         </div>
+      )}
+      {!loading && (
+        <label className="mb-4 flex h-11 items-center gap-2 rounded-full bg-surface px-4 text-ink-soft">
+          <Icon name="search" size={18} />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="A place, a name, words they said"
+            aria-label="Search photos and voice memories"
+            className="h-full min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-faint"
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="press -mr-2 grid h-11 w-11 place-items-center rounded-full">
+              <Icon name="close" size={16} />
+            </button>
+          )}
+        </label>
       )}
 
       {loading || groups === null ? (
@@ -181,10 +221,18 @@ export default function LanePage() {
           ))}
         </div>
       ) : total === 0 && albums.length === 0 ? (
-        <EmptyLine>{who ? "Nothing from them yet." : "Nothing here yet. Memories appear as the family shares them."}</EmptyLine>
+        <EmptyLine>
+          {query.trim()
+            ? `Nothing matches “${query.trim()}”. Try a place, a name or a word they said.`
+            : onlyStarred
+              ? "No stars yet. Tap the star on a photo or a voice memory and it stays here, always first."
+              : who
+                ? "Nothing from them yet."
+                : "Nothing here yet. Memories appear as the family shares them."}
+        </EmptyLine>
       ) : (
         <div className="space-y-5">
-          {!kidsOnly && (albums.length > 0 || (albumsQ.data && total > 0)) && cards && (
+          {!kidsOnly && !filtering && (albums.length > 0 || (albumsQ.data && total > 0)) && cards && (
             <Boundary label="Albums"><section aria-label="Albums">
               <RowHead
                 title="Albums"
@@ -225,7 +273,7 @@ export default function LanePage() {
                 <RowHead title={r.title} count={list.length} range={rangeLabel(list)} />
                 <Row label={r.title}>
                   {list.map((c, i) => (
-                    <Tile key={c.id} card={c} kind={r.kind} eager={first && i < 3} onOpen={() => setOpen({ kind: r.kind, index: i })} />
+                    <Tile key={c.id} card={c} kind={r.kind} eager={first && i < 3} starred={stars.isStarred(c.id)} onOpen={() => setOpen({ kind: r.kind, index: i })} />
                   ))}
                 </Row>
               </section></Boundary>
@@ -234,7 +282,7 @@ export default function LanePage() {
         </div>
       )}
 
-      <AnimatePresence>{viewing && open && viewing.list.length > 0 && <LaneViewer key={open.kind} cards={viewing.list} start={open.index} title={viewing.title} onClose={() => setOpen(null)} />}</AnimatePresence>
+      <AnimatePresence>{viewing && open && viewing.list.length > 0 && <LaneViewer key={open.kind} cards={viewing.list} start={open.index} title={viewing.title} onClose={() => setOpen(null)} starred={stars.starred} onStar={stars.toggle} />}</AnimatePresence>
     </div>
   );
 }

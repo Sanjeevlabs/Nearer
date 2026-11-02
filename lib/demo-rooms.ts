@@ -327,7 +327,7 @@ export function seedDemoRooms(now = Date.now()): void {
   seedDoc(FAM, "safety_checkin", { id: "safe-papa-2", memberId: "dada", kind: "home-safe", note: "", etaAt: null, closedAt: ago(140, now), location: null, at: ago(140, now) });
 
   // ---------- Nudges waiting for Arjun: a reply loop and the calendar ----------
-  seedDoc(FAM, "nudge", { id: "nudge-demo-heard", toMemberId: "arjun", kind: "heard", text: "{m:dadi} heard your voice note", href: "/home?card=demo-voice-1", at: ago(60 * 5, now), deliverAfter: ago(60 * 2, now), deliveredAt: null, channel: null, seenAt: null });
+  seedDoc(FAM, "nudge", { id: "nudge-demo-heard", toMemberId: "arjun", kind: "heard", text: "{m:dadi} heard your voice memory", href: "/home?card=demo-voice-1", at: ago(60 * 5, now), deliverAfter: ago(60 * 2, now), deliveredAt: null, channel: null, seenAt: null });
   seedDoc(FAM, "nudge", { id: "nudge-demo-occasion", toMemberId: "arjun", kind: "occasion", text: "The call for {m:leo}'s birthday is on Monday", href: "/gather", at: ago(60 * 4, now), deliverAfter: ago(60 * 2, now), deliveredAt: null, channel: null, seenAt: null });
 
   // ---------- Care circle ----------
@@ -420,11 +420,11 @@ export function seedDemoRooms(now = Date.now()): void {
 
   // ---------- What Muse did this week (sample activity for the demo) ----------
   const calls: [string, number, number, boolean][] = [
-    ["Wrote up Maa's recipe from a voice note", 60 * 24 * 3, 2140, false],
+    ["Wrote up Maa's recipe from a voice memory", 60 * 24 * 3, 2140, false],
     ["Translated \"Maa's dal tadka\" for a reader in English", 60 * 24 * 3 - 5, 980, false],
     ["Asked Maa this week's question", 60 * 24 * 2, 760, false],
     ["Wrote a note for Maa in Hindi: the gas booking", 60 * 20, 640, false],
-    ["Transcribed Arjun's voice note", 60 * 6, 1830, false],
+    ["Transcribed Arjun's voice memory", 60 * 6, 1830, false],
     ["Translated Maa's blessing for Vihaan", 60 * 5, 0, true],
   ];
   calls.forEach(([purpose, mins, ms, cached], i) =>

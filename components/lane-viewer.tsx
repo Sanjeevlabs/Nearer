@@ -65,7 +65,7 @@ function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: bo
             <div className="relative h-[200px] w-[200px] overflow-hidden rounded-[28px] shadow-2xl">
               <Photo src={cover} alt="" sizes="400px" position="center 30%" />
             </div>
-            <p className="m-0 mt-4 text-body font-semibold">{callName(author)}&rsquo;s voice note</p>
+            <p className="m-0 mt-4 text-body font-semibold">{callName(author)}&rsquo;s voice memory</p>
             <VoiceControls card={card} queue={queue} onPrev={onPrev} onNext={onNext} className="mt-3 w-full max-w-[360px]" />
           </div>
         </div>
@@ -82,7 +82,7 @@ function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: bo
   );
 }
 
-export function LaneViewer({ cards, start, title, onClose }: { cards: Card[]; start: number; title: string; onClose: () => void }) {
+export function LaneViewer({ cards, start, title, onClose, starred, onStar }: { cards: Card[]; start: number; title: string; onClose: () => void; starred?: string[]; onStar?: (cardId: string) => void }) {
   const strip = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(Math.min(start, Math.max(0, cards.length - 1)));
   const [editing, setEditing] = useState(false);
@@ -170,6 +170,17 @@ export function LaneViewer({ cards, start, title, onClose }: { cards: Card[]; st
         <p className="tnum m-0 flex-1 text-center text-callout font-medium text-white/80">
           {title} · {index + 1} of {cards.length}
         </p>
+        {onStar && (
+          <button
+            type="button"
+            onClick={() => onStar(card.id)}
+            aria-pressed={starred?.includes(card.id) ?? false}
+            aria-label={starred?.includes(card.id) ? "Starred, one of my favourites. Tap to unstar" : "Star it: keep it in my favourites"}
+            className="press grid h-11 w-11 place-items-center rounded-full bg-white/15 backdrop-blur-md"
+          >
+            <Icon name="star" size={20} solid={starred?.includes(card.id) ?? false} />
+          </button>
+        )}
         <div className="rounded-full bg-white/15 backdrop-blur-md">
           <CardActions card={card} tone="light" onEditing={setEditing} />
         </div>

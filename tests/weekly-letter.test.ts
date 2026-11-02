@@ -29,7 +29,7 @@ describe("draft_weekly_letter (mock)", () => {
     const { facts, weekStart } = await gatherWeekFacts(FAM);
     expect(facts.length).toBeGreaterThanOrEqual(3);
     expect(facts.length).toBeLessThanOrEqual(40);
-    expect(facts.some((f) => /^\w{3}: Maa shared a voice note 'Rain all evening/.test(f))).toBe(true);
+    expect(facts.some((f) => /^\w{3}: Maa shared a voice memory 'Rain all evening/.test(f))).toBe(true);
     expect(weekStart).toBe(weekStartOf());
   });
 

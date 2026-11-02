@@ -36,7 +36,7 @@ describe("the week's best moment", () => {
     expect(pickWeekMoment(input({ cards: [card("a", "maa")], plays: [play("a", "arjun")] }))).toBeNull();
   });
 
-  it("prefers the most blessed and most heard voice note, and names it by its story", () => {
+  it("prefers the most blessed and most heard voice memory, and names it by its story", () => {
     const stories = [{ id: "s", tellerId: "maa", cardId: "monsoon", title: "The monsoon", summary: "" } as Story];
     const m = pickWeekMoment(
       input({

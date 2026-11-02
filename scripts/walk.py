@@ -242,6 +242,14 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
                     h = head.first.bounding_box()
                     if h and h["height"] > 104:
                         problems.append(f"{person} {href}: header is {h['height']:.0f}px, over 104")
+            if href == "/lane":
+                # Memory Lane: voice memories (never "voice notes"), a Starred filter and a search box.
+                if page.get_by_text(re.compile(r"\bvoice notes?\b", re.I)).count():
+                    problems.append(f"{person} /lane: still says 'voice note'")
+                if page.get_by_role("radio", name=re.compile(r"Starred")).count() == 0:
+                    problems.append(f"{person} /lane: no Starred filter")
+                if page.get_by_role("searchbox", name="Search photos and voice memories").count() == 0:
+                    problems.append(f"{person} /lane: no search box")
             fit_check(page, href, problems, person)
             dock_overlaps(page, href, problems, person)
     ctx.close()
@@ -319,7 +327,7 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
     plan = [
         ("/", "the house", lambda: page.get_by_role("button", name="Open the house")),
         ("/", "photo / moment", lambda: page.get_by_role("button", name="Photo", exact=True)),
-        ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Voice note"))),
+        ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Voice memory"))),
         ("/", "invite family", lambda: page.get_by_role("button", name="Invite family")),
         ("/bond", "invite (family page)", lambda: page.get_by_role("button", name=re.compile(r"^Invite$"))),
         ("/bond", "add someone", lambda: page.get_by_role("button", name=re.compile(r"^Add someone"))),

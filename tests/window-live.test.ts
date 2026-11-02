@@ -21,7 +21,7 @@ const H = 3_600_000;
 describe("the lamp is lit only by an explicit tap", () => {
   beforeEach(() => resetDemo());
 
-  it("a voice note from their home does not light it; a tap does", async () => {
+  it("a voice memory from their home does not light it; a tap does", async () => {
     const read = async (as: string) => ((await (await lampGET(authedGet("http://t/api/lamp", as))).json()) as { lamps: { memberIds: string[]; litAt: string | null; litBy: string | null }[] }).lamps;
     const dadiHome = (ls: Awaited<ReturnType<typeof read>>) => ls.find((l) => l.memberIds.includes("dadi"));
     const before = dadiHome(await read("arjun"));

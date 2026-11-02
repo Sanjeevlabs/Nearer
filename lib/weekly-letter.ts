@@ -78,7 +78,7 @@ export async function gatherWeekFacts(familyId: string, weekStart?: string, now:
   for (const l of chitthi) if (Date.parse(l.deliverAt) > now.getTime()) hidden.add(l.id);
   for (const t of tasks) if (!t.completedAt) for (const a of t.answers) hidden.add(a.cardId);
   const visible = cards.filter((c) => !hidden.has(c.id));
-  const what = (c: { type: string }) => (c.type === "audio" ? "voice note" : c.type === "video" ? "video" : "photo");
+  const what = (c: { type: string }) => (c.type === "audio" ? "voice memory" : c.type === "video" ? "video" : "photo");
 
   const rows: { at: string; text: string }[] = [];
   for (const c of visible) {

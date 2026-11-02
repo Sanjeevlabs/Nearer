@@ -25,7 +25,7 @@ export function CardActions({ card, tone = "soft", onEditing }: { card: Card; to
   if (canChange(viewer, card.authorId, "edit")) actions.push({ label: card.type === "audio" ? "Edit the words" : "Edit caption", onSelect: () => onEditing?.(true) });
   if (canChange(viewer, card.authorId, "delete"))
     actions.push({
-      label: card.type === "audio" ? "Delete voice note" : "Delete",
+      label: card.type === "audio" ? "Delete voice memory" : "Delete",
       danger: true,
       confirm: card.authorId === viewer.id ? "Delete it for everyone? Reactions and replies to it go too." : "Remove this for everyone? (admin)",
       onSelect: async () => {
@@ -34,7 +34,7 @@ export function CardActions({ card, tone = "soft", onEditing }: { card: Card; to
         bumpRefresh();
       },
     });
-  return <ActionMenu actions={actions} tone={tone} label="Voice note options" />;
+  return <ActionMenu actions={actions} tone={tone} label="Voice memory options" />;
 }
 
 export function CaptionEditor({ card, onDone }: { card: Card; onDone: () => void }) {
@@ -81,7 +81,7 @@ export function VoiceRow({ card, showAuthor = true }: { card: Card; showAuthor?:
       <button
         type="button"
         onClick={() => (active ? toggle() : play(card))}
-        aria-label={`Play ${callName(author)}'s voice note`}
+        aria-label={`Play ${callName(author)}'s voice memory`}
         className="press relative h-14 w-14 shrink-0 overflow-hidden rounded-[16px] bg-surface"
         style={{ boxShadow: tintShadow(card, 0.35) }}
       >

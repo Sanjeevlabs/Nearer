@@ -78,10 +78,10 @@ describe("the inbox", () => {
   const card = (id: string, authorId: string, addressedTo: string | null, takenAt: string, type: "audio" | "photo" = "audio") => CardSchema.parse({ id, familyId: "f", type, caption: id, lang: "en", takenAt, authorId, addressedTo });
   const base: InboxInput = { viewerId: "arjun", now, names: { dadi: "Maa", priya: "Priya" }, cards: [], plays: [], reactions: [], wishes: [], questions: [], kidAsks: [], guardians: {}, beats: [], felt: null, nudges: [] };
 
-  it("lists a voice note addressed to me as waiting, then as earlier once played", () => {
+  it("lists a voice memory addressed to me as waiting, then as earlier once played", () => {
     const cards = [card("v1", "dadi", "arjun", iso(2)), card("v2", "dadi", "priya", iso(2)), card("v3", "dadi", null, iso(1))];
     const [one] = buildInbox({ ...base, cards });
-    expect(one).toMatchObject({ id: "card-v1", kind: "voice", text: "Maa sent you a voice note", waiting: true, action: "play", replyTo: "dadi", href: "/lane?card=v1" });
+    expect(one).toMatchObject({ id: "card-v1", kind: "voice", text: "Maa sent you a voice memory", waiting: true, action: "play", replyTo: "dadi", href: "/lane?card=v1" });
     expect(buildInbox({ ...base, cards }).map((i) => i.id)).toEqual(["card-v1"]);
     expect(buildInbox({ ...base, cards, plays: [{ cardId: "v1", memberId: "arjun" }] })[0]).toMatchObject({ waiting: false, heard: true });
   });
@@ -94,7 +94,7 @@ describe("the inbox", () => {
       { id: "r3", cardId: "mine", memberId: "arjun", kind: "love" as const, createdAt: iso(3) },
     ];
     const items = buildInbox({ ...base, cards, reactions });
-    expect(items.map((i) => i.text)).toEqual(["Maa sent a blessing on your voice note"]);
+    expect(items.map((i) => i.text)).toEqual(["Maa sent a blessing on your voice memory"]);
     expect(items[0]).toMatchObject({ waiting: false, replyTo: "dadi" });
   });
 
@@ -123,7 +123,7 @@ describe("the inbox", () => {
     const wishes = [{ id: "w1", cardId: "mine", memberId: "priya", kind: "wish" as const, createdAt: iso(3) }];
     const beats = [{ from: "dadi", at: iso(5) }];
     const nudges = [
-      { id: "n1", kind: "heard", text: "Priya heard your voice note", href: "/", at: iso(6), seen: false, from: "priya" },
+      { id: "n1", kind: "heard", text: "Priya heard your voice memory", href: "/", at: iso(6), seen: false, from: "priya" },
       { id: "n2", kind: "occasion", text: "Diwali is coming", href: "/", at: iso(7), seen: false },
     ];
     const items = buildInbox({ ...base, cards, questions: [q], kidAsks: [kid], today, reactions, wishes, beats, nudges });
@@ -154,7 +154,7 @@ describe("the inbox", () => {
     expect(items.find((i) => i.kind === "kid")?.replyTo).toBe("leo");
   });
 
-  it("demo seed: Arjun's inbox shows a voice note, a question, a blessing and a lamp", async () => {
+  it("demo seed: Arjun's inbox shows a voice memory, a question, a blessing and a lamp", async () => {
     resetDemo();
     const res = await inboxGET(authedGet("http://t/api/inbox", "arjun"));
     const { items } = InboxResponseSchema.parse(await res.json());

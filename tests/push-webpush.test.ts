@@ -14,7 +14,7 @@ const RFC = {
   body: "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN",
 };
 const enc = (s: string) => new TextEncoder().encode(s);
-const msg: PushMessage = { title: "Nearer", body: "Dadi sent you a voice note", url: "/lane?card=c1", tag: "voice-c1", urgency: "high" };
+const msg: PushMessage = { title: "Nearer", body: "Dadi sent you a voice memory", url: "/lane?card=c1", tag: "voice-c1", urgency: "high" };
 
 describe("Web Push encryption (RFC 8291, aes128gcm)", () => {
   it("reproduces the RFC 8291 Appendix A message exactly", async () => {

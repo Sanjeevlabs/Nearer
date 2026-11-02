@@ -74,11 +74,11 @@ describe("the sweep", () => {
 
   const invites = () => outbox.filter((o) => o.msg.tag === "quiet-dadi");
 
-  it("invites the far child once: 'Maa's been quiet this morning. Send a voice note?'", async () => {
+  it("invites the far child once: 'Maa's been quiet this morning. Send a voice memory?'", async () => {
     const n = await sweepQuietMornings(FAM, LATE_AFTERNOON);
     expect(n).toBeGreaterThan(0);
     const mine = invites().find((o) => o.memberId === "arjun");
-    expect(mine?.msg).toMatchObject({ body: "Maa's been quiet this morning. Send a voice note?", url: "/", urgency: "normal" });
+    expect(mine?.msg).toMatchObject({ body: "Maa's been quiet this morning. Send a voice memory?", url: "/", urgency: "normal" });
     clearOutbox();
     expect(await sweepQuietMornings(FAM, new Date(LATE_AFTERNOON.getTime() + 15 * 60_000))).toBe(0);
     expect(invites()).toEqual([]);

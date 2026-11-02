@@ -307,18 +307,18 @@ export function familyHomePhoto(familyId: string | null | undefined, own: string
 // Signal + role lines per viewer display_lang (data, not logic).
 // en, hi-latn (Latin script), hi-deva (Devanagari).
 export const MOCK_SIGNAL_LINES: Record<string, string> = {
-  dadi: "Arjun sent you a voice note · Priya asked for your dal recipe",
-  arjun: "Maa heard your voice note · Papa sent a blessing",
+  dadi: "Arjun sent you a voice memory · Priya asked for your dal recipe",
+  arjun: "Maa heard your voice memory · Papa sent a blessing",
   dada: "Arjun asked for your blessing · Priya sent a photo",
-  priya: "Maa heard your voice note · 1 new recipe",
+  priya: "Maa heard your voice memory · 1 new recipe",
 };
 
 export const SIGNAL_LINES_BY_LANG: Record<string, Record<string, string>> = {
   en: {
-    dadi: "Arjun sent you a voice note · Priya asked for your dal recipe",
+    dadi: "Arjun sent you a voice memory · Priya asked for your dal recipe",
     dada: "Arjun asked for your blessing · Priya sent a photo",
-    arjun: "Maa heard your voice note · Papa sent a blessing",
-    priya: "Maa heard your voice note · 1 new recipe",
+    arjun: "Maa heard your voice memory · Papa sent a blessing",
+    priya: "Maa heard your voice memory · 1 new recipe",
   },
   "hi-latn": {
     dadi: "Arjun ne aapko voice note bheja · Priya ne dal ki recipe maangi",

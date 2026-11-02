@@ -9,9 +9,9 @@ import { useViewer } from "@/components/viewer";
 // Settings → Privacy, where the controls are.
 
 const POINTS: { title: string; line: string }[] = [
-  { title: "What we keep", line: "Your family's tree, the photos, voice notes, recipes, stories and care notes you share, and the settings you choose. Files sit in private storage." },
+  { title: "What we keep", line: "Your family's tree, the photos, voice memories, recipes, stories and care notes you share, and the settings you choose. Files sit in private storage." },
   { title: "Who sees it", line: "Only the people in your family. Every read and write is locked to your family. Nothing is public unless you make a share link, and you can take that link back." },
-  { title: "Your voice stays in the family", line: "Voice notes are heard by your family, nobody else. Voices are never cloned, and there is no face recognition." },
+  { title: "Your voice stays in the family", line: "Voice memories are heard by your family, nobody else. Voices are never cloned, and there is no face recognition." },
   { title: "No ads, no tracking", line: "No advertising, no selling your data, no tracking across apps. Safe & sound shows only what each person chooses to share, and photos lose their location before upload." },
   { title: "Muse, the helper", line: "Meta's AI models write captions, transcripts and translations for your family. Muse never posts as a person." },
   { title: "Delete anytime", line: "A grown-up can download the family's data as one file. You can delete your reactions, wishes and listens, or leave the family: your profile and place in the tree are deleted. Memories you shared stay with the family." },

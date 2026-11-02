@@ -787,7 +787,7 @@ export function AddSheet() {
     <BottomSheet
       open={addOpen}
       onClose={closeAdd}
-      title={voice ? (purposeTitle(replyTo) ?? "New voice note") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}
+      title={voice ? (purposeTitle(replyTo) ?? "New voice memory") : (purposeTitle(replyTo?.kind === "fridge" ? replyTo : null) ?? "Share a moment")}
       dataUi="add-sheet"
       z={50}
     >

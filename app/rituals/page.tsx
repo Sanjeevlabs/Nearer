@@ -115,7 +115,7 @@ function Group({ g, members, albums, onOpen }: { g: OccasionGroup; members: Memb
                   {by ? <Avatar src={memberPhoto(by)} name={callName(by)} size={40} /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-well"><Icon name="music" size={17} /></span>}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-callout font-semibold leading-tight">{by ? callName(by) : "The family"}</span>
-                    <span className="voice block truncate text-callout text-ink-soft">{c.caption || "A voice note"}</span>
+                    <span className="voice block truncate text-callout text-ink-soft">{c.caption || "A voice memory"}</span>
                   </span>
                   <span className="tnum text-caption text-ink-faint">{formatDuration(cardDuration(c))}</span>
                   <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-tint text-ink" : "bg-accent text-accent-ink"}`}>

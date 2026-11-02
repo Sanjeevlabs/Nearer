@@ -11,7 +11,7 @@ export type LaneKind = "photo" | "video" | "audio";
 export const LANE_ROWS: { kind: LaneKind; title: string; one: string; many: string }[] = [
   { kind: "photo", title: "Photos", one: "photo", many: "photos" },
   { kind: "video", title: "Videos", one: "video", many: "videos" },
-  { kind: "audio", title: "Voice notes", one: "voice note", many: "voice notes" },
+  { kind: "audio", title: "Voice memories", one: "voice memory", many: "voice memories" },
 ];
 
 function valid(iso: string): Date | null {

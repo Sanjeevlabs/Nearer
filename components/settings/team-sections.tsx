@@ -42,9 +42,9 @@ export function HowWereDoing() {
           />
           <Stat
             id="metric-bids"
-            label="Voice notes answered within a day"
+            label="Voice memories answered within a day"
             value={data.bidsAnswered.share === null ? "None to count yet" : `${pct(data.bidsAnswered.share)} · ${data.bidsAnswered.answered} of ${data.bidsAnswered.total}`}
-            note="Parents' voice notes from the last 30 days that got a note back, a reaction or a wish within 24 hours. Listening alone doesn't count."
+            note="Parents' voice memories from the last 30 days that got a note back, a reaction or a wish within 24 hours. Listening alone doesn't count."
           />
           <Stat
             id="metric-parent-days"

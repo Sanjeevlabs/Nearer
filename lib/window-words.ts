@@ -68,7 +68,7 @@ export function glowLeft(litAt: string, now: Date, hours = LAMP_GLOW_HOURS): str
 export const LAMP_ASK = "Light the lamp — they’ll know you’re thinking of them";
 
 /** The lamp's one-line explanation, for the small "?" sheet. */
-export const lampWhy = (hours = LAMP_GLOW_HOURS) => `Tap the lamp to say you’re thinking of them. It glows in their window for ${hours} hours. Only a tap lights it, never a voice note or a photo.`;
+export const lampWhy = (hours = LAMP_GLOW_HOURS) => `Tap the lamp to say you’re thinking of them. It glows in their window for ${hours} hours. Only a tap lights it, never a voice memory or a photo.`;
 
 /**
  * The lamp's single line. Whoever lit it last, while it still glows:

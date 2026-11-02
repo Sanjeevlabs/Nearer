@@ -65,7 +65,7 @@ export function pickWeekMoment(i: MomentInput): Moment | null {
     const score = listeners.size * 2 + mine.filter((r) => r.kind === "bless").length * 3 + mine.filter((r) => r.kind === "love").length;
     if (score < MIN_SCORE) continue;
     const story = i.stories.find((s) => s.cardId === c.id);
-    const what = story ? `story, ${clip(oneLine(story.title), 60)}` : c.caption.trim() && c.caption.length <= 60 ? `voice note, ${oneLine(c.caption)}` : "voice note";
+    const what = story ? `story, ${clip(oneLine(story.title), 60)}` : c.caption.trim() && c.caption.length <= 60 ? `voice memory, ${oneLine(c.caption)}` : "voice memory";
     found.push({ kind: story ? "story" : "voice", cardId: c.id, authorId: c.authorId, score, at: c.takenAt, href: `/home?card=${encodeURIComponent(c.id)}`, text: `${PREFIX}{m:${c.authorId}}'s ${what}` });
   }
 

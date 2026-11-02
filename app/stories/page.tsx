@@ -196,7 +196,7 @@ function Stories() {
                           label={`${s.title} options`}
                           actions={[
                             ...(canChange(viewer, s.tellerId, "edit") ? [{ label: "Edit", onSelect: () => setEditing(s) }] : []),
-                            { label: "Remove from Stories", danger: true, confirm: "Remove it? The voice note stays in Memory Lane.", onSelect: async () => { await postJson("/api/stories", { action: "delete", storyId: s.id }); await reload(); } },
+                            { label: "Remove from Stories", danger: true, confirm: "Remove it? The voice memory stays in Memory Lane.", onSelect: async () => { await postJson("/api/stories", { action: "delete", storyId: s.id }); await reload(); } },
                           ]}
                         />
                       </div>

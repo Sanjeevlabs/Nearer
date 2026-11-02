@@ -399,7 +399,7 @@ export function VoiceControls({
           </div>
         </div>
       )}
-      <div className="mt-1 flex items-center justify-between" role="group" aria-label="Voice note controls">
+      <div className="mt-1 flex items-center justify-between" role="group" aria-label="Voice memory controls">
         <button type="button" onClick={() => onPrev?.()} disabled={!onPrev} aria-label="Previous" className={btn}>
           <StepIcon dir="prev" />
         </button>

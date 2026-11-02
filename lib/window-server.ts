@@ -124,6 +124,7 @@ export function defaultView(familyId: string, memberId: string): WindowView {
     pots: isDemoFamily(familyId) ? ["marigold", "jasmine"] : [],
     homePhoto: null,
     mixAlbum: true,
+    starred: [],
     updatedAt: new Date(0).toISOString(),
   };
 }

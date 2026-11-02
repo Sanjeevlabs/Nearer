@@ -163,7 +163,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
           ) : (
             <div role="alertdialog" aria-label="Confirm removal">
               <p className="m-0 text-body">
-                Remove {callName(person)}? Their place in the tree and anything saved about them goes too. Voice notes and photos others shared stay.
+                Remove {callName(person)}? Their place in the tree and anything saved about them goes too. Voice memories and photos others shared stay.
                 {hasAccount ? " They'll lose access to the family." : ""}
               </p>
               <div className="mt-3 flex gap-2">

@@ -28,7 +28,7 @@ export type Action =
   | "partners.order" // Send something
   | "window.at" // be one of the people at someone's window
   | "events.plan"
-  | "content.moderate" // delete someone else's voice note, photo, recipe…
+  | "content.moderate" // delete someone else's voice memory, photo, recipe…
   | "owner.transfer"
   | "family.delete"
   | "billing.manage";

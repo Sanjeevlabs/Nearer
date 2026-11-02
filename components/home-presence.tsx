@@ -198,7 +198,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
       {quiet.length > 0 && (
         <div className="mt-3 flex gap-2">
           <button type="button" onClick={() => openAdd("voice", null, home.members.map((m) => m.id))} className="press h-9 rounded-full bg-accent px-3.5 text-footnote font-semibold text-accent-ink">
-            Send {name} a voice note
+            Send {name} a voice memory
           </button>
         </div>
       )}

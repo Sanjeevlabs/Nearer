@@ -91,11 +91,11 @@ export default function PersonPage() {
       )}
 
       <section aria-label="Voices" className="mt-8">
-        <h2 className="m-0 mb-1 text-title">Voice notes</h2>
+        <h2 className="m-0 mb-1 text-title">Voice memories</h2>
         {cards === null ? (
           <div className="skeleton mt-3 h-16" />
         ) : voices.length === 0 ? (
-          <EmptyLine>No voice notes from {callName(person)} yet. Ask them something.</EmptyLine>
+          <EmptyLine>No voice memories from {callName(person)} yet. Ask them something.</EmptyLine>
         ) : (
           <>
             <div className="mt-3">

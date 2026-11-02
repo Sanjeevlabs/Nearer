@@ -486,7 +486,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
               {/* One action row */}
               <section data-ui="window-actions" aria-label="Reach them" className="grid grid-cols-3 gap-2">
-                <button type="button" onClick={() => talk()} disabled={!atWindow.length} aria-label="Voice note" className="press flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
+                <button type="button" onClick={() => talk()} disabled={!atWindow.length} aria-label="Voice memory" className="press flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
                   <Icon name="mic" size={19} strokeWidth={1.9} /> Voice
                 </button>
                 <button type="button" onClick={() => call()} aria-label="Call: open your door" className="press relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-accent py-2 text-footnote font-semibold text-accent-ink disabled:opacity-40">
@@ -500,7 +500,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
               {/* Their latest voice: one compact row */}
               {latestVoice && (
                 <section data-ui="window-voice" className={cn(CARD, "flex min-h-[56px] items-center gap-3 px-3 py-1.5")} style={EDGE} aria-label="Their latest voice">
-                  <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice note`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+                  <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice memory`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
                     <Icon name={playing ? "pause" : "play"} size={16} />
                   </button>
                   <p className="m-0 min-w-0 flex-1 truncate text-callout leading-snug" suppressHydrationWarning>
@@ -524,7 +524,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
       <PeoplePicker
         open={picking}
-        title="Voice note to"
+        title="Voice memory to"
         people={atWindow}
         onPick={(ids) => talk(ids)}
         onClose={() => setPicking(false)}
