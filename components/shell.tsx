@@ -59,7 +59,7 @@ interface ShellState {
    */
   dockOn: boolean;
   setDockOn: (v: boolean) => void;
-  /** Open the rooms sheet (the four rooms of the house). */
+  /** Open the rooms sheet (the five rooms of the house). */
   openRooms: () => void;
 }
 
@@ -72,7 +72,7 @@ export function useShell(): ShellState {
 }
 
 
-/** The rooms of the house: four tiles, nothing nested. A tile opens the room on its first page; inside, the tab row moves sideways. */
+/** The rooms of the house: five tiles, nothing nested. A tile opens the room on its first page; inside, the tab row moves sideways. */
 function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { viewer, members } = useViewer();
   const all = roomsFor(viewer.role === "elder", canStartPortrait(viewer), isKid(viewer), members.some((m) => isKid(m)));
@@ -100,7 +100,7 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 // The dock: a voice note (to anyone; it says who is waiting for your reply),
-// a photo, and the house for the rooms (Together, Keepsakes, Family, Care).
+// a photo, and the house for the rooms (Living Room, Memories, Kitchen, Our People, Care).
 function Dock() {
   const { openAdd, openRooms, refreshKey, chromeHidden, dockOn } = useShell();
   const { viewer, members } = useViewer();

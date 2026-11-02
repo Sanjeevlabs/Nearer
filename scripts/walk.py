@@ -21,17 +21,18 @@ from playwright.sync_api import sync_playwright
 
 # Mirrors lib/menu.ts roomsFor(); the walk fails if the house sheet disagrees.
 ROOMS = {
-    "Together": ["/gather/play", "/gather", "/rituals"],
-    "Keepsakes": ["/lane", "/stories", "/kitchen", "/book", "/advice", "/ask-family"],
+    "Living Room": ["/gather/play", "/gather", "/rituals"],
+    "Memories": ["/lane", "/stories", "/book", "/advice", "/ask-family"],
+    "Kitchen": ["/kitchen"],
     # Kids (/bond/kids) is there because the demo family has children.
-    "Family": ["/bond", "/bond/homes", "/bond/kids", "/together/visits"],
+    "Our People": ["/bond", "/bond/homes", "/bond/kids", "/together/visits"],
     "Care": ["/care", "/care/helpers", "/nearby"],
 }
 # Kid mode (lib/menu.ts roomsFor(..., kid)): a child's house has three rooms, and fewer tabs in them.
 KID_ROOMS = {
-    "Together": ["/gather/play", "/gather"],
-    "Keepsakes": ["/lane", "/stories"],
-    "Family": ["/bond"],
+    "Living Room": ["/gather/play", "/gather"],
+    "Memories": ["/lane", "/stories"],
+    "Our People": ["/bond"],
 }
 # Pages that are in no room: For you (the bell on the dock); Portrait (from the Family tree) and
 # Holidays (from Visits) left the tabs but still resolve.
@@ -195,11 +196,11 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
         if tile.count() == 0:
             problems.append(f"{person}: no '{room}' tile in the house")
     if kind == "child":
-        for room in ("Care",):
+        for room in ("Kitchen", "Care"):
             if page.get_by_role("link", name=re.compile(rf"^{room}\b")).count():
                 problems.append(f"{person}: kid mode shows '{room}'")
-    first = rooms["Keepsakes"][0]
-    page.get_by_role("link", name=re.compile(r"^Keepsakes\b")).first.click()
+    first = rooms["Memories"][0]
+    page.get_by_role("link", name=re.compile(r"^Memories\b")).first.click()
     page.wait_for_url(f"**{first}", timeout=15_000)
 
     for room, tabs in [*rooms.items(), ("", EXTRA)]:
@@ -366,13 +367,16 @@ def doors(base: str, browser, problems: list[str]) -> None:
         ctxs[who] = ctx
     a, d, l = ctxs["arjun"], ctxs["dadi"], ctxs["leo"]
     try:
-        made = a.request.post("/api/sit", data=json.dumps({"action": "knock", "activity": "chai", "invites": ["dadi"]}), headers={"content-type": "application/json"})
-        if not made.ok:
-            problems.append(f"doors: opening the door failed {made.status}")
-            return
-        kid = made.json()["knock"]["id"]
+        # Writes go through the page (its own cookies and origin), as the app's own buttons do.
+        post = "async (b) => { const r = await fetch('/api/sit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) }); return { ok: r.ok, status: r.status, body: await r.json().catch(() => null) }; }"
         pa = a.new_page()
         pa.goto("/gather/play", wait_until="load")
+        made = pa.evaluate(post, {"action": "knock", "activity": "chai", "invites": ["dadi"]})
+        if not made["ok"]:
+            problems.append(f"doors: opening the door failed {made['status']}")
+            return
+        kid = made["body"]["knock"]["id"]
+        pa.reload(wait_until="load")
         try:
             pa.locator("[data-ui=together-mine]").wait_for(timeout=15_000)
         except Exception:
@@ -410,7 +414,7 @@ def doors(base: str, browser, problems: list[str]) -> None:
         gum = pd.evaluate("window.__gum")
         if not gum or any(g["video"] for g in gum):
             problems.append(f"doors: joining with audio asked for {gum!r} (expected audio only)")
-        a.request.post("/api/sit", data=json.dumps({"action": "unknock"}), headers={"content-type": "application/json"})
+        pa.evaluate(post, {"action": "unknock"})
         try:
             # The call page re-checks the door every 60 s.
             pd.get_by_text(re.compile(r"closed the door|This door has closed")).wait_for(timeout=70_000)

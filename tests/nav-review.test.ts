@@ -92,7 +92,7 @@ describe("children's rooms", () => {
     const kid = roomsFor(false, false).flatMap((r) => r.tabs.map((t) => t.href));
     expect(kid).not.toContain("/portrait");
     expect(roomsFor(false).flatMap((r) => r.tabs.map((t) => t.href))).not.toContain("/portrait");
-    expect(tabsFor("/book", false)?.space.rooms.map((r) => r.title)).toEqual(["Memory Lane", "Stories", "Recipes", "The Book", "Advice", "Ask the family"]);
+    expect(tabsFor("/book", false)?.space.rooms.map((r) => r.title)).toEqual(["Memory Lane", "Stories", "The Book", "Advice", "Ask the family"]);
     expect(tabsFor("/portrait", false)).toBeNull();
     expect(tabsFor("/portrait")).toBeNull();
   });

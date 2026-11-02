@@ -1,12 +1,14 @@
-// Every feature, in four rooms of a house. The single source of rooms → ordered
-// tabs. The rooms sheet shows only the four rooms; a room opens on its first tab,
+// Every feature, in five rooms of a house. The single source of rooms → ordered
+// tabs. The rooms sheet shows only the five rooms; a room opens on its first tab,
 // and inside it the tab row (lib/spaces.ts → RoomHeader) is the only way sideways.
-// Every tab is its own page: no two tabs anywhere share one.
+// Every tab is its own page: no two tabs anywhere share one. A room with one page
+// (Kitchen) has no tab row.
 //
-//   Together:  what you do with each other now (Time together, Coming up, Occasions).
-//   Keepsakes: what you keep (Memory Lane, Stories, Recipes, the Book, Advice, Ask the family).
-//   Family:    who and where (the tree, homes, the kids, visits).
-//   Care:      help at home and people nearby (the first-to-call list).
+//   Living Room: time with each other now (Time together, Coming up, Occasions).
+//   Memories:    what you keep (Memory Lane, Stories, the Book, Advice, Ask the family).
+//   Kitchen:     Recipes. Cooking together live is a preset in the Living Room's "Open your door".
+//   Our People:  who and where (the tree, homes, the kids, visits).
+//   Care:        help at home and people nearby (the first-to-call list).
 //
 // Pages that are not tabs still resolve: Portrait (/portrait) opens from the Family
 // tree ("Family portrait"), Holidays (/together/holidays) from Visits. /send (Send
@@ -14,8 +16,8 @@
 // Safe & sound is not here: it lives on the window, the first screen. Settings is
 // not here either: tap your own photo. Care contacts are two taps away: the house,
 // then Care (Nearby is its third tab), and the window's info sheet links them.
-// Kid mode (lib/kids.ts isKid) shows three rooms only: Together (Time together,
-// Coming up), Keepsakes (Memory Lane, Stories) and Family (Tree).
+// Kid mode (lib/kids.ts isKid) shows three rooms only: Living Room (Time together,
+// Coming up), Memories (Memory Lane, Stories) and Our People (Family tree).
 // scripts/walk.py mirrors this.
 
 export interface RoomTab {
@@ -24,7 +26,7 @@ export interface RoomTab {
   label: string;
 }
 export interface Room {
-  id: "together" | "keepsakes" | "family" | "care";
+  id: "living" | "memories" | "kitchen" | "people" | "care";
   title: string;
   /** One line under the tile: what's in this room. */
   note: string;
@@ -35,13 +37,13 @@ export interface Room {
 
 /** What a child in kid mode sees: room id -> the tabs they keep. */
 export const KID_TABS: Partial<Record<Room["id"], string[]>> = {
-  together: ["/gather/play", "/gather"],
-  keepsakes: ["/lane", "/stories"],
-  family: ["/bond"],
+  living: ["/gather/play", "/gather"],
+  memories: ["/lane", "/stories"],
+  people: ["/bond"],
 };
 
 /**
- * The four rooms for a viewer. `kid` = kid mode: three rooms, fewer tabs. `hasKids` = the family has
+ * The five rooms for a viewer. `kid` = kid mode: three rooms, fewer tabs. `hasKids` = the family has
  * kid members: grown-ups get a Kids tab after Homes. `isParent` and `canPortrait` are kept for callers
  * (Portrait is reached from the Family tree, not a tab).
  */
@@ -49,8 +51,8 @@ export const KID_TABS: Partial<Record<Room["id"], string[]>> = {
 export function roomsFor(isParent: boolean, canPortrait = true, kid = false, hasKids = false): Room[] {
   const rooms: Room[] = [
     {
-      id: "together",
-      title: "Together",
+      id: "living",
+      title: "Living Room",
       note: "Time together now, what is coming up, occasions",
       icon: "door",
       tabs: [
@@ -60,22 +62,28 @@ export function roomsFor(isParent: boolean, canPortrait = true, kid = false, has
       ],
     },
     {
-      id: "keepsakes",
-      title: "Keepsakes",
-      note: "Photos and voices, stories, recipes, the Book, advice",
+      id: "memories",
+      title: "Memories",
+      note: "Photos and voices, stories, the Book, advice",
       icon: "memories",
       tabs: [
         { href: "/lane", label: "Memory Lane" },
         { href: "/stories", label: "Stories" },
-        { href: "/kitchen", label: "Recipes" },
         { href: "/book", label: "The Book" },
         { href: "/advice", label: "Advice" },
         { href: "/ask-family", label: "Ask the family" },
       ],
     },
     {
-      id: "family",
-      title: "Family",
+      id: "kitchen",
+      title: "Kitchen",
+      note: isParent ? "Your recipes, and who cooked them" : "Recipes, in the voice that taught them",
+      icon: "pot",
+      tabs: [{ href: "/kitchen", label: "Recipes" }],
+    },
+    {
+      id: "people",
+      title: "Our People",
       note: `Tree, homes, ${hasKids && !kid ? "the kids, " : ""}visits`,
       icon: "tree",
       tabs: [
@@ -102,7 +110,7 @@ export function roomsFor(isParent: boolean, canPortrait = true, kid = false, has
       .filter((r) => KID_TABS[r.id])
       .map((r) => ({
         ...r,
-        note: r.id === "keepsakes" ? "Photos, voices and stories" : r.id === "together" ? "Time together, and what is coming up" : "Your family tree",
+        note: r.id === "memories" ? "Photos, voices and stories" : r.id === "living" ? "Time together, and what is coming up" : "Your family tree",
         tabs: KID_TABS[r.id]!.map((href) => r.tabs.find((t) => t.href === href)!).filter(Boolean),
       }));
   }

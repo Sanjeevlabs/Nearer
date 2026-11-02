@@ -70,7 +70,7 @@ export function TogetherCard({
   };
 
   return (
-    <section data-ui="together" aria-label="Together" className={cn(BOX, "min-h-[112px] p-3")} style={EDGE}>
+    <section data-ui="together" aria-label="Time together" className={cn(BOX, "min-h-[112px] p-3")} style={EDGE}>
       <div aria-live="polite" aria-atomic="false">
         {view.kind === "loading" && (
           <div aria-busy="true" aria-label="Checking open doors" className="space-y-2">
