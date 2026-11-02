@@ -15,6 +15,9 @@ function lcgPeaks(seed: number, n = 48): number[] {
   return out.map((v) => Math.round(v * 100) / 100);
 }
 
+// Opt-in recording fixture only; ordinary demo visitors and the UI inventory keep the original shelf.
+const REEL_SCENARIO = process.env.NEXT_PUBLIC_MOCK === "true" && process.env.NEXT_PUBLIC_DEMO_REEL === "true";
+
 const RAW = [
   {
     id: "demo-story-elephant",
@@ -159,7 +162,8 @@ const RAW = [
     caption: "New leaves on the tulsi.",
     summary: "",
     lang: "en",
-    takenAt: "2026-10-30T04:30:00.000Z",
+    takenAt: REEL_SCENARIO ? "2026-11-02T13:50:00.000Z" : "2026-10-30T04:30:00.000Z",
+    addressedTo: REEL_SCENARIO ? "arjun" : null,
     ritualSlug: null,
     source: "upload",
     mediaRef: null,

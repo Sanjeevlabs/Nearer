@@ -18,7 +18,8 @@
     "cap:ios": "cap open ios",
     "android:apk": "cd android && ./gradlew assembleDebug",
     "docs:muse": "node scripts/muse-docs.mjs",
-    "ui:inventory": "python3 scripts/ui-inventory.py --serve 4600"
+    "ui:inventory": "python3 scripts/ui-inventory.py --serve 4600",
+    "demo:reel": "python3 scripts/demo-reel/run.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
