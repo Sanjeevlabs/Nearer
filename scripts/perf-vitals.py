@@ -65,8 +65,11 @@ def sign_in(browser, base: str) -> dict:
 def measure(browser, base: str, route: str, state: dict, door_open: bool = True) -> dict:
     """One cold load: a fresh context (empty cache), signed in, door open (or closed: the window)."""
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base, storage_state=state)
+    # Stepped inside (aangan:entered), so "/" is the app, not the public home page; door open = the courtyard.
     if door_open:
         ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
+    else:
+        ctx.add_init_script("try { sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
     page = ctx.new_page()
     cdp = ctx.new_cdp_session(page)
     cdp.send("Network.enable")
