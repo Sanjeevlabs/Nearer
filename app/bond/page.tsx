@@ -15,7 +15,7 @@ import { useViewer } from "@/components/viewer";
 import { FamilyTree } from "@/components/family-tree";
 import { BothSides } from "@/components/sides";
 import { InviteSheet } from "@/components/invite-sheet";
-import { BottomSheet } from "@/components/share-panel";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { can } from "@/lib/permissions";
 import { ZONES, placeFromTz } from "@/lib/zones";
 import { Boundary } from "@/components/ui/boundary";
