@@ -65,6 +65,8 @@ interface WindowData {
   /** Doors open to the viewer, and their own (lib/doors.ts). */
   doors?: Door[];
   myDoor?: Door | null;
+  /** Two touches meet (experiment): the pair channels for the people at this window. */
+  touchChannel?: { withId: string; channel: string }[];
   homePhoto?: string | null;
   place?: { lat: number; lon: number } | null;
   next?: { text: string; href: string } | null;
@@ -321,7 +323,49 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     // The write refetches only the lamp and the window (lib/use-json.ts scopeOfWrite).
     await postJson("/api/lamp", { action: "light" });
   };
+  // Two touches meet (an experiment): while the finger stays on the lamp (or for 30 s from the
+  // info sheet), join the pair's Presence channel; both holding at once shows a shared glow.
+  // Capped at 30 s, never stored; without Realtime nothing happens and the hold is as before.
+  const touchRef = useRef<{ stop: () => void } | null>(null);
+  const touchTimer = useRef<number | null>(null);
+  const [met, setMet] = useState(false);
+  const stopTouch = useCallback(() => {
+    if (touchTimer.current !== null) window.clearTimeout(touchTimer.current);
+    touchTimer.current = null;
+    touchRef.current?.stop();
+    touchRef.current = null;
+    setMet(false);
+  }, []);
+  useEffect(() => stopTouch, [stopTouch]);
+  const startTouch = async (ms = 30_000) => {
+    stopTouch();
+    const pairs = data?.touchChannel ?? [];
+    touchTimer.current = window.setTimeout(stopTouch, ms);
+    if (!pairs.length) return;
+    const { holdTouch } = await import("@/lib/touch");
+    const session = await holdTouch(viewer.id, pairs, (withId) => {
+      setMet(Boolean(withId));
+      if (withId) {
+        setLampNote("Together, just now");
+        try {
+          navigator.vibrate?.(30);
+        } catch {
+          /* no vibration here */
+        }
+      }
+    });
+    // Let go before the channel answered: leave at once.
+    if (touchTimer.current === null) session.stop();
+    else touchRef.current = session;
+  };
+  const handOnWindow = () => {
+    setInfo(false);
+    setLampNote("Your hand is on the window · 30 s");
+    void startTouch(30_000);
+  };
+
   const heartbeat = async () => {
+    void startTouch();
     const to = atWindow[0];
     if (!to) return;
     setLampNote(`Heartbeat sent \u00b7 ${callName(to)} will feel it when they open Nearer`);
@@ -347,6 +391,8 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
           ownPhoto={ownPhoto}
           onLight={() => void light()}
           onHold={() => void heartbeat()}
+          onRelease={stopTouch}
+          met={met}
           pulseKey={pulse}
           lampLabel={`${lampNow.lit ? "The lamp is lit" : "The lamp is not lit"}. Tap to light it for ${first || "them"}; hold to send a heartbeat`}
         >
@@ -495,7 +541,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
       />
       <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => open && call(open.id)} onSeeDay={() => { setDayOfId(open?.id ?? null); setOpen(null); }} onClose={() => setOpen(null)} />
       {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} onClose={() => setDayOfId(null)} />}
-      <InfoSheet open={info} onClose={() => setInfo(false)} />
+      <InfoSheet open={info} onClose={() => setInfo(false)} onHand={handOnWindow} />
       {doorSheet !== undefined && <OpenDoorSheet open={doorSheet !== null} preset={doorSheet ?? undefined} onClose={() => setDoorSheet(null)} />}
     </div>
   );
@@ -527,13 +573,17 @@ function WaitingNote({ names }: { names: string }) {
 
 /* ------------------------------------------------------- the small "?" */
 /** The lamp and Safe & sound in a few lines, so the first screen needn't say them. */
-function InfoSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function InfoSheet({ open, onClose, onHand }: { open: boolean; onClose: () => void; onHand: () => void }) {
   return (
     <BottomSheet open={open} onClose={onClose} title="How this works">
       <div data-ui="window-info-sheet" className="space-y-4">
         <section>
           <h3 className="m-0 text-body font-semibold">The lamp</h3>
           <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">{lampWhy()}</p>
+          <p className="m-0 mt-2 text-callout leading-snug text-ink-soft">Hold the lamp: if they are holding theirs at the same moment, both lamps glow together. Nothing is sent or kept.</p>
+          <button type="button" onClick={onHand} className="press mt-2 flex min-h-[44px] items-center gap-1.5 rounded-full bg-tint px-4 text-callout font-semibold text-ink">
+            <Icon name="lamp" size={16} /> Keep my hand on the window (30 s)
+          </button>
         </section>
         <section>
           <h3 className="m-0 text-body font-semibold">Safe &amp; sound</h3>

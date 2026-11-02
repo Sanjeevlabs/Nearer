@@ -31,6 +31,7 @@ import { describeLang } from "./languages";
 import { isMockMode } from "./config";
 import { nextLine, nextUp } from "./glance";
 import { doorsFor, type Door } from "./doors";
+import { touchChannel } from "./touch-channel";
 import { listEvents } from "./gather-store";
 import type { FamilyEvent } from "./events";
 import { familyHolidaysNow } from "./occasions-server";
@@ -87,6 +88,8 @@ export interface WindowState {
   doors: Door[];
   /** The viewer's own open door, if any. */
   myDoor: Door | null;
+  /** Two touches meet (experiment): one private Presence channel per person at the window (lib/touch-channel.ts). */
+  touchChannel: { withId: string; channel: string }[];
   /** A photo of their actual home as the view (a media ref), else null: the default photo. */
   homePhoto: string | null;
   /** Their city's coordinates (a city, never a person's location), for the real sky; null when unknown. */
@@ -351,6 +354,10 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
     doors,
     myDoor,
+    touchChannel: people.flatMap((p) => {
+      const channel = touchChannel(familyId, viewerId, p.id);
+      return channel ? [{ withId: p.id, channel }] : [];
+    }),
     next,
     homePhoto: own.homePhoto,
     place: farPlace ? { lat: Math.round(farPlace.lat * 100) / 100, lon: Math.round(farPlace.lon * 100) / 100 } : null,
