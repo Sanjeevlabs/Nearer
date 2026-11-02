@@ -75,6 +75,8 @@ npm run cf:deploy
 
 Dashboard → Workers & Pages → aangan → Settings → Domains & Routes → Add → Custom domain. The domain's DNS must be on Cloudflare (add the site to your account first). Cloudflare issues the certificate. Then set `APP_ORIGIN` to `https://<that-domain>` (e.g. `https://nearer.site`) and redeploy (or just update the secret).
 
+**Build docs host.** `docs.nearer.site` is a second custom domain on the same Worker (listed in `wrangler.jsonc` routes; a deploy replaces the domain list, so keep every host there). `cf-worker.mjs` maps that host's `/` to `/docs` and `/x` to `/docs/x` (`lib/docs-host.mjs`); other hosts are untouched. The pages are `docs/site/*.md`, written by Muse with `META_API_KEY=... npm run docs:muse` (never in CI) and prerendered by `app/docs`.
+
 ## 5. Supabase
 
 Supabase → Authentication → URL Configuration:

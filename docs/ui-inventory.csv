@@ -104,24 +104,26 @@ Entry,home-laptop,3,h1,The window between two homes.,,,arjun,,keep,
 Entry,home-laptop,4,button,Open Nearer,,home-actions,arjun,,keep,
 Entry,home-laptop,5,badge,QR code: open the Nearer demo on your phone,,,arjun,,keep,
 Entry,home-laptop,6,button,Or try the demo here,,,arjun,,review,on more than 2 screens: one path per job?
-Entry,home-laptop,7,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun,,keep,
+Entry,home-laptop,7,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun,,keep,
 Entry,home-laptop,8,heading,A window into their day,,,arjun,,keep,
 Entry,home-laptop,9,heading,"The whole family, one place",,,arjun,,keep,
 Entry,home-laptop,10,heading,"Everyone wishes, together",,,arjun,,keep,
 Entry,home-laptop,11,heading,"Care, sent in a tap",,,arjun,,keep,
-Entry,home-laptop,12,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,home-laptop,13,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-laptop,12,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
+Entry,home-laptop,13,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-laptop,14,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
 Entry,home-phone,0,badge,Nearer,,,arjun,,keep,
 Entry,home-phone,1,button,Open Nearer,,,arjun,,keep,
 Entry,home-phone,3,h1,The window between two homes.,,,arjun,,keep,
 Entry,home-phone,4,button,Open Nearer,,home-actions,arjun,,keep,
-Entry,home-phone,5,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun,,keep,
+Entry,home-phone,5,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun,,keep,
 Entry,home-phone,6,heading,A window into their day,,,arjun,,keep,
 Entry,home-phone,7,heading,"The whole family, one place",,,arjun,,keep,
 Entry,home-phone,8,heading,"Everyone wishes, together",,,arjun,,keep,
 Entry,home-phone,9,heading,"Care, sent in a tap",,,arjun,,keep,
-Entry,home-phone,10,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
-Entry,home-phone,11,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-phone,10,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
+Entry,home-phone,11,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
+Entry,home-phone,12,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
 Entry,landing,0,badge,Nearer,,,anon,,keep,
 Entry,landing,1,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing,2,link,Start your family,/create,,anon,dup,review,
@@ -129,73 +131,68 @@ Entry,landing,4,h1,The window between two homes.,,,anon,,keep,
 Entry,landing,5,button,Try the demo family,,home-actions,anon,,keep,
 Entry,landing,6,link,Start your family,/create,home-actions,anon,dup,review,
 Entry,landing,7,link,Sign in,/signin,home-actions,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing,8,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,anon,,keep,
+Entry,landing,8,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,anon,,keep,
 Entry,landing,9,heading,A window into their day,,,anon,,keep,
 Entry,landing,10,heading,"The whole family, one place",,,anon,,keep,
 Entry,landing,11,heading,"Everyone wishes, together",,,anon,,keep,
 Entry,landing,12,heading,"Care, sent in a tap",,,anon,,keep,
-Entry,landing,13,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing,14,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
+Entry,landing,14,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing,15,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,0,badge,Nearer,,,anon,,keep,
 Entry,landing-laptop,1,link,Sign in,/signin,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,2,link,Start your family,/create,,anon,dup,review,
 Entry,landing-laptop,4,h1,The window between two homes.,,,anon,,keep,
 Entry,landing-laptop,5,badge,QR code: open the Nearer demo on your phone,,,anon,,keep,
 Entry,landing-laptop,6,button,Or try the demo here,,,anon,,review,on more than 2 screens: one path per job?
-Entry,landing-laptop,7,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,anon,,keep,
+Entry,landing-laptop,7,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,anon,,keep,
 Entry,landing-laptop,8,heading,A window into their day,,,anon,,keep,
 Entry,landing-laptop,9,heading,"The whole family, one place",,,anon,,keep,
 Entry,landing-laptop,10,heading,"Everyone wishes, together",,,anon,,keep,
 Entry,landing-laptop,11,heading,"Care, sent in a tap",,,anon,,keep,
-Entry,landing-laptop,12,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
-Entry,landing-laptop,13,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing-laptop,12,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
+Entry,landing-laptop,13,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,landing-laptop,14,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
+Entry,window,0,badge,"A drawing of their home, in daylight",,window-scene,arjun dadi,,keep,
 Entry,window,0,h1,"Hello, Anika",,kid-home,aria,,keep,
-Entry,window,0,image,Their home,,,arjun dadi,,keep,
-Entry,window,1,button,Your profile and settings,,,arjun dadi,,keep,
+Entry,window,1,button,The lamp is not lit. Tap to light it for Arjun; hold to send a heartbeat,,window-lamp-button,dadi,icon-only,review,
+Entry,window,1,button,The lamp is not lit. Tap to light it for Maa; hold to send a heartbeat,,window-lamp-button,arjun,icon-only,review,
 Entry,window,1,link,You: settings,/settings,kid-home,aria,,keep,
+Entry,window,2,button,Your profile and settings,,window-scene,arjun dadi,,keep,
 Entry,window,2,image,Anika,,kid-home,aria,,review,icon-only control: its name is only an aria-label
-Entry,window,2,image,Arjun,,,arjun,,review,icon-only control: its name is only an aria-label
-Entry,window,2,image,Kamla,,,dadi,,keep,
-Entry,window,3,h1,Arjun & Priya,,window-header,dadi,,keep,
-Entry,window,3,h1,Maa & Papa,,window-header,arjun,,keep,
+Entry,window,3,image,Arjun,,window-scene,arjun,,review,icon-only control: its name is only an aria-label
+Entry,window,3,image,Kamla,,window-scene,dadi,,keep,
 Entry,window,3,image,Maa,,kid-grandparents,aria,,review,icon-only control: its name is only an aria-label
 Entry,window,4,button,Show A photo or a drawing,,kid-home,aria,,keep,
-Entry,window,4,section,The lamp and their latest voice,,window-lamp,arjun dadi,,keep,
-Entry,window,5,button,See the lamp,,window-lamp,arjun dadi,icon-only,review,
+Entry,window,4,link,For you: something is waiting,/inbox,window-bell,arjun dadi,icon-only,review,
 Entry,window,5,button,Tell Say something with your voice,,kid-home,aria,,keep,
+Entry,window,5,h1,Arjun & Priya,,window-header,dadi,,keep,
+Entry,window,5,h1,Maa & Papa,,window-header,arjun,,keep,
 Entry,window,6,button,"Ask A question, or a story",,kid-home,aria,,keep,
-Entry,window,6,button,Light the lamp. Hold to send a heartbeat,,window-lamp,arjun dadi,,keep,
-Entry,window,7,button,Play Maa's voice note,,window-lamp,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
-Entry,window,7,button,Play Vihaan's voice note,,window-lamp,dadi,icon-only,review,
+Entry,window,6,section,The lamp,,window-lamp,arjun dadi,,keep,
+Entry,window,7,section,Safe and sound,,window-safe,arjun dadi,,keep,
 Entry,window,7,section,Tonight's story,,kid-tonight,aria,,keep,
 Entry,window,8,heading,Maa’s story for tonight,,kid-tonight,aria,,keep,
-Entry,window,8,section,Safe and sound,,window-safe,arjun dadi,,keep,
+Entry,window,8,heading,Safe & sound,,window-safe,arjun dadi,,keep,
 Entry,window,9,button,Play the story,,kid-tonight,aria,icon-only,review,
-Entry,window,9,heading,Safe & sound,,window-safe,arjun dadi,,keep,
+Entry,window,9,link,See check-ins,/safe,window-safe,arjun dadi,,keep,
 Entry,window,10,button,Another one?,,kid-tonight,aria,,keep,
-Entry,window,10,link,See check-ins,/safe,window-safe,arjun dadi,,keep,
-Entry,window,11,button,Arjun: Up since <time> · active <ago>. Open their day,,window-safe,dadi,,keep,
-Entry,window,11,button,Maa: Up since <time> · active <ago>. Open their day,,window-safe,arjun,,keep,
-Entry,window,12,image,Arjun,,window-safe,dadi,,review,icon-only control: its name is only an aria-label
-Entry,window,12,image,Maa,,window-safe,arjun,,review,icon-only control: its name is only an aria-label
-Entry,window,13,button,Papa: Up since <time> · active <ago>. Open their day,,window-safe,arjun,,keep,
-Entry,window,13,button,Priya: Quiet since <time> Open their day,,window-safe,dadi,,keep,
-Entry,window,14,nav,Across the family,,window-glance,arjun dadi,,keep,
-Entry,window,15,link,"Awake now: Maa, Papa, Priya, Kavya, Rahul, in Amritsar · Bengaluru · Pune",/,window-glance,arjun,,keep,
-Entry,window,15,link,"Awake now: Papa, Arjun, Priya, Kavya, Rahul, in Amritsar · Bengaluru · Pune",/,window-glance,dadi,,keep,
-Entry,window,16,link,Waiting for you: Maa's answer is waiting for yours,/,window-glance,arjun,,keep,
-Entry,window,16,link,Waiting for you: Vihaan asked you something,/,window-glance,dadi,,keep,
-Entry,window,17,link,From the kids: New from Vihaan & Anika,/bond/kids,window-glance,arjun dadi,,keep,
-Entry,window,18,link,Next: Diwali · <day> <date>,/gather,window-glance,arjun dadi,,keep,
-Entry,window,19,link,Our call: <day> <time> · yours and theirs,/gather,window-glance,arjun dadi,,keep,
-Entry,window,20,section,Since you were here,,window-since,arjun dadi,,keep,
-Entry,window,21,section,Call,,window-call,arjun dadi,,keep,
-Entry,window,22,button,Send Arjun & Priya something,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,22,button,Send Maa & Papa something,,window-call,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,23,button,Voice note,,window-call,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,24,button,Join the video call,,window-call,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,24,button,Video call,,window-call,dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,window,25,button,Slide the key home to open your family,,,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,window,10,button,Arjun: Up since <time> · active in Nearer <ago>. Open their day,,window-safe,dadi,,keep,
+Entry,window,10,button,Maa: Up since <time> · active in Nearer <ago>. Open their day,,window-safe,arjun,,keep,
+Entry,window,11,image,Arjun,,window-safe,dadi,,review,icon-only control: its name is only an aria-label
+Entry,window,11,image,Maa,,window-safe,arjun,,review,icon-only control: its name is only an aria-label
+Entry,window,12,button,Papa: Up since <time> · active in Nearer <ago>. Open their day,,window-safe,arjun,,keep,
+Entry,window,12,button,Priya: Quiet since <time> Open their day,,window-safe,dadi,,keep,
+Entry,window,13,link,Next Weekly call · <day> <time> · yours and theirs,/gather,window-next,arjun dadi,,keep,
+Entry,window,14,section,Reach them,,window-actions,arjun dadi,,keep,
+Entry,window,15,button,Voice note,,window-actions,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,window,16,button,Call,,window-actions,dadi,,keep,
+Entry,window,16,button,Join the video call,,window-actions,arjun,,review,icon-only control: its name is only an aria-label
+Entry,window,17,button,Send something,,window-actions,arjun dadi,,keep,
+Entry,window,18,section,Their latest voice,,window-voice,arjun dadi,,keep,
+Entry,window,19,button,Play Maa's voice note,,window-voice,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
+Entry,window,19,button,Play Vihaan's voice note,,window-voice,dadi,icon-only,review,
+Entry,window,20,button,Slide to open the house,,window-key,arjun dadi,,keep,
 Other,/people/<id>,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,1,h1,Arjun,,room-header,dadi,,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,1,h1,Maa,,room-header,arjun aria,,review,icon-only control: its name is only an aria-label
@@ -238,7 +235,7 @@ Other,/people/<id>,32,image,Maa's tulsi in the morning sun.,,~Photos,arjun aria,
 Other,/people/<id>,32,link,"For you, N waiting: Vihaan asked you something",/inbox,dock,dadi,icon-only,review,
 Other,/people/<id>,33,button,Voice note options,,~Photos,arjun,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,34,image,Rangoli at the door before the first lamp.,,~Photos,arjun aria,,review,icon-only control: its name is only an aria-label
-Other,/people/<id>,36,image,"The old doorway, winter light.",,~Photos,arjun aria,,keep,
+Other,/people/<id>,36,image,"The old window, winter light.",,~Photos,arjun aria,,keep,
 Other,/people/<id>,38,image,Anika shows Maa the picture she drew.,,~Photos,arjun aria,,keep,
 Other,/people/<id>,40,section,About Maa,,,arjun aria,,keep,
 Other,/people/<id>,41,heading,About Maa,,~About Maa,arjun aria,,keep,
@@ -327,13 +324,14 @@ Public,/home,4,h1,The window between two homes.,,,arjun dadi aria anon,,keep,
 Public,/home,5,button,Try the demo family,,home-actions,arjun dadi aria anon,,keep,
 Public,/home,6,link,Start your family,/create,home-actions,arjun dadi aria anon,dup,review,
 Public,/home,7,link,Sign in,/signin,home-actions,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
-Public,/home,8,image,"The first screen: an arched window into Maa and Papa's home at night, their sta…",,,arjun dadi aria anon,,keep,
+Public,/home,8,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun dadi aria anon,,keep,
 Public,/home,9,heading,A window into their day,,,arjun dadi aria anon,,keep,
 Public,/home,10,heading,"The whole family, one place",,,arjun dadi aria anon,,keep,
 Public,/home,11,heading,"Everyone wishes, together",,,arjun dadi aria anon,,keep,
 Public,/home,12,heading,"Care, sent in a tap",,,arjun dadi aria anon,,keep,
-Public,/home,13,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
-Public,/home,14,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun dadi aria anon,dup,review,
+Public,/home,14,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
+Public,/home,15,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
 Public,/join,0,button,Back,,,anon,icon-only dup,review,icon-only control: its name is only an aria-label
 Public,/join,1,badge,Nearer,,,anon,,keep,
 Public,/join,2,h1,Join your family,,,anon,,keep,
@@ -732,7 +730,7 @@ Rooms,/lane,20,heading,Photos,,~Photos,arjun dadi aria,,keep,
 Rooms,/lane,21,button,"My house, with the sun and all of us.",,~Photos,arjun dadi aria,,keep,
 Rooms,/lane,22,button,My top spun for a whole minute.,,~Photos,arjun dadi aria,,keep,
 Rooms,/lane,23,button,Maa's tulsi in the morning sun.,,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,24,button,"The old doorway, winter light.",,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,24,button,"The old window, winter light.",,~Photos,arjun dadi aria,,keep,
 Rooms,/lane,25,button,Anika shows Maa the picture she drew.,,~Photos,arjun dadi aria,,keep,
 Rooms,/lane,26,button,"Vihaan and his spinning tops, all over the courtyard floor.",,~Photos,arjun dadi aria,,keep,
 Rooms,/lane,27,button,"Maa on the courtyard steps, between her pots of tulsi.",,~Photos,arjun dadi aria,,keep,
@@ -1013,40 +1011,42 @@ Settings,/settings#window,5,tab,People,,settings-tabs,arjun dadi aria,,keep,
 Settings,/settings#window,6,tab,Privacy,,settings-tabs,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
 Settings,/settings#window,7,section,Your first screen,,,arjun dadi aria,,keep,
 Settings,/settings#window,8,heading,Your first screen,,~Your first screen,arjun dadi aria,,keep,
-Settings,/settings#window,9,toggle,Default photo,,~Your first screen,arjun dadi aria,,keep,
-Settings,/settings#window,10,toggle,Upload your own,,~Your first screen,arjun dadi aria,,keep,
-Settings,/settings#window,11,image,Maa,,~Your first screen,arjun aria,,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,12,image,Arjun,,~Your first screen,dadi aria,,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,12,toggle,Maa at your window,,~Your first screen,arjun aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,13,toggle,Arjun at your window,,~Your first screen,dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,13,toggle,Papa at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,14,toggle,Priya at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,15,toggle,Kavya at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,16,toggle,Rahul at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,17,toggle,Rohan at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,18,toggle,Sneha at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,19,toggle,N h,,~Your first screen,arjun dadi aria,,keep,
-Settings,/settings#window,24,button,Save Your first screen,,~Your first screen,arjun dadi aria,,keep,
-Settings,/settings#window,25,section,Connected apps,,,arjun dadi aria,,keep,
-Settings,/settings#window,26,heading,Connected apps,,~Connected apps,arjun dadi aria,,keep,
-Settings,/settings#window,27,section,"For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",,~Connected apps,arjun dadi aria,,keep,
-Settings,/settings#window,28,heading,"For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
-Settings,/settings#window,29,link,Connect,/api/partners/swiggy/connect,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
-Settings,/settings#window,32,link,Connect,/api/partners/zomato/connect,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
-Settings,/settings#window,33,link,Open Urban Company,https://www.urbancompany.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Settings,/settings#window,34,link,Open Blinkit,https://blinkit.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
-Settings,/settings#window,35,link,Open Tata Nmg,https://www.Nmg.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
-Settings,/settings#window,36,link,Open Ferns N Petals,https://www.fnp.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
-Settings,/settings#window,37,link,Open Uber,https://www.uber.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
-Settings,/settings#window,38,section,"For Rohan, Sneha & Kabir · United Kingdom",,~Connected apps,arjun dadi aria,,keep,
-Settings,/settings#window,39,heading,"For Rohan, Sneha & Kabir · United Kingdom",,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,,keep,
-Settings,/settings#window,40,link,Open Ocado,https://www.ocado.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
-Settings,/settings#window,41,link,Open Deliveroo,https://deliveroo.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
-Settings,/settings#window,42,link,Open Boots,https://www.boots.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
-Settings,/settings#window,43,link,Open TaskRabbit,https://www.taskrabbit.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
-Settings,/settings#window,44,link,Open Interflora,https://www.interflora.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
-Settings,/settings#window,45,link,Open Uber,https://www.uber.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
-Settings,/settings#window,46,button,Sign out,,,arjun dadi aria,,keep,
+Settings,/settings#window,9,toggle,Window,,~Your first screen,arjun dadi aria,,keep,
+Settings,/settings#window,10,toggle,Balcony,,~Your first screen,arjun dadi aria,,keep,
+Settings,/settings#window,11,toggle,Courtyard,,~Your first screen,arjun dadi aria,,keep,
+Settings,/settings#window,12,toggle,Upload your own,,~Your first screen,arjun dadi aria,,keep,
+Settings,/settings#window,13,image,Maa,,~Your first screen,arjun aria,,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,14,image,Arjun,,~Your first screen,dadi aria,,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,14,toggle,Maa at your window,,~Your first screen,arjun aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,15,toggle,Arjun at your window,,~Your first screen,dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,15,toggle,Papa at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,16,toggle,Priya at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,17,toggle,Kavya at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,18,toggle,Rahul at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,19,toggle,Rohan at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,20,toggle,Sneha at your window,,~Your first screen,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,21,toggle,N h,,~Your first screen,arjun dadi aria,,keep,
+Settings,/settings#window,26,button,Save Your first screen,,~Your first screen,arjun dadi aria,,keep,
+Settings,/settings#window,27,section,Connected apps,,,arjun dadi aria,,keep,
+Settings,/settings#window,28,heading,Connected apps,,~Connected apps,arjun dadi aria,,keep,
+Settings,/settings#window,29,section,"For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",,~Connected apps,arjun dadi aria,,keep,
+Settings,/settings#window,30,heading,"For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
+Settings,/settings#window,31,link,Connect,/api/partners/swiggy/connect,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
+Settings,/settings#window,34,link,Connect,/api/partners/zomato/connect,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,,keep,
+Settings,/settings#window,35,link,Open Urban Company,https://www.urbancompany.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Settings,/settings#window,36,link,Open Blinkit,https://blinkit.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,37,link,Open Tata Nmg,https://www.Nmg.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,38,link,Open Ferns N Petals,https://www.fnp.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,39,link,Open Uber,https://www.uber.com,"~For Maa & Papa, Arjun's home, Kavya, Rahul & Anaya · India",arjun dadi aria,icon-only,review,
+Settings,/settings#window,40,section,"For Rohan, Sneha & Kabir · United Kingdom",,~Connected apps,arjun dadi aria,,keep,
+Settings,/settings#window,41,heading,"For Rohan, Sneha & Kabir · United Kingdom",,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,,keep,
+Settings,/settings#window,42,link,Open Ocado,https://www.ocado.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,43,link,Open Deliveroo,https://deliveroo.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,44,link,Open Boots,https://www.boots.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,45,link,Open TaskRabbit,https://www.taskrabbit.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,46,link,Open Interflora,https://www.interflora.co.uk,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,47,link,Open Uber,https://www.uber.com,"~For Rohan, Sneha & Kabir · United Kingdom",arjun dadi aria,icon-only,review,
+Settings,/settings#window,48,button,Sign out,,,arjun dadi aria,,keep,
 Settings,/settings#you,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Settings,/settings#you,1,h1,Settings,,room-header,arjun dadi aria,,keep,
 Settings,/settings#you,2,nav,Settings sections,,settings-tabs,arjun dadi aria,,keep,
@@ -1096,10 +1096,9 @@ Settings,/settings#you,38,section,Where you are,,,arjun dadi aria,,keep,
 Settings,/settings#you,39,heading,Where you are,,~Where you are,arjun dadi aria,,keep,
 Settings,/settings#you,40,select,"Time zone, so family sees your local time India Pakistan Bangladesh Nepal Sri L…",,~Where you are,arjun dadi aria,,keep,
 Settings,/settings#you,41,input:text,"Your city, so the other home sees your sky and weather",,~Where you are,arjun dadi aria,,keep,
-Settings,/settings#you,42,image,Your home photo,,~Where you are,arjun dadi aria,,keep,
-Settings,/settings#you,43,button,Change,,~Where you are,arjun dadi aria,,keep,
-Settings,/settings#you,44,button,Save Where you are,,~Where you are,arjun dadi aria,,keep,
-Settings,/settings#you,45,button,Sign out,,,arjun dadi aria,,keep,
+Settings,/settings#you,42,button,Change,,~Where you are,arjun dadi aria,,keep,
+Settings,/settings#you,43,button,Save Where you are,,~Where you are,arjun dadi aria,,keep,
+Settings,/settings#you,44,button,Sign out,,,arjun dadi aria,,keep,
 Sheets,sheet:add,0,button,Close,,person-day,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Sheets,sheet:add,0,button,Close,,add-sheet,aria,icon-only,review,icon-only control: its name is only an aria-label
 Sheets,sheet:add,1,button,Previous,,person-day,arjun dadi,icon-only,review,

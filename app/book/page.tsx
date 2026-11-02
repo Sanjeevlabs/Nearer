@@ -53,7 +53,7 @@ function Book() {
   const elders = members.filter((m) => m.role === "elder");
   const memberId = params.get("member") ?? (elders.find((m) => m.id === viewer.id) ?? elders[0])?.id ?? "";
   const person = members.find((m) => m.id === memberId);
-  const { data, failed, reload } = useJson<{ chapters: Chapter[] }>(memberId ? `/api/book?member=${encodeURIComponent(memberId)}` : null);
+  const { data, failed, reload } = useJson<{ chapters: Chapter[] }>(ready && memberId ? `/api/book?member=${encodeURIComponent(memberId)}` : null);
   const name = callName(person);
   const photo = memberPhoto(person);
 
