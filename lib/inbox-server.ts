@@ -13,7 +13,7 @@ import { callName } from "./people";
 export async function inboxFor(familyId: string, viewerId: string, now: Date): Promise<InboxItem[]> {
   const since = new Date(now.getTime() - INBOX_DAYS * 86_400_000).toISOString();
   const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
-  const [members, rels, stored, plays, reactions, wishes, questions, kidAsks, lamps, nudges] = await Promise.all([
+  const [members, rels, stored, plays, reactions, wishes, questions, kidAsks, lamps, nudges, care] = await Promise.all([
     dbListMembers(familyId),
     safe(dbListRelationships(familyId), []),
     dbListCards(familyId, { since, limit: 400 }),
@@ -24,10 +24,14 @@ export async function inboxFor(familyId: string, viewerId: string, now: Date): P
     safe(listDocs(familyId, "kid_ask"), []),
     safe(listDocs(familyId, "lamp"), []),
     safe(listDocs(familyId, "nudge"), []),
+    safe(listDocs(familyId, "care_settings"), []),
   ]);
   const home = households(members, rels).find((h) => h.members.some((m) => m.id === viewerId));
   // Lamp heartbeats stay in the lamp doc after they are felt, so they are history too.
   const lamp = lamps.find((l) => l.id === home?.id);
+  // Someone who turned off "Show my lamp and activity" lights nothing for anyone else.
+  const hidden = new Set(care.filter((c) => c.shareVisits === false && c.memberId !== viewerId).map((c) => c.memberId));
+  const lights = lamps.filter((l) => l.id !== home?.id && l.litAt && l.litBy && !hidden.has(l.litBy)).map((l) => ({ from: l.litBy as string, at: l.litAt as string }));
   return buildInbox({
     viewerId,
     now,
@@ -41,6 +45,8 @@ export async function inboxFor(familyId: string, viewerId: string, now: Date): P
     guardians: guardianMap(members, rels),
     beats: lamp?.beats ?? [],
     felt: lamp?.felt[viewerId] ?? null,
+    lights,
+    tz: members.find((m) => m.id === viewerId)?.tz,
     nudges: nudges.filter((n) => n.toMemberId === viewerId).map((n) => ({ id: n.id, kind: n.kind, text: renderNudgeText(n.text, members), href: n.href, at: n.at, seen: n.seenAt !== null })),
   });
 }
