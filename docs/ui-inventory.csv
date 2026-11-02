@@ -100,9 +100,9 @@ Entry,home-laptop,6,button,Or try the demo here,,,arjun,,review,on more than 2 s
 Entry,home-laptop,7,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun,,keep,
 Entry,home-laptop,8,heading,See it in a minute,,home-film,arjun,,keep,
 Entry,home-laptop,9,heading,A window into their day,,,arjun,,keep,
-Entry,home-laptop,10,heading,"The whole family, one place",,,arjun,,keep,
+Entry,home-laptop,10,heading,A little time together,,,arjun,,keep,
 Entry,home-laptop,11,heading,"Everyone wishes, together",,,arjun,,keep,
-Entry,home-laptop,12,heading,"Care, sent in a tap",,,arjun,,keep,
+Entry,home-laptop,12,heading,Memories that stay,,,arjun,,keep,
 Entry,home-laptop,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
 Entry,home-laptop,14,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
 Entry,home-laptop,15,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
@@ -113,9 +113,9 @@ Entry,home-phone,4,button,Open Nearer,,home-actions,arjun,,keep,
 Entry,home-phone,5,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun,,keep,
 Entry,home-phone,6,heading,See it in a minute,,home-film,arjun,,keep,
 Entry,home-phone,7,heading,A window into their day,,,arjun,,keep,
-Entry,home-phone,8,heading,"The whole family, one place",,,arjun,,keep,
+Entry,home-phone,8,heading,A little time together,,,arjun,,keep,
 Entry,home-phone,9,heading,"Everyone wishes, together",,,arjun,,keep,
-Entry,home-phone,10,heading,"Care, sent in a tap",,,arjun,,keep,
+Entry,home-phone,10,heading,Memories that stay,,,arjun,,keep,
 Entry,home-phone,11,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun,dup,review,
 Entry,home-phone,12,link,Privacy,/privacy,,arjun,dup,review,on more than 2 screens: one path per job?
 Entry,home-phone,13,link,Join with a code,/join,,arjun,dup,review,on more than 2 screens: one path per job?
@@ -129,9 +129,9 @@ Entry,landing,7,link,Sign in,/signin,home-actions,anon,dup,review,on more than 2
 Entry,landing,8,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,anon,,keep,
 Entry,landing,9,heading,See it in a minute,,home-film,anon,,keep,
 Entry,landing,10,heading,A window into their day,,,anon,,keep,
-Entry,landing,11,heading,"The whole family, one place",,,anon,,keep,
+Entry,landing,11,heading,A little time together,,,anon,,keep,
 Entry,landing,12,heading,"Everyone wishes, together",,,anon,,keep,
-Entry,landing,13,heading,"Care, sent in a tap",,,anon,,keep,
+Entry,landing,13,heading,Memories that stay,,,anon,,keep,
 Entry,landing,14,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
 Entry,landing,15,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing,16,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
@@ -144,9 +144,9 @@ Entry,landing-laptop,6,button,Or try the demo here,,,anon,,review,on more than 2
 Entry,landing-laptop,7,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,anon,,keep,
 Entry,landing-laptop,8,heading,See it in a minute,,home-film,anon,,keep,
 Entry,landing-laptop,9,heading,A window into their day,,,anon,,keep,
-Entry,landing-laptop,10,heading,"The whole family, one place",,,anon,,keep,
+Entry,landing-laptop,10,heading,A little time together,,,anon,,keep,
 Entry,landing-laptop,11,heading,"Everyone wishes, together",,,anon,,keep,
-Entry,landing-laptop,12,heading,"Care, sent in a tap",,,anon,,keep,
+Entry,landing-laptop,12,heading,Memories that stay,,,anon,,keep,
 Entry,landing-laptop,13,link,sanjeevlabs.com,https://sanjeevlabs.com,,anon,dup,review,
 Entry,landing-laptop,14,link,Privacy,/privacy,,anon,dup,review,on more than 2 screens: one path per job?
 Entry,landing-laptop,15,link,Join with a code,/join,,anon,dup,review,on more than 2 screens: one path per job?
@@ -325,9 +325,9 @@ Public,/home,7,link,Sign in,/signin,home-actions,arjun dadi aria anon,dup,review
 Public,/home,8,image,"The first screen: a drawing of Maa and Papa's window under their real sky, the…",,,arjun dadi aria anon,,keep,
 Public,/home,9,heading,See it in a minute,,home-film,arjun dadi aria anon,,keep,
 Public,/home,10,heading,A window into their day,,,arjun dadi aria anon,,keep,
-Public,/home,11,heading,"The whole family, one place",,,arjun dadi aria anon,,keep,
+Public,/home,11,heading,A little time together,,,arjun dadi aria anon,,keep,
 Public,/home,12,heading,"Everyone wishes, together",,,arjun dadi aria anon,,keep,
-Public,/home,13,heading,"Care, sent in a tap",,,arjun dadi aria anon,,keep,
+Public,/home,13,heading,Memories that stay,,,arjun dadi aria anon,,keep,
 Public,/home,14,link,sanjeevlabs.com,https://sanjeevlabs.com,,arjun dadi aria anon,dup,review,
 Public,/home,15,link,Privacy,/privacy,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?
 Public,/home,16,link,Join with a code,/join,,arjun dadi aria anon,dup,review,on more than 2 screens: one path per job?

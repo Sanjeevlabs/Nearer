@@ -6,10 +6,11 @@ Starts a mock build (MOCK=true) with the server clock frozen at --now
 scripts/ui-inventory.py does), signs in to the demo (NEARER-DEMO) the way
 scripts/walk.py does, and captures 390x844 at DPR 2:
 
-  public/home/window.webp   the first screen (door closed)
-  public/home/family.webp   the house: Family
-  public/home/chorus.webp   Celebrations: occasions and the chorus
-  public/home/send.webp     Send something
+  public/home/window.webp    the first screen: their sky, the lamp, what they shared,
+                             and Maa's door open for chai (she opens it first)
+  public/home/together.webp  Living Room: Time together
+  public/home/chorus.webp    Living Room: Occasions and the chorus
+  public/home/memories.webp  Memories: Memory Lane
 
 Each WebP is kept at or under 120 KB (780 wide when it fits, else 390). Needs a mock
 build first:
@@ -33,10 +34,10 @@ TZ = "Asia/Kolkata"
 MAX_BYTES = 120 * 1024
 # (file, path, door open?, a selector that says the screen is ready)
 SHOTS = [
-    ("window", "/", False, "[data-ui=window-scene]"),
-    ("family", "/bond", True, "main"),
+    ("window", "/", False, "[data-ui=together]"),
+    ("together", "/gather/play", True, "main"),
     ("chorus", "/rituals", True, "main"),
-    ("send", "/send", True, "main"),
+    ("memories", "/lane", True, "main"),
 ]
 
 # Date shifted so a page starts at NOW and then ticks (the same shim as scripts/ui-inventory.py).
@@ -81,7 +82,7 @@ def save_webp(png: bytes, out: str) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=4610)
-    ap.add_argument("--now", default="2026-11-02T16:40:00Z", help="the frozen instant (evening at the far home: the lamp and the moon)")
+    ap.add_argument("--now", default="2026-11-02T13:45:00Z", help="the frozen instant (7:15 PM at the far home: the lamp and the moon)")
     ap.add_argument("--base", default=None, help="use a server already running (it must have AANGAN_FIXED_NOW set)")
     ap.add_argument("--out", default="public/home")
     args = ap.parse_args()
@@ -97,6 +98,17 @@ def main() -> int:
         os.makedirs(args.out, exist_ok=True)
         with sync_playwright() as p:
             browser = p.chromium.launch()
+            # Maa opens her door for Arjun (chai, an hour), so the window shows a real invitation.
+            maa = browser.new_context(base_url=base)
+            res = maa.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": "dadi"}), headers={"content-type": "application/json"})
+            if not res.ok:
+                raise SystemExit(f"home-shots: demo sign-in (dadi) failed {res.status}")
+            page = maa.new_page()
+            page.goto("/gather/play", wait_until="load")
+            opened = page.evaluate("async () => (await fetch('/api/sit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'knock', activity: 'chai', invites: ['arjun'], minutes: 60 }) })).status")
+            if opened >= 400:
+                raise SystemExit(f"home-shots: opening Maa's door failed {opened}")
+            maa.close()
             for name, path, door_open, ready in SHOTS:
                 ctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, base_url=base, timezone_id=TZ, locale="en-US", color_scheme="light", reduced_motion="reduce")
                 ctx.add_init_script(CLOCK_JS % ms)
