@@ -506,7 +506,7 @@ export const MuseImageRunSchema = z.object({
 });
 
 // ---------- Nudges: one gentle batch a day at the recipient's 8 AM, never a stream ----------
-export const NUDGE_KINDS = ["heard", "blessed", "shared", "occasion", "call", "letter"] as const;
+export const NUDGE_KINDS = ["heard", "blessed", "shared", "occasion", "call", "letter", "digest"] as const;
 export const NudgeSchema = z.object({
   id,
   toMemberId: id,

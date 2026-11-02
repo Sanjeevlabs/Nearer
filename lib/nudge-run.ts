@@ -1,8 +1,10 @@
 // The daily scan's share of nudges: queue the calendar ones (an occasion this
 // week, the weekly call tomorrow, the weekly letter), then deliver whatever has
 // reached its recipient's 8 AM. Server only.
+import { dbListCards, dbListPlays, dbListReactions } from "./db";
+import { withDemoShelf } from "./demo";
 import { isDemoFamily } from "./family";
-import { getDoc, listDocs } from "./family-docs";
+import { getDoc, listDocs, listDocsMany } from "./family-docs";
 import { DOC_SCHEMAS } from "./kinds";
 import { letterShareLink, renderDigestEmail } from "./nudge-mail";
 import { drain, enqueueNudge, markDelivered, nudgeSettingsFor, renderNudgeText } from "./nudges";
@@ -11,6 +13,7 @@ import { pushMorning, sweepOverdue } from "./push/events";
 import type { DocKind } from "./kinds";
 import type { Member } from "./schemas";
 import { weekStartOf } from "./week";
+import { pickWeekMoment } from "./week-moment";
 
 const DAY = 86_400_000;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -87,6 +90,22 @@ export async function queueScanNudges(familyId: string, input: NudgeScanInput): 
     const letter = (await listDocs(familyId, "chitthi")).find((l) => l.kind === "letter" && l.body && Date.parse(l.deliverAt) >= from && Date.parse(l.deliverAt) <= now.getTime());
     if (letter) {
       for (const m of active) await add({ toMemberId: m.id, kind: "letter", text: `This week's letter: ${letter.title ?? "from the courtyard"}`.slice(0, 120), href: `/home?letter=${encodeURIComponent(letter.id)}` });
+    }
+  }
+
+  // Saturday where the host lives: the week's best moment, once, to everyone (it arrives with Sunday's letter).
+  if (host && weekdayIn(host.tz, now) === 6) {
+    try {
+      const [cards, plays, reactions, docs] = await Promise.all([
+        dbListCards(familyId),
+        dbListPlays(undefined, familyId),
+        dbListReactions(undefined, familyId),
+        listDocsMany(familyId, ["recipe", "attempt", "story", "today_task", "chitthi"] as const),
+      ]);
+      const moment = pickWeekMoment({ now, members, cards: withDemoShelf(cards, familyId), plays, reactions, recipes: docs.recipe, attempts: docs.attempt, stories: docs.story, tasks: docs.today_task, letters: docs.chitthi });
+      if (moment) for (const m of active) await add({ toMemberId: m.id, kind: "digest", text: moment.text, href: moment.href });
+    } catch (e) {
+      console.error("[nudges] digest failed", familyId, String(e));
     }
   }
   return { queued };

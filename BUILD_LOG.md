@@ -322,3 +322,9 @@
 - Real push: the Android app (FCM HTTP v1), the installed web app (Web Push with VAPID, written on WebCrypto so it runs on Workers) and, once the owner adds an Apple key to Firebase, the iOS app.
 - Calm by design: a voice note to you, a lit lamp, a question or a child's ask arrive now (not from 22:00 to 07:00, at most 6 a day); blessings, "heard", occasions, calls and letters wait for the 8 AM summary; "I need help" and an overdue check-in reach her chosen people at any hour. Never counts of inactivity.
 - Settings, You, Notifications: a switch per kind and "Send me a test". The soft ask ("Get a gentle note when family sends you something") never appears on load and stays away 30 days after "Not now".
+
+## 2 Nov 2026 · The family archive
+
+- Ask the family (Memories, "Ask"): a question is answered only from this family's own voice transcripts, recipes, stories and Book answers. Keyword ranking (BM25 with near-spelling matches) picks 8 passages; Muse Spark writes a short answer from them and cites each by card and moment; every quote is checked against its passage (fuzzy 0.9) or dropped, and no answer without a surviving quote is shown. Nothing found: "No one in the family has said that yet", with a one-tap ask by voice. Cached 24 h, rate-limited, logged in What Muse did.
+- The Book, printable: Download the book opens A5 pages (cover with portrait, a chapter per page, a QR to each voice); Save as PDF from the print dialog.
+- This week in your family: on Saturday the week's most heard or blessed voice note, or a recipe someone cooked, arrives as one nudge with Sunday's letter. Outside the 3-a-week event count; off for anyone at 0 a week.
