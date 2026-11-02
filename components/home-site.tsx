@@ -117,6 +117,24 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
         </div>
       </section>
 
+      {/* The film: one minute, played only when asked (no autoplay, nothing loaded until then). */}
+      <section className="mx-auto max-w-[760px] px-4 pb-12 sm:px-8 sm:pb-16" data-ui="home-film">
+        <h2 className="m-0 mb-4 text-center text-title font-semibold">See it in a minute</h2>
+        <div className="overflow-hidden rounded-[24px] bg-black shadow-[0_30px_70px_-40px_rgba(0,0,0,.55)] ring-1 ring-black/[.06]">
+          <video
+            className="block aspect-video w-full"
+            controls
+            playsInline
+            preload="none"
+            poster="/home/film-poster.webp"
+            aria-label="A one-minute film about Nearer: a son far away, his parents' day, and the app between them"
+          >
+            <source src="/home/film.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <p className="m-0 mt-3 text-center text-footnote text-ink-soft">An illustrative family, the real app.</p>
+      </section>
+
       {/* Four things it does */}
       <section className="bg-white py-12 sm:py-16">
         <div className="mx-auto grid max-w-[1120px] gap-10 px-4 sm:px-8 sm:grid-cols-2 lg:grid-cols-4">
