@@ -290,11 +290,13 @@ export function Monogram({ name, size }: { name: string; size: number }) {
 export function RoomHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode; /** Kept for callers: the header names the room itself on a room's own pages. */ room?: string }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { viewer, members } = useViewer();
+  const { viewer, members, ready } = useViewer();
   const hasKids = members.some((m) => isKid(m));
-  // Until we know who is looking, a child would briefly get the grown-ups' tabs: hold the row empty.
-  const at = viewer ? tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), hasKids) : null;
-  const pending = !viewer && tabsFor(pathname, false, false, hasKids) !== null;
+  // Before the family loads, `viewer` is a stand-in grown-up, so a child would briefly get the
+  // grown-ups' tabs: hold the row empty until we know who is looking.
+  const known = ready && members.some((m) => m.id === viewer.id);
+  const at = known ? tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), hasKids) : null;
+  const pending = !known && tabsFor(pathname, false, false, hasKids) !== null;
   const own = roomOf(pathname);
   const name = (at?.space.title ?? own?.title ?? title) || "";
   const active = useRef<HTMLAnchorElement>(null);
