@@ -35,3 +35,9 @@ The distance shown is the application's city-to-city distance. Safe & sound is a
 Sample product labels remain visible. The narration explicitly identifies samples. The recorder blocks all external browser requests, never opens checkout, and never sends or purchases a gift. The international shot chooses Rohan and Sneha through the existing window-settings endpoint in the local mock family; it does not imply Maa lives in London. The recording-only synthetic shelf (`NEXT_PUBLIC_MOCK=true` and `NEXT_PUBLIC_DEMO_REEL=true`) includes an explicitly addressed note so the real inbox can demonstrate Reply by voice. Ordinary demo visitors and the UI inventory keep the original data.
 
 Every required selector and key state fails closed. The London and night-sky shots assert their actual content. Page exceptions fail the recording; no placeholder product screens or unfinished shots are rendered into the final video.
+
+## Narrated motion film
+
+After the real-app capture exists, `npm run demo:film` builds a separate widescreen film. It synthesizes stock narration with the public Edge TTS client, composes an original piano bed and transition sounds, animates camera moves across the synthetic demo imagery, and puts the actual recordings into moving phone frames. Captioned output: `out/film/nearer-film.mp4`. The separate audio mix, subtitles, script and timeline are in the same folder. No product UI is changed, and no paid account or API key is used. The voice service requires network access; an unavailable service fails the build rather than producing another silent export. Existing narration takes are reused.
+
+The people in the illustrative photos remain still. Camera moves, moving typography, device frames and the recorded app supply the motion; this workflow does not synthesize actor performances. The stock narrator is not a family member's cloned voice. Music and effects are generated locally from original notes and noise.
