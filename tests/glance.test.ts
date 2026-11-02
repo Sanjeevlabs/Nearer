@@ -57,7 +57,7 @@ describe("waitingForYou", () => {
     expect(waitingForYou({ ...base, questions: [{ ...question, askedBy: null }] })?.text).toBe("A question for you");
   });
   it("a sealed Today answer, only until you answer or it completes", () => {
-    expect(waitingForYou({ ...base, today: [today] })).toEqual({ kind: "today", text: "Maa's answer is waiting for yours", href: "/", fromId: "dadi" });
+    expect(waitingForYou({ ...base, today: [today] })).toEqual({ kind: "today", text: "Maa answered today's question", href: "/", fromId: "dadi" });
     expect(waitingForYou({ ...base, today: [{ ...today, answers: [...today.answers, { memberId: "arjun", cardId: "y", at: "2026-10-31T11:00:00.000Z" }] }] })).toBeNull();
     expect(waitingForYou({ ...base, today: [{ ...today, completedAt: "2026-10-31T11:00:00.000Z" }] })).toBeNull();
     expect(waitingForYou({ ...base, today: [{ ...today, date: "2026-10-20" }] })).toBeNull();

@@ -25,6 +25,10 @@ export interface SceneProps {
   pulseKey: number;
   /** Accessible name for the lamp button (says whether it is lit). */
   lampLabel: string;
+  /** The finger left the lamp after a hold (two touches meet: leave the channel). */
+  onRelease?: () => void;
+  /** Two touches met: a shared glow on the lamp (static under reduced motion). */
+  met?: boolean;
   children?: React.ReactNode;
 }
 
@@ -157,7 +161,7 @@ function Lantern({ x, y, glow, cord }: { x: number; y: number; glow: number; cor
 }
 
 /** The lamp as a real button over the drawing: tap lights it, hold 600 ms sends a heartbeat. */
-function LampButton({ left, top, onLight, onHold, pulseKey, label }: { left: string; top: string; onLight: () => void; onHold: () => void; pulseKey: number; label: string }) {
+function LampButton({ left, top, onLight, onHold, onRelease, met, pulseKey, label }: { left: string; top: string; onLight: () => void; onHold: () => void; onRelease?: () => void; met?: boolean; pulseKey: number; label: string }) {
   const held = useRef<number | "held" | null>(null);
   return (
     <button
@@ -174,13 +178,22 @@ function LampButton({ left, top, onLight, onHold, pulseKey, label }: { left: str
         }, 600);
       }}
       onPointerUp={() => {
-        if (held.current === "held") return void (held.current = null);
+        if (held.current === "held") {
+          held.current = null;
+          return void onRelease?.();
+        }
         if (held.current !== null) window.clearTimeout(held.current);
         held.current = null;
         onLight();
       }}
       onPointerLeave={() => {
         if (typeof held.current === "number") window.clearTimeout(held.current);
+        if (held.current === "held") onRelease?.();
+        held.current = null;
+      }}
+      onPointerCancel={() => {
+        if (typeof held.current === "number") window.clearTimeout(held.current);
+        if (held.current === "held") onRelease?.();
         held.current = null;
       }}
       onKeyDown={(e) => {
@@ -192,7 +205,7 @@ function LampButton({ left, top, onLight, onHold, pulseKey, label }: { left: str
       }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <span key={pulseKey} className={cn("block h-10 w-10 rounded-full", pulseKey > 0 && "lamp-ring")} aria-hidden="true" />
+      <span key={pulseKey} className={cn("block h-10 w-10 rounded-full", pulseKey > 0 && "lamp-ring", met && "touch-met")} data-met={met ? "true" : undefined} aria-hidden="true" />
     </button>
   );
 }
@@ -288,7 +301,7 @@ const LAMP_AT: Record<SceneSpace, { x: number; top: number; cord: number }> = {
   courtyard: { x: 0.5, top: 0, cord: 56 },
 };
 
-export function DrawnScene({ sky, space, onLight, onHold, pulseKey, lampLabel, children }: SceneProps) {
+export function DrawnScene({ sky, space, onLight, onHold, onRelease, met, pulseKey, lampLabel, children }: SceneProps) {
   const motion = !useReducedMotion();
   const at = LAMP_AT[space];
   return (
@@ -302,7 +315,7 @@ export function DrawnScene({ sky, space, onLight, onHold, pulseKey, lampLabel, c
         <Particles sky={sky} w={W} h={H} motion={motion} />
         {sky.phase === "night" && <rect width={W} height={H} fill="#0b1020" opacity={0.18} />}
       </svg>
-      <LampButton left={`${at.x * 100}%`} top={`${((at.top + at.cord - 8) / H) * 100}%`} onLight={onLight} onHold={onHold} pulseKey={pulseKey} label={lampLabel} />
+      <LampButton left={`${at.x * 100}%`} top={`${((at.top + at.cord - 8) / H) * 100}%`} onLight={onLight} onHold={onHold} onRelease={onRelease} met={met} pulseKey={pulseKey} label={lampLabel} />
       {children}
     </div>
   );
@@ -310,7 +323,7 @@ export function DrawnScene({ sky, space, onLight, onHold, pulseKey, lampLabel, c
 
 /* ---------------------------------------------------------- the photo scene */
 /** A photo per space/phase/weather, best match first; only the lamp glow and particles drawn over it. No text. */
-export function PhotoScene({ sky, space, ownPhoto, onLight, onHold, pulseKey, lampLabel, children }: SceneProps) {
+export function PhotoScene({ sky, space, ownPhoto, onLight, onHold, onRelease, met, pulseKey, lampLabel, children }: SceneProps) {
   const motion = !useReducedMotion();
   // The viewer's own photo is a mode of its own: it shows as is. Otherwise the per-sky photos, best match first.
   const list = ownPhoto ? [ownPhoto] : photoSceneCandidates(space, sky.phase, sky.weather, null);
@@ -328,7 +341,7 @@ export function PhotoScene({ sky, space, ownPhoto, onLight, onHold, pulseKey, la
         {sky.stars && STARS.slice(0, 12).map((s, k) => <circle key={k} cx={s.x * W} cy={s.y * H * 0.5} r={s.r} fill="#fff" opacity={0.7} />)}
         <Particles sky={sky} w={W} h={H} motion={motion} />
       </svg>
-      <LampButton left={`${at.x * 100}%`} top={`${((at.top + at.cord - 8) / H) * 100}%`} onLight={onLight} onHold={onHold} pulseKey={pulseKey} label={lampLabel} />
+      <LampButton left={`${at.x * 100}%`} top={`${((at.top + at.cord - 8) / H) * 100}%`} onLight={onLight} onHold={onHold} onRelease={onRelease} met={met} pulseKey={pulseKey} label={lampLabel} />
       {children}
     </div>
   );

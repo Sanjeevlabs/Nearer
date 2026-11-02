@@ -84,17 +84,17 @@ describe("Care tabs don't repeat each other", () => {
 });
 
 describe("children's rooms", () => {
-  it("gives children no Portrait tab, grown-ups keep it", () => {
+  it("Portrait is not a tab for anyone (it opens from the Family tree); only grown-ups may start one", () => {
     const byId = (id: string) => listMembers().find((m) => m.id === id)!;
     expect(canStartPortrait(byId("aria"))).toBe(false);
     expect(canStartPortrait(byId("leo"))).toBe(false);
     expect(canStartPortrait(byId("arjun"))).toBe(true);
     const kid = roomsFor(false, false).flatMap((r) => r.tabs.map((t) => t.href));
     expect(kid).not.toContain("/portrait");
-    expect(roomsFor(false).flatMap((r) => r.tabs.map((t) => t.href))).toContain("/portrait");
-    expect(tabsFor("/book", false)?.space.rooms.map((r) => r.title)).toEqual(["Family tree", "Homes", "The Book", "Advice"]);
+    expect(roomsFor(false).flatMap((r) => r.tabs.map((t) => t.href))).not.toContain("/portrait");
+    expect(tabsFor("/book", false)?.space.rooms.map((r) => r.title)).toEqual(["Memory Lane", "Stories", "The Book", "Advice", "Ask the family"]);
     expect(tabsFor("/portrait", false)).toBeNull();
-    expect(tabsFor("/book")?.space.rooms.map((r) => r.title)).toContain("Portrait");
+    expect(tabsFor("/portrait")).toBeNull();
   });
 
   it("keeps every tab href unique across the house, with and without Portrait", () => {

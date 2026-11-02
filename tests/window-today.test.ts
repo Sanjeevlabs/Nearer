@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { beforeEach, describe, expect, it } from "vitest";
 import { GET as cardsGet } from "@/app/api/cards/route";
 import { GET as todayGet, POST as todayPost } from "@/app/api/today/route";
@@ -6,7 +7,7 @@ import { GET as weatherGet } from "@/app/api/weather/route";
 import { dbListMembers, dbListRelationships } from "@/lib/db";
 import type { Card } from "@/lib/schemas";
 import { resetDemo } from "@/lib/store";
-import { streak, type TodayPrompt } from "@/lib/today";
+import { type TodayPrompt } from "@/lib/today";
 import { treeLayout } from "@/lib/tree";
 import { groundedLayers } from "@/lib/window";
 import { phaseFor, skyFromWmo } from "@/lib/weather";
@@ -55,21 +56,19 @@ describe("the window (LITE)", () => {
 });
 
 describe("today, for both homes", () => {
-  it("seals Maa's answer until Arjun answers, then completes and lights a lamp", async () => {
-    const before = await json<{ task: { id: string; side: string; sealed: number; mine: boolean }; streak: number }>(todayGet(req("/api/today", "arjun")));
-    expect(before.task).toMatchObject({ side: "children", sealed: 1, mine: false });
-    expect(before.streak).toBe(4);
-    const hidden = await json<{ cards: Card[] }>(cardsGet(req("/api/cards", "arjun")));
-    expect(hidden.cards.some((c) => c.id === "demo-today-maa")).toBe(false);
+  it("shows Maa's answer to Arjun before he answers (nothing sealed, no streak), then completes", async () => {
+    const before = await json<{ task: { id: string; side: string; mine: boolean; theirs: boolean; answers: { cardId: string }[] }; streak?: number }>(todayGet(req("/api/today", "arjun")));
+    expect(before.task).toMatchObject({ side: "children", mine: false, theirs: true });
+    expect(before.task).not.toHaveProperty("sealed");
+    expect(before.task.answers.map((a) => a.cardId)).toContain("demo-today-maa");
+    expect(before).not.toHaveProperty("streak");
+    const open = await json<{ cards: Card[] }>(cardsGet(req("/api/cards", "arjun")));
+    expect(open.cards.some((c) => c.id === "demo-today-maa")).toBe(true);
     // Someone else's card can't be your answer.
     expect((await todayPost(req("/api/today", "arjun", { action: "answer", taskId: before.task.id, cardId: "demo-today-maa" }))).status).toBe(403);
-    const done = await json<{ completed: boolean; task: { sealed: number; answers: unknown[] } }>(todayPost(req("/api/today", "arjun", { action: "answer", taskId: before.task.id, cardId: "demo-voice-1" })));
+    const done = await json<{ completed: boolean; task: { answers: unknown[] } }>(todayPost(req("/api/today", "arjun", { action: "answer", taskId: before.task.id, cardId: "demo-voice-1" })));
     expect(done.completed).toBe(true);
-    expect(done.task.sealed).toBe(0);
     expect(done.task.answers).toHaveLength(2);
-    const after = await json<{ cards: Card[] }>(cardsGet(req("/api/cards", "arjun")));
-    expect(after.cards.some((c) => c.id === "demo-today-maa")).toBe(true);
-    expect((await json<{ streak: number }>(todayGet(req("/api/today", "arjun")))).streak).toBe(5);
   });
 
   it("isn't a task for the grandchildren or in-laws' parents", async () => {
@@ -78,10 +77,10 @@ describe("today, for both homes", () => {
     expect((await todayPost(req("/api/today", "leo", { action: "answer", taskId: "x", cardId: "y" }))).status).toBe(404);
   });
 
-  it("streaks count back from the last finished day", () => {
-    const t = (date: string, done: boolean) => ({ id: date, date, promptId: "p", forParents: "", forChildren: "", parents: [], children: [], answers: [], completedAt: done ? "2026-01-01T00:00:00.000Z" : null, madeBy: "muse" as const, createdAt: "2026-01-01T00:00:00.000Z" });
-    expect(streak([t("2026-10-29", true), t("2026-10-28", true), t("2026-10-26", true)], "2026-10-30")).toBe(2);
-    expect(streak([t("2026-10-30", true), t("2026-10-29", true)], "2026-10-30")).toBe(2);
+  it("the Today card asks without a seal: 'Add yours', no 'to hear it', no sealed count", () => {
+    const src = readFileSync("components/today.tsx", "utf8");
+    expect(src).toContain("Add yours");
+    expect(src).not.toMatch(/to hear it|sealed|streak/);
     void ({} as TodayPrompt);
   });
 });
@@ -116,20 +115,12 @@ describe("trusted nearby, both homes", () => {
 });
 
 describe("safe & sound at a glance", () => {
-  it("green when active, amber after 6 quiet hours in their day, asleep at their night", async () => {
-    const { aliveState } = await import("@/lib/status");
-    const noonIST = new Date("2026-10-30T06:30:00.000Z"); // 12:00 in Kolkata
-    const nightIST = new Date("2026-10-30T20:30:00.000Z"); // 02:00 in Kolkata
-    const tz = "Asia/Kolkata";
-    expect(aliveState(new Date(noonIST.getTime() - 2 * 3_600_000).toISOString(), tz, { shares: true, now: noonIST })).toBe("active");
-    expect(aliveState(new Date(noonIST.getTime() - 7 * 3_600_000).toISOString(), tz, { shares: true, now: noonIST })).toBe("quiet");
-    expect(aliveState(new Date(nightIST.getTime() - 9 * 3_600_000).toISOString(), tz, { shares: true, now: nightIST })).toBe("asleep");
-    expect(aliveState(null, tz, { shares: false, now: noonIST })).toBe("private");
-  });
-
-  it("the window carries a status for each grown-up on the other side", async () => {
-    const son = await json<{ people: { id: string; state: string }[] }>(windowGet(req("/api/window", "arjun")));
+  it("the window carries their day for each grown-up on the other side: shared moments, never an inferred state", async () => {
+    const son = await json<{ people: Record<string, unknown>[] }>(windowGet(req("/api/window", "arjun")));
     expect(son.people.map((p) => p.id).sort()).toEqual(["dada", "dadi"]);
-    expect(son.people.every((p) => ["active", "quiet", "asleep", "unknown", "private"].includes(p.state))).toBe(true);
+    for (const p of son.people) {
+      expect(Object.keys(p).sort()).toEqual(["checkins", "id", "moments"]);
+      expect((p.moments as { label: string }[]).every((m) => m.label !== "here")).toBe(true);
+    }
   });
 });

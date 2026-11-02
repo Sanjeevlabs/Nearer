@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { awakeNow } from "@/lib/glance";
+import { timeIn } from "@/lib/zones";
 import { grandparentsOf, guardiansOf } from "@/lib/kids";
 import { callName, memberPhoto } from "@/lib/people";
 import { useFamilyCards } from "@/lib/use-family";
@@ -87,7 +87,6 @@ export function KidHome() {
     const linked = members.filter((m) => ids.includes(m.id));
     return linked.length ? linked : members.filter((m) => m.role === "elder" && m.id !== viewer.id);
   }, [viewer.id, members, relationships]);
-  const awake = useMemo(() => new Set(awakeNow(members, viewer.id, now).map((a) => a.id)), [members, viewer.id, now]);
   const askers = guardiansOf(viewer.id, relationships);
   const grandIds = grand.map((g) => g.id);
 
@@ -106,10 +105,12 @@ export function KidHome() {
             <li key={g.id} className="flex w-[88px] shrink-0 flex-col items-center text-center">
               <span className="relative">
                 <Avatar src={memberPhoto(g)} name={callName(g)} size={72} ring />
-                <span className="absolute bottom-0 right-0 h-5 w-5 rounded-full ring-2 ring-white" style={{ background: awake.has(g.id) ? "#3f9d5a" : "#9a9086" }} aria-hidden="true" />
               </span>
               <span className="mt-1.5 block max-w-full truncate text-headline font-semibold">{callName(g)}</span>
-              <span className="text-callout text-ink-soft">{awake.has(g.id) ? "Awake" : "Asleep"}</span>
+              {/* Their clock, as it is: nothing read into it. */}
+              <span className="tnum text-callout text-ink-soft" suppressHydrationWarning>
+                {timeIn(g.tz, now)}
+              </span>
             </li>
           ))}
         </ul>

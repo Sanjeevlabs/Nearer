@@ -3,24 +3,22 @@
 import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
-import { dbListCards, dbListMembers, dbListPlays, dbListRelationships } from "./db";
+import { dbListCards, dbListMembers, dbListRelationships } from "./db";
 import { listDocs, listDocsMany } from "./family-docs";
 import { withDeadline } from "./deadline";
 import { getRitualSettings } from "./occasion-settings";
-import type { Nudge, Presence, WindowView } from "./kinds";
+import type { Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
 import { households } from "./households";
 import { lampView, type LampView } from "./lamp";
 import { inBackground } from "./push/background";
 import { MOMENT_LABEL, todayFor } from "./presence";
-import type { Card, Member, Play, Relationship } from "./schemas";
+import type { Card, Member, Relationship } from "./schemas";
 import { fetchWeather, geocode, mockPlace, mockWeather, phaseFor, type DayPhase, type PlaceHint, type Weather } from "./weather";
 import { countryOfMember } from "./place";
 import { checkinEvents, composedLine, type DayMoment } from "./window-words";
 import { cityOf, farHomeFor } from "./window";
 import { hourIn } from "./zones";
-import { aliveState, type Alive } from "./status";
-import { dayRhythm, rhythmLine, type DayRhythm } from "./rhythm";
 import { isNightAt, moonPhase, skyGlyph } from "./sky";
 import type { Wall } from "./kinds";
 import { withDemoShelf } from "./demo";
@@ -29,21 +27,21 @@ import { createDownloadUrl } from "./storage";
 import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
-import { awakeNow, callTile, nextLine, nextUp, waitingForYou, type Glance } from "./glance";
-import { askCardIds, guardianMap, kidsTile } from "./kids";
-import { renderNudgeText, unseenFor } from "./nudges";
+import { nextLine, nextUp } from "./glance";
+import { doorsFor, type Door } from "./doors";
+import { touchChannel } from "./touch-channel";
 import { listEvents } from "./gather-store";
 import type { FamilyEvent } from "./events";
 import { familyHolidaysNow } from "./occasions-server";
 import { occasionsInRange, addDays, type CalHoliday } from "./occasion-calendar";
 import { dateIn } from "./today";
 
+/**
+ * Their day, per person at the window: only facts they chose to share. Nothing here is
+ * worked out from when they opened Nearer, the lamp, the clock or silence.
+ */
 export interface WindowPerson {
   id: string;
-  lastActive: string | null;
-  state: Alive;
-  line: string;
-  rhythm: DayRhythm;
   /** What they shared today (their local day), oldest first: chai, a walk, the temple. */
   moments: DayMoment[];
   /** Today's safety check-ins, oldest first. */
@@ -62,9 +60,9 @@ export interface WindowState {
   line: string;
   /** What they shared today, newest first, in words ("is having chai"). */
   moments: { memberId: string; label: string; at: string }[];
-  /** Safe & sound at a glance, per person at the window (at most two). */
+  /** Their day, per person at the window (at most two): what they shared today, and their check-ins. */
   people: WindowPerson[];
-  /** This viewer's amber threshold, in hours. */
+  /** A stored setting from the old amber dot; kept for older clients, it changes nothing on screen. */
   quietAfterHours: number;
   /** The viewer's previous visit (the inbox holds what happened since; the window no longer lists it). */
   since: { at: string | null };
@@ -84,8 +82,12 @@ export interface WindowState {
   sky: { glyph: "sun" | "moon" | null; moon: { illumination: number; waxing: boolean; name: string }; bothNight: boolean };
   /** Is now a good time to call, in their day and yours. */
   call: { good: boolean; text: string };
-  /** Four 3-second answers about the whole family (under Safe & sound). */
-  glance: Glance;
+  /** Doors open to the viewer right now (not their own), only those they may see (lib/doors.ts). */
+  doors: Door[];
+  /** The viewer's own open door, if any. */
+  myDoor: Door | null;
+  /** Two touches meet (experiment): one private Presence channel per person at the window (lib/touch-channel.ts). */
+  touchChannel: { withId: string; channel: string }[];
   /** A photo of their actual home as the view (a media ref), else null: the default photo. */
   homePhoto: string | null;
   /** Their city's coordinates (a city, never a person's location), for the real sky; null when unknown. */
@@ -175,7 +177,7 @@ function localDay(iso: string, tz: string): string {
 }
 
 /** The family-wide reads the window needs, all started at once (one wave of round trips). */
-const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask", "lamp"] as const;
+const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask", "lamp", "knock"] as const;
 /** The rhythm looks back 15 days: a time window, not the newest 500 (heartbeats pile up). */
 const PRESENCE_WINDOW_MS = 16 * 86_400_000;
 /** The window needs the recent shelf (latest voice, last signs, what waits), never the whole lane. */
@@ -196,11 +198,8 @@ export interface WindowReads {
   docs: WindowDocs;
   /** Heartbeats and moments from the last 16 days. */
   presence: Presence[];
-  /** The viewer's nudges that are due and unseen (the same list the dock dot reads). */
-  nudges: Nudge[];
   /** Recent cards only (last 60 days, at most 200). */
   cards: Card[];
-  plays: Play[];
   events: FamilyEvent[];
   /** The calendar the family keeps: this isolate's cached feed or the bundled list, never a wait on the network. */
   holidays: Promise<CalHoliday[]>;
@@ -229,19 +228,16 @@ export function readWindow(familyId: string, now: Date = new Date(), viewerId?: 
     dbListRelationships(familyId),
     listDocsMany(familyId, WINDOW_KINDS),
     safe(listDocs(familyId, "presence", { sinceMs: PRESENCE_WINDOW_MS }), [] as Presence[]),
-    viewerId ? safe(unseenFor(familyId, viewerId, now), [] as Nudge[]) : Promise.resolve([] as Nudge[]),
     dbListCards(familyId, { since, limit: CARD_WINDOW_LIMIT }),
-    safe(dbListPlays(undefined, familyId), [] as Play[]),
     safe(listEvents(familyId), [] as FamilyEvent[]),
-  ]).then(([members, relationships, docs, presence, nudges, cards, plays, events]) => ({ members, relationships, docs, presence, nudges, cards, plays, events, holidays }));
+  ]).then(([members, relationships, docs, presence, cards, events]) => ({ members, relationships, docs, presence, cards, events, holidays }));
 }
 
 export async function windowState(familyId: string, viewerId: string, now = new Date(), preread?: Promise<WindowReads>): Promise<WindowState> {
-  const { members, relationships, docs, presence, nudges: rawNudges, cards: recent, plays, events, holidays } = await (preread ?? readWindow(familyId, now, viewerId));
+  const { members, relationships, docs, presence, cards: recent, events, holidays } = await (preread ?? readWindow(familyId, now, viewerId));
   const view = docs.window_view.find((d) => d.id === viewerId);
   // An open check-in nobody answered for 48 h reads as closed "no reply" (the daily scan stores it).
   const checkins = docs.safety_checkin.map((c) => expireCheckin(c, now.getTime()));
-  const nudges = rawNudges.map((n) => ({ id: n.id, kind: n.kind, text: renderNudgeText(n.text, members), href: n.href, at: n.at }));
   const settings = docs.care_settings;
   const viewer = members.find((m) => m.id === viewerId);
   const farHome = viewer ? farHomeFor(viewer, members, relationships) : undefined;
@@ -280,11 +276,11 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     return m?.displayName || m?.firstName || "";
   };
   const shelf = withDemoShelf(recent, familyId);
-  // Last sign of life in Nearer: any moment (opening the app included), a
-  // voice or photo they sent, a safety check-in. Only what they already share.
+  // Something they did and chose to share: a moment, a voice or photo they sent, a safety
+  // check-in. The automatic "here" (just opening Nearer) is never shown to anyone else.
   const signs = (id: string): string[] =>
     [
-      ...presence.filter((p) => p.memberId === id).map((p) => p.at),
+      ...presence.filter((p) => p.memberId === id && p.moment !== "here").map((p) => p.at),
       ...shelf.filter((c) => c.authorId === id && Date.parse(c.takenAt) <= now.getTime()).map((c) => c.takenAt),
       ...checkins.filter((c) => c.memberId === id).map((c) => answeredAt(c) ?? c.at),
     ].filter((t) => Date.parse(t) <= now.getTime());
@@ -293,22 +289,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     .filter((m) => m.role !== "child")
     .map((m) => {
       const shares = settings.find((s) => s.memberId === m.id)?.shareVisits ?? true;
-      const lastActive = shares ? lastSeen(m.id) : null;
-      const state = aliveState(lastActive, m.tz, { shares, now, quietAfter: view?.quietAfterHours });
-      const rhythm = dayRhythm(shares ? signs(m.id) : [], m.tz, now);
-      // The only sign being the app heartbeat (just opening Nearer) is not "active" for long.
-      const latestShared = presence.find((p) => p.memberId === m.id && p.at === lastActive);
-      const heartbeatOnly = Boolean(lastActive) && latestShared?.moment === "here";
       const shared = dayOf(m.id, m.tz);
-      return {
-        id: m.id,
-        lastActive,
-        state,
-        rhythm,
-        line: rhythmLine(state, lastActive, rhythm, m.tz, (iso) => agoWords(iso, now), { heartbeatOnly, now }),
-        moments: shares ? shared.moments : [],
-        checkins: shared.checkins,
-      };
+      return { id: m.id, moments: shares ? shared.moments : [], checkins: shared.checkins };
     })
     .slice(0, 2);
   function dayOf(id: string, mtz: string): { moments: DayMoment[]; checkins: { at: string; label: string }[] } {
@@ -332,9 +314,9 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const [[weather, farPlace, herePlace], hol] = await Promise.all([skyP, holidays]);
   const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   const own = view ?? defaultView(familyId, viewerId);
-  const glance = glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous });
   const myTz = viewer?.tz ?? "UTC";
-  const next = nextLine({ call: docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, theirTz: home?.tz ?? null, next: glance.next, now, today: dateIn(myTz, now) });
+  const next = nextLine({ call: docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, theirTz: home?.tz ?? null, next: nextFrom({ viewerId, members, now, events, holidays: hol }), now, today: dateIn(myTz, now) });
+  const { doors, myDoor } = doorsFor(docs.knock, viewerId, nameOfId, now.getTime());
   const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
   return {
     view: view ? { ...view, style: "still" } : null,
@@ -354,7 +336,12 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Nearer (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance,
+    doors,
+    myDoor,
+    touchChannel: people.flatMap((p) => {
+      const channel = touchChannel(familyId, viewerId, p.id);
+      return channel ? [{ withId: p.id, channel }] : [];
+    }),
     next,
     homePhoto: own.homePhoto,
     place: farPlace ? { lat: Math.round(farPlace.lat * 100) / 100, lon: Math.round(farPlace.lon * 100) / 100 } : null,
@@ -364,49 +351,22 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   };
 }
 
-/**
- * The glance strip: who is awake, what waits for the viewer, what is next, and
- * the weekly call in both zones. Pure over what windowState already read (a
- * failed source arrives as an empty list, so it just empties its tile).
- */
-function glanceFrom(i: {
-  viewerId: string;
-  members: Member[];
-  relationships: Relationship[];
-  /** The visit before this one: "new from the kids" counts from here. */
-  previousVisit: string | null;
-  theirTz: string | null;
-  /** Already includes the demo shelf. */
-  cards: Card[];
-  now: Date;
-  lastSeen: (id: string) => string | null;
-  plays: Play[];
-  docs: Pick<WindowDocs, "question" | "today_task" | "need" | "weekly_call" | "kid_ask">;
-  nudges: { id: string; kind: string; text: string; href: string; at: string }[];
-  events: FamilyEvent[];
-  holidays: CalHoliday[];
-}): Glance {
+/** The next thing on the family calendar (an event or an occasion), for the one "Next" line. */
+function nextFrom(i: { viewerId: string; members: Member[]; now: Date; events: FamilyEvent[]; holidays: CalHoliday[] }): ReturnType<typeof nextUp> {
   const { viewerId, members, now } = i;
   const viewer = members.find((m) => m.id === viewerId);
   const myTz = viewer?.tz ?? "UTC";
   const names = Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName]));
   const today = dateIn(myTz, now);
-  return {
-    awake: awakeNow(members, viewerId, now, i.lastSeen),
-    // The same list the dock dot reads (GET /api/waiting), from reads already in hand.
-    waiting: waitingForYou({ viewerId, now, names, cards: i.cards, plays: i.plays, questions: i.docs.question, today: i.docs.today_task.slice(0, 4), needs: i.docs.need, nudges: i.nudges, kidAsks: i.docs.kid_ask, guardians: guardianMap(members, i.relationships) }),
-    kids: kidsTile(i.cards, members, viewerId, i.previousVisit, now, askCardIds(i.docs.kid_ask)),
-    next: nextUp({
-      today,
-      now,
-      tz: myTz,
-      viewerId,
-      names,
-      events: i.events.map((e) => ({ id: e.id, title: e.title, date: e.date, status: e.status, occasionKey: e.occasionKey, forMemberId: e.forMemberId, startsAt: e.status === "locked" ? (e.slots.find((sl) => sl.id === e.lockedSlotId)?.startsAt ?? null) : null })),
-      occasions: occasionsInRange(members, i.holidays, today, addDays(today, 120)),
-    }),
-    call: callTile(i.docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, i.theirTz, now),
-  };
+  return nextUp({
+    today,
+    now,
+    tz: myTz,
+    viewerId,
+    names,
+    events: i.events.map((e) => ({ id: e.id, title: e.title, date: e.date, status: e.status, occasionKey: e.occasionKey, forMemberId: e.forMemberId, startsAt: e.status === "locked" ? (e.slots.find((sl) => sl.id === e.lockedSlotId)?.startsAt ?? null) : null })),
+    occasions: occasionsInRange(members, i.holidays, today, addDays(today, 120)),
+  });
 }
 
 /** City to city, to the nearest 10 km, only when both places are known and really apart. */
@@ -419,14 +379,6 @@ export function distanceKm(a: { lat: number; lon: number } | null, b: { lat: num
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
   const km = 2 * R * Math.asin(Math.sqrt(x));
   return km < 15 ? null : Math.round(km / 10) * 10;
-}
-
-function agoWords(iso: string, now: Date): string {
-  const min = Math.max(0, Math.round((now.getTime() - Date.parse(iso)) / 60_000));
-  if (min < 2) return "just now";
-  if (min < 60) return `${min} min ago`;
-  const h = Math.round(min / 60);
-  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
 }
 
 /** The sky over their home from real coordinates; without them, no glyph (never a guess). */
@@ -447,18 +399,14 @@ function clockIn(tz: string, d: Date): string {
   }
 }
 
-/** Both awake and not in the dead of night on either side: say so. Otherwise, when. */
+/** Both homes' clocks, as facts: their time and yours. Never "they're asleep" or "a good time". */
 export function callHint(theirTz: string, myTz: string, names: string[], now = new Date()): { good: boolean; text: string } {
   const them = hourIn(theirTz, now);
   const me = hourIn(myTz, now);
-  const who = names.length <= 1 ? (names[0] ?? "them") : `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
-  if (them >= 8 && them < 21.5 && me >= 7 && me < 23) return { good: true, text: `Good time to call ${who}` };
-  if (them < 8 || them >= 21.5) {
-    // Next 8 AM there, in your time.
-    const wait = ((8 - them + 24) % 24) * 3_600_000;
-    return { good: false, text: `They're asleep · best from 8 AM their time (${clockIn(myTz, new Date(now.getTime() + wait))} yours)` };
-  }
-  return { good: false, text: `It's late for you · ${clockIn(theirTz, now)} there` };
+  const who = names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} & ${names[names.length - 1]}`;
+  // `good` is kept for older clients; it is only the clock (daytime on both sides), never a claim about anyone.
+  const good = them >= 8 && them < 21.5 && me >= 7 && me < 23;
+  return { good, text: `It's ${clockIn(theirTz, now)}${who ? ` for ${who}` : " there"} · ${clockIn(myTz, now)} for you` };
 }
 
 /** A photo card from this family, as the window's image. */

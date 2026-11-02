@@ -116,7 +116,7 @@ export async function pendingFor(familyId: string, memberId: string): Promise<Nu
 }
 
 /** How long an unopened nudge keeps waiting once it is due: "the call is tomorrow" is stale in two days. */
-export const WAIT_MS: Record<NudgeKind, number> = { heard: 7 * 86_400_000, blessed: 7 * 86_400_000, shared: 7 * 86_400_000, letter: 7 * 86_400_000, digest: 7 * 86_400_000, occasion: 2 * 86_400_000, call: 2 * 86_400_000 };
+export const WAIT_MS: Record<NudgeKind, number> = { heard: 7 * 86_400_000, blessed: 7 * 86_400_000, shared: 7 * 86_400_000, letter: 7 * 86_400_000, digest: 7 * 86_400_000, occasion: 2 * 86_400_000, call: 2 * 86_400_000, reminder: 7 * 86_400_000 };
 
 /**
  * What is waiting for this person to open: due (their 8 AM has come), not yet
@@ -147,6 +147,8 @@ export interface NudgeBatch {
 export async function drain(familyId: string, now: Date = new Date()): Promise<NudgeBatch[]> {
   const by = new Map<string, Nudge[]>();
   for (const n of await listDocs(familyId, "nudge")) {
+    // A reminder is never emailed or pushed: it waits in For you on its day, for its owner only.
+    if (n.kind === "reminder") continue;
     if (n.deliveredAt !== null || Date.parse(n.deliverAfter) > now.getTime()) continue;
     by.set(n.toMemberId, [...(by.get(n.toMemberId) ?? []), n]);
   }
@@ -184,4 +186,36 @@ export async function markSeenWhere(familyId: string, memberId: string, match: (
 /** `{m:id}` becomes the word this family uses for that person. */
 export function renderNudgeText(text: string, members: Pick<Member, "id" | "displayName" | "firstName">[]): string {
   return text.replace(/\{m:([^}]+)\}/g, (_, id: string) => callName(members.find((m) => m.id === id) as Member | undefined));
+}
+
+// ---------------------------------------------------------------- reminders
+/** "Remind me to ask": tomorrow, in 3 days, or next week. */
+export const REMIND_DAYS = [1, 3, 7] as const;
+
+/** 8 AM on the person's own clock, `days` local days from today. */
+export function reminderAt(tz: string, days: number, now: Date = new Date()): string {
+  const target = new Date(now.getTime() + days * 86_400_000);
+  const dayOf = (d: Date) => {
+    try {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: tz || "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+    } catch {
+      return d.toISOString().slice(0, 10);
+    }
+  };
+  const want = dayOf(target);
+  let at = next8amLocal(tz, now);
+  for (let i = 0; i < 10 && dayOf(new Date(at)) < want; i++) at = next8amLocal(tz, new Date(Date.parse(at) + 60_000));
+  return at;
+}
+
+/** The words of a reminder: "Ask {m:dada}: how did the interview go?" or "Ask {m:dada} about Diwali lunch". */
+export function reminderText(aboutId: string, what: string, note: string): string {
+  const n = note.trim();
+  const w = what.trim();
+  return (n ? `Ask {m:${aboutId}}: ${n}` : w ? `Ask {m:${aboutId}} about ${w}` : `Ask {m:${aboutId}} how it went`).slice(0, 120);
+}
+
+/** A person's own reminders (to themselves), soonest first. Nobody else's list ever includes them. */
+export async function remindersOf(familyId: string, memberId: string): Promise<Nudge[]> {
+  return (await listDocs(familyId, "nudge")).filter((n) => n.kind === "reminder" && n.toMemberId === memberId).sort((a, b) => a.deliverAfter.localeCompare(b.deliverAfter));
 }

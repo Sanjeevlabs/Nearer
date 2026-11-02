@@ -4,7 +4,7 @@
 // route feeds it docs and cards.
 import type { TodayTask } from "@/lib/kinds";
 import type { Card, Member } from "@/lib/schemas";
-import { TODAY_PROMPTS, fill, sealedCardIds } from "@/lib/today";
+import { TODAY_PROMPTS, fill } from "@/lib/today";
 
 export interface Chapter {
   id: string;
@@ -30,18 +30,16 @@ function taskTitle(task: TodayTask, memberId: string, members: Member[]): string
 }
 
 /**
- * Chapters for `memberId`, newest first, as `viewerId` may see them: answers
- * still sealed for the viewer stay out, and only the person's own voice notes
- * count (a chapter is always in their voice).
+ * Chapters for `memberId`, newest first: every answer is open to every viewer
+ * (nothing is sealed), and only the person's own voice notes count (a chapter is always in their voice).
  */
 export function bookChapters({ memberId, viewerId, tasks, cards, members }: { memberId: string; viewerId: string; tasks: TodayTask[]; cards: Card[]; members: Member[] }): Chapter[] {
-  const sealed = sealedCardIds(tasks, viewerId);
   const byId = new Map(cards.map((c) => [c.id, c]));
   const seen = new Set<string>();
   const out: Chapter[] = [];
   const add = (id: string, title: string, source: Chapter["source"], cardId: string) => {
     const card = byId.get(cardId);
-    if (!card || seen.has(cardId) || sealed.has(cardId) || card.authorId !== memberId) return;
+    if (!card || seen.has(cardId) || card.authorId !== memberId) return;
     seen.add(cardId);
     out.push({ id, title, source, at: card.takenAt, year: new Date(card.takenAt).getFullYear(), card });
   };

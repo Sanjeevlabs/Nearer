@@ -3,7 +3,7 @@ import { seedDemoRooms } from "@/lib/demo-rooms";
 import { listDocs, resetDocs } from "@/lib/family-docs";
 import { DEFAULT_IMAGE } from "@/lib/hero";
 import { countryOfTz } from "@/lib/place";
-import { dayRhythm, rhythmLine } from "@/lib/rhythm";
+import { dayRhythm } from "@/lib/rhythm";
 import { isNightAt, skyGlyph, solarPhase, sunPosition } from "@/lib/sky";
 import { fetchWeather, pickPlace, type Weather } from "@/lib/weather";
 import { DEFAULT_IMAGE as SERVER_DEFAULT, distanceKm, skyOver } from "@/lib/window-server";
@@ -143,18 +143,10 @@ describe("the lamp row words", () => {
   });
 });
 
-describe("Safe & sound words", () => {
+describe("their day words", () => {
   const tz = "Asia/Kolkata";
   const now = new Date("2026-10-31T09:00:00Z"); // 2:30 PM
   const dr = dayRhythm(["2026-10-31T00:40:00Z"], tz, now);
-  it("drops 'active N h ago' when the only sign is an old app heartbeat", () => {
-    const ago = () => "7 h ago";
-    const last = "2026-10-31T02:00:00Z"; // 7:30 AM, 7 h before
-    expect(rhythmLine("active", last, dr, tz, ago, { heartbeatOnly: true, now })).toBe("Up since 6:10 AM · quiet since 7:30 AM");
-    expect(rhythmLine("active", last, dr, tz, ago, { heartbeatOnly: false, now })).toBe("Up since 6:10 AM · active in Nearer 7 h ago");
-    // A fresh heartbeat is still active.
-    expect(rhythmLine("active", "2026-10-31T08:00:00Z", dr, tz, () => "1 h ago", { heartbeatOnly: true, now })).toContain("active in Nearer 1 h ago");
-  });
   it("a check-in is a timed event, and a closed one adds its close", () => {
     expect(checkinEvents({ kind: "heading", at: "2026-10-31T05:00:00Z", closedAt: "2026-10-31T05:30:00Z" })).toEqual([
       { at: "2026-10-31T05:00:00Z", label: "Heading home" },

@@ -21,21 +21,22 @@ from playwright.sync_api import sync_playwright
 
 # Mirrors lib/menu.ts roomsFor(); the walk fails if the house sheet disagrees.
 ROOMS = {
-    "Memories": ["/lane", "/stories", "/ask-family"],
+    "Living Room": ["/gather/play", "/gather", "/rituals"],
+    "Memories": ["/lane", "/stories", "/book", "/advice", "/ask-family"],
     "Kitchen": ["/kitchen"],
-    "Care": ["/care", "/care/helpers", "/nearby"],
     # Kids (/bond/kids) is there because the demo family has children.
-    "Family": ["/bond", "/bond/homes", "/bond/kids", "/book", "/advice", "/portrait"],
-    "Celebrations": ["/gather", "/rituals", "/together/visits", "/together/holidays", "/gather/play"],
+    "Our People": ["/bond", "/bond/homes", "/bond/kids", "/together/visits"],
+    "Care": ["/care", "/care/helpers", "/nearby"],
 }
 # Kid mode (lib/menu.ts roomsFor(..., kid)): a child's house has three rooms, and fewer tabs in them.
 KID_ROOMS = {
+    "Living Room": ["/gather/play", "/gather"],
     "Memories": ["/lane", "/stories"],
-    "Celebrations": ["/gather", "/gather/play"],
-    "Family": ["/bond"],
+    "Our People": ["/bond"],
 }
-# Pages that are in no room: For you (the bell on the dock).
-EXTRA = ["/inbox"]
+# Pages that are in no room: For you (the bell on the dock); Portrait (from the Family tree) and
+# Holidays (from Visits) left the tabs but still resolve.
+EXTRA = ["/inbox", "/portrait", "/together/holidays"]
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "child")]
 # Console noise that isn't ours (dev tooling, a blocked third-party font).
 IGNORE = re.compile(r"Download the React DevTools|fonts\.g(static|oogleapis)|favicon", re.I)
@@ -338,6 +339,92 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
     return skipped
 
 
+# Records every getUserMedia call (and answers it with an empty stream, so no real device is touched).
+GUM_SPY = """
+window.__gum = [];
+try {
+  const md = navigator.mediaDevices || {};
+  md.getUserMedia = (c) => { window.__gum.push({ audio: Boolean(c && c.audio), video: Boolean(c && c.video) }); return Promise.resolve(new MediaStream()); };
+  if (!navigator.mediaDevices) Object.defineProperty(navigator, 'mediaDevices', { value: md });
+} catch (e) {}
+"""
+
+
+def doors(base: str, browser, problems: list[str]) -> None:
+    """Two (three) sessions: Arjun opens a chai door for Dadi only. Dadi sees it and joins with audio (no media
+    before the tap, no camera after it); Leo sees nothing and cannot open it; Arjun closes it and Dadi's room
+    says so within one 60 s re-check. The video provider is blocked: nothing leaves the machine."""
+    ctxs = {}
+    for who in ("arjun", "dadi", "leo"):
+        ctx = browser.new_context(viewport={"width": 360, "height": 740}, base_url=base)
+        ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
+        ctx.add_init_script(GUM_SPY)
+        ctx.route(re.compile(r"https://(meet\.jit\.si|8x8\.vc)/.*"), lambda route: route.abort())
+        res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": who}), headers={"content-type": "application/json"})
+        if not res.ok:
+            problems.append(f"doors: {who} sign-in failed {res.status}")
+            return
+        ctxs[who] = ctx
+    a, d, l = ctxs["arjun"], ctxs["dadi"], ctxs["leo"]
+    try:
+        # Writes go through the page (its own cookies and origin), as the app's own buttons do.
+        post = "async (b) => { const r = await fetch('/api/sit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) }); return { ok: r.ok, status: r.status, body: await r.json().catch(() => null) }; }"
+        pa = a.new_page()
+        pa.goto("/gather/play", wait_until="load")
+        made = pa.evaluate(post, {"action": "knock", "activity": "chai", "invites": ["dadi"]})
+        if not made["ok"]:
+            problems.append(f"doors: opening the door failed {made['status']}")
+            return
+        kid = made["body"]["knock"]["id"]
+        pa.reload(wait_until="load")
+        try:
+            pa.locator("[data-ui=together-mine]").wait_for(timeout=15_000)
+        except Exception:
+            problems.append("doors: Arjun does not see his own open door")
+        pl = l.new_page()
+        pl.goto("/gather/play", wait_until="load")
+        pl.locator("ul[aria-label='Things to do together']").wait_for(timeout=15_000)
+        pl.wait_for_timeout(2000)
+        if pl.locator("[data-ui=together-door]").count():
+            problems.append("doors: Leo (not invited) sees Arjun's door")
+        pl.goto(f"/call/{kid}", wait_until="load")
+        try:
+            pl.get_by_text("This door has closed").wait_for(timeout=15_000)
+        except Exception:
+            problems.append("doors: Leo can open a door he was not invited to")
+        if pl.evaluate("window.__gum.length") or pl.locator("[data-ui=call-room] iframe").count():
+            problems.append("doors: media started on Leo's closed door")
+
+        pd = d.new_page()
+        pd.goto("/gather/play", wait_until="load")
+        try:
+            pd.locator("[data-ui=together-door]").wait_for(timeout=15_000)
+        except Exception:
+            problems.append("doors: Dadi does not see the door Arjun opened for her")
+            return
+        pd.locator("[data-ui=together-door]").get_by_role("button", name="Join").click()
+        pd.locator("[data-ui=call-prejoin]").wait_for(timeout=15_000)
+        pd.wait_for_timeout(1500)
+        if pd.evaluate("window.__gum.length"):
+            problems.append("doors: getUserMedia was called before the consent tap")
+        if pd.locator("iframe").count() or pd.evaluate("Boolean(window.JitsiMeetExternalAPI) || [...document.scripts].some((s) => /external_api/.test(s.src))"):
+            problems.append("doors: the video room loaded before the consent tap")
+        pd.locator("[data-ui=join-audio]").click()
+        pd.wait_for_timeout(1500)
+        gum = pd.evaluate("window.__gum")
+        if not gum or any(g["video"] for g in gum):
+            problems.append(f"doors: joining with audio asked for {gum!r} (expected audio only)")
+        pa.evaluate(post, {"action": "unknock"})
+        try:
+            # The call page re-checks the door every 60 s.
+            pd.get_by_text(re.compile(r"closed the door|This door has closed")).wait_for(timeout=70_000)
+        except Exception:
+            problems.append("doors: Dadi's room did not say the door closed within 70 s")
+    finally:
+        for ctx in ctxs.values():
+            ctx.close()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:3100")
@@ -356,6 +443,10 @@ def main() -> int:
         found: list[str] = []
         skipped = sheets(args.base, "arjun", browser, found)
         print(f"sheets 360x640 {'ok' if not found else f'{len(found)} problem(s)'}" + (f" (no opener for: {', '.join(skipped)})" if skipped else ""))
+        problems += found
+        found = []
+        doors(args.base, browser, found)
+        print(f"doors (two sessions) {'ok' if not found else f'{len(found)} problem(s)'}")
         problems += found
         browser.close()
     for line in problems:

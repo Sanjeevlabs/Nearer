@@ -388,10 +388,8 @@ export function seedDemoRooms(now = Date.now()): void {
     keptCardId: null,
     createdAt: ago(60 * 30, now),
   });
-  if (localNow >= 7 && localNow < 21.5) {
-    const note = localNow < 12 ? "Morning chai on the verandah. Come sit?" : localNow < 17 ? "Shelling peas. Come sit with me?" : "Evening chai. Come sit?";
-    seedDoc(FAM, "knock", { id: "knock-dadi", memberId: "dadi", note, venue: "courtyard", at: ago(10, now), until: ahead(50, now) });
-  }
+  // No open door is seeded: an open door says a real person has time now, so the demo starts
+  // with none. Open one as Arjun and see it as Dadi in a second window.
 
   // ---------- The weekly question ----------
   seedDoc(FAM, "question", {

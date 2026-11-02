@@ -23,3 +23,6 @@ export const SITTING_REASONS = ["chai", "cook", "story", "festival", "birthday",
 /** Where a sitting happens: the virtual place the family sits (lib/venues.ts has the photos and seats). */
 export const VENUE_IDS = ["courtyard", "terrace", "pergola", "deck", "lounge", "patio"] as const;
 export type VenueId = (typeof VENUE_IDS)[number];
+
+/** "How to listen" (an optional wish on a voice note sent to someone): only its addressees ever see it. */
+export const LISTEN_WAYS = ["just-listen", "help-me-think", "keep-me-company"] as const;

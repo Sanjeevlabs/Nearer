@@ -2,7 +2,6 @@ import { requireSession, sessionFromRequest } from "@/lib/auth";
 import { cardsFor, docsFor, membersFor, prefetchDocs, preloadCore, relationshipsFor } from "@/lib/request-data";
 import { isKid } from "@/lib/kids";
 import { kidsPage } from "@/lib/kids-page";
-import { sealedCardIds } from "@/lib/today";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 
@@ -34,8 +33,8 @@ async function getHandler(req: Request): Promise<Response> {
     docsFor(req, f, "chitthi"),
   ]);
   if (isKid(members.find((m) => m.id === auth.memberId))) return Response.json({ error: "not-allowed" }, { status: 403 });
-  // What /api/cards keeps sealed stays sealed here.
-  const sealed = sealedCardIds(tasks, auth.memberId);
+  // What /api/cards keeps back (a morning letter before its morning) stays back here.
+  const sealed = new Set<string>();
   const now = Date.now();
   for (const l of letters) if (l.authorId !== auth.memberId && Date.parse(l.deliverAt) > now) sealed.add(l.id);
   const all = withDemoShelf(stored, f);

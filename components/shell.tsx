@@ -100,7 +100,7 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 // The dock: a voice note (to anyone; it says who is waiting for your reply),
-// a photo, and the house for the rooms (Memories, Kitchen, Care, Family, Celebrations).
+// a photo, and the house for the rooms (Living Room, Memories, Kitchen, Our People, Care).
 function Dock() {
   const { openAdd, openRooms, refreshKey, chromeHidden, dockOn } = useShell();
   const { viewer, members } = useViewer();

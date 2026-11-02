@@ -8,7 +8,8 @@ import { addressees } from "../households";
 import type { Member } from "../schemas";
 import { callName } from "../people";
 import { stateOf } from "../safety";
-import type { SafetyCheckin } from "../kinds";
+import type { Knock, SafetyCheckin } from "../kinds";
+import { doorPush } from "../doors";
 import { inBackground } from "./background";
 import { PUSH_TITLE, thingOf, wordsFor } from "./copy";
 import { decidePush, localClock } from "./policy";
@@ -62,6 +63,28 @@ export function pushAddressed(familyId: string, card: { id: string; type: string
       await routePush(familyId, m, "voice", (w) => ({ body: w.voice(callName(from), thingOf(card.type)), url: `/lane?card=${encodeURIComponent(card.id)}`, tag: `voice-${card.id}`, urgency: "high" }));
     }
   });
+}
+
+/**
+ * A door opened for one person ("Can I sit with you?"): that person hears once, now or not at all.
+ * Quiet hours and the daily cap drop it (an invitation is only good now); `seenAt` marks it told,
+ * so it is never sent again. Family-wide doors send nothing (the caller only calls this for one).
+ */
+export async function pushDoorNow(familyId: string, knock: Knock, now: Date = new Date(), deps: SendDeps = {}): Promise<"sent" | "held" | "skipped"> {
+  const toId = knock.invites?.length === 1 ? knock.invites[0] : null;
+  if (!toId || toId === knock.memberId || knock.seenAt) return "skipped";
+  const [from, to] = await Promise.all([activeMember(familyId, knock.memberId), activeMember(familyId, toId)]);
+  if (!from || !to) return "skipped";
+  const out = await routePush(familyId, to, "ask", () => ({ body: doorPush(callName(from), knock.activity ?? null, knock.note), url: `/call/${encodeURIComponent(knock.id)}`, tag: `door-${knock.id}`, urgency: "high" }), now, deps, { dropIfHeld: true });
+  // Told (or deliberately not): either way this door never pushes again.
+  const cur = await getDoc(familyId, "knock", knock.id);
+  if (cur && !cur.seenAt) await putDoc(familyId, "knock", { ...cur, seenAt: now.toISOString() });
+  return out;
+}
+
+/** Fire-and-forget pushDoorNow, for the route. */
+export function pushDoor(familyId: string, knock: Knock): void {
+  inBackground(async () => void (await pushDoorNow(familyId, knock)));
 }
 
 /** A heartbeat: someone lit the lamp for this person. */

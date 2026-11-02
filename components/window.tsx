@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { whatsappInvite } from "@/lib/invite-link";
 import { haptic } from "@/lib/native";
-import type { Knock, SafetyCheckin } from "@/lib/kinds";
+import type { SafetyCheckin } from "@/lib/kinds";
+import type { Activity, Door } from "@/lib/doors";
 import { rememberHero, type SceneSpace } from "@/lib/hero";
 import type { LampView } from "@/lib/lamp";
 import { skyState } from "@/lib/sky-state";
@@ -15,19 +16,19 @@ import { callName, memberPhoto } from "@/lib/people";
 import { stateOf, type SafetyState } from "@/lib/safety";
 import { useFamilyCards } from "@/lib/use-family";
 import type { Card, Member } from "@/lib/schemas";
-import type { Glance } from "@/lib/glance";
-import { ALIVE_LOOK } from "@/lib/status";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import type { Weather } from "@/lib/weather";
 import { LAMP_GLOW_HOURS } from "@/lib/lamp";
-import { arrivedLine, badgeParts, clockWord, dayWord, firstNameOf, lampState, lampWhy, moonLine, statusLine } from "@/lib/window-words";
+import { arrivedLine, badgeParts, clockWord, dayWord, firstNameOf, lampState, lampWhy, moonLine, theirDayRows } from "@/lib/window-words";
 import { timeIn } from "@/lib/zones";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import dynamic from "next/dynamic";
 import { PeoplePicker } from "./people-picker";
 import { PersonSheet, type WindowPersonData } from "./person-sheet";
 import { PushAsk } from "./push-ask";
+import type { DoorPreset } from "./open-door-sheet";
+import { TogetherCard } from "./together-card";
 import { usePlayer } from "./player";
 import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
@@ -37,11 +38,13 @@ import { WindowScene } from "./window-scene";
 
 // The full day view is only needed after a tap on "See their day": it stays out of the first paint.
 const PersonDay = dynamic(() => import("./person-day").then((m) => m.PersonDay), { ssr: false });
+// "Open your door" is only needed after a tap.
+const OpenDoorSheet = dynamic(() => import("./open-door-sheet").then((m) => m.OpenDoorSheet), { ssr: false });
 
 // The first screen. A real photograph of their home, full width and about half
 // the screen, with one small badge on it (their time, weather, sun or moon).
 // Everything else is under the photo, in boxes of one size and one background:
-// the lamp and their latest voice, Safe & sound (tap a person for their day),
+// the lamp and their latest voice, Their day (tap a person for it),
 // the glance strip, since you were here, and the call row.
 
 interface WindowData {
@@ -58,7 +61,11 @@ interface WindowData {
   km: number | null;
   sky: { glyph: "sun" | "moon" | null; moon: { illumination: number; waxing: boolean; name: string }; bothNight: boolean };
   call: { good: boolean; text: string };
-  glance?: Glance;
+  /** Doors open to the viewer, and their own (lib/doors.ts). */
+  doors?: Door[];
+  myDoor?: Door | null;
+  /** Two touches meet (experiment): the pair channels for the people at this window. */
+  touchChannel?: { withId: string; channel: string }[];
   homePhoto?: string | null;
   place?: { lat: number; lon: number } | null;
   next?: { text: string; href: string } | null;
@@ -176,12 +183,12 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const { openAdd } = useShell();
   const { play, current, isPlaying, toggle } = usePlayer();
   const win = useJson<WindowData>("/api/window", { every: 60_000 });
-  const sit = useJson<{ knocks: Knock[] }>("/api/sit");
   const safety = useJson<{ checkins: SafetyCheckin[] }>("/api/safety");
   const waitingFor = useJson<{ items: unknown[] }>("/api/waiting", { every: 60_000 });
   const hasWaiting = (waitingFor.data?.items.length ?? 0) > 0;
   const [, setTick] = useState(0);
-  const [calling, setCalling] = useState(false);
+  // undefined: never opened (the sheet's code is not even loaded); null: closed.
+  const [doorSheet, setDoorSheet] = useState<DoorPreset | null | undefined>(undefined);
   const [picking, setPicking] = useState(false);
   const [open, setOpen] = useState<Member | null>(null);
   const [dayOfId, setDayOfId] = useState<string | null>(null);
@@ -265,7 +272,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
   const latestVoice: Card | undefined = data?.voice ?? undefined;
   const voiceBy = members.find((mm) => mm.id === latestVoice?.authorId);
-  const knock = (sit.data?.knocks ?? []).find((k) => farIds.has(k.memberId));
 
   // Their own home photo (Settings, Your window, Photo) shows as is; otherwise the scene is drawn.
   const ownRef = data?.homePhoto ?? null;
@@ -294,22 +300,21 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     return s && (s.tone !== "calm" || Date.now() - Date.parse(s.at) < 24 * 3_600_000) ? s : null;
   };
 
-  const status = statusLine(
+  // Their day: what each person chose to share today, or a check-in they made that needs a look.
+  const dayRows = theirDayRows(
     atWindow.map((p) => {
       const st = statusOf(p.id);
       const chk = checkOf(p.id);
       const alarm = chk && (chk.tone === "overdue" || chk.tone === "help") ? `${chk.label} \u00b7 ${clockWord(chk.at, p.tz)}` : null;
-      return { name: callName(p), state: st?.state ?? "unknown", lastActive: st?.lastActive ?? null, tz: p.tz, alarm };
+      const last = st?.moments?.[st.moments.length - 1];
+      return { id: p.id, name: callName(p), tz: p.tz, latest: last ? { label: last.label, at: last.at } : null, alarm };
     }),
   );
 
-  const call = async () => {
+  // Call opens "Open your door": nobody is dropped into a live room. From a person, the door is for them only.
+  const call = (only?: string, activity?: Activity) => {
     setOpen(null);
-    if (knock) return router.push(`/call/${knock.id}`);
-    setCalling(true);
-    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: 45, note: "Come sit with me" });
-    setCalling(false);
-    if (out?.knock) router.push(`/call/${out.knock.id}`);
+    setDoorSheet({ only, activity });
   };
   const light = async () => {
     setPulse((k) => k + 1);
@@ -319,7 +324,49 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     // The write refetches only the lamp and the window (lib/use-json.ts scopeOfWrite).
     await postJson("/api/lamp", { action: "light" });
   };
+  // Two touches meet (an experiment): while the finger stays on the lamp (or for 30 s from the
+  // info sheet), join the pair's Presence channel; both holding at once shows a shared glow.
+  // Capped at 30 s, never stored; without Realtime nothing happens and the hold is as before.
+  const touchRef = useRef<{ stop: () => void } | null>(null);
+  const touchTimer = useRef<number | null>(null);
+  const [met, setMet] = useState(false);
+  const stopTouch = useCallback(() => {
+    if (touchTimer.current !== null) window.clearTimeout(touchTimer.current);
+    touchTimer.current = null;
+    touchRef.current?.stop();
+    touchRef.current = null;
+    setMet(false);
+  }, []);
+  useEffect(() => stopTouch, [stopTouch]);
+  const startTouch = async (ms = 30_000) => {
+    stopTouch();
+    const pairs = data?.touchChannel ?? [];
+    touchTimer.current = window.setTimeout(stopTouch, ms);
+    if (!pairs.length) return;
+    const { holdTouch } = await import("@/lib/touch");
+    const session = await holdTouch(viewer.id, pairs, (withId) => {
+      setMet(Boolean(withId));
+      if (withId) {
+        setLampNote("Together, just now");
+        try {
+          navigator.vibrate?.(30);
+        } catch {
+          /* no vibration here */
+        }
+      }
+    });
+    // Let go before the channel answered: leave at once.
+    if (touchTimer.current === null) session.stop();
+    else touchRef.current = session;
+  };
+  const handOnWindow = () => {
+    setInfo(false);
+    setLampNote("Your hand is on the window · 30 s");
+    void startTouch(30_000);
+  };
+
   const heartbeat = async () => {
+    void startTouch();
     const to = atWindow[0];
     if (!to) return;
     setLampNote(`Heartbeat sent \u00b7 ${callName(to)} will feel it when they open Nearer`);
@@ -345,6 +392,8 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
           ownPhoto={ownPhoto}
           onLight={() => void light()}
           onHold={() => void heartbeat()}
+          onRelease={stopTouch}
+          met={met}
           pulseKey={pulse}
           lampLabel={`${lampNow.lit ? "The lamp is lit" : "The lamp is not lit"}. Tap to light it for ${first || "them"}; hold to send a heartbeat`}
         >
@@ -400,27 +449,20 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
           {data && (
             <>
-              {/* ONE status line (Safe & sound): everyone is fine, or the one person to look at. Tap a face for their day. */}
-              <section data-ui="window-safe" className={cn(CARD, "flex min-h-[56px] items-center gap-2 py-1 pl-2 pr-3")} style={EDGE} aria-label="Safe and sound">
+              {/* Their day: one row per person, only what they chose to share (and their own check-ins). Tap for more. */}
+              <section data-ui="window-day" className={cn(CARD, "flex min-h-[56px] flex-col justify-center py-1 pl-2 pr-3")} style={EDGE} aria-label="Their day">
                 {atWindow.length > 0 ? (
-                  <>
-                    <div className="flex shrink-0 items-center">
-                      {atWindow.map((p) => {
-                        const st = statusOf(p.id);
-                        return (
-                          <button key={p.id} type="button" onClick={() => setOpen(p)} aria-label={`${callName(p)}: ${st?.line ?? ""}. Open`} className="press relative grid h-11 w-11 place-items-center rounded-full">
-                            <Avatar src={memberPhoto(p)} name={callName(p)} size={36} />
-                            <span className={cn("absolute bottom-1 right-1 h-3 w-3 rounded-full ring-2 ring-[var(--surface,#fff)]", st?.state === "active" && "alive-breathe")} style={{ background: ALIVE_LOOK[st?.state ?? "unknown"].dot, color: ALIVE_LOOK[st?.state ?? "unknown"].dot }} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button type="button" onClick={() => setOpen(atWindow[status?.subject ?? 0] ?? atWindow[0])} className={cn("press min-h-[44px] min-w-0 flex-1 px-1 text-left text-callout leading-snug", status?.tone === "alarm" ? "font-semibold text-[#c2343a]" : "font-medium text-ink")} suppressHydrationWarning>
-                      {status?.text ?? "…"}
-                    </button>
-                  </>
+                  dayRows.map((r) => {
+                    const p = atWindow.find((x) => x.id === r.id)!;
+                    return (
+                      <button key={r.id} type="button" onClick={() => setOpen(p)} className={cn("press flex min-h-[44px] w-full items-center gap-2 text-left text-callout leading-snug", r.alarm ? "font-semibold text-[#c2343a]" : "font-medium text-ink")} suppressHydrationWarning>
+                        <Avatar src={memberPhoto(p)} name={callName(p)} size={32} />
+                        <span className="min-w-0 flex-1">{r.text}</span>
+                      </button>
+                    );
+                  })
                 ) : (
-                  <p className="m-0 px-2 py-2 text-callout text-ink-soft">Add the people on the other side, and how they are shows here.</p>
+                  <p className="m-0 px-2 py-2 text-callout text-ink-soft">Add the people on the other side, and what they share shows here.</p>
                 )}
               </section>
               {waiting && <WaitingNote names={first} />}
@@ -434,29 +476,26 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                   {lampNote ?? arrivedWords ?? lampNow.line}
                   {lampNow.felt && <span className="block text-footnote font-normal text-ink-soft">{lampNow.felt}</span>}
                 </p>
-                <button type="button" data-ui="window-info" onClick={() => setInfo(true)} aria-label="About the lamp and Safe and sound" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft">
+                <button type="button" data-ui="window-info" onClick={() => setInfo(true)} aria-label="About the lamp and their day" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft">
                   <Icon name="info" size={18} />
                 </button>
               </section>
+
+              {/* Together: doors open to you, your own, or a way to open yours (from this payload, no extra request). */}
+              <TogetherCard data={data} failed={win.failed} onRetry={() => void win.reload()} onOpen={(a) => call(undefined, a)} />
 
               {/* One action row */}
               <section data-ui="window-actions" aria-label="Reach them" className="grid grid-cols-3 gap-2">
                 <button type="button" onClick={() => talk()} disabled={!atWindow.length} aria-label="Voice note" className="press flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
                   <Icon name="mic" size={19} strokeWidth={1.9} /> Voice
                 </button>
-                <button type="button" onClick={() => void call()} disabled={calling || !atWindow.length} aria-label={knock ? "Join the video call" : "Call"} className={cn("press relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-accent py-2 text-footnote font-semibold text-accent-ink disabled:opacity-40", calling && "opacity-60")}>
-                  <Icon name="video" size={19} strokeWidth={1.9} /> {knock ? "Join" : "Call"}
-                  {knock && <span className="absolute right-3 top-2 h-2.5 w-2.5 animate-ping rounded-full bg-[#3ccf7a] motion-reduce:animate-none" />}
+                <button type="button" onClick={() => call()} aria-label="Call: open your door" className="press relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-accent py-2 text-footnote font-semibold text-accent-ink disabled:opacity-40">
+                  <Icon name="video" size={19} strokeWidth={1.9} /> Call
                 </button>
                 <button type="button" onClick={() => atWindow[0] && router.push(`/send?for=${encodeURIComponent(atWindow[0].id)}`)} disabled={!atWindow.length} aria-label="Send something" className="press flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[16px] bg-surface py-2 text-footnote font-semibold text-ink disabled:opacity-40" style={EDGE}>
                   <Icon name="gift" size={19} strokeWidth={1.9} /> Send
                 </button>
               </section>
-              {knock && (
-                <p className="m-0 -mt-1 px-0.5 text-footnote text-ink-soft">
-                  {callName(members.find((mm) => mm.id === knock.memberId))} is on a video call now
-                </p>
-              )}
 
               {/* Their latest voice: one compact row */}
               {latestVoice && (
@@ -487,16 +526,13 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
         open={picking}
         title="Voice note to"
         people={atWindow}
-        status={(p) => {
-          const st = statusOf(p.id);
-          return st ? { text: st.line, dot: ALIVE_LOOK[st.state].dot } : null;
-        }}
         onPick={(ids) => talk(ids)}
         onClose={() => setPicking(false)}
       />
-      <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => void call()} onSeeDay={() => { setDayOfId(open?.id ?? null); setOpen(null); }} onClose={() => setOpen(null)} />
+      <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => open && call(open.id)} onSeeDay={() => { setDayOfId(open?.id ?? null); setOpen(null); }} onClose={() => setOpen(null)} />
       {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} onClose={() => setDayOfId(null)} />}
-      <InfoSheet open={info} onClose={() => setInfo(false)} />
+      <InfoSheet open={info} onClose={() => setInfo(false)} onHand={handOnWindow} />
+      {doorSheet !== undefined && <OpenDoorSheet open={doorSheet !== null} preset={doorSheet ?? undefined} onClose={() => setDoorSheet(null)} />}
     </div>
   );
 }
@@ -526,18 +562,22 @@ function WaitingNote({ names }: { names: string }) {
 }
 
 /* ------------------------------------------------------- the small "?" */
-/** The lamp and Safe & sound in a few lines, so the first screen needn't say them. */
-function InfoSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** The lamp and Their day in a few lines, so the first screen needn't say them. */
+function InfoSheet({ open, onClose, onHand }: { open: boolean; onClose: () => void; onHand: () => void }) {
   return (
     <BottomSheet open={open} onClose={onClose} title="How this works">
       <div data-ui="window-info-sheet" className="space-y-4">
         <section>
           <h3 className="m-0 text-body font-semibold">The lamp</h3>
           <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">{lampWhy()}</p>
+          <p className="m-0 mt-2 text-callout leading-snug text-ink-soft">Hold the lamp: if they are holding theirs at the same moment, both lamps glow together. Nothing is sent or kept.</p>
+          <button type="button" onClick={onHand} className="press mt-2 flex min-h-[44px] items-center gap-1.5 rounded-full bg-tint px-4 text-callout font-semibold text-ink">
+            <Icon name="lamp" size={16} /> Keep my hand on the window (30 s)
+          </button>
         </section>
         <section>
-          <h3 className="m-0 text-body font-semibold">Safe &amp; sound</h3>
-          <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">From their time in Nearer: opening it, a voice note, a check-in. Nothing outside Nearer is watched.</p>
+          <h3 className="m-0 text-body font-semibold">Their day</h3>
+          <p className="m-0 mt-1 text-callout leading-snug text-ink-soft">Only what they chose to share today, like chai or a morning walk, and the check-ins they make themselves. Nothing is guessed from when they open Nearer.</p>
         </section>
         <Link href="/safe" onClick={onClose} className="press flex min-h-[44px] items-center gap-1 text-callout font-semibold text-accent no-underline">
           See check-ins <Icon name="chevron" size={14} />

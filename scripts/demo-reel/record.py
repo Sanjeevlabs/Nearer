@@ -268,7 +268,7 @@ def shot3(c: Clip) -> None:
     c.scroll_to("[data-ui=window-safe]", top=300, ms=900)
     c.pause(200)
     c.tap(c.page.locator("[data-ui=window-safe] button").first, "Maa's row in Safe & sound", before=200, after=800)
-    c.need("[role=dialog] [data-ui=window-their-day]", "Maa's day sheet")
+    c.need("[role=dialog] [data-ui=person-sheet]", "Maa's day sheet")
     c.pause(1900)
     c.scroll(150, ms=800, at=(195, 520))
     c.pause(1000)

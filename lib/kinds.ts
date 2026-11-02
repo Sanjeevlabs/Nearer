@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { COURSES, EVENT_KINDS, GAME_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS } from "./kind-values";
+import { COURSES, EVENT_KINDS, GAME_KINDS, LISTEN_WAYS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS } from "./kind-values";
 
 export { COURSES, EVENT_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS };
 
@@ -345,6 +345,12 @@ export const KnockSchema = z.object({
   venue: z.enum(VENUE_IDS).default("courtyard"),
   at: iso,
   until: iso,
+  /** What the door is open for (a preset key, lib/doors.ts); `note` stays the human line. */
+  activity: z.enum(["chai", "dinner", "catchup", "cook", "story", "song", "quiz"]).optional(),
+  /** Who may see and join it. Empty or absent: the whole family. */
+  invites: z.array(id).max(30).optional(),
+  /** When the one person it was for was told (a push is sent once, never again). */
+  seenAt: iso.optional(),
 });
 
 // ---------- The weekly question (story keeper) ----------
@@ -524,7 +530,8 @@ export const MuseImageRunSchema = z.object({
 });
 
 // ---------- Nudges: one gentle batch a day at the recipient's 8 AM, never a stream ----------
-export const NUDGE_KINDS = ["heard", "blessed", "shared", "occasion", "call", "letter", "digest"] as const;
+// "reminder" is a person's own "Remind me to ask": to themselves only, shown in For you on the day, never emailed or pushed.
+export const NUDGE_KINDS = ["heard", "blessed", "shared", "occasion", "call", "letter", "digest", "reminder"] as const;
 export const NudgeSchema = z.object({
   id,
   toMemberId: id,
@@ -539,6 +546,20 @@ export const NudgeSchema = z.object({
   channel: z.enum(["email", "inapp"]).nullable().default(null),
   /** When the recipient opened the list (only they ever see it). */
   seenAt: iso.nullable().default(null),
+  /** A reminder: the person to ask, and the person's own note (both only ever seen by the one who set it). */
+  aboutId: id.optional(),
+  what: z.string().max(80).optional(),
+  note: z.string().max(140).optional(),
+});
+
+/** "How to listen" on a voice note sent to someone. id = the card id. Only the addressees are ever shown it. */
+export const CardListenSchema = z.object({
+  id,
+  cardId: id,
+  authorId: id,
+  listen: z.enum(LISTEN_WAYS),
+  to: z.array(id).min(1).max(30),
+  at: iso,
 });
 
 /** Per member: id is the member id. Default (no doc): email on if they have one, up to 3 a week. */
@@ -679,9 +700,11 @@ export const DOC_SCHEMAS = {
   kid_ask: KidAskSchema,
   feedback: FeedbackSchema,
   sweep_mark: SweepMarkSchema,
+  card_listen: CardListenSchema,
 } as const;
 
 export type DocKind = keyof typeof DOC_SCHEMAS;
+export type CardListen = z.infer<typeof CardListenSchema>;
 export type DocOf<K extends DocKind> = z.infer<(typeof DOC_SCHEMAS)[K]>;
 
 export type Habit = DocOf<"habit">;

@@ -12,7 +12,6 @@ import { cacheKey } from "./llm";
 import { museJson } from "./muse";
 import { callName } from "./people";
 import type { Member } from "./schemas";
-import { sealedCardIds } from "./today";
 import {
   QUOTE_MAX_WORDS,
   buildSnippets,
@@ -99,7 +98,8 @@ export async function loadArchive(familyId: string, viewerId: string): Promise<{
     dbListMembers(familyId),
     listDocsMany(familyId, ["recipe", "story", "question", "today_task", "chitthi"] as const),
   ]);
-  const hidden = sealedCardIds(docs.today_task, viewerId);
+  // Today's answers are open to everyone; only a morning letter before its morning stays out.
+  const hidden = new Set<string>();
   const now = Date.now();
   for (const l of docs.chitthi) if (l.authorId !== viewerId && Date.parse(l.deliverAt) > now) hidden.add(l.id);
   const snippets = buildSnippets({ cards: withDemoShelf(stored, familyId), recipes: docs.recipe, stories: docs.story, questions: docs.question, hidden, familyId });

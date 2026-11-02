@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useState } from "react";
+import { canStartPortrait } from "@/lib/muse-portrait";
 import { Button, EmptyLine, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import { FamilyTree } from "@/components/family-tree";
@@ -71,6 +73,12 @@ export default function BondPage() {
             )}
             {canShareTree(viewer) && <TreeShare members={members} relationships={relationships} />}
           </div>
+          {/* Portrait is no longer a tab: it opens from here (grown-ups only start one). */}
+          {canStartPortrait(viewer) && (
+            <Link href="/portrait" data-ui="tree-portrait" className="press mt-2 flex min-h-[44px] items-center gap-1.5 text-callout font-semibold text-ink no-underline">
+              <Icon name="sparkle" size={16} /> Family portrait <Icon name="chevron" size={14} />
+            </Link>
+          )}
           <BothSides />
           {mayAdd && everAdded && (
             <BottomSheet open={adding} onClose={() => setAdding(false)} title="Add someone">

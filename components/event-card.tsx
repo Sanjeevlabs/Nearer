@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { fmtIn, isLive, lockedStart, participants, startsInLabel, type FamilyEvent } from "@/lib/events";
-import { roomUrl } from "@/lib/overlap";
 import { callName, memberPhoto } from "@/lib/people";
 import type { Member } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -60,10 +59,11 @@ export function EventTimes({ at, members, viewer, ids, tone = "light", size = "l
 export function JoinButton({ e, className }: { e: FamilyEvent; className?: string }) {
   if (!e.sittingId) return null;
   return (
-    <a href={roomUrl(e.sittingId)} target="_blank" rel="noreferrer" className={cn("press flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-body font-semibold text-[#1c1b1a] no-underline", className)}>
+    // Through our own call page: its pre-join asks before any microphone or camera starts.
+    <Link href={`/call/${encodeURIComponent(e.sittingId)}`} className={cn("press flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-body font-semibold text-[#1c1b1a] no-underline", className)}>
       <Icon name="video" size={20} />
       Join
-    </a>
+    </Link>
   );
 }
 

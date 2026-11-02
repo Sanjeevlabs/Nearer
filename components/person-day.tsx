@@ -57,13 +57,14 @@ export function lampFor(member: Pick<Member, "id" | "tz" | "city">, data: { pres
   const today = localDay(now.toISOString(), member.tz);
   const t = now.getTime();
   const cards = data.cards.filter((c) => c.authorId === member.id && Date.parse(c.takenAt) <= t);
-  const presence = data.presence.filter((p) => p.memberId === member.id && Date.parse(p.at) <= t);
+  // Only moments they chose to share: the automatic "here" (opening Nearer) is never shown to others.
+  const presence = data.presence.filter((p) => p.memberId === member.id && p.moment !== "here" && Date.parse(p.at) <= t);
   const fresh = cards.some((c) => localDay(c.takenAt, member.tz) === today);
   const activeToday = presence.some((p) => localDay(p.at, member.tz) === today);
   const glow = fresh || activeToday;
   // Words, never a count or a "last seen" clock.
   if (fresh) return { glow, line: "shared today" };
-  if (activeToday) return { glow, line: "here today" };
+  if (activeToday) return { glow, line: "shared today" };
   return { glow, line: place };
 }
 

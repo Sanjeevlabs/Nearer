@@ -5,6 +5,8 @@ import { dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { SITTING_REASONS, VENUE_IDS } from "@/lib/kinds";
 import { guardWrites } from "@/lib/api-guard";
+import { ACTIVITIES, DEFAULT_DOOR_MINUTES, visibleKnocks } from "@/lib/doors";
+import { pushDoor } from "@/lib/push/events";
 
 // Sit together: planned sittings with a reason, and "come sit" knocks.
 const Body = z.discriminatedUnion("action", [
@@ -21,7 +23,15 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel"), sittingId: z.string().min(1) }),
   z.object({ action: z.literal("rsvp"), sittingId: z.string().min(1), answer: z.enum(["going", "cant", "clear"]) }),
   z.object({ action: z.literal("reschedule"), sittingId: z.string().min(1), startsAt: z.string().datetime(), title: z.string().trim().min(2).max(80).optional() }),
-  z.object({ action: z.literal("knock"), minutes: z.number().int().min(15).max(180).default(45), note: z.string().trim().max(80).default(""), venue: z.enum(VENUE_IDS).default("courtyard") }),
+  z.object({
+    action: z.literal("knock"),
+    minutes: z.number().int().min(15).max(180).default(DEFAULT_DOOR_MINUTES),
+    note: z.string().trim().max(80).default(""),
+    venue: z.enum(VENUE_IDS).default("courtyard"),
+    activity: z.enum(ACTIVITIES).optional(),
+    /** Empty or absent: the whole family. */
+    invites: z.array(z.string().min(1).max(80)).max(30).default([]),
+  }),
   z.object({ action: z.literal("unknock") }),
 ]);
 
@@ -33,7 +43,8 @@ async function getHandler(req: Request): Promise<Response> {
   return Response.json({
     // Keep sittings visible until 3 hours after they start (so "Join" works late).
     sittings: sittings.filter((s) => Date.parse(s.startsAt) > now - 3 * 3_600_000).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
-    knocks: knocks.filter((k) => Date.parse(k.until) > now),
+    // Only the doors this person may see: their own, family-wide ones, and ones they were invited to.
+    knocks: visibleKnocks(knocks, auth.memberId, now),
   });
 }
 
@@ -80,7 +91,22 @@ async function postHandler(req: Request): Promise<Response> {
   const mine = (await listDocs(auth.familyId, "knock")).filter((k) => k.memberId === auth.memberId);
   for (const k of mine) await deleteDoc(auth.familyId, "knock", k.id);
   if (body.action === "unknock") return Response.json({ closed: mine.length });
-  const knock = await putDoc(auth.familyId, "knock", { id: newId("knock"), memberId: auth.memberId, note: body.note, venue: body.venue, at: now.toISOString(), until: new Date(now.getTime() + body.minutes * 60_000).toISOString() });
+  const family = new Set((await dbListMembers(auth.familyId)).map((m) => m.id));
+  const invites = Array.from(new Set(body.invites.filter((id) => family.has(id) && id !== auth.memberId)));
+  // Invited people who are no longer in the family leave nobody: the door is not opened to everyone by mistake.
+  if (body.invites.length > 0 && invites.length === 0) return Response.json({ error: "no-one-invited" }, { status: 400 });
+  const knock = await putDoc(auth.familyId, "knock", {
+    id: newId("knock"),
+    memberId: auth.memberId,
+    note: body.note,
+    venue: body.venue,
+    at: now.toISOString(),
+    until: new Date(now.getTime() + body.minutes * 60_000).toISOString(),
+    ...(body.activity ? { activity: body.activity } : {}),
+    ...(invites.length ? { invites } : {}),
+  });
+  // A door for one person tells that person once ("Maa is having chai. Join?"). Family-wide doors send nothing.
+  if (invites.length === 1) pushDoor(auth.familyId, knock);
   return Response.json({ knock }, { status: 201 });
 }
 

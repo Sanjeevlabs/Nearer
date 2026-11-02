@@ -2,15 +2,15 @@ import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { dbListCards } from "@/lib/db";
 import { getDoc, putDoc } from "@/lib/family-docs";
-import { isComplete, sideOf, streak, viewFor } from "@/lib/today";
+import { isComplete, sideOf, viewFor } from "@/lib/today";
 import { ensureToday } from "@/lib/today-server";
 import { nextOccasionFor } from "@/lib/occasions-server";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { docsFor, holidaysOf, membersFor, relationshipsFor } from "@/lib/request-data";
 
-// Today: one task, both homes. Your answer is a voice note you recorded; the
-// other side's answer is sealed until you add yours.
+// Today: one task, both homes. Your answer is a voice note you recorded; everyone
+// hears every answer at once (nothing is sealed, and there is no streak).
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
@@ -22,11 +22,11 @@ async function getHandler(req: Request): Promise<Response> {
   const [members, relationships, tasks] = await Promise.all([membersFor(req, auth.familyId), relationshipsFor(req, auth.familyId), docsFor(req, auth.familyId, "today_task")]);
   const task = await ensureToday(auth.familyId, new Date(), { members, relationships, tasks, holidays });
   const occasion = await nextOccasionFor(auth.familyId, members, new Date(), 30, holidays);
-  if (!task) return Response.json({ task: null, streak: 0, recent: [], occasion });
+  if (!task) return Response.json({ task: null, recent: [], occasion });
   // A task made just now is not in the list read a moment ago.
   const all = tasks.some((t) => t.id === task.id) ? tasks : [task, ...tasks];
   const recent = all.filter((t) => t.id !== task.id && t.completedAt).slice(0, 6).map((t) => viewFor(t, auth.memberId));
-  return Response.json({ task: viewFor(task, auth.memberId), streak: streak(all, task.date), recent, occasion });
+  return Response.json({ task: viewFor(task, auth.memberId), recent, occasion });
 }
 
 const Answer = z.object({ action: z.literal("answer"), taskId: z.string().min(1), cardId: z.string().min(1) });

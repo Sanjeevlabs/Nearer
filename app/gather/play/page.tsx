@@ -2,98 +2,108 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Avatar, Icon, RoomHeader, type IconName } from "@/components/ui/kit";
+import { OpenDoorSheet, type DoorPreset } from "@/components/open-door-sheet";
+import { Avatar, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
+import { ACTIVITIES, PRESETS, doorLine, doorsFor } from "@/lib/doors";
 import type { Knock } from "@/lib/kinds";
 import { callName, memberPhoto } from "@/lib/people";
 import { postJson, useJson } from "@/lib/use-json";
+import { timeIn } from "@/lib/zones";
 
-// Play together: ready things to do on a call across homes. Each one opens
-// your door now (the same "sit together" knock as the family page) with that
-// reason, and takes you into the call. Nothing to plan.
+// Time together: every way to say "I have time now, come sit". A preset opens the
+// "Open your door" sheet (what, who, how long); opening the door never starts a call.
+// Above them: your own open door, and the doors open to you (only those you may see:
+// GET /api/sit already leaves out doors opened to other people). Story, song and quiz
+// are presets for the conversation; there is no game logic behind them.
 
-interface Activity {
-  id: string;
-  title: string;
-  line: string;
-  /** The knock note others see: "Come sit with me" with a reason. */
-  note: string;
-  icon: IconName;
-  minutes: number;
-}
-
-const ACTIVITIES: Activity[] = [
-  { id: "chai", title: "Tea and catch-up", line: "A cup each, wherever you are. Just talk.", note: "Tea and catch-up, come sit", icon: "coffee", minutes: 45 },
-  { id: "story", title: "Story night", line: "A grandparent tells one, the children listen.", note: "Story night, come listen", icon: "moon", minutes: 30 },
-  { id: "song", title: "Song game", line: "Sing a line; the next song starts where it ended.", note: "Song game, come sing", icon: "music", minutes: 45 },
-  { id: "quiz", title: "Family quiz", line: "Who said it, where was this photo, whose recipe.", note: "Family quiz, come play", icon: "sparkle", minutes: 30 },
-];
-
-export default function PlayPage() {
+export default function TimeTogetherPage() {
   const router = useRouter();
   const { viewer, members } = useViewer();
-  const sit = useJson<{ knocks: Knock[] }>("/api/sit");
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState(false);
-  const open = (sit.data?.knocks ?? []).filter((k) => k.memberId !== viewer.id);
+  const sit = useJson<{ knocks: Knock[] }>("/api/sit", { every: 60_000 });
+  const [sheet, setSheet] = useState<DoorPreset | null>(null);
+  const [closing, setClosing] = useState(false);
+  const nameOf = (id: string) => callName(members.find((m) => m.id === id));
+  const { doors, myDoor } = doorsFor(sit.data?.knocks ?? [], viewer.id, nameOf, Date.now());
+  const until = (iso: string) => timeIn(viewer.tz, new Date(iso));
 
-  const start = async (a: Activity) => {
-    setBusy(a.id);
-    setError(false);
-    const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", minutes: a.minutes, note: a.note });
-    setBusy(null);
-    if (out?.knock) router.push(`/call/${out.knock.id}`);
-    else setError(true);
+  const closeDoor = async () => {
+    setClosing(true);
+    await postJson("/api/sit", { action: "unknock" });
+    setClosing(false);
+    await sit.reload();
   };
 
   return (
     <div>
-      <RoomHeader title="Play" subtitle="Something to do on a call, right now." />
+      <RoomHeader title="Time together" subtitle="Say you have time now. Whoever you open it to can join, or not." />
 
-      {open.map((k) => {
-        const who = members.find((m) => m.id === k.memberId);
-        return (
-          <button key={k.id} type="button" onClick={() => router.push(`/call/${k.id}`)} className="press mb-3 flex min-h-[56px] w-full items-center gap-3 rounded-card bg-deep p-3 pl-4 text-left text-white shadow-card">
-            <Avatar src={memberPhoto(who)} name={callName(who)} size={44} />
-            <span className="min-w-0 flex-1">
-              <span className="block text-body font-semibold">{callName(who)}&rsquo;s door is open</span>
-              <span className="block truncate text-body text-white/75">{k.note || "Come sit with me"}</span>
+      <div aria-live="polite">
+        {!sit.data && !sit.failed && <div className="skeleton mb-3 h-[64px] rounded-card" aria-busy="true" aria-label="Checking open doors" />}
+        {!sit.data && sit.failed && (
+          <div className="mb-3 flex min-h-[56px] items-center gap-3 rounded-card bg-well p-3 pl-4">
+            <p className="m-0 min-w-0 flex-1 text-body text-ink-soft">Couldn&rsquo;t check right now.</p>
+            <button type="button" onClick={() => void sit.reload()} className="press flex h-11 items-center rounded-full bg-card px-4 text-body font-semibold">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {myDoor && (
+          <div data-ui="together-mine" className="mb-3 flex min-h-[56px] items-center gap-3 rounded-card bg-deep p-3 pl-4 text-white shadow-card">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15" aria-hidden="true">
+              <Icon name="door" size={20} />
             </span>
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#1c1b1a]">
-              <Icon name="video" size={20} />
+            <span className="min-w-0 flex-1" suppressHydrationWarning>
+              <span className="block text-body font-semibold">Your door is open until {until(myDoor.until)}</span>
+              <span className="block truncate text-body text-white/75">{doorLine(myDoor)}</span>
             </span>
-          </button>
-        );
-      })}
+            <button type="button" onClick={() => void closeDoor()} disabled={closing} className="press flex h-11 shrink-0 items-center rounded-full bg-white px-4 text-body font-semibold text-[#1c1b1a] disabled:opacity-60">
+              {closing ? "Closing…" : "Close door"}
+            </button>
+          </div>
+        )}
+
+        {doors.map((d) => {
+          const who = members.find((m) => m.id === d.hostId);
+          return (
+            <div key={d.id} data-ui="together-door" className="mb-3 flex min-h-[56px] items-center gap-3 rounded-card bg-card p-3 pl-4 shadow-card">
+              <Avatar src={memberPhoto(who)} name={callName(who)} size={44} />
+              <span className="min-w-0 flex-1" suppressHydrationWarning>
+                <span className="block text-body font-semibold">{d.hostName}&rsquo;s door is open</span>
+                <span className="block truncate text-body text-ink-soft">
+                  {doorLine(d)} · until {until(d.until)}
+                </span>
+              </span>
+              <button type="button" onClick={() => router.push(`/call/${encodeURIComponent(d.id)}`)} className="press flex h-11 shrink-0 items-center rounded-full bg-accent px-4 text-body font-semibold text-accent-ink">
+                Join
+              </button>
+            </div>
+          );
+        })}
+      </div>
 
       <ul className="m-0 grid list-none gap-3 p-0" aria-label="Things to do together">
         {ACTIVITIES.map((a) => (
-          <li key={a.id}>
-            <button type="button" disabled={busy !== null} onClick={() => void start(a)} className="press flex min-h-[88px] w-full items-center gap-4 rounded-card bg-card p-4 text-left text-ink shadow-card disabled:opacity-60">
+          <li key={a}>
+            <button type="button" onClick={() => setSheet({ activity: a })} className="press flex min-h-[64px] w-full items-center gap-4 rounded-card bg-card p-4 text-left text-ink shadow-card">
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-well">
-                <Icon name={a.icon} size={22} strokeWidth={1.8} />
+                <Icon name={PRESETS[a].icon} size={22} strokeWidth={1.8} />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-headline font-semibold leading-tight">{a.title}</span>
-                <span className="mt-1 block text-body leading-snug text-ink-soft">{a.line}</span>
-              </span>
-              <span className="flex h-11 shrink-0 items-center rounded-full bg-deep px-4 text-body font-semibold text-white">{busy === a.id ? "…" : "Start"}</span>
+              <span className="min-w-0 flex-1 text-headline font-semibold leading-tight">{PRESETS[a].label}</span>
+              <span className="flex h-11 shrink-0 items-center rounded-full bg-deep px-4 text-body font-semibold text-white">Open door</span>
             </button>
           </li>
         ))}
       </ul>
 
-      {error && (
-        <p className="m-0 mt-3 text-center text-body text-[#b42318]" role="alert">
-          Couldn&rsquo;t open the call. Try again.
-        </p>
-      )}
       <div className="mt-6 flex items-center gap-3 rounded-card bg-well p-4">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card">
           <Icon name="door" size={19} strokeWidth={1.8} />
         </span>
-        <p className="m-0 text-body leading-snug text-ink-soft">Starting one opens your door for the family to join.</p>
+        <p className="m-0 text-body leading-snug text-ink-soft">Opening your door starts nothing. Whoever joins chooses audio or video first.</p>
       </div>
+      <OpenDoorSheet open={sheet !== null} preset={sheet ?? undefined} onClose={() => setSheet(null)} />
     </div>
   );
 }

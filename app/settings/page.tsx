@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { WindowOptions } from "./window-options";
 import { ConnectedApps } from "@/components/connected-apps";
 import { Group, UnsavedBanner } from "@/components/settings/section";
+import { RemindersSection } from "@/components/settings/reminders-section";
 import { LampSection, LanguageSection, NudgeSettingsSection, ProfileSection, ReadingSection, WhereSection } from "@/components/settings/account-sections";
 import { PeopleAndRoles } from "@/components/settings/roles-section";
 import { NotificationsSection } from "@/components/settings/push-section";
@@ -210,6 +211,7 @@ export default function SettingsPage() {
         <LanguageSection onMessage={flash} />
         <ReadingSection onMessage={flash} />
         <NudgeSettingsSection onMessage={flash} />
+        <RemindersSection />
         <NotificationsSection onMessage={flash} />
         <WhereSection onMessage={flash} />
       </div>

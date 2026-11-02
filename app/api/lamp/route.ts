@@ -1,10 +1,9 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { dbListMembers, dbListRelationships } from "@/lib/db";
-import { getDoc, listDocs, listDocsMany, newId, putDoc } from "@/lib/family-docs";
+import { getDoc, listDocsMany, putDoc } from "@/lib/family-docs";
 import { households } from "@/lib/households";
 import { BEAT_TTL_MS, LAMP_PUSH_GAP_MS, glowFrom, LIGHT_COOLDOWN_MS, lampPushedRecently, lampView, lightCooldownLeft, trimStamps } from "@/lib/lamp";
-import { todayFor } from "@/lib/presence";
 import { guardWrites } from "@/lib/api-guard";
 import type { Lamp } from "@/lib/kinds";
 import { pushBeat, pushLightInBackground } from "@/lib/push/events";
@@ -25,23 +24,6 @@ const Body = z.discriminatedUnion("action", [
 async function homesOf(familyId: string) {
   const [members, relationships] = await Promise.all([dbListMembers(familyId), dbListRelationships(familyId)]);
   return { members, homes: households(members, relationships) };
-}
-
-/**
- * A parent's lamp is their day's "I'm okay": the first one each (their) day is recorded as a
- * presence moment ("is thinking of you"), which is what the morning sweep and the quiet-day
- * note read. Only for grown-ups of the elder generation; best effort.
- */
-async function markMorningLamp(familyId: string, memberId: string, now: Date): Promise<void> {
-  try {
-    const me = (await dbListMembers(familyId)).find((m) => m.id === memberId);
-    if (!me || me.role !== "elder") return;
-    const recent = await listDocs(familyId, "presence", { sinceMs: 3 * 86_400_000 });
-    if (todayFor(memberId, recent, me.tz, now).length > 0) return;
-    await putDoc(familyId, "presence", { id: newId("presence"), memberId, moment: "thinking", note: "", at: now.toISOString() });
-  } catch (e) {
-    console.error("[lamp] morning mark failed", String(e));
-  }
 }
 
 async function getHandler(req: Request): Promise<Response> {
@@ -79,7 +61,6 @@ async function postHandler(req: Request): Promise<Response> {
     const lit = { ...trimStamps(lamp.lit, LIGHT_COOLDOWN_MS, nowMs), [auth.memberId]: nowIso };
     const saved = await putDoc(auth.familyId, "lamp", { ...lamp, litAt: nowIso, litBy: auth.memberId, lit, pushed, updatedAt: nowIso });
     pushLightInBackground(auth.familyId, auth.memberId, due.map((m) => m.id));
-    await markMorningLamp(auth.familyId, auth.memberId, new Date(nowMs));
     return Response.json({ lamp: { homeKey: mine.id, litAt: saved.litAt, litBy: saved.litBy, glow: 1 } });
   }
 
@@ -101,7 +82,6 @@ async function postHandler(req: Request): Promise<Response> {
     const pushed = pushDue ? { ...trimStamps(own.pushed, LAMP_PUSH_GAP_MS, now), [`${auth.memberId}>${toId}`]: nowIso } : own.pushed;
     await putDoc(auth.familyId, "lamp", { ...own, litAt: nowIso, litBy: auth.memberId, pushed, updatedAt: nowIso });
     if (pushDue) pushBeat(auth.familyId, auth.memberId, toId);
-    await markMorningLamp(auth.familyId, auth.memberId, new Date(now));
     return Response.json({ ok: true });
   }
 

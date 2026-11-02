@@ -8,12 +8,13 @@ import { buildInbox, INBOX_DAYS, type InboxItem } from "./inbox";
 import { households } from "./households";
 import { guardianMap } from "./kids";
 import { renderNudgeText } from "./nudges";
+import { LISTEN_WORDS, withListen } from "./listen";
 import { callName } from "./people";
 
 export async function inboxFor(familyId: string, viewerId: string, now: Date): Promise<InboxItem[]> {
   const since = new Date(now.getTime() - INBOX_DAYS * 86_400_000).toISOString();
   const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
-  const [members, rels, stored, plays, reactions, wishes, questions, kidAsks, lamps, nudges, tasks, care] = await Promise.all([
+  const [members, rels, stored, plays, reactions, wishes, questions, kidAsks, lamps, nudges, tasks, care, listen] = await Promise.all([
     dbListMembers(familyId),
     safe(dbListRelationships(familyId), []),
     dbListCards(familyId, { since, limit: 400 }),
@@ -26,6 +27,7 @@ export async function inboxFor(familyId: string, viewerId: string, now: Date): P
     safe(listDocs(familyId, "nudge"), []),
     safe(listDocs(familyId, "today_task", { sinceMs: 3 * 86_400_000 }), []),
     safe(listDocs(familyId, "care_settings"), []),
+    safe(listDocs(familyId, "card_listen"), []),
   ]);
   const home = households(members, rels).find((h) => h.members.some((m) => m.id === viewerId));
   // Lamp heartbeats stay in the lamp doc after they are felt, so they are history too.
@@ -37,7 +39,8 @@ export async function inboxFor(familyId: string, viewerId: string, now: Date): P
     viewerId,
     now,
     names: Object.fromEntries(members.map((m) => [m.id, callName(m)])),
-    cards: withDemoShelf(stored, familyId),
+    // "How to listen" in words, only where the viewer is an addressee (lib/listen.ts).
+    cards: withListen(withDemoShelf(stored, familyId), listen, viewerId).map((c) => (c.listen ? { ...c, listen: LISTEN_WORDS[c.listen] } : { ...c, listen: undefined })),
     plays,
     reactions,
     wishes,
@@ -48,7 +51,7 @@ export async function inboxFor(familyId: string, viewerId: string, now: Date): P
     felt: lamp?.felt[viewerId] ?? null,
     lights,
     tz: members.find((m) => m.id === viewerId)?.tz,
-    nudges: nudges.filter((n) => n.toMemberId === viewerId).map((n) => ({ id: n.id, kind: n.kind, text: renderNudgeText(n.text, members), href: n.href, at: n.at, seen: n.seenAt !== null, from: /\{m:([^}]+)\}/.exec(n.text)?.[1] ?? null })),
+    nudges: nudges.filter((n) => n.toMemberId === viewerId).map((n) => ({ id: n.id, kind: n.kind, text: renderNudgeText(n.text, members), href: n.href, at: n.at, seen: n.seenAt !== null, from: /\{m:([^}]+)\}/.exec(n.text)?.[1] ?? null, deliverAfter: n.deliverAfter })),
     today: tasks.slice(0, 4),
   });
 }

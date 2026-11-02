@@ -22,13 +22,16 @@ describe("the five rooms", () => {
 
   it("groups the rooms as agreed, in order", () => {
     const tabs = Object.fromEntries(roomsFor(false).map((r) => [r.title, r.tabs.map((t) => `${t.label} ${t.href}`)]));
+    expect(Object.keys(tabs)).toEqual(["Living Room", "Memories", "Kitchen", "Our People", "Care"]);
     expect(tabs).toEqual({
-      Memories: ["Memory Lane /lane", "Stories /stories", "Ask /ask-family"],
+      "Living Room": ["Time together /gather/play", "Coming up /gather", "Occasions /rituals"],
+      Memories: ["Memory Lane /lane", "Stories /stories", "The Book /book", "Advice /advice", "Ask the family /ask-family"],
       Kitchen: ["Recipes /kitchen"],
+      "Our People": ["Family tree /bond", "Homes /bond/homes", "Visits /together/visits"],
       Care: ["Care tasks /care", "Helpers /care/helpers", "Nearby /nearby"],
-      Family: ["Family tree /bond", "Homes /bond/homes", "The Book /book", "Advice /advice", "Portrait /portrait"],
-      Celebrations: ["Coming up /gather", "Occasions /rituals", "Visits /together/visits", "Holidays /together/holidays", "Play /gather/play"],
     });
+    // Never these words as room names.
+    expect(roomsFor(false).map((r) => r.title).join(" ")).not.toMatch(/Together|Keepsakes/);
   });
 
   it("opens each room's tile on its first tab", () => {
@@ -40,18 +43,20 @@ describe("the five rooms", () => {
   });
 
   it("shows each room's tabs on its pages, with the right one active; Kitchen and pages outside rooms have none", () => {
-    expect(tabLabels("/stories")).toEqual(["Memory Lane", "Stories", "Ask"]);
-    expect(tabLabels("/book")).toEqual(["Family tree", "Homes", "The Book", "Advice", "Portrait"]);
+    const keep = ["Memory Lane", "Stories", "The Book", "Advice", "Ask the family"];
+    expect(tabLabels("/stories")).toEqual(keep);
+    expect(tabLabels("/book")).toEqual(keep);
+    expect(tabLabels("/together/visits")).toEqual(["Family tree", "Homes", "Visits"]);
     expect(tabLabels("/care/helpers")).toEqual(["Care tasks", "Helpers", "Nearby"]);
     expect(tabsFor("/send")).toBeNull();
     expect(roomsFor(false).flatMap((r) => r.tabs.map((t) => t.href))).not.toContain("/send");
     expect(roomsFor(false).find((r) => r.id === "care")?.note).not.toMatch(/send/i);
-    expect(tabLabels("/gather")).toEqual(["Coming up", "Occasions", "Visits", "Holidays", "Play"]);
-    expect(tabLabels("/rituals")).toEqual(["Coming up", "Occasions", "Visits", "Holidays", "Play"]);
+    expect(tabLabels("/gather")).toEqual(["Time together", "Coming up", "Occasions"]);
+    expect(tabLabels("/rituals")).toEqual(["Time together", "Coming up", "Occasions"]);
     expect(tabsFor("/gather/play")?.room).toBe("/gather/play");
     expect(tabsFor("/care/helpers")?.room).toBe("/care/helpers");
     expect(tabsFor("/kitchen")).toBeNull();
-    for (const p of ["/safe", "/settings", "/day", "/people/dadi", "/lane/album/a1", "/gather/ev_123", "/together/p1", "/kitchen/r1"]) expect(tabsFor(p), p).toBeNull();
+    for (const p of ["/safe", "/settings", "/day", "/people/dadi", "/lane/album/a1", "/gather/ev_123", "/together/p1", "/kitchen/r1", "/portrait", "/together/holidays"]) expect(tabsFor(p), p).toBeNull();
   });
 
   it("renders only the five rooms in the rooms sheet: no nested lists", () => {

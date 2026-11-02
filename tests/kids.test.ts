@@ -162,16 +162,16 @@ describe("bedtime stories", () => {
 });
 
 describe("kid mode menu", () => {
-  it("three rooms: Memories (Lane, Stories), Celebrations (Coming up, Play), Family (Tree)", () => {
+  it("three rooms: Living Room (Time together, Coming up), Memories (Lane, Stories), Our People (Tree)", () => {
     const rooms = roomsFor(false, false, true);
-    expect(rooms.map((r) => r.title)).toEqual(["Memories", "Family", "Celebrations"]);
+    expect(rooms.map((r) => r.title)).toEqual(["Living Room", "Memories", "Our People"]);
     expect(Object.fromEntries(rooms.map((r) => [r.title, r.tabs.map((t) => t.href)]))).toEqual({
+      "Living Room": ["/gather/play", "/gather"],
       Memories: ["/lane", "/stories"],
-      Celebrations: ["/gather", "/gather/play"],
-      Family: ["/bond"],
+      "Our People": ["/bond"],
     });
     expect(spacesFor(false, false, true).flatMap((s) => s.rooms.map((r) => r.href))).not.toContain("/care");
-    // Grown-ups are unchanged: five rooms.
+    // Grown-ups: five rooms.
     expect(roomsFor(false)).toHaveLength(5);
     // A kid's tab row is only their own two tabs.
     expect(tabsFor("/lane", false, true)?.space.rooms.map((r) => r.href)).toEqual(["/lane", "/stories"]);
@@ -182,7 +182,9 @@ describe("From the kids", () => {
   it("counts the kids' new cards since the last visit and names who; asks are not counted", async () => {
     const members = await dbListMembers(FAM);
     const w = await windowState(FAM, "dadi", new Date());
-    expect(w.glance.kids).toMatchObject({ href: "/bond/kids", text: "New from Vihaan & Anika", count: 3 });
+    // The window no longer carries the glance strip (it was never shown); kidsTile stays for its own callers.
+    expect(w).not.toHaveProperty("glance");
+    expect(members.length).toBeGreaterThan(0);
     // A visit after all of it: nothing new.
     expect(kidsTile([{ id: "c", authorId: "leo", takenAt: new Date(NOON.getTime() - 3_600_000).toISOString() }], members, "dadi", NOON.toISOString(), NOON)).toBeNull();
     // Other grown-ups' cards never count.
@@ -209,8 +211,8 @@ describe("privacy", () => {
 
 describe("the Kids tab and page", () => {
   it("the tab sits after Homes for grown-ups in a family with kids, and never for kids or without them", () => {
-    const tabs = (kid: boolean, hasKids: boolean) => roomsFor(false, true, kid, hasKids).find((r) => r.id === "family")!.tabs.map((t) => t.href);
-    expect(tabs(false, true)).toEqual(["/bond", "/bond/homes", "/bond/kids", "/book", "/advice", "/portrait"]);
+    const tabs = (kid: boolean, hasKids: boolean) => roomsFor(false, true, kid, hasKids).find((r) => r.id === "people")!.tabs.map((t) => t.href);
+    expect(tabs(false, true)).toEqual(["/bond", "/bond/homes", "/bond/kids", "/together/visits"]);
     expect(tabs(false, false)).not.toContain("/bond/kids");
     expect(tabs(true, true)).not.toContain("/bond/kids");
     expect(tabsFor("/bond/kids", true, false, true)?.space.rooms.map((r) => r.title)).toContain("Kids");

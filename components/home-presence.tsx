@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { CareSettings, Knock, Need, Pet, Presence, PresenceMoment, Project, Question } from "@/lib/kinds";
+import type { CareSettings, Need, Pet, Presence, PresenceMoment, Project, Question } from "@/lib/kinds";
 import { callName, memberPhoto } from "@/lib/people";
 import { MOMENT_LABEL, latestFor, quietDay, shareableFor, todayFor } from "@/lib/presence";
 import type { Member } from "@/lib/schemas";
 import { useDisplayText } from "@/lib/use-display-text";
 import { ago, postJson, useJson } from "@/lib/use-json";
-import { roomUrl } from "@/lib/overlap";
 import { householdName, households, type Household } from "@/lib/households";
 import { cn } from "@/lib/utils";
 import { dayPartIn, placeFromTz, timeIn } from "@/lib/zones";
 import { SafetyWatch } from "./safety";
 import { useShell } from "./shell";
 import { Translated } from "./translated";
-import { Avatar, Icon, LiveDot, MuseMark } from "./ui/kit";
+import { Avatar, Icon, MuseMark } from "./ui/kit";
 import { useViewer } from "./viewer";
 
 interface PresenceData {
@@ -132,24 +131,6 @@ export function VisitCountdown({ visit }: { visit: Project }) {
   );
 }
 
-export function KnockBanner({ knock, member }: { knock: Knock; member: Member | undefined }) {
-  return (
-    <div className="flex items-center gap-3 rounded-card bg-well p-3.5">
-      <Avatar src={memberPhoto(member)} name={callName(member)} size={44} ring />
-      <div className="min-w-0 flex-1">
-        <p className="m-0 flex items-center gap-1.5 text-body font-semibold">
-          <LiveDot />
-          {callName(member)}&rsquo;s door is open
-        </p>
-        <p className="voice m-0 truncate text-body text-ink-soft">{knock.note || "Come sit with me?"}</p>
-      </div>
-      <a href={roomUrl(knock.id)} target="_blank" rel="noreferrer" className="press flex h-10 shrink-0 items-center rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink no-underline">
-        Come sit
-      </a>
-    </div>
-  );
-}
-
 /**
  * One far-away home, right now. Maa and Papa are one card: the home's local
  * time, then each parent's latest moment. A gentle flag only if a parent
@@ -162,10 +143,10 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
   const name = householdName(home, (m) => callName(m));
   const rows = elders.map((parent) => {
     const shared = latestFor(parent.id, presence.filter((p) => p.moment !== "here"));
-    const visit = latestFor(parent.id, presence.filter((p) => p.moment === "here"));
     const quiet = quietDay(settings.find((x) => x.memberId === parent.id), viewerId, presence, parent.tz);
     const fresh = Boolean(shared && Date.now() - Date.parse(shared.at) < 8 * 3_600_000);
-    return { parent, shared, visit, quiet: quiet.quiet, fresh };
+    // Only what they shared: just opening Nearer ("here") is never shown to anyone else.
+    return { parent, shared, quiet: quiet.quiet, fresh };
   });
   const quiet = rows.filter((r) => r.quiet);
 
@@ -186,7 +167,7 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
         <Icon name="chevron" size={18} className="text-ink-faint" />
       </Link>
       <ul className="m-0 mt-2.5 list-none space-y-1.5 p-0 pl-1">
-        {rows.map(({ parent, shared, visit, fresh }) => (
+        {rows.map(({ parent, shared, fresh }) => (
           <li key={parent.id} className="flex items-baseline gap-2 text-callout">
             <span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rounded-full bg-marigold" aria-hidden="true" />
             <span className="min-w-0 truncate">
@@ -197,8 +178,6 @@ function HomeNow({ home, presence, settings, viewerId, pets = [] }: { home: Hous
                   {shared.note ? <span className="voice text-body text-ink-soft"> · {shared.note}</span> : null}
                   <span className="text-ink-faint"> · {ago(shared.at)}</span>
                 </>
-              ) : visit && Date.now() - Date.parse(visit.at) < 24 * 3_600_000 ? (
-                <span className="text-ink-soft">stopped by today</span>
               ) : shared ? (
                 <span className="text-ink-soft">
                   {MOMENT_LABEL[shared.moment].line} · {ago(shared.at)}

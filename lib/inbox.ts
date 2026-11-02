@@ -34,6 +34,8 @@ export const InboxItemSchema = z.object({
   /** Who "Reply by voice" is addressed to; null = no reply button. */
   replyTo: z.string().nullable(),
   nudgeId: z.string().nullable().default(null),
+  /** "How to listen", in words ("just listen"): only on a note sent to the viewer. */
+  listen: z.string().nullable().default(null),
 });
 export type InboxItem = z.infer<typeof InboxItemSchema>;
 export const InboxResponseSchema = z.object({ items: z.array(InboxItemSchema) });
@@ -47,7 +49,7 @@ export interface InboxInput {
   viewerId: string;
   now: Date;
   names: Record<string, string>;
-  cards: Pick<Card, "id" | "type" | "authorId" | "addressedTo" | "takenAt">[];
+  cards: (Pick<Card, "id" | "type" | "authorId" | "addressedTo" | "takenAt"> & { listen?: string })[];
   plays: Pick<Play, "cardId" | "memberId">[];
   reactions: Pick<Reaction, "id" | "cardId" | "memberId" | "kind" | "createdAt">[];
   wishes: Pick<Wish, "id" | "cardId" | "memberId" | "kind" | "createdAt">[];
@@ -61,7 +63,7 @@ export interface InboxInput {
   lights?: { from: string; at: string }[];
   /** The viewer's zone, for "8:10 PM" in a lamp line. */
   tz?: string;
-  nudges: { id: string; kind: string; text: string; href: string; at: string; seen: boolean; from?: string | null }[];
+  nudges: { id: string; kind: string; text: string; href: string; at: string; seen: boolean; from?: string | null; deliverAfter?: string }[];
   today?: Pick<TodayTask, "id" | "date" | "parents" | "children" | "answers" | "completedAt">[];
 }
 
@@ -86,7 +88,7 @@ export function buildInbox(i: InboxInput): InboxItem[] {
     return t <= nowMs + 60_000 && nowMs - t <= INBOX_DAYS * 86_400_000;
   };
   const out: InboxItem[] = [];
-  const base = { fromId: null, cardId: null, heard: false, replyTo: null, nudgeId: null, plain: false } as const;
+  const base = { fromId: null, cardId: null, heard: false, replyTo: null, nudgeId: null, plain: false, listen: null } as const;
 
   const played = new Set(i.plays.filter((p) => p.memberId === i.viewerId).map((p) => p.cardId));
   const mine = i.cards.filter((c) => c.authorId === i.viewerId);
@@ -98,7 +100,7 @@ export function buildInbox(i: InboxInput): InboxItem[] {
     const heard = played.has(c.id);
     const replied = mine.some((r) => r.takenAt > c.takenAt && (addressees(r).length === 0 || addressees(r).includes(c.authorId as string)));
     const thing = THING[c.type] ?? "card";
-    out.push({ ...base, id: `card-${c.id}`, kind: "voice", badge: "voice", at: c.takenAt, text: `${name(c.authorId)} sent you a ${thing}`, fromId: c.authorId, cardId: c.id, href: `/lane?card=${encodeURIComponent(c.id)}`, waiting: c.type === "audio" && !heard && !replied, action: c.type === "audio" ? "play" : "open", heard, replyTo: c.authorId });
+    out.push({ ...base, id: `card-${c.id}`, kind: "voice", badge: "voice", listen: c.listen ? `${name(c.authorId)}: ${c.listen}` : null, at: c.takenAt, text: `${name(c.authorId)} sent you a ${thing}`, fromId: c.authorId, cardId: c.id, href: `/lane?card=${encodeURIComponent(c.id)}`, waiting: c.type === "audio" && !heard && !replied, action: c.type === "audio" ? "play" : "open", heard, replyTo: c.authorId });
   }
   for (const q of i.questions) {
     if (q.toMemberId !== i.viewerId || !recent(q.createdAt)) continue;
@@ -130,6 +132,12 @@ export function buildInbox(i: InboxInput): InboxItem[] {
     out.push({ ...base, id: `light-${l.from}-${l.at}`, kind: "lamp", badge: "lamp", plain: true, at: l.at, text: `${name(l.from)} lit the lamp for you${clock ? ` · ${clock}` : ""}`, fromId: l.from, href: "/", waiting: false, action: "open", replyTo: l.from });
   }
   for (const n of i.nudges) {
+    // A reminder you set yourself shows on its day, not before (and only ever to you).
+    if (n.kind === "reminder") {
+      if (!n.deliverAfter || Date.parse(n.deliverAfter) > nowMs || !recent(n.deliverAfter)) continue;
+      out.push({ ...base, id: `nudge-${n.id}`, kind: "nudge", badge: "question", plain: true, at: n.deliverAfter, text: n.text, href: n.href, waiting: !n.seen, action: "open", nudgeId: n.id });
+      continue;
+    }
     if (!recent(n.at)) continue;
     const person = NUDGE_PERSON.has(n.kind) && n.from && n.from !== i.viewerId ? n.from : null;
     out.push({ ...base, id: `nudge-${n.id}`, kind: "nudge", badge: n.kind === "blessed" ? "blessing" : person ? "heart" : "occasion", plain: true, at: n.at, text: n.text, fromId: person, href: n.href, waiting: false, action: "open", replyTo: person, nudgeId: n.id });
@@ -143,7 +151,7 @@ export function buildInbox(i: InboxInput): InboxItem[] {
     const others = side === "parents" ? t.children : t.parents;
     const theirs = t.answers.filter((a) => others.includes(a.memberId) && recent(a.at)).sort((a, b) => b.at.localeCompare(a.at))[0];
     if (!theirs) continue;
-    out.push({ ...base, id: `today-${t.id}`, kind: "today", badge: "today", at: theirs.at, text: `${name(theirs.memberId)}'s answer is waiting for yours`, fromId: theirs.memberId, href: "/", waiting: true, action: "answer", replyTo: theirs.memberId });
+    out.push({ ...base, id: `today-${t.id}`, kind: "today", badge: "today", at: theirs.at, text: `${name(theirs.memberId)} answered today's question`, fromId: theirs.memberId, href: "/", waiting: true, action: "answer", replyTo: theirs.memberId });
   }
   // Waiting first (newest first within), then Earlier; the cap never drops a waiting item for an old one.
   return out.sort((a, b) => Number(b.waiting) - Number(a.waiting) || b.at.localeCompare(a.at)).slice(0, INBOX_MAX);
