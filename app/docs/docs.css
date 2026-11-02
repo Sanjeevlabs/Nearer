@@ -1,4 +1,4 @@
-/* Build docs. Tokens come from app/tokens.css; dark mode is local to the docs (the app itself is light only). */
+/* Build docs. Tokens come from app/tokens.css; light only, like the app. */
 .docs-root {
   --docs-link: #2f5684;
   --docs-code: var(--well);
@@ -8,18 +8,6 @@
   width: min(64rem, calc(100vw - 2rem));
   margin-bottom: -9rem; /* the app shell reserves room for its dock; docs have none */
   color: var(--ink);
-}
-@media (prefers-color-scheme: dark) {
-  body:has(.docs-root) {
-    background: #171513;
-  }
-  .docs-root {
-    --ink: rgba(255, 255, 255, 0.92);
-    --ink-soft: rgba(255, 255, 255, 0.68);
-    --line: rgba(255, 255, 255, 0.14);
-    --well: #25221f;
-    --docs-link: #9dbbe6;
-  }
 }
 .docs-layout {
   display: flex;

@@ -287,18 +287,6 @@ html[data-entered="1"] .pre-mark, html[data-door="open"] .pre-mark { display: no
   --scene-line: rgba(60, 46, 34, 0.42);
   background: var(--scene-wall);
 }
-@media (prefers-color-scheme: dark) {
-  .window-scene {
-    --scene-wall: #2b2724;
-    --scene-wall-low: #25211e;
-    --scene-wall-side: #26221f;
-    --scene-floor: #231f1c;
-    --scene-door: #1f1b18;
-    --scene-frame: #3a3531;
-    --scene-glass: rgba(255, 255, 255, 0.12);
-    --scene-line: rgba(255, 240, 225, 0.32);
-  }
-}
 .window-scene[data-phase="night"] { --scene-glass: rgba(255, 255, 255, 0.18); }
 .scene-twinkle { animation: scene-twinkle 4s ease-in-out infinite alternate; }
 @keyframes scene-twinkle { from { opacity: 0.35; } to { opacity: 0.9; } }
