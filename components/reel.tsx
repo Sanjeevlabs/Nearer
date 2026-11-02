@@ -111,7 +111,7 @@ export function ReelPlayer({ runId }: { runId: string }) {
   const quote = current.card ? current.card.transcript || current.card.caption : "";
 
   return (
-    <div className="relative h-[620px] overflow-hidden rounded-hero bg-[#1d1714] text-white" style={{ boxShadow: "0 30px 60px -24px rgba(60,30,10,.7)" }}>
+    <div className="relative h-[620px] overflow-hidden rounded-hero bg-[#141414] text-white" style={{ boxShadow: "0 30px 60px -24px rgba(0,0,0,.6)" }}>
       <div className="absolute inset-[-40px]" aria-hidden="true" style={{ filter: "blur(40px) brightness(.55) saturate(1.3)" }}>
         <Photo src={art} alt="" sizes="200px" />
       </div>

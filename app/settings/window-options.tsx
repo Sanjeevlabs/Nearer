@@ -40,7 +40,7 @@ export function WindowOptions({ onMessage }: { onMessage?: (m: string) => void }
     return (
       <div role="alert" className="mb-6 rounded-[22px] bg-surface px-4 py-4 text-callout text-ink-soft">
         Couldn&rsquo;t load your first screen.
-        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-white px-4 text-callout font-semibold text-ink">
+        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-surface px-4 text-callout font-semibold text-ink">
           Retry
         </button>
       </div>
@@ -75,7 +75,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
     setUploading(false);
   };
 
-  const tile = (on: boolean) => cn("press relative block aspect-[4/3] w-full overflow-hidden rounded-[14px] bg-surface ring-1 ring-black/10", on && "outline outline-2 outline-offset-[3px] outline-ink");
+  const tile = (on: boolean) => cn("press relative block aspect-[4/3] w-full overflow-hidden rounded-[14px] bg-surface ring-1 ring-[var(--line)]", on && "outline outline-2 outline-offset-[3px] outline-ink");
 
   return (
     <SettingsSection
@@ -102,7 +102,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
               aria-checked={on}
               disabled={busy}
               onClick={() => form.set({ photo: null, scene: sp.id })}
-              className={cn("press min-h-[44px] rounded-full text-callout font-semibold", on ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+              className={cn("press min-h-[44px] rounded-full text-callout font-semibold", on ? "bg-accent text-accent-ink" : "bg-surface text-ink-soft")}
             >
               {sp.label}
             </button>
@@ -163,7 +163,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
                   className={cn("relative h-[44px] w-[52px] shrink-0 rounded-full disabled:opacity-35")}
                 >
                   <span className={cn("absolute inset-x-0 top-[9px] h-[26px] rounded-full transition-colors", on ? "bg-ink" : "bg-black/15")} />
-                  <span className={cn("absolute top-[12px] h-5 w-5 rounded-full bg-white shadow transition-all", on ? "left-[28px]" : "left-[4px]")} />
+                  <span className={cn("absolute top-[12px] h-5 w-5 rounded-full bg-surface shadow transition-all", on ? "left-[28px]" : "left-[4px]")} />
                 </button>
               </li>
             );
@@ -181,7 +181,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
             aria-checked={form.draft.quietAfterHours === h}
             disabled={busy}
             onClick={() => form.set({ quietAfterHours: h })}
-            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", form.draft.quietAfterHours === h ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+            className={cn("press h-11 flex-1 rounded-full text-callout font-semibold", form.draft.quietAfterHours === h ? "bg-accent text-accent-ink" : "bg-surface text-ink-soft")}
           >
             {h} h
           </button>

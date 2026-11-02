@@ -63,7 +63,7 @@ function Tonight() {
       ) : (
         <div className="mt-3 rounded-[26px] bg-surface p-4" style={{ boxShadow: "var(--surface-edge)" }}>
           <div className="flex items-center gap-4">
-            <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause the story" : "Play the story"} className="press grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-black text-white">
+            <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause the story" : "Play the story"} className="press grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
               <Icon name={playing ? "pause" : "play"} size={30} />
             </button>
             <p className="voice m-0 min-w-0 text-title leading-snug">{card.caption || "A story for you"}</p>

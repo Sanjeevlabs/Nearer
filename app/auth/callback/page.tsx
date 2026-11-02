@@ -78,10 +78,10 @@ export default function AuthCallback() {
         <>
           <p className="m-0 text-headline">You&rsquo;re signed in, but not in a family yet.</p>
           <div className="flex gap-3">
-            <Link href="/create" className="press rounded-full bg-ink px-5 py-3 text-body font-semibold text-white no-underline">
+            <Link href="/create" className="press rounded-full bg-accent px-5 py-3 text-body font-semibold text-accent-ink no-underline">
               Start a family
             </Link>
-            <Link href="/join" className="press rounded-full bg-black/[.06] px-5 py-3 text-body font-semibold text-ink no-underline">
+            <Link href="/join" className="press rounded-full bg-tint px-5 py-3 text-body font-semibold text-ink no-underline">
               Join with a code
             </Link>
           </div>
@@ -90,7 +90,7 @@ export default function AuthCallback() {
       {state === "failed" && (
         <>
           <p className="m-0 text-headline">That sign-in link didn&rsquo;t work.</p>
-          <Link href="/signin" className="press rounded-full bg-ink px-5 py-3 text-body font-semibold text-white no-underline">
+          <Link href="/signin" className="press rounded-full bg-accent px-5 py-3 text-body font-semibold text-accent-ink no-underline">
             Try again
           </Link>
         </>

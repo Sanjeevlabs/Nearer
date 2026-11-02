@@ -54,7 +54,7 @@ export function WishAhead({ viewer }: { viewer: Member }) {
         <span className="block text-body font-semibold leading-snug">Record a {word} for {title}</span>
         <span className="block text-footnote text-ink-soft">{whenLabel(daysBetween(today, o.date), o.date)} · it plays with everyone&rsquo;s on the day</span>
       </span>
-      <button type="button" onClick={() => openAdd("voice", { runId: run.id, kind: viewer.role === "elder" ? "blessing" : "wish" }, o.memberId)} aria-label={`Record a voice ${word} for ${title}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-white">
+      <button type="button" onClick={() => openAdd("voice", { runId: run.id, kind: viewer.role === "elder" ? "blessing" : "wish" }, o.memberId)} aria-label={`Record a voice ${word} for ${title}`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
         <Icon name="mic" size={18} />
       </button>
       <PhotoWishButton run={run} viewer={viewer} forName={person ? callName(person) : o.title} onDone={() => void reload()} className="h-11 w-11 bg-well text-ink" />

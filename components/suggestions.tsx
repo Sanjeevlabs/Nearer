@@ -79,14 +79,14 @@ export function Suggestions({ compact }: { compact?: boolean }) {
     <section aria-label="Nearer suggests" className="mb-6">
       <ul className="m-0 list-none space-y-2 p-0">
         {items.map((s) => (
-          <li key={s.id} className="rounded-[22px] bg-black/[.04] px-4 py-3.5">
+          <li key={s.id} className="rounded-[22px] bg-tint px-4 py-3.5">
             <p className="m-0 mt-1 text-body leading-snug text-ink">{s.goal}</p>
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
                 disabled={busyId === s.id}
                 onClick={() => void act(s.id, true)}
-                className="press h-10 rounded-full bg-black px-5 text-callout font-semibold text-white disabled:opacity-40"
+                className="press h-10 rounded-full bg-accent px-5 text-callout font-semibold text-accent-ink disabled:opacity-40"
               >
                 Do it
               </button>

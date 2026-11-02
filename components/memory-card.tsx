@@ -59,7 +59,7 @@ export function CaptionEditor({ card, onDone }: { card: Card; onDone: () => void
         >
           Save
         </Button>
-        <Button variant="secondary" className="h-11 flex-1 !bg-white text-body" onClick={onDone}>
+        <Button variant="secondary" className="h-11 flex-1 !bg-surface text-body" onClick={onDone}>
           Cancel
         </Button>
       </div>

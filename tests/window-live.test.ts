@@ -10,7 +10,7 @@ import { RENDERER_COMPONENT, SCENE_RENDERER, isRetiredHero, photoSceneCandidates
 import { glowFrom, lampView } from "@/lib/lamp";
 import { moonPhase, sunPosition } from "@/lib/sky";
 import { phaseFromSun, skyState, weatherLayer } from "@/lib/sky-state";
-import { firstNameOf, lampState, moonLine } from "@/lib/window-words";
+import { arrivedLine, firstNameOf, lampState, moonLine, statusLine } from "@/lib/window-words";
 import { resetDemo } from "@/lib/store";
 import { authedGet, authedJson } from "./auth-helper";
 
@@ -61,10 +61,38 @@ describe("the lamp is lit only by an explicit tap", () => {
     const nameOf = (id: string) => ({ dadi: "Maa", arjun: "Arjun" })[id] ?? "";
     const base = { viewerId: "arjun", nameOf, city: "Amritsar", now, tz: "Asia/Kolkata" };
     expect(lampState({ ...base, theirs: { litAt: "2026-11-02T02:40:00Z", litBy: "dadi" }, mine: undefined, felt: null }).line).toBe("Maa lit it for you · 8:10 AM");
-    const mine = lampState({ ...base, theirs: undefined, mine: { litAt: "2026-11-02T01:00:00Z", litBy: "arjun" }, felt: { by: "dadi", at: "2026-11-02T01:42:00Z" } });
-    expect(mine.line).toBe("You lit it · glowing in Amritsar");
-    expect(mine.felt).toBe("Maa felt it · 7:12 AM");
-    expect(lampState({ ...base, theirs: { litAt: "2026-10-30T02:40:00Z", litBy: "dadi" }, mine: undefined, felt: null }).line).toBe("Not lit today");
+    const mine = lampState({ ...base, theirs: undefined, mine: { litAt: "2026-11-02T02:40:00Z", litBy: "arjun" }, felt: { by: "dadi", at: "2026-11-02T03:12:00Z" }, forName: "Maa" });
+    expect(mine.line).toBe("Glowing for Maa · 40 m");
+    expect(mine.felt).toBe("Maa saw it · 8:42 AM");
+    // The glow lasts 2 hours: after that the lamp asks again.
+    const gone = lampState({ ...base, theirs: { litAt: "2026-11-02T01:00:00Z", litBy: "dadi" }, mine: undefined, felt: null });
+    expect(gone).toEqual({ lit: false, line: "Light the lamp \u2014 they\u2019ll know you\u2019re thinking of them", felt: null });
+    expect(lampState({ ...base, theirs: undefined, mine: { litAt: "2026-11-02T04:00:00Z", litBy: "arjun" }, felt: null, forName: "Maa" }).line).toBe("Glowing for Maa · 2 h");
+  });
+});
+
+describe("a light that arrived", () => {
+  it("says who is thinking of you for 24 h, then nothing", () => {
+    const nameOf = (id: string) => (id === "dadi" ? "Maa" : "");
+    const now = new Date("2026-11-02T12:00:00Z");
+    expect(arrivedLine({ from: "dadi", at: "2026-11-02T06:00:00Z" }, nameOf, now)).toBe("Maa is thinking of you");
+    expect(arrivedLine({ from: "dadi", at: "2026-11-01T06:00:00Z" }, nameOf, now)).toBeNull();
+    expect(arrivedLine(null, nameOf, now)).toBeNull();
+  });
+});
+
+describe("the one status line", () => {
+  const P = (name: string, state: "active" | "quiet" | "asleep" | "unknown" | "private", lastActive: string | null = null, alarm: string | null = null) => ({ name, state, lastActive, tz: "Asia/Kolkata", alarm });
+  it("says all is well, or names the one person", () => {
+    expect(statusLine([P("Maa", "active"), P("Papa", "active")])?.text).toBe("Both active in Nearer today \u00b7 all good");
+    expect(statusLine([P("Maa", "active"), P("Papa", "quiet", "2026-11-02T04:30:00Z")])).toMatchObject({ text: "Papa quiet since 10 AM", tone: "quiet", subject: 1 });
+    expect(statusLine([P("Maa", "active")])?.text).toBe("Maa active in Nearer today \u00b7 all good");
+    expect(statusLine([P("Maa", "asleep"), P("Papa", "asleep")])?.text).toBe("Night-time there \u00b7 all good");
+    expect(statusLine([P("Maa", "active"), P("Papa", "active", null, "Home late")])).toMatchObject({ text: "Papa \u00b7 Home late", tone: "alarm", subject: 1 });
+  });
+  it("says nothing for nobody or for people who keep their activity private", () => {
+    expect(statusLine([])).toBeNull();
+    expect(statusLine([P("Maa", "private")])).toBeNull();
   });
 });
 
@@ -96,7 +124,7 @@ describe("the real sky", () => {
     expect(night.moonVisible).toBe(true);
     expect(day.moonVisible).toBe(false);
     expect(moonLine(day.moonVisible, "Amritsar", day.moon.illumination)).toBeNull();
-    expect(moonLine(night.moonVisible, "Amritsar", 0.62)).toBe("The same moon is over Amritsar tonight, 62% full");
+    expect(moonLine(night.moonVisible, "Amritsar", 0.62)).toBe("Same moon tonight · 62%");
   });
 
   it("weather is drawn only from a fetched code, and rain hides the stars", () => {

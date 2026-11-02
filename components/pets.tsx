@@ -86,7 +86,7 @@ function PetForm({ pet, onDone }: { pet?: Pet; onDone: () => void }) {
       <input className={field} value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="Name (Bruno)" aria-label="Pet's name" />
       <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Kind of pet">
         {PET_SPECIES.map((s) => (
-          <button key={s} type="button" role="radio" aria-checked={species === s} onClick={() => setSpecies(s)} className={cn("press h-9 rounded-full px-3.5 text-callout font-medium", species === s ? "bg-black text-white" : "bg-white")}>
+          <button key={s} type="button" role="radio" aria-checked={species === s} onClick={() => setSpecies(s)} className={cn("press h-9 rounded-full px-3.5 text-callout font-medium", species === s ? "bg-accent text-accent-ink" : "bg-white")}>
             {SPECIES_LABEL[s]}
           </button>
         ))}

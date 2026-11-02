@@ -4,7 +4,7 @@ import * as L from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { tabsFor } from "@/lib/spaces";
+import { roomOf, tabsFor } from "@/lib/spaces";
 import { canStartPortrait } from "@/lib/muse-portrait";
 import { isKid } from "@/lib/kids";
 import { useViewer } from "@/components/viewer";
@@ -91,6 +91,7 @@ const ICONS = {
   wrench: L.Wrench,
   utensils: L.UtensilsCrossed,
   bell: L.Bell,
+  info: L.Info,
   question: L.CircleHelp,
 } satisfies Record<string, L.LucideIcon>;
 
@@ -228,7 +229,7 @@ export function PlayButton({
       aria-label={label}
       className={cn(
         "press grid shrink-0 place-items-center rounded-full",
-        tone === "light" ? "bg-white text-black" : "bg-black text-white",
+        tone === "light" ? "bg-white text-black" : "bg-accent text-accent-ink",
       )}
       style={{ width: size, height: size }}
     >
@@ -279,19 +280,23 @@ export function Monogram({ name, size }: { name: string; size: number }) {
 
 /* ---------------------------------------------------------------- rooms */
 /**
- * One compact sticky bar for every room page: back, then the room's tabs in the same row
- * (the open tab is bold and underlined and is the title; the h1 is for screen readers).
- * A page with no tabs (Kitchen, or anything opened from a room) shows back + its title.
+ * One compact sticky header for every page, two rows at most (<= 104px with the gap):
+ *   row 1  back chevron (44px) + the ROOM's name beside it ("Family", "Care"...) in the title size;
+ *   row 2  the room's sub-pages as a scrollable pill row, the open one filled with the accent.
+ * A room with one page (Kitchen) shows row 1 only. A page opened from a room (a recipe, an album,
+ * a person, Settings) shows back + its own title. The room names are lib/menu.ts titles, verbatim.
  * Back goes to where you came in (tabs replace each other, so they never stack).
- * Each page mounts it once; the same bar in the same place does not re-mount between loading states.
  */
-export function RoomHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode; /** Kept for callers; the bar no longer names the room above the title. */ room?: string }) {
+export function RoomHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode; /** Kept for callers: the header names the room itself on a room's own pages. */ room?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const { viewer, members } = useViewer();
-  const at = tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), members.some((m) => isKid(m)));
+  const hasKids = members.some((m) => isKid(m));
+  const at = tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), hasKids);
+  const own = roomOf(pathname);
+  const name = (at?.space.title ?? own?.title ?? title) || "";
   const active = useRef<HTMLAnchorElement>(null);
-  // The last tabs (Play, Nearby) sit past the screen edge: bring the open one into view, without animating.
+  // The last pills (Play, Nearby) sit past the screen edge: bring the open one into view, without animating.
   // Measured in the row's own pixels (not scrollIntoView), so it is right under the elders' larger text zoom too.
   useEffect(() => {
     const tab = active.current;
@@ -306,44 +311,30 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <header
       data-ui="room-header"
-      className="sticky top-0 z-30 -mx-4 mb-3 bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] px-4 backdrop-blur"
+      className="sticky top-0 z-30 -mx-4 mb-3 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] px-4 backdrop-blur"
       style={{ marginTop: "calc(-16px - env(safe-area-inset-top))", paddingTop: "calc(4px + env(safe-area-inset-top))" }}
     >
       <div className="flex h-11 items-center gap-1">
         <button type="button" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} aria-label="Back" className="press -ml-2 grid h-11 w-11 shrink-0 place-items-center rounded-full">
           <Icon name="back" />
         </button>
-        {at ? (
-          <>
-            <h1 className="sr-only">{title}</h1>
-            <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar flex min-w-0 flex-1 overflow-x-auto">
-              {at.space.rooms.map((r) => {
-                const on = r.href === at.room;
-                return (
-                  <Link
-                    key={r.href}
-                    href={r.href}
-                    replace
-                    ref={on ? active : undefined}
-                    aria-current={on ? "page" : undefined}
-                    className={cn(
-                      "press relative flex h-11 shrink-0 items-center px-3 text-body no-underline",
-                      on ? "font-bold text-ink after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-ink after:content-['']" : "font-medium text-ink-soft",
-                    )}
-                  >
-                    {r.title}
-                  </Link>
-                );
-              })}
-            </nav>
-          </>
-        ) : (
-          <h1 className="m-0 min-w-0 flex-1 truncate text-title font-semibold">{title}</h1>
-        )}
+        <h1 className="m-0 min-w-0 flex-1 truncate text-title font-semibold leading-tight tracking-[-0.015em]">{name}</h1>
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      {/* Subtitles stay in the code for screen readers only: the page says it, the header doesn't repeat it. */}
-      {subtitle && <p className="sr-only">{subtitle}</p>}
+      {at && (
+        <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar -mx-4 flex h-11 items-center overflow-x-auto px-4">
+          {at.space.rooms.map((r) => {
+            const on = r.href === at.room;
+            return (
+              <Link key={r.href} href={r.href} replace ref={on ? active : undefined} aria-current={on ? "page" : undefined} className="press flex h-11 shrink-0 items-center pr-2 no-underline">
+                <span className={cn("flex h-9 items-center rounded-full px-4 text-callout transition-colors", on ? "bg-accent font-semibold text-accent-ink" : "bg-well font-medium text-ink-soft")}>{r.title}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
+      {/* The page's own title, when the header shows the room's name instead: for screen readers. */}
+      {(subtitle || (name && title && name !== title)) && <p className="sr-only">{[name !== title ? title : "", subtitle].filter(Boolean).join(". ")}</p>}
     </header>
   );
 }
@@ -383,7 +374,7 @@ export function Button({
       disabled={disabled}
       className={cn(
         "press flex h-11 items-center justify-center gap-2 rounded-full px-5 text-body font-semibold disabled:opacity-40",
-        variant === "primary" && "bg-black text-white",
+        variant === "primary" && "bg-accent text-accent-ink",
         variant === "secondary" && "bg-surface text-ink",
         variant === "quiet" && "bg-transparent text-ink-soft",
         className,
@@ -558,7 +549,7 @@ export function ActionMenu({ actions, label = "More", tone = "soft", className }
                   <button type="button" disabled={busy} onClick={() => void run(a)} className="press h-11 flex-1 rounded-full bg-[#b42318] text-callout font-semibold text-white">
                     {busy ? "…" : "Yes"}
                   </button>
-                  <button type="button" onClick={() => setConfirming(null)} className="press h-11 flex-1 rounded-full bg-black/[.06] text-callout font-semibold">
+                  <button type="button" onClick={() => setConfirming(null)} className="press h-11 flex-1 rounded-full bg-tint text-callout font-semibold">
                     Keep
                   </button>
                 </div>
@@ -570,7 +561,7 @@ export function ActionMenu({ actions, label = "More", tone = "soft", className }
                 role="menuitem"
                 disabled={busy}
                 onClick={() => (a.danger ? setConfirming(i) : void run(a))}
-                className={cn("press flex h-11 w-full items-center rounded-[12px] px-3 text-left text-body font-medium hover:bg-black/[.04]", a.danger && "text-[#b42318]")}
+                className={cn("press flex h-11 w-full items-center rounded-[12px] px-3 text-left text-body font-medium hover:bg-tint", a.danger && "text-[#b42318]")}
               >
                 {a.label}
               </button>

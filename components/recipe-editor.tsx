@@ -30,7 +30,7 @@ const blank = (cookId: string): Draft => ({
   cookId,
 });
 
-const field = "h-[48px] w-full rounded-[14px] bg-white px-4 text-body outline-none focus:ring-2 focus:ring-marigold";
+const field = "h-[48px] w-full rounded-[14px] bg-surface px-4 text-body outline-none focus:ring-2 focus:ring-marigold";
 
 /**
  * One editor for a new recipe and for corrections. The cook's words win:
@@ -87,13 +87,13 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
       <RoomHeader title={recipe ? "Edit recipe" : scan ? "Check the recipe" : "Add a recipe"} subtitle={recipe ? "Fix anything. The cook's words win." : scan ? "Nothing is saved until you add it" : "Your own, or one you're writing down for someone"} />
 
       {scan && (
-        <figure className="m-0 mb-5 flex items-center gap-3 rounded-card bg-[#fff6e6] p-3">
+        <figure className="m-0 mb-5 flex items-center gap-3 rounded-card bg-well p-3">
           {scan.url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={scan.url} alt="The recipe card" className="h-[84px] w-[68px] shrink-0 rounded-[12px] object-cover" />
           )}
           <figcaption className="min-w-0">
-            <span className="block font-hand text-title leading-tight text-[#8a4b00]">In {d.cookId === viewer.id ? "your" : `${callName(members.find((m) => m.id === d.cookId))}'s`} handwriting</span>
+            <span className="block font-hand text-title leading-tight text-ink-soft">In {d.cookId === viewer.id ? "your" : `${callName(members.find((m) => m.id === d.cookId))}'s`} handwriting</span>
             <span className="mt-0.5 block text-footnote text-ink-soft">{scan.fromMuse ? "Muse read this card. Check every line against it, then add it." : "Muse couldn't read this one. Type it in from the photo; it stays with the recipe."}</span>
           </figcaption>
         </figure>
@@ -104,7 +104,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
           <p className="m-0 mb-2 text-footnote font-semibold uppercase tracking-[0.06em] text-ink-faint">Whose recipe</p>
           <div className="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4">
             {members.map((m) => (
-              <button key={m.id} type="button" aria-pressed={d.cookId === m.id} onClick={() => set("cookId", m.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", d.cookId === m.id ? "bg-black text-white" : "bg-surface")}>
+              <button key={m.id} type="button" aria-pressed={d.cookId === m.id} onClick={() => set("cookId", m.id)} className={cn("press flex h-11 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", d.cookId === m.id ? "bg-accent text-accent-ink" : "bg-surface")}>
                 <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
                 {m.id === viewer.id ? "Mine" : callName(m)}
               </button>
@@ -117,7 +117,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
         <input className={cn(field, "text-headline font-semibold")} value={d.title} onChange={(e) => set("title", e.target.value)} maxLength={80} placeholder="Palak paneer" aria-label="Recipe name" />
         <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1" role="radiogroup" aria-label="Course">
           {COURSES.map((c) => (
-            <button key={c} type="button" role="radio" aria-checked={d.course === c} onClick={() => set("course", c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", d.course === c ? "bg-black text-white" : "bg-white")}>
+            <button key={c} type="button" role="radio" aria-checked={d.course === c} onClick={() => set("course", c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", d.course === c ? "bg-accent text-accent-ink" : "bg-surface")}>
               {COURSE_LOOK[c].label}
             </button>
           ))}
@@ -136,7 +136,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
             <input className={field} value={d.serves} onChange={(e) => set("serves", e.target.value)} maxLength={40} placeholder="4" />
           </label>
         </div>
-        <textarea className="w-full resize-none rounded-[14px] bg-white p-4 text-body outline-none focus:ring-2 focus:ring-marigold" rows={2} value={d.memory} onChange={(e) => set("memory", e.target.value)} maxLength={240} placeholder="Why it matters (Sunday breakfast, with white butter)" aria-label="Why it matters" />
+        <textarea className="w-full resize-none rounded-[14px] bg-surface p-4 text-body outline-none focus:ring-2 focus:ring-marigold" rows={2} value={d.memory} onChange={(e) => set("memory", e.target.value)} maxLength={240} placeholder="Why it matters (Sunday breakfast, with white butter)" aria-label="Why it matters" />
       </div>
 
       <SectionTitle>Before you start</SectionTitle>
@@ -162,8 +162,8 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
         {d.steps.map((st, i) => (
           <li key={i} className="rounded-[16px] bg-surface p-2.5">
             <div className="flex gap-1.5">
-              <span className="tnum mt-3 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-black text-caption font-bold text-white">{i + 1}</span>
-              <textarea className="w-full resize-none rounded-[12px] bg-white p-3 text-body outline-none focus:ring-2 focus:ring-marigold" rows={2} value={st.text} onChange={(e) => set("steps", d.steps.map((x, k) => (k === i ? { ...x, text: e.target.value } : x)))} aria-label={`Step ${i + 1}`} />
+              <span className="tnum mt-3 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-caption font-bold text-accent-ink">{i + 1}</span>
+              <textarea className="w-full resize-none rounded-[12px] bg-surface p-3 text-body outline-none focus:ring-2 focus:ring-marigold" rows={2} value={st.text} onChange={(e) => set("steps", d.steps.map((x, k) => (k === i ? { ...x, text: e.target.value } : x)))} aria-label={`Step ${i + 1}`} />
               <button type="button" aria-label="Remove step" onClick={() => set("steps", d.steps.filter((_, k) => k !== i))} className="press grid w-9 place-items-center text-ink-faint">
                 <Icon name="close" size={16} />
               </button>

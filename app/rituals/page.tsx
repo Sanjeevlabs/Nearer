@@ -118,7 +118,7 @@ function Group({ g, members, albums, onOpen }: { g: OccasionGroup; members: Memb
                     <span className="voice block truncate text-callout text-ink-soft">{c.caption || "A voice note"}</span>
                   </span>
                   <span className="tnum text-caption text-ink-faint">{formatDuration(cardDuration(c))}</span>
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-marigold text-black" : "bg-ink text-white"}`}>
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${on ? "bg-tint text-ink" : "bg-accent text-accent-ink"}`}>
                     <Icon name={on ? "pause" : "play"} size={13} />
                   </span>
                 </button>
@@ -224,7 +224,7 @@ export default function OccasionsPage() {
               title="No occasion photos yet."
               line="Wishes, cake photos and festival voices from every home gather here, one occasion at a time."
               action={
-                <Link href="/gather" className="press flex h-12 w-full items-center justify-center rounded-full bg-ink text-body font-semibold text-white no-underline">
+                <Link href="/gather" className="press flex h-12 w-full items-center justify-center rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
                   See what&rsquo;s coming up
                 </Link>
               }

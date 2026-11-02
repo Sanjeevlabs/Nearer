@@ -53,11 +53,11 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
     return (
       <div>
         <RoomHeader title="Celebration" />
-        <div className="rounded-[28px] bg-black/[.04] p-4" role={failed ? "alert" : undefined}>
+        <div className="rounded-[28px] bg-tint p-4" role={failed ? "alert" : undefined}>
           <p className="m-0 text-headline font-semibold">{failed ? "Couldn't load this celebration." : "This celebration has ended or was cancelled."}</p>
           <div className="mt-3 flex gap-2">
             {failed && (
-              <Button variant="secondary" className="!bg-white" onClick={() => void reload()}>
+              <Button variant="secondary" className="!bg-surface" onClick={() => void reload()}>
                 Try again
               </Button>
             )}
@@ -111,7 +111,7 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
       <RoomHeader title={e.title} subtitle={`Set up by ${callName(host)}`} action={actions.length ? <ActionMenu actions={actions} /> : undefined} />
 
       {start ? (
-        <section className="relative overflow-hidden rounded-[28px] p-4 text-white" style={{ background: "#1c1b1a" }} aria-label="When">
+        <section className="relative overflow-hidden rounded-[28px] p-4 text-white" style={{ background: "var(--deep)" }} aria-label="When">
           <p className="m-0 text-caption font-semibold uppercase tracking-[0.08em] text-white/55">{live ? "Live now" : startsInLabel(start)}</p>
           <div className="mt-2">
             <EventTimes at={start} members={members} viewer={viewer} ids={participants(e)} tone="dark" />

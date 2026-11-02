@@ -87,7 +87,7 @@ export function PeoplePicker({
           data-picker-row={r.kind}
           aria-pressed={multi ? on : undefined}
           onClick={() => choose(r)}
-          className={cn("press flex min-h-[56px] w-full items-center gap-3.5 px-3.5 py-2 text-start", on && "bg-black/[.04]")}
+          className={cn("press flex min-h-[56px] w-full items-center gap-3.5 px-3.5 py-2 text-start", on && "bg-tint")}
         >
           {r.kind === "person" ? (
             <span className="relative">
@@ -107,7 +107,7 @@ export function PeoplePicker({
             <span className="block truncate text-body font-semibold leading-tight">{r.label}</span>
             <span className="block truncate text-footnote text-ink-soft">{r.kind === "person" && r.waiting ? "Waiting for your reply" : r.sub}</span>
           </span>
-          {multi ? <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", on ? "bg-black text-white" : "ring-1 ring-black/20")}>{on && <Icon name="check" size={14} />}</span> : <Icon name="chevron" size={16} className="text-ink-faint rtl:-scale-x-100" />}
+          {multi ? <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", on ? "bg-accent text-accent-ink" : "ring-1 ring-black/20")}>{on && <Icon name="check" size={14} />}</span> : <Icon name="chevron" size={16} className="text-ink-faint rtl:-scale-x-100" />}
         </button>
       </li>
     );
@@ -115,7 +115,7 @@ export function PeoplePicker({
 
   const list = (rows: PickerRow[]) =>
     rows.length > 0 && (
-      <ul className="m-0 list-none divide-y divide-[var(--line)] overflow-hidden rounded-[22px] bg-card p-0 ring-1 ring-black/[.05]">
+      <ul className="m-0 list-none divide-y divide-[var(--line)] overflow-hidden rounded-[22px] bg-card p-0 ring-1 ring-[var(--line)]">
         {rows.map(row)}
       </ul>
     );
@@ -129,7 +129,7 @@ export function PeoplePicker({
       dataUi="people-picker"
       footer={
         multi ? (
-          <button type="button" onClick={() => multi.onDone(sel)} className="press h-12 w-full rounded-full bg-black text-body font-semibold text-white">
+          <button type="button" onClick={() => multi.onDone(sel)} className="press h-12 w-full rounded-full bg-accent text-body font-semibold text-accent-ink">
             Done
           </button>
         ) : undefined
@@ -144,7 +144,7 @@ export function PeoplePicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search family"
             aria-label="Search family"
-            className="h-11 w-full rounded-full bg-card px-4 text-body text-ink ring-1 ring-black/[.06] placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-black/30"
+            className="h-11 w-full rounded-full bg-card px-4 text-body text-ink ring-1 ring-[var(--line)] placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-black/30"
           />
         )}
         {list(view.rest)}

@@ -50,7 +50,7 @@ export default function RecipePage() {
   if (!data) {
     return (
       <div>
-        <RoomHeader title="" />
+        <RoomHeader title="Recipe" />
         <div className="skeleton h-[300px] rounded-hero" aria-busy="true" aria-label="Loading recipe" />
       </div>
     );
@@ -96,7 +96,7 @@ export default function RecipePage() {
   return (
     <div>
       <RoomHeader
-        title=""
+        title={r.title}
         action={
           <div className="flex items-center gap-1">
             <ShareRecipe recipe={data.original} cookName={callName(cook)} photo={cover ? (resolveMediaUrl(cover) ?? cover) : null} />
@@ -135,11 +135,11 @@ export default function RecipePage() {
       {(voice || videoUrl) && (
         <section aria-label="Taught by" className="mt-4 space-y-2">
           {voice && (
-            <div className="flex items-center gap-3 rounded-card bg-[#fff6e6] p-3.5">
+            <div className="flex items-center gap-3 rounded-card bg-well p-3.5">
               <PlayButton playing={Boolean(active && isPlaying)} onClick={() => (active ? toggle() : play(voice))} label={`Hear ${callName(cook)} teach it`} />
               <span className="min-w-0">
                 <span className="block text-body font-semibold">Hear {callName(cook)} teach it</span>
-                <span className="block text-footnote text-[#8a4b00]">In their own words, step by step</span>
+                <span className="block text-footnote text-ink-soft">In their own words, step by step</span>
               </span>
             </div>
           )}
@@ -182,7 +182,7 @@ export default function RecipePage() {
             return (
               <li key={n}>
                 <button type="button" aria-pressed={got} onClick={() => setHave((s) => { const x = new Set(s); if (x.has(n)) x.delete(n); else x.add(n); return x; })} className="flex w-full items-center gap-3 px-2 py-3 text-left">
-                  <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full border-2", got ? "border-black bg-black text-white" : "border-black/20")} aria-hidden="true">
+                  <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full border-2", got ? "border-black bg-accent text-accent-ink" : "border-black/20")} aria-hidden="true">
                     {got && <Icon name="check" size={14} strokeWidth={3} />}
                   </span>
                   <span className={cn("min-w-0 flex-1 text-body font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
@@ -207,7 +207,7 @@ export default function RecipePage() {
               <div className="pt-1">
                 <p className="m-0 text-headline leading-snug">{st.text}</p>
                 {st.tip && (
-                  <p className="voice m-0 mt-1.5 text-headline text-[#8a4b00]">
+                  <p className="voice m-0 mt-1.5 text-headline text-ink-soft">
                     &ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-faint">— {callName(cook)}</span>
                   </p>
                 )}
@@ -294,7 +294,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <span className="text-footnote text-ink-soft">{blessed.length ? `${blessed.map((m) => callName(m)).join(", ")} blessed this` : ""}</span>
                   {blessedByMe && (
-                    <button type="button" onClick={async () => { await postJson("/api/kitchen", { action: "unbless", attemptId: a.id }); onChange(); }} className="press flex h-10 items-center gap-1.5 rounded-full bg-[#fff6e6] px-4 text-callout font-semibold text-[#8a4b00]">
+                    <button type="button" onClick={async () => { await postJson("/api/kitchen", { action: "unbless", attemptId: a.id }); onChange(); }} className="press flex h-10 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink-soft">
                       <Icon name="bless" size={16} />
                       Blessed
                     </button>
@@ -306,7 +306,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                         await postJson("/api/kitchen", { action: "bless", attemptId: a.id });
                         onChange();
                       }}
-                      className="press flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-callout font-semibold"
+                      className="press flex h-10 items-center gap-1.5 rounded-full bg-surface px-4 text-callout font-semibold"
                     >
                       <Icon name="bless" size={16} />
                       Bless
@@ -328,7 +328,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
           ) : (
             <div className="rounded-card bg-surface p-4">
               <p className="m-0 text-headline font-semibold">How did it turn out?</p>
-              <button type="button" onClick={() => fileRef.current?.click()} className="press mt-3 flex h-[120px] w-full items-center justify-center overflow-hidden rounded-[18px] bg-white text-body font-medium text-ink-soft">
+              <button type="button" onClick={() => fileRef.current?.click()} className="press mt-3 flex h-[120px] w-full items-center justify-center overflow-hidden rounded-[18px] bg-surface text-body font-medium text-ink-soft">
                 {photo?.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={photo.url} alt="Your dish" className="h-full w-full object-cover" />
@@ -340,7 +340,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                 )}
               </button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && void pick(e.target.files[0])} />
-              <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={240} placeholder={`A line for ${cookName}`} className="mt-3 h-12 w-full rounded-full bg-white px-5 text-body outline-none focus:ring-2 focus:ring-marigold" />
+              <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={240} placeholder={`A line for ${cookName}`} className="mt-3 h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold" />
               <div className="mt-3 flex gap-2">
                 <Button
                   className="flex-[1.4]"
@@ -357,7 +357,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                 >
                   Show {cookName}
                 </Button>
-                <Button variant="secondary" className="flex-1 !bg-white" onClick={() => setOpen(false)}>
+                <Button variant="secondary" className="flex-1 !bg-surface" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
               </div>

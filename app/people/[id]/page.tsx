@@ -79,7 +79,7 @@ export default function PersonPage() {
 
       {person.role === "elder" && (
         <Link href={`/book?member=${encodeURIComponent(person.id)}`} className="press mt-4 flex items-center gap-3 rounded-[22px] bg-surface px-4 py-3.5 text-ink no-underline">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-white">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
             <Icon name="book" size={18} />
           </span>
           <span className="min-w-0 flex-1">

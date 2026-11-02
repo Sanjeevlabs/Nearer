@@ -35,7 +35,7 @@ export function VoiceCode({ peaks, progress = 0, bars = 28, className }: { peaks
 
 function Frame({ card, children, footer }: { card: Card; children: React.ReactNode; footer: React.ReactNode }) {
   return (
-    <article className="rounded-[30px] bg-white p-3 ring-1 ring-black/[.06]" style={{ boxShadow: tintShadow(card, 0.32) }}>
+    <article className="rounded-[30px] bg-white p-3 ring-1 ring-[var(--line)]" style={{ boxShadow: tintShadow(card, 0.32) }}>
       {children}
       <div className="flex items-center gap-3 border-t border-[var(--line)] px-2 pt-3">{footer}</div>
     </article>
@@ -78,7 +78,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
       <div className="relative overflow-hidden rounded-[22px] bg-surface" style={{ aspectRatio: ratio }}>
         <Photo src={cardCover(card, members)} alt={`${callName(author)}'s photo`} sizes="(max-width: 480px) 100vw, 440px" priority={priority} position="center 30%" />
       </div>
-      <Meta card={card} title={text === null ? <span className="inline-block h-5 w-3/4 rounded bg-black/[.06]" /> : `“${firstWords(text)}”`} line={`${callName(author)} · ${relativeDay(card.takenAt)}`} />
+      <Meta card={card} title={text === null ? <span className="inline-block h-5 w-3/4 rounded bg-tint" /> : `“${firstWords(text)}”`} line={`${callName(author)} · ${relativeDay(card.takenAt)}`} />
       <div className="px-2 pt-4">
         <button
           type="button"
@@ -90,7 +90,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
           }}
           className="block h-4 w-full"
         >
-          <span className="block h-[3px] w-full overflow-hidden rounded-full bg-black/[.08]">
+          <span className="block h-[3px] w-full overflow-hidden rounded-full bg-tint">
             <span className="block h-full rounded-full bg-ink transition-[width] duration-200" style={{ width: `${Math.min(100, progress * 100)}%` }} />
           </span>
         </button>
@@ -103,7 +103,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
             type="button"
             onClick={() => (active ? toggle() : play(card))}
             aria-label={playing ? "Pause" : `Play ${callName(author)}'s voice note`}
-            className="press grid h-[60px] w-[60px] place-items-center rounded-full bg-ink text-white"
+            className="press grid h-[60px] w-[60px] place-items-center rounded-full bg-accent text-accent-ink"
           >
             <Icon name={playing ? "pause" : "play"} size={22} />
           </button>
@@ -129,7 +129,7 @@ export function VideoPlaque({ card }: { card: Card }) {
       footer={
         <>
           <span className="text-caption font-semibold tracking-wide text-ink-soft">NEARER</span>
-          <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-black/[.08]">
+          <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-tint">
             <span className="block h-full bg-ink" style={{ width: `${progress * 100}%` }} />
           </span>
         </>

@@ -47,7 +47,7 @@ export function SideSwitch() {
   const [busy, setBusy] = useState<string | null>(null);
   if (sides.length < 2) return null;
   return (
-    <div className="mt-3 inline-flex rounded-full bg-surface p-1" role="tablist" aria-label="Family side">
+    <div className="mt-3 inline-flex rounded-full bg-well p-1" role="tablist" aria-label="Family side">
       {sides.map((s) => (
         <button
           key={s.familyId}
@@ -60,7 +60,7 @@ export function SideSwitch() {
             setBusy(s.familyId);
             void openSide(s.familyId);
           }}
-          className={cn("press h-9 rounded-full px-4 text-callout font-semibold", s.familyId === current ? "bg-white text-ink shadow-sm" : "text-ink-soft")}
+          className={cn("press h-9 rounded-full px-4 text-callout font-semibold", s.familyId === current ? "bg-accent text-accent-ink" : "text-ink-soft")}
         >
           {busy === s.familyId ? "Opening…" : `${s.name} side`}
         </button>
@@ -128,15 +128,15 @@ export function BothSides() {
                     setBusy(s.familyId);
                     void openSide(s.familyId);
                   }}
-                  className={cn("press flex w-full items-center gap-3 rounded-card p-3 text-left", here ? "bg-ink text-white" : "bg-surface")}
+                  className={cn("press flex w-full items-center gap-3 rounded-card p-3 text-left", here ? "bg-accent text-accent-ink" : "bg-surface")}
                 >
-                  <span className={cn("relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-headline font-bold", here ? "bg-white/15" : "bg-white")}>
+                  <span className={cn("relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-headline font-bold", here ? "bg-accent-ink/15" : "bg-well")}>
                     {s.name.slice(0, 1)}
-                    {!here && (s.fresh ?? 0) > 0 && <span className="tnum absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-caption font-semibold text-white">{s.fresh}</span>}
+                    {!here && (s.fresh ?? 0) > 0 && <span className="tnum absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-caption font-semibold text-accent-ink">{s.fresh}</span>}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body font-semibold">{s.name}</span>
-                    <span className={cn("block truncate text-caption", here ? "text-white/70" : "text-ink-soft")}>
+                    <span className={cn("block truncate text-caption", here ? "text-accent-ink/70" : "text-ink-soft")}>
                       {busy === s.familyId ? "Opening…" : here ? "You're here" : s.addedBy ? `Added by ${s.addedBy}` : `${s.people} people`}
                     </span>
                   </span>
@@ -166,7 +166,7 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
           <>
             <p className="m-0 text-body text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
             <p data-display className="tnum m-0 mt-4 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{made.invite.code}</p>
-            <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black text-body font-semibold text-white no-underline">
+            <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
               <Icon name="whatsapp" size={20} />
               Send on WhatsApp
             </a>
@@ -196,7 +196,7 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
                     const on = bring.includes(m.id);
                     return (
                       <li key={m.id}>
-                        <button type="button" aria-pressed={on} onClick={() => setBring((b) => (on ? b.filter((x) => x !== m.id) : [...b, m.id]))} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-ink text-white" : "bg-surface")}>
+                        <button type="button" aria-pressed={on} onClick={() => setBring((b) => (on ? b.filter((x) => x !== m.id) : [...b, m.id]))} className={cn("press flex h-11 items-center gap-2 rounded-full pl-1 pr-4 text-body font-medium", on ? "bg-accent text-accent-ink" : "bg-surface")}>
                           <Avatar src={memberPhoto(m)} name={callName(m)} size={34} />
                           {callName(m)}
                         </button>

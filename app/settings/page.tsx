@@ -60,10 +60,10 @@ function WaitingToJoin({ onMessage }: { onMessage: (m: string) => void }) {
               <span className="block truncate text-body font-semibold">{callName(m)}</span>
               <span className="block text-footnote text-ink-soft">{m.city ? `Joined with a code · ${m.city}` : "Joined with a code"}</span>
             </span>
-            <button type="button" aria-label={`Decline ${callName(m)}`} disabled={busy === m.id} onClick={() => void decide(m, "decline")} className="press grid h-11 w-11 place-items-center rounded-full bg-white text-ink disabled:opacity-40">
+            <button type="button" aria-label={`Decline ${callName(m)}`} disabled={busy === m.id} onClick={() => void decide(m, "decline")} className="press grid h-11 w-11 place-items-center rounded-full bg-surface text-ink disabled:opacity-40">
               <Icon name="close" size={20} />
             </button>
-            <button type="button" aria-label={`Let ${callName(m)} in`} disabled={busy === m.id} onClick={() => void decide(m, "approve")} className="press grid h-11 w-11 place-items-center rounded-full bg-ink text-white disabled:opacity-40">
+            <button type="button" aria-label={`Let ${callName(m)} in`} disabled={busy === m.id} onClick={() => void decide(m, "approve")} className="press grid h-11 w-11 place-items-center rounded-full bg-accent text-accent-ink disabled:opacity-40">
               <Icon name="check" size={20} />
             </button>
           </li>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
 
       <nav data-ui="settings-tabs" aria-label="Settings sections" className="mt-7 grid grid-cols-4 gap-1 rounded-full bg-surface p-1">
         {TABS.map(([id, label]) => (
-          <button key={id} type="button" aria-pressed={tab === id} onClick={() => go(id)} className={cn("press h-11 rounded-full text-body font-semibold", tab === id ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>
+          <button key={id} type="button" aria-pressed={tab === id} onClick={() => go(id)} className={cn("press h-11 rounded-full text-body font-semibold", tab === id ? "bg-surface text-ink shadow-sm" : "text-ink-soft")}>
             {label}
           </button>
         ))}
@@ -286,7 +286,7 @@ export default function SettingsPage() {
             <div className="px-4 py-4">
               <p className="m-0 text-body">Leave the family? Your profile and place in the tree are deleted. Shared memories stay with the family.</p>
               <div className="mt-3 flex gap-2">
-                <button type="button" onClick={() => setConfirmLeave(false)} className="press h-11 flex-1 rounded-full bg-white text-callout font-semibold">
+                <button type="button" onClick={() => setConfirmLeave(false)} className="press h-11 flex-1 rounded-full bg-surface text-callout font-semibold">
                   Stay
                 </button>
                 <button type="button" onClick={() => void leave()} disabled={busy === "leave"} className="press h-11 flex-1 rounded-full bg-[#b42318] text-callout font-semibold text-white">
