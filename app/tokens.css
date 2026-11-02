@@ -87,35 +87,8 @@
   --font-body: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-voice: "Literata", Georgia, serif;
   --font-display: var(--font-body);
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0e0e0e;
-    --card: #181818;
-    --surface: #181818;
-    --surface-edge: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 1px 2px rgba(0, 0, 0, 0.3);
-    --well: #242424;
-    --card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
-    --ink: #f5f5f5;
-    --ink-soft: rgba(245, 245, 245, 0.66);
-    --ink-faint: rgba(245, 245, 245, 0.42);
-    --line: rgba(255, 255, 255, 0.12);
-    --tint: rgba(255, 255, 255, 0.09);
-    /* Dark mode inverts the accent: near-white with black text (18:1). */
-    --accent: #f5f5f5;
-    --accent-ink: #0e0e0e;
-    --deep: #262626;
-    --accent-soft: #2c2c2c;
-    --accent-soft-ink: #f5f5f5;
-    --marigold-glow: rgba(245, 245, 245, 0.25);
-    --frost-bg: rgba(14, 14, 14, 0.86);
-    --frost-solid: #0e0e0e;
-    --frost-border: rgba(255, 255, 255, 0.1);
-    --frost-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-    color-scheme: dark;
-  }
+  /* Light only, on every device: no dark mode (owner's call). */
+  color-scheme: light only;
 }
 
 @media (min-width: 768px) {

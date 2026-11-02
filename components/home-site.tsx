@@ -128,7 +128,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             playsInline
             preload="none"
             poster="/home/film-poster.webp"
-            aria-label="A one-minute film about Nearer: a son far away, his parents' day, and the app between them"
+            aria-label="A short film about Nearer: a new city, the same home; the lamp, her voice, a family recipe"
           >
             <source src="/home/film.mp4" type="video/mp4" />
           </video>

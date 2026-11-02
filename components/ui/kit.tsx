@@ -292,7 +292,9 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
   const pathname = usePathname();
   const { viewer, members } = useViewer();
   const hasKids = members.some((m) => isKid(m));
-  const at = tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), hasKids);
+  // Until we know who is looking, a child would briefly get the grown-ups' tabs: hold the row empty.
+  const at = viewer ? tabsFor(pathname, canStartPortrait(viewer), isKid(viewer), hasKids) : null;
+  const pending = !viewer && tabsFor(pathname, false, false, hasKids) !== null;
   const own = roomOf(pathname);
   const name = (at?.space.title ?? own?.title ?? title) || "";
   const active = useRef<HTMLAnchorElement>(null);
@@ -321,6 +323,7 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
         <h1 className="m-0 min-w-0 flex-1 truncate text-title font-semibold leading-tight tracking-[-0.015em]">{name}</h1>
         {action && <div className="shrink-0">{action}</div>}
       </div>
+      {pending && <div className="h-11" aria-hidden />}
       {at && (
         <nav data-ui="room-tabs" aria-label={at.space.title} className="no-scrollbar -mx-4 flex h-11 items-center overflow-x-auto px-4">
           {at.space.rooms.map((r) => {
