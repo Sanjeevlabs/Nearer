@@ -57,7 +57,7 @@ export function mockRecipe(transcript: string, title?: string): RecipeDraft {
     memory: "",
     serves: "",
     ingredients: ingredients.length ? ingredients : [{ item: "as the cook said", said: "", approx: "" }],
-    steps: steps.length ? steps : [{ text: text.slice(0, 400) || "Listen to the voice note for the steps.", tip: "" }],
+    steps: steps.length ? steps : [{ text: text.slice(0, 400) || "Listen to the voice memory for the steps.", tip: "" }],
   });
 }
 
@@ -75,7 +75,7 @@ export async function recipeFromVoice(input: { familyId: string; transcript: str
   const fallback = mockRecipe(input.transcript, input.title);
   const out = await museJson({
     familyId: input.familyId,
-    purpose: `Wrote up ${input.cookName}'s recipe from a voice note`,
+    purpose: `Wrote up ${input.cookName}'s recipe from a voice memory`,
     system: RECIPE_SYSTEM,
     user: `Cook: ${input.cookName}\nLanguage: ${describeLang(input.lang)}\n${input.title ? `Title: ${input.title}\n` : ""}Transcript:\n${input.transcript}`,
     schema: RecipeDraftSchema,

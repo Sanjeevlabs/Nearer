@@ -41,8 +41,8 @@ describe("waitingForYou", () => {
   const need = { id: "n1", title: "Book the cylinder", claimedBy: "arjun", status: "claimed" as const, doneAt: null, createdAt: "2026-10-31T07:00:00.000Z" };
 
   it("is null when nothing waits", () => expect(waitingForYou(base)).toBeNull());
-  it("an unplayed voice note addressed to you, until you play it", () => {
-    expect(waitingForYou({ ...base, cards: [card] })).toEqual({ kind: "voice", text: "Maa's voice note", href: "/lane?card=c1", fromId: "dadi" });
+  it("an unplayed voice memory addressed to you, until you play it", () => {
+    expect(waitingForYou({ ...base, cards: [card] })).toEqual({ kind: "voice", text: "Maa's voice memory", href: "/lane?card=c1", fromId: "dadi" });
     expect(waitingForYou({ ...base, cards: [card], plays: [{ cardId: "c1", memberId: "arjun" }] })).toBeNull();
     // someone else playing it does not clear it for you
     expect(waitingForYou({ ...base, cards: [card], plays: [{ cardId: "c1", memberId: "dada" }] })?.kind).toBe("voice");
@@ -79,7 +79,7 @@ describe("waitingForYou", () => {
     expect(waitingForYou({ ...base, cards: [{ ...card, takenAt: same }], questions: [{ ...question, createdAt: same }], needs: [{ ...need, createdAt: same }] })?.kind).toBe("voice");
     expect(waitingForYou({ ...base, questions: [{ ...question, createdAt: same }], needs: [{ ...need, createdAt: same }] })?.kind).toBe("question");
   });
-  it("answering the sender clears a voice note (a card of yours to them, or to everyone, sent after theirs)", () => {
+  it("answering the sender clears a voice memory (a card of yours to them, or to everyone, sent after theirs)", () => {
     const reply = { id: "r1", type: "audio" as const, authorId: "arjun", addressedTo: "dadi", takenAt: "2026-10-31T09:00:00.000Z" };
     expect(waitingForYou({ ...base, cards: [card, reply] })).toBeNull();
     expect(waitingForYou({ ...base, cards: [card, { ...reply, addressedTo: null }] })).toBeNull();
@@ -88,11 +88,11 @@ describe("waitingForYou", () => {
     expect(waitingForYou({ ...base, cards: [card, { ...reply, takenAt: "2026-10-31T07:00:00.000Z" }] })?.kind).toBe("voice");
   });
   it("a nudge waits as a nudge, with its id so opening it can mark it seen", () => {
-    const nudge = { id: "nudge-1", kind: "heard", text: "Maa heard your voice note", href: "/home?card=c9", at: "2026-10-31T11:00:00.000Z" };
-    expect(waitingForYou({ ...base, nudges: [nudge] })).toEqual({ kind: "nudge", text: "Maa heard your voice note", href: "/home?card=c9", nudgeId: "nudge-1" });
+    const nudge = { id: "nudge-1", kind: "heard", text: "Maa heard your voice memory", href: "/home?card=c9", at: "2026-10-31T11:00:00.000Z" };
+    expect(waitingForYou({ ...base, nudges: [nudge] })).toEqual({ kind: "nudge", text: "Maa heard your voice memory", href: "/home?card=c9", nudgeId: "nudge-1" });
     expect(waitingItems({ ...base, cards: [card], questions: [question], nudges: [nudge] }).map((i) => i.kind)).toEqual(["nudge", "question", "voice"]);
   });
-  it("ignores the future and very old voice notes", () => {
+  it("ignores the future and very old voice memories", () => {
     expect(waitingForYou({ ...base, cards: [{ ...card, takenAt: "2026-11-02T00:00:00.000Z" }] })).toBeNull();
     expect(waitingForYou({ ...base, cards: [{ ...card, takenAt: "2026-08-01T00:00:00.000Z" }] })).toBeNull();
   });

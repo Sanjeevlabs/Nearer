@@ -58,7 +58,7 @@ describe("Bids answered in 24 h", () => {
   it("a note still inside its 24 hours and unanswered counts neither way; none yet is null", () => {
     expect(bidsAnswered(base({ cards: [card("b", "maa", null, new Date(NOW.getTime() - 3_600_000).toISOString())] }))).toEqual({ answered: 0, total: 0, share: null });
   });
-  it("only parent voice notes are bids, and only the last 30 days", () => {
+  it("only parent voice memories are bids, and only the last 30 days", () => {
     const cards = [card("p", "maa", null, day(3), "photo"), card("k", "arjun", null, day(3)), card("old", "maa", null, day(40))];
     expect(bidsAnswered(base({ cards })).total).toBe(0);
   });

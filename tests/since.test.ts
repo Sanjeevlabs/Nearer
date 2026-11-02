@@ -24,7 +24,7 @@ const base = {
 
 describe("sinceLines", () => {
   it("writes plain sentences, newest first, at most three", () => {
-    expect(sinceLines(base)).toEqual(["Papa checked in: home safe", "Maa sent a voice note", "Papa blessed your photo"]);
+    expect(sinceLines(base)).toEqual(["Papa checked in: home safe", "Maa sent a voice memory", "Papa blessed your photo"]);
     expect(sinceLines({ ...base, limit: 4 })).toHaveLength(4);
   });
   it("ignores what happened before the last visit, your own actions and strangers", () => {
@@ -43,7 +43,7 @@ describe("sinceLines", () => {
 });
 
 describe("sinceSentence", () => {
-  const lines = ["Papa checked in: home safe", "Maa sent a voice note"];
+  const lines = ["Papa checked in: home safe", "Maa sent a voice memory"];
   const fake = (json: unknown) =>
     (async (o: { schema: { safeParse: (x: unknown) => { success: boolean; data?: unknown } }; accept?: (d: never) => boolean; fallback: unknown }) => {
       const p = o.schema.safeParse(json);
@@ -55,8 +55,8 @@ describe("sinceSentence", () => {
     expect(await sinceSentence("f", "arjun", "en", lines.slice(0, 1), fake({ line: "Hello there" }), false)).toBeNull();
   });
   it("returns a valid grounded line and rejects a bad one", async () => {
-    expect(await sinceSentence("f", "arjun", "en", lines, fake({ line: "Since yesterday, Maa sent a voice note and Papa got home safe." }), false)).toMatch(/Maa/);
-    expect(await sinceSentence("f", "arjun", "en", lines, fake({ line: "Maa sent 3 voice notes" }), false)).toBeNull();
+    expect(await sinceSentence("f", "arjun", "en", lines, fake({ line: "Since yesterday, Maa sent a voice memory and Papa got home safe." }), false)).toMatch(/Maa/);
+    expect(await sinceSentence("f", "arjun", "en", lines, fake({ line: "Maa sent 3 voice memories" }), false)).toBeNull();
     expect(await sinceSentence("f", "arjun", "en", lines, fake({ line: "x".repeat(200) }), false)).toBeNull();
   });
 });

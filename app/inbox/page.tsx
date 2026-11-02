@@ -28,7 +28,7 @@ function when(iso: string, tz: string): string {
 }
 
 const BADGE: Record<InboxItem["badge"], { icon: IconName; label: string }> = {
-  voice: { icon: "mic", label: "Voice note" },
+  voice: { icon: "mic", label: "Voice memory" },
   question: { icon: "question", label: "Question" },
   blessing: { icon: "flower", label: "Blessing" },
   lamp: { icon: "lamp", label: "Lamp" },

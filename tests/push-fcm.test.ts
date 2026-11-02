@@ -3,7 +3,7 @@ import { accessToken, fcmBody, jwtClaims, resetFcmToken, sendFcm, serviceAccount
 import { b64uDecode } from "@/lib/push/webpush";
 import type { PushMessage } from "@/lib/push/types";
 
-const msg: PushMessage = { title: "Nearer", body: "Dadi sent you a voice note", url: "/lane?card=c1", tag: "voice-c1", urgency: "high" };
+const msg: PushMessage = { title: "Nearer", body: "Dadi sent you a voice memory", url: "/lane?card=c1", tag: "voice-c1", urgency: "high" };
 let pem = "";
 let publicKey: CryptoKey;
 let env: Record<string, string>;
@@ -84,7 +84,7 @@ describe("sendFcm", () => {
     const body = JSON.parse(String(send.init.body)) as ReturnType<typeof fcmBody>;
     expect(body.message).toMatchObject({
       token: "device-token-0123456789",
-      notification: { title: "Nearer", body: "Dadi sent you a voice note" },
+      notification: { title: "Nearer", body: "Dadi sent you a voice memory" },
       data: { url: "/lane?card=c1", tag: "voice-c1" },
       android: { priority: "HIGH", collapse_key: "voice-c1", notification: { channel_id: "family", tag: "voice-c1" } },
     });

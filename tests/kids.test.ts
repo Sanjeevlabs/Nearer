@@ -83,7 +83,7 @@ describe("Ask Dadi", () => {
     const before = await json<{ items: { kind: string; text: string }[] }>(waitingGet(get("/api/waiting", "dadi")));
     expect(before.items.find((i) => i.kind === "kid")?.text).toBe("Vihaan asked you something");
     // The question itself is not also a "voice note" line.
-    expect(before.items.filter((i) => i.text.includes("voice note") && i.text.includes("Vihaan"))).toHaveLength(0);
+    expect(before.items.filter((i) => i.text.includes("voice memory") && i.text.includes("Vihaan"))).toHaveLength(0);
 
     // Someone else in the family cannot answer it.
     const arjunCard = await voice("arjun");
@@ -150,7 +150,7 @@ describe("bedtime stories", () => {
     expect((await json<{ prompt: unknown }>(bedtimeGet(get("/api/bedtime", "dadi")))).prompt).not.toBeNull();
   });
 
-  it("only a child's own grandparent or parent can tell one, with their own voice note", async () => {
+  it("only a child's own grandparent or parent can tell one, with their own voice memory", async () => {
     const mine = await voice("dadi");
     expect((await bedtimePost(post("/api/bedtime", { action: "create", forMemberId: "leo", cardId: mine.id }, "kavya"))).status).toBe(403);
     expect((await bedtimePost(post("/api/bedtime", { action: "create", forMemberId: "leo", cardId: "nope" }, "dadi"))).status).toBe(404);

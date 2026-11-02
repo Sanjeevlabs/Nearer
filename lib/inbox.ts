@@ -40,7 +40,7 @@ export const InboxItemSchema = z.object({
 export type InboxItem = z.infer<typeof InboxItemSchema>;
 export const InboxResponseSchema = z.object({ items: z.array(InboxItemSchema) });
 
-const THING: Record<string, string> = { audio: "voice note", photo: "photo", video: "video" };
+const THING: Record<string, string> = { audio: "voice memory", photo: "photo", video: "video" };
 const ASK: Record<string, string> = { story: "for a story", recipe: "for a recipe", wisdom: "for advice", blessing: "for a blessing", song: "for a song", place: "about a place" };
 const ASK_HREF: Record<string, string> = { story: "/stories", recipe: "/kitchen", wisdom: "/advice", blessing: "/advice", song: "/", place: "/" };
 const REACTION_WORD: Record<Reaction["kind"], string> = { love: "love", bless: "blessing", laugh: "smile" };

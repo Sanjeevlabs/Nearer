@@ -9,6 +9,7 @@ import { useShell } from "./shell";
 import { ShareTodayAnswer } from "./share-quote";
 import { Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
+import { PromptText } from "./prompt-text";
 
 type View = TodayTask & { side: "parents" | "children" | null; mine: boolean; theirs: boolean };
 export interface TodayData {
@@ -61,7 +62,7 @@ export function TodayCard({ variant = "card" }: { variant?: "card" | "line" }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-caption font-semibold uppercase tracking-[0.08em] text-white/60">Today, both homes</span>
-          <span className="voice block truncate text-headline leading-snug">{prompt}</span>
+          <span className="voice block truncate text-headline leading-snug"><PromptText text={prompt} /></span>
           <span className="block truncate text-caption text-white/70">{status}</span>
         </span>
       </button>
@@ -72,7 +73,7 @@ export function TodayCard({ variant = "card" }: { variant?: "card" | "line" }) {
       <p className="relative m-0 flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.1em] text-white/65">
         <Icon name="sparkle" size={14} /> Today · both homes
       </p>
-      <p className="voice relative m-0 mt-3 text-title leading-[1.2]">{prompt}</p>
+      <p className="voice relative m-0 mt-3 text-title leading-[1.2]"><PromptText text={prompt} /></p>
       <p className="relative m-0 mt-2 text-callout text-white/75">{status}</p>
       <div className="relative mt-4 flex items-center gap-2">
         {!task.mine ? (

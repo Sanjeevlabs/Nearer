@@ -75,7 +75,7 @@ export default function RecipePage() {
           {
             label: "Delete recipe",
             danger: true,
-            confirm: "Delete this recipe and everyone's attempts? The voice note stays in Memory Lane.",
+            confirm: "Delete this recipe and everyone's attempts? The voice memory stays in Memory Lane.",
             onSelect: async () => {
               await postJson("/api/kitchen", { action: "delete-recipe", recipeId: data.original.id });
               router.replace("/kitchen");
@@ -150,7 +150,7 @@ export default function RecipePage() {
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
-        {data.original.madeBy === "muse" && <MuseMark>written from {callName(cook)}&rsquo;s voice note</MuseMark>}
+        {data.original.madeBy === "muse" && <MuseMark>written from {callName(cook)}&rsquo;s voice memory</MuseMark>}
         {data.translated && (
           <button type="button" onClick={() => setShowOriginal((v) => !v)} className="text-caption font-medium text-ink-soft underline underline-offset-2">
             {showOriginal ? `Show in ${language(displayLang).native}` : `Translated · show ${language(data.original.lang).native}`}

@@ -2,7 +2,7 @@
 // Short, calm, and about a person: no counts of inactivity, no "you haven't opened...".
 import { toLangCode } from "../languages";
 
-export type Thing = "voice note" | "photo" | "video";
+export type Thing = "voice memory" | "photo" | "video";
 
 interface Words {
   voice: (name: string, thing: Thing) => string;
@@ -22,7 +22,7 @@ const EN: Words = {
   voice: (n, t) => `${n} sent you a ${t}`,
   beat: (n) => `${n} lit the lamp for you`,
   thinking: (n) => `${n} is thinking of you`,
-  quiet: (n) => `${n}'s been quiet this morning. Send a voice note?`,
+  quiet: (n) => `${n}'s been quiet this morning. Send a voice memory?`,
   ask: (n) => `${n} asked you something`,
   story: (n) => `${n} would like a story`,
   help: (n) => `${n} asked for help`,
@@ -33,7 +33,7 @@ const EN: Words = {
 };
 
 const HI_LATN: Words = {
-  voice: (n, t) => `${n} ne aapko ${t === "voice note" ? "voice note bheja" : t === "photo" ? "photo bheji" : "video bheja"}`,
+  voice: (n, t) => `${n} ne aapko ${t === "voice memory" ? "voice note bheja" : t === "photo" ? "photo bheji" : "video bheja"}`,
   beat: (n) => `${n} ne aapke liye diya jalaya`,
   thinking: (n) => `${n} aapke baare mein soch rahe hain`,
   quiet: (n) => `${n} aaj subah se shaant hain. Ek voice note bhejein?`,
@@ -47,7 +47,7 @@ const HI_LATN: Words = {
 };
 
 const HI_DEVA: Words = {
-  voice: (n, t) => `${n} ने आपको ${t === "voice note" ? "वॉइस नोट भेजा" : t === "photo" ? "फ़ोटो भेजी" : "वीडियो भेजा"}`,
+  voice: (n, t) => `${n} ने आपको ${t === "voice memory" ? "वॉइस नोट भेजा" : t === "photo" ? "फ़ोटो भेजी" : "वीडियो भेजा"}`,
   beat: (n) => `${n} ने आपके लिए दिया जलाया`,
   thinking: (n) => `${n} आपके बारे में सोच रहे हैं`,
   quiet: (n) => `${n} आज सुबह से शांत हैं। एक वॉइस नोट भेजें?`,
@@ -70,5 +70,5 @@ export function wordsFor(lang: string | null | undefined): Words {
 export const PUSH_TITLE = "Nearer";
 
 export function thingOf(type: string): Thing {
-  return type === "audio" ? "voice note" : type === "video" ? "video" : "photo";
+  return type === "audio" ? "voice memory" : type === "video" ? "video" : "photo";
 }

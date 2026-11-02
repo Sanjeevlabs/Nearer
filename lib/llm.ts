@@ -216,6 +216,45 @@ const FALLBACK_TRANSLATION: Translation = {
 };
 
 const KNOWN_EN_TO_HI_DEVA: Array<[RegExp, string]> = [
+  // Prompts an elder is asked to tell or answer (Stories, today's question), so
+  // Dadi reads them in Hindi in the demo. Mock mode only; live mode asks Muse.
+  // "$1" keeps a family name as it is.
+  [/^One thing you miss about (.+)$/i, "$1 की एक बात जो आपको याद आती है"],
+  [/^The monkey and the crocodile$/i, "बंदर और मगरमच्छ"],
+  [/^The thirsty crow$/i, "प्यासा कौआ"],
+  [/^The lion and the mouse$/i, "शेर और चूहा"],
+  [/^The tortoise who talked too much$/i, "बहुत बोलने वाला कछुआ"],
+  [/^The blue jackal$/i, "नीला सियार"],
+  [/^The hare and the lion in the well$/i, "खरगोश और कुएँ वाला शेर"],
+  [/^The goose with golden feathers$/i, "सुनहरे पंखों वाली हंसिनी"],
+  [/^The elephant and the thin rope$/i, "हाथी और पतली रस्सी"],
+  [/^A story only you know$/i, "एक कहानी जो सिर्फ़ आपके पास है"],
+  [/^Where you grew up, and what the street sounded like$/i, "आप कहाँ पले-बढ़े, और वहाँ की गली कैसी सुनाई देती थी"],
+  [/^How the two of you met$/i, "आप दोनों कैसे मिले"],
+  [/^A hard year, and how the family came through$/i, "एक मुश्किल साल, और परिवार उससे कैसे निकला"],
+  [/^The day (.+) was born$/i, "जिस दिन $1 का जन्म हुआ"],
+  [/^Where your own grandparents lived$/i, "आपके अपने दादा-दादी कहाँ रहते थे"],
+  [/^Your first job, and your first pay$/i, "आपकी पहली नौकरी, और पहली तनख़्वाह"],
+  [/^A time you were really scared, and what got you through$/i, "जब आप सच में डर गए थे, और किसने हिम्मत दी"],
+  [/^Your wedding day, including what went wrong$/i, "आपकी शादी का दिन, और उस दिन क्या गड़बड़ हुई"],
+  [/^How (.+) got their name$/i, "$1 का नाम कैसे रखा गया"],
+  [/^The day the family moved, or you left home for the first time$/i, "जिस दिन परिवार ने घर बदला, या आपने पहली बार घर छोड़ा"],
+  [/^Something precious you lost, and what came after$/i, "कोई क़ीमती चीज़ जो खो गई, और उसके बाद क्या हुआ"],
+  [/^A festival from your childhood, and what made it special$/i, "बचपन का एक त्योहार, और उसमें क्या ख़ास था"],
+  [/^A dish your mother made, and what it tasted like$/i, "आपकी माँ का बनाया एक पकवान, और उसका स्वाद"],
+  [/^A teacher you never forgot$/i, "एक शिक्षक जिन्हें आप कभी नहीं भूले"],
+  [/^A time you were proud of (.+)$/i, "जब आपको $1 पर गर्व हुआ"],
+  [/^A mistake you made, and what you learned$/i, "आपसे हुई एक ग़लती, और उससे क्या सीखा"],
+  [/^Someone who helped the family when it needed help$/i, "कोई जिसने मुश्किल में परिवार की मदद की"],
+  [/^The first time you held (.+)$/i, "जब आपने पहली बार $1 को गोद में लिया"],
+  [/^How you kept in touch with family before phones$/i, "फ़ोन से पहले आप परिवार से कैसे जुड़े रहते थे"],
+  [/^A time the whole family laughed until they cried$/i, "जब पूरा परिवार हँसते-हँसते रो पड़ा"],
+  [/^The day you got lost at the fair$/i, "जिस दिन आप मेले में खो गए थे"],
+  [/^What Papa was like at my age$/i, "मेरी उम्र में पापा कैसे थे"],
+  [/^An animal that lived near your home$/i, "आपके घर के पास रहने वाला एक जानवर"],
+  [/^A story your grandmother told you$/i, "आपकी दादी-नानी की सुनाई एक कहानी"],
+  [/^The naughtiest thing you ever did$/i, "आपकी सबसे बड़ी शरारत"],
+  [/^A lullaby you sang to your children$/i, "अपने बच्चों को सुनाई एक लोरी"],
   [/birthday song/i, "परिवार ने मिलकर जन्मदिन का गीत गाया।"],
   [/courtyard game/i, "आँगन का खेल, पूरे जोश में सुनाया।"],
   [/morning blessing|morning prayer/i, "सुबह की दुआ — आज का दिन अच्छा हो।"],
@@ -323,7 +362,7 @@ async function mockTranslate(text: string, targetLang: string): Promise<{ json: 
   if (target !== "en" && target !== "hi-latn" && target !== "hi-deva") return { json: { text, language: target }, cost: 0 };
   if (target === "hi-deva") {
     for (const [re, hi] of KNOWN_EN_TO_HI_DEVA) {
-      if (re.test(text)) return { json: { text: hi, language: "hi-deva" }, cost: 0 };
+      if (re.test(text)) return { json: { text: hi.includes("$1") ? text.trim().replace(re, hi) : hi, language: "hi-deva" }, cost: 0 };
     }
     // Unknown text: give the family's own words back rather than a made-up
     // phrase (mock mode has no model; live mode translates with Muse).

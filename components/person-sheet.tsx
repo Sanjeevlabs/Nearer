@@ -89,7 +89,7 @@ export function PersonSheet({
           )}
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button type="button" onClick={onTalk} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-tint text-body font-semibold text-ink">
-              <Icon name="mic" size={19} /> Voice note
+              <Icon name="mic" size={19} /> Voice memory
             </button>
             <button type="button" onClick={onCall} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink">
               <Icon name="video" size={19} /> Call

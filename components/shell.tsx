@@ -146,7 +146,7 @@ function Dock() {
           >
             <div data-ui="dock" className="frost glass-pill flex items-center gap-1 p-1.5">
               {others.length ? (
-                <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice note to ${callName(pagePerson)}` : "Voice note"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink">
+                <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice memory to ${callName(pagePerson)}` : "Voice memory"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink">
                   <Icon name="mic" size={23} strokeWidth={1.9} />
                 </button>
               ) : (

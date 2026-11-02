@@ -16,7 +16,7 @@ interface PushSettingsView {
 
 type Key = keyof PushSettingsView["settings"];
 const CATEGORIES: { key: Key; label: string; hint: string }[] = [
-  { key: "voice", label: "Voice notes, photos and videos for me", hint: "When someone sends one straight to you." },
+  { key: "voice", label: "Voice memories, photos and videos for me", hint: "When someone sends one straight to you." },
   { key: "lamp", label: "The lamp", hint: "When someone lights it for you or sends a heartbeat." },
   { key: "asks", label: "Questions and requests", hint: "When someone asks you something, or a child asks for a story." },
   { key: "digest", label: "A morning summary", hint: "One note around 8 with the smaller things, like a blessing or a call tomorrow." },

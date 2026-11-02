@@ -59,7 +59,7 @@ export function TraceView() {
       <SectionTitle>Recent steps</SectionTitle>
       {failed && <EmptyLine>Activity is unavailable offline.</EmptyLine>}
       {data === null && !failed && <div className="skeleton h-40 rounded-card" aria-busy="true" />}
-      {data && calls.length === 0 && <EmptyLine>Nothing yet. Teach a recipe or record a voice note and Muse will help.</EmptyLine>}
+      {data && calls.length === 0 && <EmptyLine>Nothing yet. Teach a recipe or record a voice memory and Muse will help.</EmptyLine>}
       <ol className="m-0 list-none p-0">
         {calls.map((c) => (
           <li key={c.id} className="border-b border-[var(--line)] py-3">

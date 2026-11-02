@@ -58,7 +58,7 @@ export function giftsFor(
           : `heard your advice on “${answer.text.replace(/\?$/, "")}”`
         : recipe
           ? `listened to how you make ${recipe.title}`
-          : "heard your voice note";
+          : "heard your voice memory";
     out.push({ id: `heard-${p.id}`, byId: p.memberId, at: p.playedAt, text, href: story ? "/stories" : answer ? "/advice" : recipe ? `/kitchen/${recipe.id}` : "/lane" });
   }
   return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);

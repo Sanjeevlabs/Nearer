@@ -182,11 +182,11 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
           <SectionTitle>Voice and video</SectionTitle>
           <div className="space-y-2">
             {voices.length > 0 && (
-              <select className={cn(field, "bg-surface")} value={d.voiceCardId ?? ""} onChange={(e) => set("voiceCardId", e.target.value || null)} aria-label="Voice note">
-                <option value="">No voice note</option>
+              <select className={cn(field, "bg-surface")} value={d.voiceCardId ?? ""} onChange={(e) => set("voiceCardId", e.target.value || null)} aria-label="Voice memory">
+                <option value="">No voice memory</option>
                 {voices.map((c) => (
                   <option key={c.id} value={c.id}>
-                    🎙 {c.caption || c.transcript.slice(0, 40) || "Voice note"}
+                    🎙 {c.caption || c.transcript.slice(0, 40) || "Voice memory"}
                   </option>
                 ))}
               </select>

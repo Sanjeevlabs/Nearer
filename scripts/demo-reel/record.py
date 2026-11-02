@@ -297,8 +297,8 @@ def shot6(c: Clip) -> None:
     c.page.goto("/")
     window_ready(c)
     c.scroll_to("[data-ui=window-voice]", top=420, ms=1100)
-    c.tap("[data-ui=window-voice] button", "Maa's latest voice note play button", after=1400)
-    c.need("[role=dialog][aria-label^='Voice note from']", "the full player with the words")
+    c.tap("[data-ui=window-voice] button", "Maa's latest voice memory play button", after=1400)
+    c.need("[role=dialog][aria-label^='Voice memory from']", "the full player with the words")
     c.hold_until(c.spec["dur"])
 
 
@@ -351,7 +351,7 @@ def shot9(c: Clip) -> None:
         c.pause(1500)
         c.close_sheet() if c.page.locator("[role=dialog] button[aria-label=Close]").count() else c.page.keyboard.press("Escape")
     else:
-        c.notes.append("TODO: no 'Reply by voice' item in Arjun's inbox on this build (needs a seeded voice note addressed to him); reply sheet not shown")
+        c.notes.append("TODO: no 'Reply by voice' item in Arjun's inbox on this build (needs a seeded voice memory addressed to him); reply sheet not shown")
         print("  TODO: no 'Reply by voice' in Arjun's inbox; recording the inbox only", flush=True)
     c.hold_until(c.spec["dur"])
 

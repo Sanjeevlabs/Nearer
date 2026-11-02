@@ -66,7 +66,7 @@ describe("one source for the dock dot and the glance tile", () => {
     expect((await waiting()).items.map((i) => i.nudgeId)).not.toContain("later");
   });
 
-  it("playing a voice note clears it from both, and the nudge that points at that card", async () => {
+  it("playing a voice memory clears it from both, and the nudge that points at that card", async () => {
     const sent = await dbAddCard({ id: "v1", familyId: FAM, type: "audio", caption: "Hello", takenAt: new Date(NOW.getTime() - H).toISOString(), authorId: "dadi", addressedTo: "arjun", lang: "en" });
     await putDoc(FAM, "nudge", { ...nudge("n-card", "heard", new Date(NOW.getTime() - H).toISOString()), href: `/home?card=${sent.id}` });
     let w = await waiting();
@@ -80,7 +80,7 @@ describe("one source for the dock dot and the glance tile", () => {
     expect(await glance()).toEqual(w.top);
   });
 
-  it("answering the sender clears the voice note", async () => {
+  it("answering the sender clears the voice memory", async () => {
     await dbAddCard({ id: "v2", familyId: FAM, type: "audio", caption: "Hi", takenAt: new Date(NOW.getTime() - 2 * H).toISOString(), authorId: "dadi", addressedTo: "arjun", lang: "en" });
     expect((await waiting()).items.some((i) => i.kind === "voice")).toBe(true);
     await dbAddCard({ id: "v3", familyId: FAM, type: "audio", caption: "Reply", takenAt: new Date(NOW.getTime() - H).toISOString(), authorId: "arjun", addressedTo: "dadi", lang: "en" });

@@ -20,8 +20,8 @@ export interface SinceInput {
   limit?: number;
 }
 
-const THING: Record<string, string> = { audio: "voice note", photo: "photo", video: "video" };
-const SENT: Record<string, string> = { audio: "sent a voice note", photo: "shared a photo", video: "shared a video" };
+const THING: Record<string, string> = { audio: "voice memory", photo: "photo", video: "video" };
+const SENT: Record<string, string> = { audio: "sent a voice memory", photo: "shared a photo", video: "shared a video" };
 
 export function sinceLines(i: SinceInput): string[] {
   const from = Date.parse(i.at);

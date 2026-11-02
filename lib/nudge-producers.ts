@@ -6,7 +6,7 @@ import { getDoc } from "./family-docs";
 import type { Card } from "./schemas";
 import { tryNudge } from "./nudges";
 
-const what = (c: Pick<Card, "type">) => (c.type === "audio" ? "voice note" : c.type === "video" ? "video" : "photo");
+const what = (c: Pick<Card, "type">) => (c.type === "audio" ? "voice memory" : c.type === "video" ? "video" : "photo");
 
 /** Someone listened to the card: its author hears "Maa heard your voice note". */
 export async function nudgeHeard(familyId: string, card: Pick<Card, "id" | "type" | "authorId">, actorId: string): Promise<void> {

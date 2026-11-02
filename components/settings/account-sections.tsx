@@ -279,7 +279,7 @@ function NudgeForm({ initial, hasEmail, reload, onMessage }: { initial: NudgeDra
       </label>
       <div className="mt-3 rounded-[22px] bg-surface px-4 py-4">
         <span className="block text-body font-medium">Nudges</span>
-        <span className="block text-footnote text-ink-soft">Small notes like &ldquo;Maa heard your voice note&rdquo;. Never more than three a week.</span>
+        <span className="block text-footnote text-ink-soft">Small notes like &ldquo;Maa heard your voice memory&rdquo;. Never more than three a week.</span>
         <div role="group" aria-label="Nudges" className="mt-3 grid grid-cols-3 gap-1 rounded-full bg-tint p-1">
           {NUDGE_CHOICES.map(([label, n]) => (
             <button key={label} type="button" aria-pressed={d.maxPerWeek === n} onClick={() => form.set({ maxPerWeek: n })} className={cn("press h-11 rounded-full text-body font-semibold", d.maxPerWeek === n ? "bg-white text-ink shadow-sm" : "text-ink-soft")}>

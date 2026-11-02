@@ -93,14 +93,17 @@ const ICONS = {
   bell: L.Bell,
   info: L.Info,
   question: L.CircleHelp,
+  star: L.Star,
+  textSize: L.ALargeSmall,
+  search: L.Search,
 } satisfies Record<string, L.LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
 const SOLID = new Set<IconName>(["play", "pause", "stop"]);
 
-export function Icon({ name, size = 22, className, strokeWidth = 2 }: { name: IconName; size?: number; className?: string; strokeWidth?: number }) {
+export function Icon({ name, size = 22, className, strokeWidth = 2, solid }: { name: IconName; size?: number; className?: string; strokeWidth?: number; solid?: boolean }) {
   const C = ICONS[name];
-  return <C size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" fill={SOLID.has(name) ? "currentColor" : "none"} />;
+  return <C size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" fill={(solid ?? SOLID.has(name)) ? "currentColor" : "none"} />;
 }
 
 /* ---------------------------------------------------------------- photo */

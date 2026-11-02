@@ -83,7 +83,7 @@ export interface WaitingInput {
   guardians?: Record<string, string[]>;
 }
 
-const THING: Record<string, string> = { audio: "voice note", photo: "photo", video: "video" };
+const THING: Record<string, string> = { audio: "voice memory", photo: "photo", video: "video" };
 /** What a question asks for, to follow "asked you". */
 const ASK: Record<string, string> = { story: "for a story", recipe: "for a recipe", wisdom: "for advice", blessing: "for a blessing", song: "for a song", place: "about a place" };
 const ASK_HREF: Record<string, string> = { story: "/stories", recipe: "/kitchen", wisdom: "/advice", blessing: "/advice", song: "/", place: "/" };

@@ -2,7 +2,7 @@
 .env.*
 !.env.example
 qa/
-node_modules/
+node_modules
 .next/
 .npm-cache/
 .tmp/

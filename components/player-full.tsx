@@ -219,7 +219,7 @@ export default function FullPlayer({
         <motion.div
           role="dialog"
           aria-modal="true"
-          aria-label={`Voice note from ${callName(author)}`}
+          aria-label={`Voice memory from ${callName(author)}`}
           className="fixed inset-0 z-50 overflow-hidden bg-[var(--player-ground)] text-white"
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
@@ -255,7 +255,7 @@ export default function FullPlayer({
             <div className="mt-6 flex items-end justify-between gap-3">
               <div className="min-w-0">
                 <p className="m-0 truncate text-title font-bold leading-tight">{callName(author)}</p>
-                <p className="m-0 mt-0.5 text-body text-white/65">{translated ? "Translated for you" : "Voice note"}</p>
+                <p className="m-0 mt-0.5 text-body text-white/65">{translated ? "Translated for you" : "Voice memory"}</p>
                 {/* "How to listen": the server adds it only for the people this note was sent to. */}
                 {current.listen && (
                   <p data-ui="listen-label" className="m-0 mt-0.5 text-footnote text-white/80">
@@ -263,7 +263,7 @@ export default function FullPlayer({
                   </p>
                 )}
               </div>
-              {current.authorId && current.authorId !== viewer.id && <RemindMe aboutId={current.authorId} href={`/lane?card=${encodeURIComponent(current.id)}`} what={(current.caption || "their voice note").slice(0, 80)} tone="dark" className="shrink-0" />}
+              {current.authorId && current.authorId !== viewer.id && <RemindMe aboutId={current.authorId} href={`/lane?card=${encodeURIComponent(current.id)}`} what={(current.caption || "their voice memory").slice(0, 80)} tone="dark" className="shrink-0" />}
             </div>
 
             <div className="mt-4">

@@ -10,8 +10,10 @@ inside real memory cards, which must only show the family's own uploads.
 - `home-courtyard.jpg`, `home-balcony.jpg`, `home-window.jpg` (generated with
   `META_API_KEY=... node scripts/gen-courtyard.mjs`, then
   `node scripts/demo-variants.mjs` for the 390/780 WebP widths): photos of a
-  home with no people, 1024 square. They are only used when a viewer picks the
-  "Photo" mode for their first screen, and as demo memory photos. The first
+  home with no people, 1024 square. Used when a viewer picks the "Photo" mode
+  for their first screen, as demo memory photos, and as the courtyard header's
+  default home when a member has set no home photo of their own
+  (`home-courtyard` for the Sharma side, `home-balcony` for the Iyer side). The first
   screen itself is drawn (`lib/hero.ts` picks the renderer) and nothing is
   painted before the app knows which screen to show.
 - The old `courtyard.jpg` (an arched door) was retired on 2 Nov 2026; empty

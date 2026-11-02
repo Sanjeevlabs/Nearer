@@ -53,12 +53,12 @@ afterEach(() => vi.useRealTimers());
 const voiceCard = (authorAs: string, addressedTo: string | null) =>
   cardPost(post("/api/cards", { type: "audio", caption: "hello", lang: "en", takenAt: new Date().toISOString(), addressedTo }, authorAs));
 
-describe("a voice note sent to someone", () => {
+describe("a voice memory sent to someone", () => {
   it("pushes the people it is addressed to, never the sender, deep-linking to the card", async () => {
     const res = await json<{ card: { id: string } }>(await voiceCard("dadi", "arjun,dadi"));
     await pushIdle();
     expect(outbox).toHaveLength(1);
-    expect(outbox[0]).toMatchObject({ familyId: FAM, memberId: "arjun", msg: { title: "Nearer", body: "Maa sent you a voice note", url: `/lane?card=${res.card.id}`, tag: `voice-${res.card.id}`, urgency: "high" } });
+    expect(outbox[0]).toMatchObject({ familyId: FAM, memberId: "arjun", msg: { title: "Nearer", body: "Maa sent you a voice memory", url: `/lane?card=${res.card.id}`, tag: `voice-${res.card.id}`, urgency: "high" } });
   });
 
   it("a note to the whole family (no addressee) pushes nobody", async () => {
@@ -147,7 +147,7 @@ describe("quiet hours, six a day, and the morning summary", () => {
     expect(outbox).toHaveLength(6);
     // Next morning's run delivered one nudge as well: 1 + 2 held = 3 things.
     const next = new Date("2026-10-29T12:30:00.000Z");
-    expect(await pushMorning(FAM, [arjun], new Map([["arjun", ["Dadi heard your voice note"]]]), next)).toBe(1);
+    expect(await pushMorning(FAM, [arjun], new Map([["arjun", ["Dadi heard your voice memory"]]]), next)).toBe(1);
     expect(outbox[outbox.length - 1].msg.body).toBe("3 things from your family");
   });
 
@@ -168,8 +168,8 @@ describe("quiet hours, six a day, and the morning summary", () => {
   it("the daily nudge run pushes one summary per person, in the same run that delivers the nudges", async () => {
     for (const id of ["nudge-demo-heard", "nudge-demo-occasion"]) await deleteDoc(FAM, "nudge", id); // the demo seeds two for Arjun
     const members = await dbListMembers(FAM);
-    await enqueueNudge(FAM, { toMemberId: "arjun", kind: "heard", text: "{m:dadi} heard your voice note", href: "/home?card=a", actorId: "dadi" }, new Date("2026-10-27T10:00:00Z"));
-    await enqueueNudge(FAM, { toMemberId: "arjun", kind: "blessed", text: "{m:dadi} blessed your voice note", href: "/home?card=b", actorId: "dadi" }, new Date("2026-10-27T10:01:00Z"));
+    await enqueueNudge(FAM, { toMemberId: "arjun", kind: "heard", text: "{m:dadi} heard your voice memory", href: "/home?card=a", actorId: "dadi" }, new Date("2026-10-27T10:00:00Z"));
+    await enqueueNudge(FAM, { toMemberId: "arjun", kind: "blessed", text: "{m:dadi} blessed your voice memory", href: "/home?card=b", actorId: "dadi" }, new Date("2026-10-27T10:01:00Z"));
     await deliverDueNudges(FAM, members, MORNING_NY);
     expect(bodies("arjun")).toEqual(["2 things from your family"]);
     // Nothing left to deliver: nothing more to say.
@@ -183,7 +183,7 @@ describe("quiet hours, six a day, and the morning summary", () => {
     return import("@/lib/push/copy").then(({ wordsFor }) => {
       for (const lang of ["en", "hi-latn", "hi-deva"]) {
         const w = wordsFor(lang);
-        const all = [w.voice("A", "voice note"), w.voice("A", "photo"), w.voice("A", "video"), w.beat("A"), w.ask("A"), w.story("A"), w.help("A"), w.overdue("A"), w.digest(3), w.digestOne, w.test].join(" ");
+        const all = [w.voice("A", "voice memory"), w.voice("A", "photo"), w.voice("A", "video"), w.beat("A"), w.ask("A"), w.story("A"), w.help("A"), w.overdue("A"), w.digest(3), w.digestOne, w.test].join(" ");
         expect(all).not.toMatch(/streak|days? (ago|since)|haven.t (opened|visited)|miss(ed)? you|inactive|दिन से|din se/i);
       }
     });

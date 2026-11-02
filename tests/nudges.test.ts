@@ -18,7 +18,7 @@ const FAM = "demo-family";
 // Wed 28 Oct 2026, 09:00 UTC (the cron's hour).
 const NOW = new Date("2026-10-28T09:00:00.000Z");
 const mine = (to: string) => listDocs(FAM, "nudge").then((l) => l.filter((n) => n.toMemberId === to));
-const base = { kind: "heard" as const, text: "{m:dadi} heard your voice note" };
+const base = { kind: "heard" as const, text: "{m:dadi} heard your voice memory" };
 
 beforeEach(async () => {
   resetDemo();
@@ -147,7 +147,7 @@ describe("producers never notify the actor", () => {
     await nudgeHeard(FAM, card, "arjun");
     const [n] = await mine("dadi");
     expect(n.kind).toBe("heard");
-    expect(renderNudgeText(n.text, await dbListMembers(FAM))).toBe("Arjun heard your voice note");
+    expect(renderNudgeText(n.text, await dbListMembers(FAM))).toBe("Arjun heard your voice memory");
     expect(n.text).not.toMatch(/\d/); // no counts
   });
 
@@ -240,7 +240,7 @@ describe("api", () => {
     await enqueueNudge(FAM, { ...base, toMemberId: "kavya", href: "/a" }, new Date());
     const list = (await (await nudgesGET(authedGet("http://t/api/nudges", "arjun"))).json()) as { nudges: { id: string; text: string; waiting: boolean; seen: boolean }[] };
     const seed = list.nudges.map((n) => n.text);
-    expect(seed).toContain("Maa heard your voice note"); // seeded demo ones + this one, names resolved
+    expect(seed).toContain("Maa heard your voice memory"); // seeded demo ones + this one, names resolved
     expect(list.nudges.every((n) => n.waiting)).toBe(true);
     const out = (await (await seenPOST(authedJson("http://t/api/nudges/seen", { ids: "all" }, "arjun"))).json()) as { seen: number };
     expect(out.seen).toBe(list.nudges.length);

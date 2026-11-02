@@ -28,9 +28,9 @@ by a person before the family sees it.
 |---|---|---|---|
 | Add sheet, photo or video | Writes a caption from what is visible and dates it (photo metadata first, Muse only as a fallback, never the future) | `muse-spark-1.3` vision | `app/api/cards/route.ts`, `lib/dating.ts` |
 | Add sheet, a single photo | **"Old photo? Let Muse restore it"**: scratches and fading cleaned, faces kept; original and restored side by side; Keep restored / Keep original | `muse-image-1.0` | `components/muse-restore.tsx`, `app/api/muse/restore` |
-| Voice notes, everywhere | Writes down every voice note, wish, blessing, story and request, with timings for the words-along view | `muse-voice-transcribe-1.0` | `lib/llm.ts`, `app/api/transcribe` |
+| Voice memories, everywhere | Writes down every voice memory, wish, blessing, story and request, with timings for the words-along view | `muse-voice-transcribe-1.0` | `lib/llm.ts`, `app/api/transcribe` |
 | Anything someone said or wrote | Reaches each person in their own language (29 languages), the whole card at once | `muse-spark-1.3` | `app/api/translate`, `lib/kitchen.ts` |
-| Morning letter | Suggests holding a voice note until 7:30 AM their time when it is night where they are (a rule on their time zone, no model) | none | `components/add-sheet.tsx` |
+| Morning letter | Suggests holding a voice memory until 7:30 AM their time when it is night where they are (a rule on their time zone, no model) | none | `components/add-sheet.tsx` |
 | Family page, Today | Chooses today's shared question for both homes | `muse-spark-1.3` | `lib/today-server.ts` |
 | Family page, "Now in the family" | **"Muse made this for you"**: at most one card, weekly: a portrait of all of you, or "this day, N years ago" from a real photo. ✕ hides it for two weeks | none (offer only) | `components/muse-slot.tsx`, `lib/muse-slot.ts` |
 | Family room, Family portrait | **Paints one group portrait** from profile photos (or a chosen family photo each), in watercolour, oil, pencil or a festive illustration. Preview, then Keep or Try again | `muse-image-1.0` | `app/portrait`, `app/api/muse/portrait`, `lib/muse-portrait.ts` |

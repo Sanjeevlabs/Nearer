@@ -48,7 +48,7 @@ export function RemindersSection() {
           Couldn&rsquo;t load them. Try again
         </button>
       )}
-      {data && list.length === 0 && <p className="m-0 text-callout text-ink-soft">None yet. On a voice note or an event from someone, tap &ldquo;Remind me to ask&rdquo;.</p>}
+      {data && list.length === 0 && <p className="m-0 text-callout text-ink-soft">None yet. On a voice memory or an event from someone, tap &ldquo;Remind me to ask&rdquo;.</p>}
       <ul className="m-0 list-none space-y-2 p-0">
         {list.map((r) => (
           <li key={r.id} className="rounded-card bg-surface p-3" style={{ boxShadow: "var(--surface-edge)" }}>

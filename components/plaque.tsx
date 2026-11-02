@@ -102,7 +102,7 @@ export function VoicePlaque({ card, ratio = "4/3", priority = false }: { card: C
           <button
             type="button"
             onClick={() => (active ? toggle() : play(card))}
-            aria-label={playing ? "Pause" : `Play ${callName(author)}'s voice note`}
+            aria-label={playing ? "Pause" : `Play ${callName(author)}'s voice memory`}
             className="press grid h-[60px] w-[60px] place-items-center rounded-full bg-accent text-accent-ink"
           >
             <Icon name={playing ? "pause" : "play"} size={22} />

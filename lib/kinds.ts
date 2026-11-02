@@ -405,6 +405,8 @@ export const WindowViewSchema = z.object({
   homePhoto: z.string().max(300).nullable().default(null),
   /** With a home photo: let family photos cross-fade in now and then. */
   mixAlbum: z.boolean().default(true),
+  /** "My favourites": the photos and voice memories this person starred (card ids), newest star first. Only theirs. */
+  starred: z.array(id).max(500).default([]),
   updatedAt: iso,
 });
 
