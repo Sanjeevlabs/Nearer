@@ -370,28 +370,29 @@ def doors(base: str, browser, problems: list[str]) -> None:
         problems.append(f"doors: arjun sign-in failed {res.status}")
         return
     family = res.json()["familyId"]
-    got = a.request.get("/api/members")
-    people = got.json().get("members", []) if got.ok else []
+    # Through a page (the browser's own cookie jar and origin), as the app does.
+    pa = a.new_page()
+    pa.goto("/gather/play", wait_until="load")
+    call = "async ([url, body]) => { const r = await fetch(url, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}); return { ok: r.ok, status: r.status, body: await r.json().catch(() => null) }; }"
+    got = pa.evaluate(call, ["/api/members", None])
+    people = (got["body"] or {}).get("members", []) if got["ok"] else []
     ids = {}
     for seed in ("dadi", "leo"):
         hit = next((m for m in people if m.get("familyId", family) == family and (m["id"] == seed or m["id"].endswith("-" + seed))), None)
         if not hit:
-            problems.append(f"doors: no {seed} in the demo family ({got.status}, {len(people)} people: {[m['id'] for m in people][:8]})")
+            problems.append(f"doors: no {seed} in the demo family ({got['status']}, {len(people)} people)")
             return
         ids[seed] = hit["id"]
-        made_pass = a.request.post("/api/session/pass", data=json.dumps({"memberId": hit["id"]}), headers={"content-type": "application/json"})
-        if not made_pass.ok:
-            problems.append(f"doors: demo pass for {seed} failed {made_pass.status}")
+        made_pass = pa.evaluate(call, ["/api/session/pass", {"memberId": hit["id"]}])
+        if not made_pass["ok"]:
+            problems.append(f"doors: demo pass for {seed} failed {made_pass['status']}")
             return
-        redeemed = ctxs[seed].request.get(made_pass.json()["path"])
-        if not redeemed.ok:
-            problems.append(f"doors: redeeming {seed}'s pass failed {redeemed.status}")
-            return
+        landing = ctxs[seed].new_page()
+        landing.goto(made_pass["body"]["path"], wait_until="load")
+        landing.close()
     try:
         # Writes go through the page (its own cookies and origin), as the app's own buttons do.
         post = "async (b) => { const r = await fetch('/api/sit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) }); return { ok: r.ok, status: r.status, body: await r.json().catch(() => null) }; }"
-        pa = a.new_page()
-        pa.goto("/gather/play", wait_until="load")
         made = pa.evaluate(post, {"action": "knock", "activity": "chai", "invites": [ids["dadi"]]})
         if not made["ok"]:
             problems.append(f"doors: opening the door failed {made['status']}")
