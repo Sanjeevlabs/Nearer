@@ -39,7 +39,7 @@ export function ConnectedApps() {
     return (
       <div id="connected-apps" className="rounded-[22px] bg-surface px-4 py-5 text-center">
         <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load your apps.</p>
-        <button type="button" onClick={() => void reload()} className="press mt-2 h-11 rounded-full bg-white px-4 text-callout font-semibold">
+        <button type="button" onClick={() => void reload()} className="press mt-2 h-11 rounded-full bg-surface px-4 text-callout font-semibold">
           Try again
         </button>
       </div>
@@ -62,7 +62,7 @@ export function ConnectedApps() {
           <ul className="m-0 list-none divide-y divide-[var(--line)] rounded-[22px] bg-surface p-0 px-4">
             {g.rows.map((r) => (
               <li key={r.key} data-status={r.status} className="flex min-h-[64px] items-center gap-3 py-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-body font-semibold text-ink" aria-hidden="true">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-body font-semibold text-ink" aria-hidden="true">
                   {r.name.slice(0, 1)}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -75,7 +75,7 @@ export function ConnectedApps() {
                   </span>
                 </span>
                 {r.status === "connected" && r.accountId && (
-                  <button type="button" disabled={busy === r.accountId} onClick={() => void disconnect(r.accountId as string)} aria-label={`Disconnect ${r.name}`} className="press h-11 rounded-full bg-white px-4 text-callout font-semibold text-ink-soft disabled:opacity-40">
+                  <button type="button" disabled={busy === r.accountId} onClick={() => void disconnect(r.accountId as string)} aria-label={`Disconnect ${r.name}`} className="press h-11 rounded-full bg-surface px-4 text-callout font-semibold text-ink-soft disabled:opacity-40">
                     Disconnect
                   </button>
                 )}
@@ -85,7 +85,7 @@ export function ConnectedApps() {
                   </a>
                 )}
                 {r.status === "link" && r.url && (
-                  <a href={r.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${r.name}`} className="press grid h-11 w-11 place-items-center rounded-full bg-white text-ink-soft">
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${r.name}`} className="press grid h-11 w-11 place-items-center rounded-full bg-surface text-ink-soft">
                     <Icon name="external" size={18} />
                   </a>
                 )}

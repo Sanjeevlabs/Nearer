@@ -40,7 +40,7 @@ export function WindowOptions({ onMessage }: { onMessage?: (m: string) => void }
     return (
       <div role="alert" className="mb-6 rounded-[22px] bg-surface px-4 py-4 text-callout text-ink-soft">
         Couldn&rsquo;t load your first screen.
-        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-white px-4 text-callout font-semibold text-ink">
+        <button type="button" onClick={() => void reload()} className="press ml-2 h-11 rounded-full bg-surface px-4 text-callout font-semibold text-ink">
           Retry
         </button>
       </div>
@@ -163,7 +163,7 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
                   className={cn("relative h-[44px] w-[52px] shrink-0 rounded-full disabled:opacity-35")}
                 >
                   <span className={cn("absolute inset-x-0 top-[9px] h-[26px] rounded-full transition-colors", on ? "bg-ink" : "bg-black/15")} />
-                  <span className={cn("absolute top-[12px] h-5 w-5 rounded-full bg-white shadow transition-all", on ? "left-[28px]" : "left-[4px]")} />
+                  <span className={cn("absolute top-[12px] h-5 w-5 rounded-full bg-surface shadow transition-all", on ? "left-[28px]" : "left-[4px]")} />
                 </button>
               </li>
             );

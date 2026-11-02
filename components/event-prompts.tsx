@@ -38,7 +38,7 @@ export function EventPrompts({ prompts, onChange, className, kinds }: { prompts?
             <span className="min-w-0 flex-1 text-body font-semibold leading-snug">{p.text}</span>
           </>
         );
-        const row = cn("flex items-center gap-3 rounded-[22px] p-2 pr-2", dark ? "bg-[#1c1b1a] text-white" : "bg-surface text-ink");
+        const row = cn("flex items-center gap-3 rounded-[22px] p-2 pr-2", dark ? "bg-deep text-white" : "bg-surface text-ink");
         if (p.kind !== "suggest") {
           return (
             <li key={p.id}>
@@ -63,7 +63,7 @@ export function EventPrompts({ prompts, onChange, className, kinds }: { prompts?
                 setBusy(null);
                 if (out?.event) router.push(`/gather/${out.event.id}`);
               }}
-              className="press h-10 shrink-0 rounded-full bg-[#1c1b1a] px-4 text-callout font-semibold text-white disabled:opacity-50"
+              className="press h-10 shrink-0 rounded-full bg-deep px-4 text-callout font-semibold text-white disabled:opacity-50"
             >
               {busy === p.id ? "…" : "Plan"}
             </button>

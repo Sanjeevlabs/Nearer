@@ -81,7 +81,7 @@ function Book() {
           ))}
         </nav>
       )}
-      <section aria-label="Cover" className="relative h-[300px] overflow-hidden rounded-[28px] bg-[#1c1b1a] text-white" style={{ boxShadow: "0 24px 50px -24px rgba(60,35,20,.6)" }}>
+      <section aria-label="Cover" className="relative h-[300px] overflow-hidden rounded-[28px] bg-deep text-white" style={{ boxShadow: "0 24px 50px -24px rgba(60,35,20,.6)" }}>
         {photo ? <Photo src={photo} alt="" sizes="440px" priority position="center 28%" /> : <Monogram name={name} size={300} />}
         <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/20 to-black/80" aria-hidden="true" />
         <div className="absolute inset-x-5 bottom-5">

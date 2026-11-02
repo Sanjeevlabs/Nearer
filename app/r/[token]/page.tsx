@@ -143,7 +143,7 @@ export default async function SharedRecipe(props: { params: Promise<{ token: str
       <aside className="mt-10 rounded-hero bg-[linear-gradient(135deg,#1c1712,#3a2a1c)] p-6 text-white">
         <p className="m-0 text-title font-semibold leading-snug">Whose cooking do you miss?</p>
         <p className="m-0 mt-1.5 text-body text-white/80">Nearer keeps your family&rsquo;s recipes in the voices that taught them, private to your family.</p>
-        <Link href="/" className="press mt-4 flex h-12 items-center justify-center rounded-full bg-white text-body font-semibold text-ink no-underline">
+        <Link href="/" className="press mt-4 flex h-12 items-center justify-center rounded-full bg-surface text-body font-semibold text-ink no-underline">
           Start your family on Nearer
         </Link>
       </aside>

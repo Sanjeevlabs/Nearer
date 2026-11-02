@@ -87,7 +87,7 @@ function CircleRow({ title, note, people }: { title: string; note: string; peopl
         <ul className="m-0 grid list-none grid-cols-3 gap-2 px-3 pb-3 p-0">
           {people.map((p) => (
             <li key={p.member.id}>
-              <Link href={`/people/${p.member.id}`} className="press flex flex-col items-center gap-1 rounded-[18px] bg-white px-1 py-3 text-center text-ink no-underline">
+              <Link href={`/people/${p.member.id}`} className="press flex flex-col items-center gap-1 rounded-[18px] bg-surface px-1 py-3 text-center text-ink no-underline">
                 <Avatar src={memberPhoto(p.member)} name={callName(p.member)} size={48} />
                 <span className="max-w-full truncate text-callout font-semibold">{callName(p.member)}</span>
                 {p.label && <span className="max-w-full truncate text-caption text-ink-soft">{p.label}</span>}

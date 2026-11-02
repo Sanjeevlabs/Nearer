@@ -135,7 +135,7 @@ function Tasks({ e, members, viewer, onChange }: { e: FamilyEvent; members: Memb
         return (
           <li key={t.id} className="rounded-[20px] bg-tint p-2">
             <div className="flex items-center gap-2">
-              <button type="button" aria-label={t.done ? `Mark "${t.text}" not done` : `Mark "${t.text}" done`} aria-pressed={t.done} onClick={() => void update(t.id, { done: !t.done })} className={cn("press grid h-10 w-10 shrink-0 place-items-center rounded-full border", t.done ? "border-[#1c1b1a] bg-[#1c1b1a] text-white" : "border-black/20 bg-white")}>
+              <button type="button" aria-label={t.done ? `Mark "${t.text}" not done` : `Mark "${t.text}" done`} aria-pressed={t.done} onClick={() => void update(t.id, { done: !t.done })} className={cn("press grid h-10 w-10 shrink-0 place-items-center rounded-full border", t.done ? "border-[#1c1b1a] bg-deep text-white" : "border-black/20 bg-white")}>
                 {t.done && <Icon name="check" size={18} strokeWidth={2.5} />}
               </button>
               <p className={cn("m-0 min-w-0 flex-1 text-body leading-snug", t.done && "text-ink-faint line-through")}>{t.text}</p>
@@ -147,7 +147,7 @@ function Tasks({ e, members, viewer, onChange }: { e: FamilyEvent; members: Memb
             {assigning === t.id && (
               <div className="no-scrollbar -mx-2 mt-2 flex gap-2 overflow-x-auto px-2 pb-1" role="radiogroup" aria-label="Who does this">
                 {members.map((m) => (
-                  <button key={m.id} type="button" role="radio" aria-checked={m.id === t.ownerId} onClick={() => { setAssigning(null); void update(t.id, { ownerId: m.id }); }} className={cn("press flex shrink-0 flex-col items-center gap-1 rounded-[14px] p-1.5 text-caption font-semibold", m.id === t.ownerId ? "bg-[#1c1b1a] text-white" : "")}>
+                  <button key={m.id} type="button" role="radio" aria-checked={m.id === t.ownerId} onClick={() => { setAssigning(null); void update(t.id, { ownerId: m.id }); }} className={cn("press flex shrink-0 flex-col items-center gap-1 rounded-[14px] p-1.5 text-caption font-semibold", m.id === t.ownerId ? "bg-deep text-white" : "")}>
                     <Avatar src={memberPhoto(m)} name={callName(m)} size={40} />
                     {m.id === viewer.id ? "You" : callName(m)}
                   </button>

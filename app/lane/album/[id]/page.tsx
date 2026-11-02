@@ -53,7 +53,7 @@ export default function AlbumPage() {
   return (
     <div>
       <RoomHeader
-        title=""
+        title={album.title}
         action={
           <ActionMenu
             label="Album options"

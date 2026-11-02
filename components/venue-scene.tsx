@@ -21,7 +21,7 @@ export function VenueScene({ venue, sitters, children }: { venue: Venue; sitters
   const seats = assignSeats(venue, sitters);
   const seated = new Set(seats.keys());
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#1c1b1a]">
+    <div className="relative h-full w-full overflow-hidden bg-deep">
       <Photo src={venue.image} sizes="100vw" priority />
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/55" aria-hidden="true" />
       <ul className="pointer-events-none absolute inset-0 m-0 list-none p-0" aria-label={`Seats in the ${venue.name.toLowerCase()}`}>

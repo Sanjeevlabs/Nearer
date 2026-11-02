@@ -25,6 +25,7 @@
   /* The one accent: deep teal. White on it 5.9:1; on paper 5.5:1. */
   --accent: #1f6f69;
   --accent-ink: #ffffff;
+  --deep: #1b3330; /* the dark panel: Today, a call, a live event (deep teal-ink) */
   --accent-soft: #e2efec; /* selected pill, tint behind an accent icon */
   --accent-soft-ink: #14504b;
   --marigold: var(--accent); /* legacy name: focus, "live" and selected states now use the accent */
@@ -117,6 +118,7 @@
     /* Accent on dark: a lighter teal with dark text (9:1 on paper). */
     --accent: #6fcbc1;
     --accent-ink: #0c1a19;
+    --deep: #20403c;
     --accent-soft: #1f3a37;
     --accent-soft-ink: #a9e6df;
     --marigold-glow: rgba(111, 203, 193, 0.28);

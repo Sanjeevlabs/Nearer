@@ -87,7 +87,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
           <p className="m-0 mt-1 text-callout text-ink-soft">{aboutLine(person)}</p>
         </div>
         {manageable && !editing && (
-          <button type="button" onClick={() => setEditing(true)} className="press h-10 rounded-full bg-white px-4 text-callout font-semibold">
+          <button type="button" onClick={() => setEditing(true)} className="press h-10 rounded-full bg-surface px-4 text-callout font-semibold">
             Edit
           </button>
         )}
@@ -101,11 +101,11 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
         <div className="mt-4 space-y-3">
           <label className="block">
             <span className="mb-1.5 block text-footnote font-medium text-ink-soft">What the family calls them</span>
-            <input className={cn(field, "bg-white")} value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
+            <input className={cn(field, "bg-surface")} value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Generation</span>
-            <select className={cn(field, "bg-white")} value={role} onChange={(e) => setRole(e.target.value as Member["role"])}>
+            <select className={cn(field, "bg-surface")} value={role} onChange={(e) => setRole(e.target.value as Member["role"])}>
               {ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}
@@ -115,7 +115,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
           </label>
           <label className="block">
             <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Where they live</span>
-            <select className={cn(field, "bg-white")} value={tz} onChange={(e) => setTz(e.target.value)}>
+            <select className={cn(field, "bg-surface")} value={tz} onChange={(e) => setTz(e.target.value)}>
               {Array.from(new Set([tz, ...ZONES.map((z) => z.tz)])).map((z) => (
                 <option key={z} value={z}>
                   {placeFromTz(z)}
@@ -124,7 +124,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
             </select>
           </label>
           <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-2">
-            <select aria-label="Birthday month" className={cn(field, "bg-white !px-4")} value={month} onChange={(e) => setMonth(e.target.value)}>
+            <select aria-label="Birthday month" className={cn(field, "bg-surface !px-4")} value={month} onChange={(e) => setMonth(e.target.value)}>
               <option value="">Birthday month</option>
               {MONTHS.map((m, i) => (
                 <option key={m} value={String(i + 1).padStart(2, "0")}>
@@ -132,7 +132,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
                 </option>
               ))}
             </select>
-            <select aria-label="Birthday day" className={cn(field, "bg-white !px-4")} value={day} onChange={(e) => setDay(e.target.value)}>
+            <select aria-label="Birthday day" className={cn(field, "bg-surface !px-4")} value={day} onChange={(e) => setDay(e.target.value)}>
               <option value="">Day</option>
               {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
                 <option key={d} value={d}>
@@ -147,7 +147,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
             <Button className="flex-1" disabled={busy || !name.trim()} onClick={() => void save()}>
               {busy ? "Saving…" : "Save"}
             </Button>
-            <Button variant="secondary" className="flex-1 !bg-white" onClick={() => setEditing(false)}>
+            <Button variant="secondary" className="flex-1 !bg-surface" onClick={() => setEditing(false)}>
               Cancel
             </Button>
           </div>
@@ -170,7 +170,7 @@ export function PersonDetails({ person, onChanged }: { person: Member; onChanged
                 <Button className="flex-1 !bg-[#b42318]" disabled={busy} onClick={() => void remove()}>
                   {busy ? "Removing…" : "Remove"}
                 </Button>
-                <Button variant="secondary" className="flex-1 !bg-white" onClick={() => setConfirm(false)}>
+                <Button variant="secondary" className="flex-1 !bg-surface" onClick={() => setConfirm(false)}>
                   Keep
                 </Button>
               </div>
@@ -209,7 +209,7 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
       {mine.length === 0 && <p className="m-0 text-callout text-ink-soft">Not connected to anyone yet.</p>}
       <ul className="m-0 list-none space-y-1 p-0">
         {mine.map((r) => (
-          <li key={r.id} className="flex items-center justify-between gap-2 rounded-[14px] bg-white px-3 py-2 text-callout">
+          <li key={r.id} className="flex items-center justify-between gap-2 rounded-[14px] bg-surface px-3 py-2 text-callout">
             <span>{line(r)}</span>
             {canEdit && (
               <button
@@ -234,7 +234,7 @@ function Connections({ person, members, relationships, canEdit, canAdd, onChange
         </button>
       )}
       {adding && (
-        <div className="mt-2 rounded-[16px] bg-white p-3">
+        <div className="mt-2 rounded-[16px] bg-surface p-3">
           <p className="m-0 mb-1.5 text-footnote text-ink-soft">{callName(person)} is the</p>
           <div className="flex flex-wrap gap-1.5">
             {LINK_WORDS.map((w) => (

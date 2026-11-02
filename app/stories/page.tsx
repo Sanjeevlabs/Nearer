@@ -131,7 +131,7 @@ function Stories() {
             ))}
           </ol>
           <p className="voice m-0 mt-2 text-body text-white/75">{data.idea.lesson}</p>
-          <button type="button" onClick={() => openAdd("voice", { kind: "story", prompt: data.idea!.title })} className="press mt-3 flex h-11 items-center gap-2 rounded-full bg-surface px-4 text-callout font-semibold text-black">
+          <button type="button" onClick={() => openAdd("voice", { kind: "story", prompt: data.idea!.title })} className="press mt-3 flex h-11 items-center gap-2 rounded-full bg-white px-4 text-callout font-semibold text-black">
             <Icon name="mic" size={17} /> Record it for the children
           </button>
         </section>
@@ -442,7 +442,7 @@ function Bedtime({ stories, cardOf, tellers, onClose }: { stories: Story[]; card
         <p className="m-0 text-callout text-white/70">Stories told by</p>
         <div className="no-scrollbar -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
           {tellers.map((t) => (
-            <button key={t.id} type="button" aria-pressed={teller === t.id} onClick={() => setTeller(t.id)} className={cn("press flex h-12 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-semibold", teller === t.id ? "bg-surface text-[#141c3a]" : "bg-white/10 text-white")}>
+            <button key={t.id} type="button" aria-pressed={teller === t.id} onClick={() => setTeller(t.id)} className={cn("press flex h-12 shrink-0 items-center gap-2 rounded-full pl-1 pr-4 text-body font-semibold", teller === t.id ? "bg-white text-[#141c3a]" : "bg-white/10 text-white")}>
               <Avatar src={memberPhoto(t)} name={callName(t)} size={40} />
               {callName(t)}
             </button>
@@ -458,7 +458,7 @@ function Bedtime({ stories, cardOf, tellers, onClose }: { stories: Story[]; card
           <span className="text-callout text-white/70">Lights out after</span>
           <div className="flex gap-1.5" role="radiogroup" aria-label="Sleep timer">
             {[10, 20, 30, null].map((n) => (
-              <button key={String(n)} type="button" role="radio" aria-checked={sleep === n} onClick={() => { setSleep(n); setEnding(null); }} className={cn("press h-10 rounded-full px-3.5 text-callout font-semibold", sleep === n ? "bg-surface text-[#141c3a]" : "bg-white/10")}>
+              <button key={String(n)} type="button" role="radio" aria-checked={sleep === n} onClick={() => { setSleep(n); setEnding(null); }} className={cn("press h-10 rounded-full px-3.5 text-callout font-semibold", sleep === n ? "bg-white text-[#141c3a]" : "bg-white/10")}>
                 {n === null ? "Off" : `${n} min`}
               </button>
             ))}

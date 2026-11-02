@@ -155,7 +155,7 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
         style={{ left: 0, top: 0, width: KNOB + INSET * 2, height: BAR_H, transform: `translateX(${x}px)`, transition: start.current === null ? "transform 260ms cubic-bezier(.2,.9,.3,1.2)" : "none" }}
       >
         <span className="sr-only">Slide to open the house</span>
-        <span className="grid place-items-center rounded-full bg-white text-ink shadow-[0_6px_18px_rgba(0,0,0,.35)]" style={{ width: KNOB, height: KNOB }} aria-hidden="true">
+        <span className="grid place-items-center rounded-full bg-white text-[#174e4a] shadow-[0_6px_18px_rgba(0,0,0,.35)]" style={{ width: KNOB, height: KNOB }} aria-hidden="true">
           <m.span animate={done ? { rotate: 90 } : { rotate: 0 }} transition={{ duration: 0.2 }} className="grid place-items-center">
             <Icon name={done ? "lockOpen" : "key"} size={19} strokeWidth={2} />
           </m.span>
@@ -394,7 +394,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
           {data && (
             <>
               {/* ONE status line (Safe & sound): everyone is fine, or the one person to look at. Tap a face for their day. */}
-              <section data-ui="window-safe" className={cn(CARD, "flex min-h-[56px] items-center gap-2 py-1 pl-2 pr-1")} style={EDGE} aria-label="Safe and sound">
+              <section data-ui="window-safe" className={cn(CARD, "flex min-h-[56px] items-center gap-2 py-1 pl-2 pr-3")} style={EDGE} aria-label="Safe and sound">
                 {atWindow.length > 0 ? (
                   <>
                     <div className="flex shrink-0 items-center">
@@ -411,9 +411,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                     <button type="button" onClick={() => setOpen(atWindow[status?.subject ?? 0] ?? atWindow[0])} className={cn("press min-h-[44px] min-w-0 flex-1 px-1 text-left text-callout leading-snug", status?.tone === "alarm" ? "font-semibold text-[#c2343a]" : "font-medium text-ink")} suppressHydrationWarning>
                       {status?.text ?? "…"}
                     </button>
-                    <Link href="/safe" aria-label="Check-ins" className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-faint no-underline">
-                      <Icon name="chevron" size={16} />
-                    </Link>
                   </>
                 ) : (
                   <p className="m-0 px-2 py-2 text-callout text-ink-soft">Add the people on the other side, and how they are shows here.</p>

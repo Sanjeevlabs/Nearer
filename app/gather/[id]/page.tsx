@@ -111,7 +111,7 @@ export default function EventPage(props: { params: Promise<{ id: string }> }) {
       <RoomHeader title={e.title} subtitle={`Set up by ${callName(host)}`} action={actions.length ? <ActionMenu actions={actions} /> : undefined} />
 
       {start ? (
-        <section className="relative overflow-hidden rounded-[28px] p-4 text-white" style={{ background: "#1c1b1a" }} aria-label="When">
+        <section className="relative overflow-hidden rounded-[28px] p-4 text-white" style={{ background: "var(--deep)" }} aria-label="When">
           <p className="m-0 text-caption font-semibold uppercase tracking-[0.08em] text-white/55">{live ? "Live now" : startsInLabel(start)}</p>
           <div className="mt-2">
             <EventTimes at={start} members={members} viewer={viewer} ids={participants(e)} tone="dark" />

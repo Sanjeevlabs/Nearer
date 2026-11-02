@@ -281,7 +281,7 @@ def shot4(c: Clip) -> None:
     window_ready(c)
     c.pause(1200)
     c.tap("[data-ui=window-lamp-button]", "the lamp in the scene", before=450, after=900)
-    c.page.wait_for_function("() => /lit it just now/i.test(document.querySelector('[data-ui=window-lamp]')?.textContent || '')", timeout=SELECTOR_TIMEOUT)
+    c.page.wait_for_function("() => /glowing for/i.test(document.querySelector('[data-ui=window-lamp]')?.textContent || '')", timeout=SELECTOR_TIMEOUT)
     c.hold_until(c.spec["dur"])
 
 

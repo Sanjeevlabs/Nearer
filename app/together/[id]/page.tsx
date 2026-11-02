@@ -48,7 +48,7 @@ export default function ProjectPage() {
   return (
     <div>
       <RoomHeader
-        title=""
+        title={p.title}
         action={
           <ActionMenu
             label="Plan options"

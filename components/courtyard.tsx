@@ -68,7 +68,7 @@ function SitSlide() {
     if (out?.knock) router.push(`/call/${out.knock.id}`);
   };
   return (
-    <article className={`flex ${SLIDE_H} flex-col justify-between rounded-[26px] bg-[#1c1b1a] p-4 text-white`}>
+    <article className={`flex ${SLIDE_H} flex-col justify-between rounded-[26px] bg-deep p-4 text-white`}>
       <div className="flex items-center justify-between">
         <p className="m-0 flex items-center gap-2 text-caption uppercase tracking-[0.14em] text-white/60">
           <span className={`h-2 w-2 rounded-full ${knock ? "animate-pulse bg-[#3ccf7a]" : "bg-white/50"}`} />
@@ -89,7 +89,7 @@ function SitSlide() {
       <div className="flex items-center justify-between gap-3">
         <ul className="m-0 flex list-none -space-x-2.5 p-0" aria-label="Awake now">
           {(awake.length ? awake : adults).slice(0, 6).map((mm) => (
-            <li key={mm.id} className="relative rounded-full ring-2 ring-[#1c1b1a]" title={`${callName(mm)} · ${placeFromTz(mm.tz)}`}>
+            <li key={mm.id} className="relative rounded-full ring-2 ring-[var(--deep)]" title={`${callName(mm)} · ${placeFromTz(mm.tz)}`}>
               <Avatar src={memberPhoto(mm)} name={callName(mm)} size={36} />
             </li>
           ))}
@@ -147,7 +147,7 @@ function MyDayChip({ member, onOpen }: { member: Member; onOpen: () => void }) {
       <button type="button" onClick={onOpen} aria-label="Your day: add a photo, a voice note or a line about today" className="press block w-full text-ink">
         <span className="relative mx-auto block h-[68px] w-[68px] rounded-full ring-1 ring-black/15">
           <span className="absolute inset-[3px] overflow-hidden rounded-full bg-surface">{photo ? <Photo src={photo} alt="" sizes="140px" position="center 30%" /> : <Monogram name={callName(member)} size={62} />}</span>
-          <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-[#1c1b1a] text-white ring-2 ring-white" aria-hidden="true">
+          <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-deep text-white ring-2 ring-white" aria-hidden="true">
             <Icon name="plus" size={14} />
           </span>
         </span>
@@ -226,7 +226,7 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   return (
     <div>
       <header data-ui="courtyard-header" className="pt-4">
-        <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-ink">
+        <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-deep">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/window/courtyard-band.svg" alt="" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
           <span className="absolute left-4 top-4 opacity-90" aria-hidden="true">

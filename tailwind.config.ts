@@ -10,6 +10,7 @@ const config: Config = {
         card: "var(--card)",
         well: "var(--well)",
         tint: "var(--tint)",
+        deep: "var(--deep)",
         surface: "var(--surface)",
         ink: "var(--ink)",
         "ink-soft": "var(--ink-soft)",

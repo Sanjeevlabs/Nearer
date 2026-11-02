@@ -51,7 +51,7 @@ export default function GatherPage() {
 
   const canPlan = data?.canPlan ?? viewer.role !== "child";
   const plus = canPlan ? (
-    <button type="button" onClick={() => setSheet({})} aria-label="Plan an event" className="press grid h-11 w-11 place-items-center rounded-full bg-[#1c1b1a] text-white">
+    <button type="button" onClick={() => setSheet({})} aria-label="Plan an event" className="press grid h-11 w-11 place-items-center rounded-full bg-deep text-white">
       <Icon name="plus" />
     </button>
   ) : undefined;
@@ -173,7 +173,7 @@ function ComingUp({ occasions, members, canPlan, onPlan }: { occasions: Upcoming
               </span>
               {who && <Avatar src={memberPhoto(who)} name={callName(who)} size={32} />}
               {canPlan && (
-                <button type="button" onClick={() => onPlan(o)} aria-label={`Plan ${o.label}`} className="press h-11 shrink-0 rounded-full bg-[#1c1b1a] px-4 text-body font-semibold text-white">
+                <button type="button" onClick={() => onPlan(o)} aria-label={`Plan ${o.label}`} className="press h-11 shrink-0 rounded-full bg-deep px-4 text-body font-semibold text-white">
                   Plan
                 </button>
               )}

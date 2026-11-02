@@ -96,7 +96,7 @@ export default function RecipePage() {
   return (
     <div>
       <RoomHeader
-        title=""
+        title={r.title}
         action={
           <div className="flex items-center gap-1">
             <ShareRecipe recipe={data.original} cookName={callName(cook)} photo={cover ? (resolveMediaUrl(cover) ?? cover) : null} />

@@ -79,7 +79,7 @@ export function StoryDoor({ story }: { story: StoryLite }) {
   const { members } = useViewer();
   const teller = members.find((m) => m.id === story.tellerId);
   return (
-    <Link href="/stories" className="flex h-full min-h-[236px] flex-col justify-end gap-3 rounded-[26px] bg-[#1c1b1a] p-4 text-white no-underline">
+    <Link href="/stories" className="flex h-full min-h-[236px] flex-col justify-end gap-3 rounded-[26px] bg-deep p-4 text-white no-underline">
       <Avatar src={memberPhoto(teller)} name={callName(teller)} size={44} ring />
       <span className="min-w-0 flex-1">
         <span className="block text-footnote text-white/70">A story from {callName(teller)}</span>

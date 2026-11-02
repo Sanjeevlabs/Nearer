@@ -47,7 +47,7 @@ export function SideSwitch() {
   const [busy, setBusy] = useState<string | null>(null);
   if (sides.length < 2) return null;
   return (
-    <div className="mt-3 inline-flex rounded-full bg-surface p-1" role="tablist" aria-label="Family side">
+    <div className="mt-3 inline-flex rounded-full bg-well p-1" role="tablist" aria-label="Family side">
       {sides.map((s) => (
         <button
           key={s.familyId}
@@ -60,7 +60,7 @@ export function SideSwitch() {
             setBusy(s.familyId);
             void openSide(s.familyId);
           }}
-          className={cn("press h-9 rounded-full px-4 text-callout font-semibold", s.familyId === current ? "bg-white text-ink shadow-sm" : "text-ink-soft")}
+          className={cn("press h-9 rounded-full px-4 text-callout font-semibold", s.familyId === current ? "bg-accent text-accent-ink" : "text-ink-soft")}
         >
           {busy === s.familyId ? "Opening…" : `${s.name} side`}
         </button>

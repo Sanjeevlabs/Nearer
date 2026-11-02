@@ -60,6 +60,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
           </div>
           <h1 data-display className="m-0 text-display md:text-[clamp(44px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">The window between two homes.</h1>
           <p className="voice m-0 mt-5 max-w-[34ch] text-title leading-snug text-ink-soft">A window into your parents&rsquo; day, and theirs into yours.</p>
+          <p className="m-0 mt-3 max-w-[34ch] text-body leading-snug">Open Nearer and you&rsquo;ll know how they are, with nothing else to check.</p>
           {/* The way in: on every screen when signed in, and on a phone when not (no QR there). */}
           <div className={signedIn ? "mt-7 flex flex-col gap-2.5 sm:max-w-[320px]" : "mt-7 flex flex-col gap-2.5 sm:max-w-[320px] md:hidden"} data-ui="home-actions">
             {signedIn ? (
@@ -118,7 +119,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
       </section>
 
       {/* Four things it does */}
-      <section className="bg-white py-12 sm:py-16">
+      <section className="bg-card py-12 sm:py-16">
         <div className="mx-auto grid max-w-[1120px] gap-10 px-4 sm:px-8 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <article key={f.title}>
