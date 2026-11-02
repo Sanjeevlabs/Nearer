@@ -7,7 +7,6 @@ import type { CareSettings, Knock, Presence, Sitting } from "@/lib/kinds";
 import { callName, cardCover, memberPhoto, peopleByRecency, relativeDay } from "@/lib/people";
 import type { Card, Member } from "@/lib/schemas";
 import { useDisplayText } from "@/lib/use-display-text";
-import { useEvents } from "@/lib/gather-client";
 import { useCourtyard } from "@/lib/courtyard-data";
 import { useFamilyCards } from "@/lib/use-family";
 import { ago, postJson, useJson } from "@/lib/use-json";
@@ -16,8 +15,6 @@ import { DEFAULT_VENUE, venueOf, type VenueId } from "@/lib/venues";
 import { Carousel } from "./carousel";
 import { MyNeeds, MyQuestions, StoryDoor, VisitCountdown, useNextVisit } from "./home-presence";
 import { MuseSlide, useMuseSlot } from "./muse-slot";
-import { usePlayer } from "./player";
-import { VoiceCode } from "./plaque";
 import { useShell } from "./shell";
 import { SafetyWatch } from "./safety";
 import { PersonDay, lampFor } from "./person-day";
@@ -25,7 +22,7 @@ import { SideSwitch, useSides } from "./sides";
 import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
 import { EventPrompts } from "./event-prompts";
-import { TodayCard, useToday } from "./today";
+import { TodayCard } from "./today";
 import { TogetherHabit } from "./together-habit";
 import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
@@ -41,36 +38,6 @@ import { useViewer } from "./viewer";
 // The five rooms open from the house in the dock, beside the mic and the camera.
 
 const SLIDE_H = "h-[236px]";
-
-/* ------------------------------------------------------ a voice from home */
-function VoiceSlide({ card }: { card: Card }) {
-  const { members, displayLang } = useViewer();
-  const { play, current, isPlaying, toggle } = usePlayer();
-  const author = members.find((mm) => mm.id === card.authorId);
-  const { text } = useDisplayText(card.transcript || card.caption, card.transcript ? card.transcriptLang : card.lang, displayLang);
-  const playing = current?.id === card.id && isPlaying;
-  return (
-    <article className={`relative ${SLIDE_H} overflow-hidden rounded-[26px] bg-surface`}>
-      <Photo src={cardCover(card, members)} alt="" sizes="440px" position="center 30%" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/75" aria-hidden="true" />
-      <div className="absolute inset-x-4 bottom-4 text-white">
-        <p className="voice m-0 line-clamp-2 text-headline leading-snug">“{text ?? card.caption}”</p>
-        <div className="mt-3 flex items-center gap-3">
-          <span className="min-w-0 flex-1">
-            <span className="block text-footnote font-semibold">{callName(author)}</span>
-            <span className="block text-caption text-white/70">{relativeDay(card.takenAt)}</span>
-          </span>
-          <span className="hidden min-[400px]:block [&_span>span]:!bg-white/60">
-            <VoiceCode peaks={card.peaks} bars={16} className="h-5" />
-          </span>
-          <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause" : `Play ${callName(author)}'s voice note`} className="press grid h-12 w-12 place-items-center rounded-full bg-white text-black">
-            <Icon name={playing ? "pause" : "play"} size={18} />
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
 
 /* --------------------------------------------------------- sit together */
 function SitSlide() {
@@ -134,29 +101,6 @@ function SitSlide() {
   );
 }
 
-/* --------------------------------------------------------------- coming up */
-function ComingUpSlide() {
-  const { members } = useViewer();
-  const { data } = useToday();
-  const occ = data?.occasion;
-  if (!occ) return null;
-  const who = members.find((mm) => mm.id === occ.memberId);
-  const when = occ.days === 0 ? "Today" : occ.days === 1 ? "Tomorrow" : `In ${occ.days} days`;
-  return (
-    <article className={`relative ${SLIDE_H} overflow-hidden rounded-[26px] bg-surface`}>
-      <Photo src={memberPhoto(who) ?? "/demo/family-group.webp"} alt="" sizes="440px" position="center 35%" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/75" aria-hidden="true" />
-      <Link href="/gather" className="absolute inset-0" aria-label="Coming up" />
-      <div className="pointer-events-none absolute inset-x-4 bottom-4 flex items-end gap-3 text-white">
-        <span className="min-w-0 flex-1">
-          <span className="block text-caption uppercase tracking-[0.14em] text-white/70">{when}</span>
-          <span className="block truncate text-title font-semibold">{occ.title}</span>
-        </span>
-      </div>
-    </article>
-  );
-}
-
 /* ------------------------------------------------------------ from the years */
 function YearsSlide({ card }: { card: Card }) {
   const { members, displayLang } = useViewer();
@@ -177,21 +121,14 @@ function YearsSlide({ card }: { card: Card }) {
 }
 
 /* ------------------------------------------------------------ everyone */
-// Each person's photo inside a lamp-glow ring: warm gold when they were
-// active or shared something today (their local day), a thin dim ring
-// otherwise. No ticks, no "seen".
-const LAMP_CSS = `
-@keyframes kutumb-lamp { 0%,100% { box-shadow: 0 0 0 2.5px #e9b44c, 0 0 14px 3px rgba(240,170,60,.55); } 50% { box-shadow: 0 0 0 2.5px #f3c76b, 0 0 22px 7px rgba(240,170,60,.75); } }
-.kutumb-lamp { box-shadow: 0 0 0 2.5px #e9b44c, 0 0 18px 5px rgba(240,170,60,.65); animation: kutumb-lamp 4.2s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .kutumb-lamp { animation: none; } }
-`;
-
+// Each person's photo and one calm line under it. The lamp lives on the window only (no glow ring here);
+// a tap opens their day.
 function PersonChip({ member, lamp, onOpen }: { member: Member; lamp: { glow: boolean; line: string }; onOpen: () => void }) {
   const photo = memberPhoto(member);
   return (
     <li className="w-[92px] shrink-0 text-center" style={{ scrollSnapAlign: "start" }}>
-      <button type="button" onClick={onOpen} aria-label={`${callName(member)}'s day${lamp.glow ? ", lamp lit today" : ""}`} className="press block w-full text-ink">
-        <span className={`relative mx-auto block h-[68px] w-[68px] rounded-full ${lamp.glow ? "kutumb-lamp" : "ring-1 ring-black/15"}`}>
+      <button type="button" onClick={onOpen} aria-label={`${callName(member)}'s day`} className="press block w-full text-ink">
+        <span className="relative mx-auto block h-[68px] w-[68px] rounded-full ring-1 ring-black/15">
           <span className="absolute inset-[3px] overflow-hidden rounded-full bg-surface">{photo ? <Photo src={photo} alt="" sizes="140px" position="center 30%" /> : <Monogram name={callName(member)} size={62} />}</span>
         </span>
         <span className="mt-2 block truncate text-footnote font-semibold">{callName(member)}</span>
@@ -261,11 +198,6 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const stories = useJson<{ stories: { id: string; tellerId: string; title: string }[] }>(viewer.role === "child" ? "/api/stories" : null);
   const [dayOfId, setDayOfId] = useState<string | null>(null);
 
-  const voice = useMemo(() => {
-    const others = (cards ?? []).filter((c) => c.type === "audio" && c.authorId && c.authorId !== viewer.id);
-    // A voice from the other generation first: that's the one you came for.
-    return others.find((c) => members.find((mm) => mm.id === c.authorId)?.role === (elder ? "adult" : "elder")) ?? others[0];
-  }, [cards, viewer.id, members, elder]);
   const people = useMemo(() => peopleByRecency(viewer.id, members, cards ?? []), [viewer.id, members, cards]);
   const thisYear = new Date().getFullYear();
   const yearsAgo = (cards ?? []).find((c) => c.type === "photo" && new Date(c.takenAt).getFullYear() < thisYear);
@@ -274,7 +206,6 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
   const lampData = { presence: pres.data?.presence ?? [], settings: pres.data?.settings ?? [], cards: cards ?? [] };
   const dayPerson = members.find((mm) => mm.id === dayOfId);
   const muse = useMuseSlot(cards ?? []);
-  const planPrompt = (useEvents().data?.prompts ?? []).some((p) => p.kind === "suggest");
   // Everything under the header appears in one step, once the cards and the one
   // courtyard payload are in, so nothing slides down as the pieces arrive.
   const shared = useCourtyard();
@@ -282,7 +213,6 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
 
   return (
     <div>
-      <style>{LAMP_CSS}</style>
       <header data-ui="courtyard-header" className="pt-4">
         <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-ink">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -332,19 +262,17 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
 
       {ready && (
         <>
-          {/* One way to plan: Muse's "Plan" card when it has a prompt, otherwise the quiet Coming up slide below. */}
-          <EventPrompts className="mt-4" kinds={["suggest", "soon", "live"]} />
+          {/* What is coming up lives on Celebrations (one line on the window): only what is happening now or soon shows here. */}
+          <EventPrompts className="mt-4" kinds={["soon", "live"]} />
           <TodayCard />
           <TogetherHabit />
           <CourtyardLetter />
           <KidsCourtyard />
 
           <Carousel label="Now in the family" className="mt-5">
-            {voice && <VoiceSlide card={voice} />}
             {story && <StoryDoor story={story} />}
             <SitSlide />
             {visit && <VisitCountdown visit={visit} />}
-            {!planPrompt && <ComingUpSlide />}
             {yearsAgo && <YearsSlide card={yearsAgo} />}
             {muse.slot && <MuseSlide slot={muse.slot} />}
           </Carousel>
