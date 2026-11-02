@@ -230,6 +230,11 @@ export function seedDemo(): void {
   photo("demo-kid-leo-top", "leo", mins(26 * 60), "/demo/family-leo.webp", "My top spun for a whole minute.", { place: "Bengaluru" });
   voice("demo-kid-aria-whistle", "aria", mins(9 * 60), "I can whistle now!", "Maa, I can whistle now! Listen. Fweeeet. Papa says it sounds like a kettle.", { source: "upload", coverRef: "/demo/portrait-aria.webp", addressedTo: "dadi" });
   voice("demo-kid-leo-ask", "leo", mins(3 * 60), "A question for Maa", "Maa, how did you and Papa meet?", { source: "upload", coverRef: "/demo/portrait-leo.webp", addressedTo: "dadi" });
+  // For Arjun's inbox (/inbox): Maa's unplayed voice note to him, Vihaan's question to him, and
+  // Maa's blessing on his voice note (the lamp lit for him is in lib/demo-rooms.ts).
+  voice("demo-maa-to-arjun", "dadi", mins(2 * 60), "Eat something warm tonight", "Arjun, the rain is here too. Eat something warm tonight, and call me when you are home. I made your favourite dal today and thought of you.", { source: "upload", coverRef: "/demo/family-dadi.webp", addressedTo: "arjun" });
+  voice("demo-kid-leo-ask2", "leo", mins(90), "A question for Papa", "Papa, why does the moon follow our car when we drive home?", { source: "upload", coverRef: "/demo/portrait-leo.webp", addressedTo: "arjun" });
+  setReaction({ id: "react-dadi-arjun-voice", familyId: "demo-family", cardId: "demo-voice-1", memberId: "dadi", kind: "bless", createdAt: mins(4 * 60) });
   voice("demo-bedtime-dadi-aria", "dadi", mins(20 * 60), "The little elephant and the moon", "Once there was a little elephant who wanted to touch the moon. Every night she walked a little further, and every night the moon stayed just out of reach. Then one evening she stopped at the river, and there was the moon, sleeping in the water. She put in her trunk, very gently, and the moon wobbled and smiled. Goodnight, little one.", { source: "upload", coverRef: "/demo/family-dadi.webp", addressedTo: "aria" });
 
   // A few real-looking listens so a parent's "your gifts this week" isn't empty
