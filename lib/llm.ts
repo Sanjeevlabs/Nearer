@@ -140,8 +140,9 @@ async function liveCaption(
   const data = (await res.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
   };
-  const text = data.choices?.[0]?.message?.content ?? "{}";
-  return { json: JSON.parse(text) as unknown, cost: 0.01 };
+  const text = data.choices?.[0]?.message?.content ?? "";
+  if (!text.trim()) throw new Error("empty");
+  return { json: extractJson(text), cost: 0.01 };
 }
 
 const CAPTION_SYSTEM =
@@ -389,15 +390,46 @@ async function liveJsonOnce(
         { role: "user", content: user },
       ],
       response_format: { type: "json_object" },
-      max_tokens: maxTokens,
+      // Reasoning tokens count against this cap: below the floor the reply is
+      // truncated before any JSON and every call falls back (seen live on picks
+      // and the window's catch-up line). Callers' maxTokens is the answer size.
+      max_tokens: Math.max(maxTokens, REASONING_TOKEN_FLOOR),
     }),
   });
   if (!res.ok) throw new Error(`provider-${res.status}`);
   const data = (await res.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }>;
   };
-  const raw = data.choices?.[0]?.message?.content ?? "{}";
-  return { json: JSON.parse(raw) as unknown, cost: 0.01 };
+  const choice = data.choices?.[0];
+  const raw = choice?.message?.content ?? "";
+  if (!raw.trim()) throw new Error(choice?.finish_reason === "length" ? "truncated" : "empty");
+  return { json: extractJson(raw), cost: 0.01 };
+}
+
+/** Floor for max_tokens on reasoning models (the vision path already uses 2000). */
+export const REASONING_TOKEN_FLOOR = 2000;
+
+/**
+ * The JSON object in a model reply: plain JSON, or wrapped in a ```json fence,
+ * a <think> block or a sentence. Throws "parse" when there is none.
+ */
+export function extractJson(raw: string): unknown {
+  const text = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text)?.[1];
+    const start = (fenced ?? text).indexOf("{");
+    const end = (fenced ?? text).lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse((fenced ?? text).slice(start, end + 1)) as unknown;
+      } catch {
+        /* fall through */
+      }
+    }
+    throw new Error("parse");
+  }
 }
 
 // Voice transcription: mock-first; live uses the chat endpoint with a
