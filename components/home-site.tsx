@@ -80,6 +80,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
                 >
                   {busy ? "Opening…" : "Try the demo family"}
                 </button>
+                <p className="m-0 -mt-1 text-center text-footnote text-ink-soft">No sign-up. Opens a demo family.</p>
                 <Link href="/create" className="press flex h-[50px] items-center justify-center rounded-full bg-black/[.07] text-body font-semibold text-ink no-underline">
                   Start your family
                 </Link>
@@ -111,7 +112,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
         <div className="relative mx-auto w-[240px] sm:w-[300px]">
           <div className="overflow-hidden rounded-[46px] border-[10px] border-[#1c1b1a] bg-black shadow-[0_50px_90px_-40px_rgba(0,0,0,.6)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/home/window.webp" alt="The first screen: an arched window into Maa and Papa's home at night, their status below" className="block w-full" />
+            <img src="/home/window.webp" alt="The first screen: a drawing of Maa and Papa's window under their real sky, the lamp, and how they are" className="block w-full" />
           </div>
         </div>
       </section>
@@ -140,7 +141,13 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
 
       <footer className="border-t border-[var(--line)]">
         <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-4 py-6 sm:px-8 text-footnote text-ink-soft">
-          <span className="flex items-center gap-2"><Mark size={20} /> Nearer · made in Bengaluru for families everywhere</span>
+          <span className="flex items-center gap-2">
+            <Mark size={20} /> Made with <span aria-label="love">♥</span> by{" "}
+            <a href="https://sanjeevlabs.com" target="_blank" rel="noopener noreferrer" className="text-ink-soft underline underline-offset-2 hover:text-ink">
+              sanjeevlabs.com
+            </a>{" "}
+            · India
+          </span>
           <span className="flex gap-5">
             <Link href="/privacy" className="text-ink-soft no-underline hover:text-ink">
               Privacy
