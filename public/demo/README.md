@@ -7,18 +7,18 @@ girl) — generated from one shared character block per prompt (see
 `scripts/seed.mjs`). They are labelled demo photos in the app and never appear
 inside real memory cards, which must only show the family's own uploads.
 
-- `courtyard.jpg` (27 Oct 2026, `scripts/gen-courtyard.mjs`): fallback home
-  illustration — arched wooden doorway, potted plants, morning light; no
-  people. Used only when a member has no home photo. The in-app SVG courtyard
-  (`components/courtyard-art.tsx`) remains the offline fallback.
-- `home-courtyard.jpg`, `home-balcony.jpg`, `home-window.jpg` (not generated
-  yet; the owner runs `META_API_KEY=... node scripts/gen-courtyard.mjs`, then
-  `node scripts/demo-variants.mjs` for the 390/780 WebP widths): the first
-  screen's default home photo options, 1024 square, no people. A North-Indian
-  haveli courtyard at morning (tulsi, string cot, brass pots), a city balcony
-  with plants at golden hour, an old wooden window with marigolds on the sill.
-  The app keeps `courtyard.jpg` until `DEFAULT_IMAGE` in `lib/hero.ts` (re-exported
-  from `lib/window-server.ts`) is switched to one of them.
+- `home-courtyard.jpg`, `home-balcony.jpg`, `home-window.jpg` (generated with
+  `META_API_KEY=... node scripts/gen-courtyard.mjs`, then
+  `node scripts/demo-variants.mjs` for the 390/780 WebP widths): photos of a
+  home with no people, 1024 square. They are only used when a viewer picks the
+  "Photo" mode for their first screen, and as demo memory photos. The first
+  screen itself is drawn (`lib/hero.ts` picks the renderer) and nothing is
+  painted before the app knows which screen to show.
+- The old `courtyard.jpg` (an arched door) was retired on 2 Nov 2026; empty
+  states use the brand mark on a plain ground instead.
+- `lamp-lit.jpg`, `lamp-unlit.jpg`: a small brass lamp on a sill, lit and
+  unlit, no people.
+- `venues/*.jpg`: the places the family sits on a call.
 - `family-dadi.webp`, `family-leo.webp`, `family-aria.webp`,
   `family-group.webp` (28 Oct 2026, `node scripts/seed.mjs`): consistent
   demo-family portraits. Manifest: `family.json`.

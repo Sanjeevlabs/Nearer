@@ -21,7 +21,7 @@ try {
 
 const dir = join(process.cwd(), "public", "demo");
 // file -> widths. Keep in step with DEMO_WIDTHS in components/ui/kit.tsx.
-const plan = { "courtyard.jpg": [390, 780] };
+const plan = {};
 // The first screen's home photos (scripts/gen-courtyard.mjs), once they exist.
 for (const n of ["home-courtyard", "home-balcony", "home-window"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [390, 780];
 for (const n of ["lamp-unlit", "lamp-lit"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [160, 390];

@@ -6,9 +6,7 @@ import { Courtyard } from "@/components/courtyard";
 import { CourtyardProvider } from "@/lib/courtyard-data";
 import { useShell } from "@/components/shell";
 import { useViewer } from "@/components/viewer";
-import { Photo } from "@/components/ui/kit";
-import { HeroBox, WindowLoading } from "@/components/window-hero";
-import { DEFAULT_IMAGE, HERO_SIZES } from "@/lib/hero";
+import { WindowLoading } from "@/components/window-hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
 import { hasEntered, isInstalledApp, markEntered } from "@/lib/entered";
@@ -27,25 +25,14 @@ const HomeSite = dynamic(() => import("@/components/home-site").then((x) => x.Ho
 const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.DoorTransition), { ssr: false });
 
 /**
- * What the server sends and the phone paints before any script has run. Behind the
- * door (the inline script in app/layout.tsx sets html[data-door=open]) that is the
- * courtyard's header photo, in the box the real header uses, so the largest paint
- * does not wait for the bundle; otherwise the plain dark ground. See .door-hero in globals.css.
+ * What the server sends and the phone paints before any script has run: plain paper and the
+ * mark, nothing else. No photo here: the view (window, courtyard, landing, kid-home) is not
+ * known yet, and a photo that turns out to be the wrong one is worse than none.
  */
 function CheckingShell() {
   return (
-    <div className="lite-ground checking-ground fixed inset-0 z-30" aria-busy="true" aria-label="Opening Nearer">
-      <div className="win-hero mx-auto w-full max-w-[480px]" aria-hidden="true">
-        <HeroBox src={DEFAULT_IMAGE} />
-      </div>
-      <div className="checking-mark fixed inset-0 grid place-items-center" aria-hidden="true">
-        <Mark size={72} />
-      </div>
-      <div className="door-hero mx-auto w-full max-w-[480px] px-4" style={{ paddingTop: "calc(32px + env(safe-area-inset-top))" }} aria-hidden="true">
-        <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
-          <Photo src="/demo/courtyard.jpg" alt="" sizes={HERO_SIZES} position="center 55%" />
-        </div>
-      </div>
+    <div className="fixed inset-0 z-30 grid place-items-center bg-paper" aria-busy="true" aria-label="Opening Nearer">
+      <Mark size={72} />
     </div>
   );
 }

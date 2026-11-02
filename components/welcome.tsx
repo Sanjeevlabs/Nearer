@@ -7,15 +7,19 @@ import { useDocumentLang, useT } from "@/lib/use-t";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { Button, Icon, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
-import { Lockup } from "./brand";
+import { Lockup, Mark } from "./brand";
 
-const COURTYARD = "/demo/courtyard.jpg";
-
-/** Full-bleed photo with a glass card at the bottom: the frame for every entry screen. */
-export function EntryFrame({ image = COURTYARD, children }: { image?: string; children: React.ReactNode }) {
+/** A glass card at the bottom of a calm ground (the home photo when there is one): the frame for every entry screen. */
+export function EntryFrame({ image, children }: { image?: string | null; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-30 overflow-hidden bg-[#2a211c]">
-      <Photo src={image} alt="" sizes="100vw" priority />
+      {image ? (
+        <Photo src={image} alt="" sizes="100vw" priority />
+      ) : (
+        <div className="absolute inset-0 grid place-items-center opacity-25" aria-hidden="true">
+          <Mark size={160} />
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/30" aria-hidden="true" />
       <div className="relative mx-auto flex h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
         <p className="m-0 px-2 text-white drop-shadow"><Lockup mark={28} word={84} /></p>
@@ -70,7 +74,7 @@ export function Landing({ onDemo }: { onDemo: () => Promise<void> }) {
 export function Welcome({ onEnter }: { onEnter: () => void }) {
   const { viewer, signalLine } = useViewer();
   const [hour] = useState(() => new Date().getHours());
-  const home = resolveMediaUrl(viewer.homeImageRef) ?? COURTYARD;
+  const home = resolveMediaUrl(viewer.homeImageRef);
   const t = useT();
   useDocumentLang();
   return (

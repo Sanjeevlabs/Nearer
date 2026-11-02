@@ -319,7 +319,7 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
     }
     setBusy(false);
   };
-  const home = resolveMediaUrl(form.draft.home?.mediaRef) ?? resolveMediaUrl(viewer.homeImageRef) ?? "/demo/courtyard.jpg";
+  const home = resolveMediaUrl(form.draft.home?.mediaRef) ?? resolveMediaUrl(viewer.homeImageRef);
   return (
     <SettingsSection
       id="where"
@@ -358,7 +358,12 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
         />
       </label>
       <div className="relative mt-4 h-[160px] overflow-hidden rounded-card bg-surface">
-        <Photo src={home} alt="Your home photo" sizes="440px" />
+        {home ? (
+          <Photo src={home} alt="Your home photo" sizes="440px" />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/brand/mark.svg" alt="" width={48} height={48} className="absolute left-1/2 top-8 h-12 w-12 -translate-x-1/2 opacity-60" />
+        )}
         <div className="glass absolute inset-x-2.5 bottom-2.5 flex items-center justify-between rounded-[18px] py-1.5 pl-4 pr-1.5">
           <span className="text-body font-semibold">{form.draft.home ? "A new photo, not saved yet" : "The home you miss"}</span>
           <button type="button" disabled={busy} onClick={() => input.current?.click()} className="press h-11 rounded-full bg-white px-4 text-callout font-semibold text-black">
