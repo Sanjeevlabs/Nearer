@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 150" preserveAspectRatio="xMidYMid slice">
+  <!-- The courtyard header: a quiet drawn band (thin arches on a dark ground), white text sits on it. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2622"/>
+      <stop offset="1" stop-color="#1c1b1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="440" height="150" fill="url(#g)"/>
+  <g fill="none" stroke="rgba(255,240,225,.16)" stroke-width="1.2">
+    <path d="M40 150 L40 70 A40 40 0 0 1 120 70 L120 150"/>
+    <path d="M180 150 L180 70 A40 40 0 0 1 260 70 L260 150"/>
+    <path d="M320 150 L320 70 A40 40 0 0 1 400 70 L400 150"/>
+  </g>
+  <g opacity=".22">
+    <circle cx="80" cy="128" r="6" fill="#E8735A"/><circle cx="220" cy="128" r="6" fill="#5FAAA3"/><circle cx="360" cy="128" r="6" fill="#DE9F3E"/>
+  </g>
+</svg>

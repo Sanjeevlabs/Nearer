@@ -9,6 +9,10 @@ const literata = Literata({ subsets: ["latin"], style: ["italic"], weight: ["400
 // Handwriting on printed photos (when, where, a note). Kalam covers Latin and Devanagari, so Hindi notes are handwritten too.
 const kalam = Kalam({ subsets: ["latin", "devanagari"], weight: ["400"], variable: "--font-hand", display: "swap", preload: false });
 
+// Before any script: which view is likely (stepped inside? door open?), so the server-sent shell
+// (app/page.tsx CheckingShell) paints that view's drawn frame at once. Never a photo.
+const VIEW_HINT = `try{var s=sessionStorage,d=document.documentElement;if(s.getItem("aangan:door")==="open")d.dataset.door="open";if(s.getItem("aangan:entered")==="1")d.dataset.entered="1"}catch(e){}`;
+
 export const metadata: Metadata = {
   title: "Nearer — the window between two homes",
   description: "A live window between two homes: their time, weather and sky, a Safe & sound when they are well, and a lamp that says you are thinking of them.",
@@ -31,6 +35,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: VIEW_HINT }} />
+      </head>
       <body className={`${onest.variable} ${literata.variable} ${kalam.variable}`}>
         <Providers>
           <Shell>{children}</Shell>
