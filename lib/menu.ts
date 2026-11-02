@@ -45,6 +45,7 @@ export function roomsFor(isParent: boolean, canPortrait = true, kid = false, has
       tabs: [
         { href: "/lane", label: "Memory Lane" },
         { href: "/stories", label: "Stories" },
+        { href: "/ask-family", label: "Ask" },
       ],
     },
     {
