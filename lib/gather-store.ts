@@ -37,7 +37,48 @@ async function putLive(familyId: string, kind: string, id: string, data: unknown
 // source of truth on every read: this process's copy must never bring back a
 // row another Worker has since removed (Workers share no memory).
 export async function listEvents(familyId: string): Promise<FamilyEvent[]> {
-  const rows = await listLive(familyId, "event", EventSchema);
+  return eventsFrom(familyId, await listLive(familyId, "event", EventSchema));
+}
+
+/**
+ * The events and this member's dismissed prompts in ONE round trip (both kinds
+ * in one query). Same answers as listEvents + listDismissed; if the combined
+ * query comes back full it asks for each kind on its own, as they do.
+ */
+export async function listEventsAndDismissed(familyId: string, memberId: string): Promise<{ events: FamilyEvent[]; dismissed: string[] }> {
+  const sb = dbFor(familyId);
+  if (sb) {
+    const { data, error } = await sb.from("family_docs").select("kind, data").eq("family_id", familyId).in("kind", ["event", "event_dismiss"]).limit(1000);
+    if (!error && data && data.length < 500) {
+      const of = <T>(kind: string, schema: z.ZodType<T, z.ZodTypeDef, unknown>): T[] =>
+        (data as { kind: string; data: unknown }[]).filter((r) => r.kind === kind).map((r) => schema.safeParse(r.data)).filter((p): p is z.SafeParseSuccess<T> => p.success).map((p) => p.data);
+      return { events: eventsFrom(familyId, of("event", EventSchema)), dismissed: dismissedFrom(familyId, memberId, of("event_dismiss", DismissSchema)) };
+    }
+  }
+  const [events, dismissed] = await Promise.all([listEvents(familyId), listDismissed(familyId, memberId)]);
+  return { events, dismissed };
+}
+
+const parseRows = <T>(rows: { data: unknown }[], schema: z.ZodType<T, z.ZodTypeDef, unknown>): T[] =>
+  rows.map((r) => schema.safeParse(r.data)).filter((p): p is z.SafeParseSuccess<T> => p.success).map((p) => p.data);
+
+/** The kinds this store keeps in family_docs, for a caller that reads them in its own batch (listDocsManyWith). */
+export const EVENT_DOC_KINDS = ["event", "event_dismiss"] as const;
+
+/** listEvents from rows another query already read (undefined: they weren't; read them here). */
+export async function eventsFromRows(familyId: string, rows: { data: unknown }[] | undefined): Promise<FamilyEvent[]> {
+  return rows ? eventsFrom(familyId, parseRows(rows, EventSchema)) : listEvents(familyId);
+}
+
+/** listEventsAndDismissed from rows another query already read (null: they weren't; read them here). */
+export async function eventsFromBatch(familyId: string, memberId: string, extra: Map<string, { data: unknown }[]> | null): Promise<{ events: FamilyEvent[]; dismissed: string[] }> {
+  const ev = extra?.get("event");
+  const dis = extra?.get("event_dismiss");
+  if (!ev || !dis) return listEventsAndDismissed(familyId, memberId);
+  return { events: eventsFrom(familyId, parseRows(ev, EventSchema)), dismissed: dismissedFrom(familyId, memberId, parseRows(dis, DismissSchema)) };
+}
+
+function eventsFrom(familyId: string, rows: FamilyEvent[] | null): FamilyEvent[] {
   const out: FamilyEvent[] = [];
   if (rows) out.push(...rows);
   else
@@ -61,7 +102,11 @@ export async function putEvent(familyId: string, input: unknown): Promise<Family
 }
 
 export async function listDismissed(familyId: string, memberId: string): Promise<string[]> {
-  let rows = await listLive(familyId, "event_dismiss", DismissSchema);
+  return dismissedFrom(familyId, memberId, await listLive(familyId, "event_dismiss", DismissSchema));
+}
+
+function dismissedFrom(familyId: string, memberId: string, live: Dismiss[] | null): string[] {
+  let rows = live;
   if (!rows) {
     const local: Dismiss[] = [];
     dismissals.forEach((d, k) => {

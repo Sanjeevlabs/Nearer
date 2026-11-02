@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { isGrownUp } from "@/lib/permissions";
 import { whatsappInvite } from "@/lib/invite-link";
 import { callName, memberPhoto } from "@/lib/people";
@@ -31,14 +31,46 @@ export function useSides() {
   return { sides: data?.sides ?? [], current: data?.current ?? null, loading: data === null && !failed, failed, reload };
 }
 
-async function openSide(familyId: string): Promise<void> {
-  const out = await postJson("/api/sides", { action: "switch", familyId });
-  if (!out) return;
+// The side being opened, from the tap until its courtyard has answered: its name (and its home
+// photo) show in the header at once, while the rest is read.
+let opening: { familyId: string; name: string } | null = null;
+const openingListeners = new Set<() => void>();
+function setOpening(next: { familyId: string; name: string } | null): void {
+  opening = next;
+  openingListeners.forEach((l) => l());
+}
+
+/** The side whose courtyard is being opened (null when none). */
+export function useOpeningSide(): { familyId: string; name: string } | null {
+  return useSyncExternalStore(
+    (l) => {
+      openingListeners.add(l);
+      return () => openingListeners.delete(l);
+    },
+    () => opening,
+    () => null,
+  );
+}
+
+/** The opened side's courtyard has answered: the header goes back to reading it. */
+export function doneOpening(familyId: string): void {
+  if (opening?.familyId === familyId) setOpening(null);
+}
+
+async function openSide(side: Pick<Side, "familyId" | "name">): Promise<void> {
+  const home = window.location.pathname === "/";
+  if (home) setOpening({ familyId: side.familyId, name: side.name });
+  const out = await postJson("/api/sides", { action: "switch", familyId: side.familyId });
+  if (!out) {
+    setOpening(null);
+    return;
+  }
   resetFamilyCards();
-  // The other family's data must not come back from this tab's caches (sessionStorage survives the reload).
+  // Everything re-reads for the other side at once (session, family, courtyard, cards, window), and
+  // nothing of this side comes back from the caches: the courtyard remounts for the new family.
   window.dispatchEvent(new Event("aangan:auth"));
-  // A clean load: every room re-reads the other side's data.
-  window.location.assign("/");
+  // From elsewhere (Settings), the courtyard is where a switch lands, as before.
+  if (!home) window.location.assign("/");
 }
 
 /** "Sharma · Iyer" under the courtyard title, only when you have two sides. */
@@ -58,7 +90,7 @@ export function SideSwitch() {
           onClick={() => {
             if (s.familyId === current) return;
             setBusy(s.familyId);
-            void openSide(s.familyId);
+            void openSide(s).finally(() => setBusy(null));
           }}
           className={cn("press h-9 rounded-full px-4 text-callout font-semibold", s.familyId === current ? "bg-accent text-accent-ink" : "text-ink-soft")}
         >
@@ -126,7 +158,7 @@ export function BothSides() {
                   aria-label={here ? `${s.name}, you're here` : `Switch to ${s.name}`}
                   onClick={() => {
                     setBusy(s.familyId);
-                    void openSide(s.familyId);
+                    void openSide(s);
                   }}
                   className={cn("press flex w-full items-center gap-3 rounded-card p-3 text-left", here ? "bg-accent text-accent-ink" : "bg-surface")}
                 >

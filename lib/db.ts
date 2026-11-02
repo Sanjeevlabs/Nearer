@@ -326,14 +326,62 @@ export async function dbFindMemberByEmail(email: string): Promise<Member | undef
  * human. A member without a personId belongs to one family space only.
  */
 export async function dbListSides(member: Member): Promise<Member[]> {
-  if (!member.personId) return [member];
+  return (await dbListSidesNamed(member)).map((s) => s.member);
+}
+
+export interface NamedSide {
+  member: Member;
+  /** null when it wasn't read with the sides: ask dbGetFamilyName. */
+  familyName: string | null;
+  /** With `since`: everyone in that family (waiting joiners too), or null when not read. */
+  people: Member[] | null;
+  /** With `since`: who shared what in that family since then, or null when not read. */
+  recent: { authorId: string | null; takenAt: string }[] | null;
+}
+
+/**
+ * dbListSides, with each family's name (and, given `since`, its people and its
+ * recent cards' authors and dates) read in the SAME query through the family
+ * foreign keys. Anything the database couldn't embed comes back null and the
+ * caller reads it as before.
+ */
+export async function dbListSidesNamed(member: Member, opts: { since?: string } = {}): Promise<NamedSide[]> {
+  const bare = (list: Member[]): NamedSide[] => list.map((m) => ({ member: m, familyName: null, people: null, recent: null }));
+  if (!member.personId) return bare([member]);
   const local = memFindByPerson(member.personId);
   // A demo person's sides are the demo homes, in memory.
   const sb = dbFor(member.familyId);
-  if (!sb) return local;
-  const { data, error } = await sb.from("members").select("*").eq("person_id", member.personId).limit(8);
-  if (error || !data) return local;
-  return data.map((r) => memberFromRow(r as Record<string, unknown>)).filter((m) => !isSeedFamily(m.familyId));
+  if (!sb) return bare(local);
+  type Row = Record<string, unknown> & { families?: { name?: unknown; members?: unknown; cards?: unknown } | null };
+  let rows: Row[] | null = null;
+  if (opts.since) {
+    const { data, error } = await sb.from("members").select("*, families(name, members(*), cards(author_id, taken_at))").eq("person_id", member.personId).gte("families.cards.taken_at", opts.since).limit(8);
+    if (!error && data) rows = data as Row[];
+  }
+  if (!rows) {
+    const { data, error } = await sb.from("members").select("*, families(name)").eq("person_id", member.personId).limit(8);
+    if (error || !data) return bare(local);
+    rows = data as Row[];
+  }
+  const out: NamedSide[] = [];
+  for (const r of rows) {
+    const m = memberFromRow(r);
+    if (isSeedFamily(m.familyId)) continue;
+    const fam = r.families;
+    let people: Member[] | null = null;
+    let recent: NamedSide["recent"] = null;
+    if (opts.since && fam && Array.isArray(fam.members) && Array.isArray(fam.cards)) {
+      try {
+        people = (fam.members as Record<string, unknown>[]).map(memberFromRow);
+        recent = (fam.cards as { author_id?: unknown; taken_at?: unknown }[]).map((c) => ({ authorId: typeof c.author_id === "string" ? c.author_id : null, takenAt: String(c.taken_at ?? "") }));
+      } catch {
+        people = null;
+        recent = null;
+      }
+    }
+    out.push({ member: m, familyName: typeof fam?.name === "string" ? fam.name : null, people, recent });
+  }
+  return out;
 }
 
 export async function dbUpdateMemberProfile(memberId: string, patch: MemberPatch): Promise<Member | undefined> {

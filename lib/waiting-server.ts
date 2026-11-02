@@ -4,7 +4,7 @@
 // Server only.
 import { dbListCards, dbListMembers, dbListPlays, dbListRelationships } from "./db";
 import { withDemoShelf } from "./demo";
-import { listDocs } from "./family-docs";
+import { listDocsMany } from "./family-docs";
 import { waitingItems, type WaitingItem } from "./glance";
 import { guardianMap } from "./kids";
 import { renderNudgeText, unseenFor } from "./nudges";
@@ -12,19 +12,21 @@ import type { Member } from "./schemas";
 
 type Cards = Awaited<ReturnType<typeof dbListCards>>;
 
-export async function waitingNow(familyId: string, viewerId: string, now: Date, have: { members?: Member[]; cards?: Cards } = {}): Promise<WaitingItem[]> {
+const KINDS = ["question", "today_task", "need", "kid_ask"] as const;
+
+export async function waitingNow(familyId: string, viewerId: string, now: Date, have: { members?: Member[] | Promise<Member[]>; cards?: Cards } = {}): Promise<WaitingItem[]> {
   const safe = async <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
-  const [members, cards, plays, questions, tasks, needs, nudges, kidAsks, rels] = await Promise.all([
-    have.members ? Promise.resolve(have.members) : dbListMembers(familyId),
+  // The four document kinds in one query: six reads at once, inside a Worker's six open connections.
+  const none = { question: [], today_task: [], need: [], kid_ask: [] };
+  const [members, cards, plays, docs, nudges, rels] = await Promise.all([
+    have.members ?? dbListMembers(familyId),
     have.cards ? Promise.resolve(have.cards) : dbListCards(familyId),
     safe(dbListPlays(undefined, familyId), []),
-    safe(listDocs(familyId, "question"), []),
-    safe(listDocs(familyId, "today_task"), []),
-    safe(listDocs(familyId, "need"), []),
+    safe(listDocsMany(familyId, KINDS), none),
     safe(unseenFor(familyId, viewerId, now), []),
-    safe(listDocs(familyId, "kid_ask"), []),
     safe(dbListRelationships(familyId), []),
   ]);
+  const { question: questions, today_task: tasks, need: needs, kid_ask: kidAsks } = docs;
   const names = Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName]));
   return waitingItems({
     viewerId,

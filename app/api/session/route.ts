@@ -1,12 +1,16 @@
 import { z } from "zod";
-import { DEMO_INVITE_CODE, clearSessionCookieHeader, isDemoFamily, sessionCookieHeader, sessionFromRequest, signSession } from "@/lib/auth";
+import { DEMO_INVITE_CODE, clearSessionCookieHeader, isDemoFamily, requireSession, sessionCookieHeader, sessionFromRequest, signSession } from "@/lib/auth";
+import { guardWrites } from "@/lib/api-guard";
+import { membersPayload } from "@/lib/members-payload";
+import { memberFor } from "@/lib/request-memo";
+import { familyNameFor, preloadSessionMember, relationshipsFor } from "@/lib/request-data";
 import { dbFindInvite, dbGetMember, dbListMembers } from "@/lib/db";
 import { isAdmin, isClaimable } from "@/lib/permissions";
 import { hostOf } from "@/lib/roles";
 import { allowAuthAttempt, callerKey } from "@/lib/otp";
 import { dbFor, dbLive } from "@/lib/family-db";
-import { isSeedFamily } from "@/lib/family";
-import { createSandbox, sandboxId, visitorOf } from "@/lib/demo-sandbox";
+import { createSandbox, sandboxId, seedMemberOf, visitorOf } from "@/lib/demo-sandbox";
+import type { Member } from "@/lib/schemas";
 
 const ExchangeSchema = z.object({
   inviteCode: z.string().min(1).max(64),
@@ -74,23 +78,25 @@ export async function POST(req: Request): Promise<Response> {
 // the seed (lib/demo-sandbox.ts), reused while their cookie lasts, so what
 // they add survives reloads and nobody sees anyone else's uploads.
 async function enterDemo(req: Request, seedMemberId: string): Promise<Response> {
-  const seedMember = await dbGetMember(seedMemberId);
-  if (!seedMember || !isSeedFamily(seedMember.familyId)) return Response.json({ error: "unknown-member" }, { status: 404 });
-  let memberId: string | null = null;
+  // The seed lives in memory (the copy is made from it), so finding the seed member costs no round trip.
+  const seedMember = seedMemberOf(seedMemberId);
+  if (!seedMember) return Response.json({ error: "unknown-member" }, { status: 404 });
+  let member: Member | undefined;
   const current = sessionFromRequest(req);
   const vid = current ? visitorOf(current.familyId) : null;
   if (vid) {
     const again = await dbGetMember(sandboxId(seedMemberId, vid));
-    if (again && visitorOf(again.familyId) === vid) memberId = again.id;
+    if (again && visitorOf(again.familyId) === vid) member = again;
   }
-  if (!memberId) {
+  if (!member) {
     const sb = dbFor(null);
     if (!sb) return Response.json({ error: "session-unavailable" }, { status: 503 });
     const made = await createSandbox(sb, callerKey(req));
     if (!made.ok) return Response.json({ error: made.error === "busy" ? "demo-busy" : "demo-unavailable" }, { status: 503 });
-    memberId = made.idMap.get(seedMemberId) ?? null;
+    // The copy's own row, as just written: no read back.
+    const id = made.idMap.get(seedMemberId);
+    member = made.members.find((m) => m.id === id);
   }
-  const member = memberId ? await dbGetMember(memberId) : undefined;
   if (!member) return Response.json({ error: "demo-unavailable" }, { status: 503 });
   const signed = signSession({ familyId: member.familyId, memberId: member.id });
   if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
@@ -99,15 +105,34 @@ async function enterDemo(req: Request, seedMemberId: string): Promise<Response> 
 
 // Current session (who am I). The one route a joiner who is still waiting
 // for an admin can use: it says whom they're waiting for (a first name only).
-export async function GET(req: Request): Promise<Response> {
+// With ?family=1 an active member's answer also carries the family (as GET /api/members) and its
+// relationships (as GET /api/relationships): the first screen asks once, and the three reads go
+// out together with the session check (one round trip; the member's row comes out of the family list).
+async function getHandler(req: Request): Promise<Response> {
   const session = sessionFromRequest(req);
   if (!session) return Response.json({ error: "unauthorized" }, { status: 401 });
-  const me = await dbGetMember(session.memberId);
+  const withFamily = new URL(req.url).searchParams.get("family") === "1";
+  if (withFamily) {
+    preloadSessionMember(req, session);
+    void familyNameFor(req, session.familyId).catch(() => undefined);
+    void relationshipsFor(req, session.familyId).catch(() => undefined);
+  }
+  const me = await memberFor(req, session.memberId);
   if (!me || me.familyId !== session.familyId) return Response.json({ error: "unauthorized" }, { status: 401 });
-  if (me.status !== "pending") return Response.json({ familyId: session.familyId, memberId: session.memberId, status: "active" });
+  if (me.status !== "pending") {
+    const base = { familyId: session.familyId, memberId: session.memberId, status: "active" as const };
+    if (!withFamily) return Response.json(base);
+    // The same check (and sliding renewal) the members route makes; the member is already loaded.
+    const auth = await requireSession(req);
+    if (auth instanceof Response) return auth;
+    const [family, relationships] = await Promise.all([membersPayload(req, auth), relationshipsFor(req, auth.familyId)]);
+    return Response.json({ ...base, ...family, relationships });
+  }
   const host = hostOf(await dbListMembers(session.familyId));
   return Response.json({ familyId: session.familyId, memberId: session.memberId, status: "pending", waitingFor: host ? host.firstName : null });
 }
+
+export const GET = guardWrites(getHandler);
 
 // Log out: clear the cookie.
 export async function DELETE(): Promise<Response> {

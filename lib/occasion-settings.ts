@@ -39,6 +39,20 @@ function empty(familyId = ""): RitualSettings {
   return { id: ID, traditions: [], kept, skipped: [], updatedBy: null, updatedAt: new Date(0).toISOString() };
 }
 
+/** The family_docs kind and row id these settings live under, for a caller that reads them in its own batch. */
+export const RITUAL_SETTINGS_KIND = KIND;
+export const ritualSettingsRowId = (familyId: string) => `${familyId}:${ID}`;
+
+/** getRitualSettings from rows of RITUAL_SETTINGS_KIND another query already read (null: not read; read it here). */
+export async function ritualSettingsFromBatch(familyId: string, rows: { id: string; data: unknown }[] | null | undefined): Promise<RitualSettings> {
+  if (!rows || !dbFor(familyId)) return getRitualSettings(familyId);
+  const local = mem.get(familyId);
+  const row = rows.find((r) => r.id === ritualSettingsRowId(familyId));
+  if (!row) return local ?? empty(familyId);
+  const parsed = RitualSettingsSchema.safeParse(row.data);
+  return parsed.success ? parsed.data : (local ?? empty(familyId));
+}
+
 export async function getRitualSettings(familyId: string): Promise<RitualSettings> {
   const local = mem.get(familyId);
   const sb = dbFor(familyId);

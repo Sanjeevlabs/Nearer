@@ -40,23 +40,33 @@ const h = vi.hoisted(() => {
     let patch: Row = {};
     let head = false;
     let lim = Infinity;
+    let cols = "*";
+    let embedSince = "";
+    // members → families(name, members(*), cards(...)): the embed PostgREST makes through the family foreign keys.
+    const embed = (r: Row): Row => {
+      if (t !== "members" || !cols.includes("families(")) return { ...r };
+      const fam = rows("families").find((f) => f.id === r.family_id);
+      const out: Row = { ...r, families: fam ? { name: fam.name } : null };
+      if (fam && cols.includes("members(")) Object.assign(out.families as Row, { members: rows("members").filter((m) => m.family_id === r.family_id).map((m) => ({ ...m })), cards: rows("cards").filter((c) => c.family_id === r.family_id && (!embedSince || String(c.taken_at) >= embedSince)).map((c) => ({ author_id: c.author_id, taken_at: c.taken_at })) });
+      return out;
+    };
     const run = () => {
       const all = rows(t);
       const hit = all.filter((r) => preds.every((f) => f(r)));
       if (op === "delete") tables.set(t, all.filter((r) => !hit.includes(r)));
       if (op === "update") hit.forEach((r) => Object.assign(r, patch));
-      return { data: head ? null : hit.slice(0, lim).map((r) => ({ ...r })), error: null, count: hit.length };
+      return { data: head ? null : hit.slice(0, lim).map(embed), error: null, count: hit.length };
     };
     const add = (label: string, f: (r: Row) => boolean) => (filters.push(label), preds.push(f), b);
     const b: Record<string, unknown> = {
-      select: (_c?: string, o?: { head?: boolean }) => ((head = Boolean(o?.head)), b),
+      select: (c?: string, o?: { head?: boolean }) => ((cols = c ?? "*"), (head = Boolean(o?.head)), b),
       delete: () => ((op = "delete"), b),
       update: (p: Row) => ((op = "update"), (patch = p), b),
       eq: (k: string, v: unknown) => add(`${k}=${String(v).slice(0, 20)}`, (r) => r[k] === v),
       neq: (k: string, v: unknown) => add(`${k}!=`, (r) => r[k] !== v),
       in: (k: string, vs: unknown[]) => add(`${k} in ${vs.length}`, (r) => vs.includes(r[k])),
       like: (k: string, p: string) => add(`${k} like`, (r) => like(r[k], p)),
-      gte: (k: string, v: string) => add(`${k}>=`, (r) => String(r[k]) >= v),
+      gte: (k: string, v: string) => (k.includes(".") ? ((embedSince = v), b) : add(`${k}>=`, (r) => String(r[k]) >= v)),
       lt: (k: string, v: string) => add(`${k}<`, (r) => String(r[k]) < v),
       not: () => b,
       or: () => b,
@@ -70,10 +80,14 @@ const h = vi.hoisted(() => {
   const fake = {
     from: (t: string) => ({
       ...builder(t),
-      insert: (input: Row | Row[]) => {
-        for (const r of Array.isArray(input) ? input : [input]) rows(t).push({ created_at: new Date().toISOString(), ...r });
-        return Promise.resolve({ error: null });
-      },
+      // A copy into the database is a round trip too (the demo sign-in is mostly inserts).
+      insert: (input: Row | Row[]) =>
+        new Promise((res) =>
+          dispatch(`${t}(insert)`, () => {
+            for (const r of Array.isArray(input) ? input : [input]) rows(t).push({ created_at: new Date().toISOString(), ...r });
+            res({ error: null });
+          }),
+        ),
       upsert: (input: Row | Row[]) => {
         for (const r of Array.isArray(input) ? input : [input]) {
           const at = rows(t).findIndex((x) => x.id === r.id);
@@ -103,6 +117,13 @@ import { GET as kidsRoute } from "@/app/api/kids/route";
 import { GET as festivalWeekRoute } from "@/app/api/festival-week/route";
 import { POST as session } from "@/app/api/session/route";
 import { GET as windowRoute } from "@/app/api/window/route";
+import { GET as membersRoute } from "@/app/api/members/route";
+import { GET as relationshipsRoute } from "@/app/api/relationships/route";
+import { GET as whoami } from "@/app/api/session/route";
+import { GET as sidesGet, POST as sidesPost } from "@/app/api/sides/route";
+import { sandboxIdle } from "@/lib/demo-sandbox";
+import { GET as cardsRoute } from "@/app/api/cards/route";
+import { GET as waitingRoute } from "@/app/api/waiting/route";
 import { requireCan, requireSession } from "@/lib/auth";
 import { readDbStats, resetDbStats } from "@/lib/db-stats";
 import { listDocs, listDocsMany, putDoc } from "@/lib/family-docs";
@@ -112,10 +133,22 @@ import { windowState } from "@/lib/window-server";
 const BUDGET = {
   // Calls run in parallel waves; depth (sequential waves) is what the person waits for.
   // The window also reads presence by time window and the viewer's unseen nudges (one wave, two more calls).
-  windowState: { calls: 10, depth: 2 },
-  window: { calls: 10, depth: 2 },
-  courtyard: { calls: 19, depth: 3 },
-  courtyardOne: { calls: 15, depth: 2 },
+  // The documents, the events and the calendar settings are one query; the session's own row comes out of the family list.
+  windowState: { calls: 5, depth: 1 },
+  window: { calls: 5, depth: 1 },
+  // At most 5 at once: a Worker keeps 6 connections open, and a 7th waits for one to close.
+  courtyard: { calls: 10, depth: 2, width: 6 },
+  courtyardOne: { calls: 9, depth: 2 },
+  // The first screen's "who am I", with the family and its relationships: one wave.
+  sessionFamily: { calls: 3, depth: 1 },
+  members: { calls: 2, depth: 1 },
+  relationships: { calls: 2, depth: 1 },
+  sideSwitch: { calls: 2, depth: 1 },
+  // The rest of the first screen's wave: everything with the session check.
+  cards: { calls: 3, depth: 1 },
+  waiting: { calls: 6, depth: 1 },
+  // The demo sign-in: brakes + family rows, members, what the first screens read. The rest copies after the answer.
+  signIn: { depth: 3 },
   festivalWeek: { calls: 6, depth: 2 },
   // The Kids page: members, relationships, cards and the document kinds, all in the wave after the session lookup.
   kids: { calls: 6, depth: 2 },
@@ -222,9 +255,13 @@ describe("database round trips", () => {
   });
 
   it("GET /api/courtyard", async () => {
+    await courtyard(get("/api/courtyard")); // a festival's first look creates its run (one insert); this is the steady state
     const m = await measure(async () => (await courtyard(get("/api/courtyard"))).status);
     report("GET /api/courtyard", m);
     expect(m.out).toBe(200);
+    // No wave wider than the Worker's open connections (the rest would queue behind them).
+    const width = Math.max(...Object.values(m.log.reduce<Record<string, number>>((acc, q) => ((acc[q.split(":")[0]] = (acc[q.split(":")[0]] ?? 0) + 1), acc), {})));
+    expect(width).toBeLessThanOrEqual(BUDGET.courtyard.width);
     expect(m.calls).toBeLessThanOrEqual(BUDGET.courtyard.calls);
     expect(m.depth).toBeLessThanOrEqual(BUDGET.courtyard.depth);
   });
@@ -232,6 +269,7 @@ describe("database round trips", () => {
   it("GET /api/courtyard for someone in one family only", async () => {
     // Their other homes are a second hop (find them, then read each); with none, it is one wave after the auth lookup.
     for (const r of h.tables.get("members")!) if (r.id === memberId) r.person_id = null;
+    await courtyard(get("/api/courtyard"));
     const m = await measure(async () => (await courtyard(get("/api/courtyard"))).status);
     report("GET /api/courtyard (one family)", m);
     expect(m.out).toBe(200);
@@ -254,6 +292,93 @@ describe("database round trips", () => {
     expect(m.out).toBe(200);
     expect(m.calls).toBeLessThanOrEqual(BUDGET.festivalWeek.calls);
     expect(m.depth).toBeLessThanOrEqual(BUDGET.festivalWeek.depth);
+  });
+});
+
+describe("the first visit and the side switch", () => {
+  it("GET /api/session?family=1", async () => {
+    const m = await measure(async () => (await whoami(get("/api/session?family=1"))).json() as Promise<{ members: unknown[]; relationships: unknown[]; status: string }>);
+    report("GET /api/session?family=1", m);
+    expect(m.out.status).toBe("active");
+    expect(m.out.members.length).toBeGreaterThan(5);
+    expect(m.out.relationships.length).toBeGreaterThan(5);
+    expect(m.calls).toBeLessThanOrEqual(BUDGET.sessionFamily.calls);
+    expect(m.depth).toBeLessThanOrEqual(BUDGET.sessionFamily.depth);
+  });
+
+  it("GET /api/session?family=1 answers what /api/members and /api/relationships answer", async () => {
+    const full = (await (await whoami(get("/api/session?family=1"))).json()) as Record<string, unknown>;
+    const members = (await (await membersRoute(get("/api/members"))).json()) as Record<string, unknown>;
+    const rels = (await (await relationshipsRoute(get("/api/relationships"))).json()) as Record<string, unknown>;
+    expect(full.members).toEqual(members.members);
+    expect(full.pending).toEqual(members.pending);
+    expect(full.family).toEqual(members.family);
+    expect(full.relationships).toEqual(rels.relationships);
+  });
+
+  it("GET /api/cards and GET /api/waiting", async () => {
+    const a = await measure(async () => (await cardsRoute(get("/api/cards"))).status);
+    const b = await measure(async () => (await waitingRoute(get("/api/waiting"))).status);
+    report("GET /api/cards", a);
+    report("GET /api/waiting", b);
+    expect([a.out, b.out]).toEqual([200, 200]);
+    expect(a.calls).toBeLessThanOrEqual(BUDGET.cards.calls);
+    expect(a.depth).toBeLessThanOrEqual(BUDGET.cards.depth);
+    expect(b.calls).toBeLessThanOrEqual(BUDGET.waiting.calls);
+    expect(b.depth).toBeLessThanOrEqual(BUDGET.waiting.depth);
+  });
+
+  it("GET /api/members and GET /api/relationships", async () => {
+    const a = await measure(async () => (await membersRoute(get("/api/members"))).status);
+    const b = await measure(async () => (await relationshipsRoute(get("/api/relationships"))).status);
+    report("GET /api/members", a);
+    report("GET /api/relationships", b);
+    expect([a.out, b.out]).toEqual([200, 200]);
+    expect(a.calls).toBeLessThanOrEqual(BUDGET.members.calls);
+    expect(a.depth).toBeLessThanOrEqual(BUDGET.members.depth);
+    expect(b.calls).toBeLessThanOrEqual(BUDGET.relationships.calls);
+    expect(b.depth).toBeLessThanOrEqual(BUDGET.relationships.depth);
+  });
+
+  it("POST /api/sides switch is one wave, and only to a home this person has", async () => {
+    const sides = (await (await sidesGet(get("/api/sides"))).json()) as { sides: { familyId: string; name: string; people: number; fresh: number }[] };
+    const other = sides.sides.find((s) => s.familyId !== familyId);
+    expect(other).toBeDefined();
+    const post = (body: unknown) => sidesPost(new Request("http://test/api/sides", { method: "POST", headers: { cookie, "content-type": "application/json" }, body: JSON.stringify(body) }));
+    const m = await measure(async () => (await post({ action: "switch", familyId: other!.familyId })).json() as Promise<{ familyId: string; memberId: string }>);
+    report("POST /api/sides switch", m);
+    expect(m.out.familyId).toBe(other!.familyId);
+    expect(m.calls).toBeLessThanOrEqual(BUDGET.sideSwitch.calls);
+    expect(m.depth).toBeLessThanOrEqual(BUDGET.sideSwitch.depth);
+    expect((await post({ action: "switch", familyId: "demo-family" })).status).toBe(403);
+    expect((await post({ action: "switch", familyId: "fam-someone-else" })).status).toBe(403);
+  });
+
+  it("the sides read with the side's people and week embedded answer what the separate reads answer", async () => {
+    const embedded = (await (await sidesGet(get("/api/sides"))).json()) as { sides: unknown[] };
+    // Without the embed (an older database, or PostgREST refusing it) the same answer comes from separate reads.
+    const realFrom = h.fake.from;
+    h.fake.from = (t: string) => {
+      const q = realFrom(t) as Record<string, unknown>;
+      const select = q.select as (c?: string) => unknown;
+      return { ...q, select: (c?: string) => select(c?.replace(/, families\(.*\)$/, "")) } as unknown as ReturnType<typeof realFrom>;
+    };
+    try {
+      const separate = (await (await sidesGet(get("/api/sides"))).json()) as { sides: unknown[] };
+      expect(separate.sides).toEqual(embedded.sides);
+    } finally {
+      h.fake.from = realFrom;
+    }
+  });
+
+  it("the demo sign-in waits for three waves", async () => {
+    h.reset();
+    const res = await session(new Request("http://test/api/session", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "10.2.0.1" }, body: JSON.stringify({ inviteCode: "NEARER-DEMO", memberId: "arjun" }) }));
+    const waited = h.stats.tick;
+    expect(res.status).toBe(200);
+    console.log(`[round-trips] POST /api/session (demo sign-in): waited ${waited} waves`);
+    expect(waited).toBeLessThanOrEqual(BUDGET.signIn.depth);
+    await sandboxIdle();
   });
 });
 

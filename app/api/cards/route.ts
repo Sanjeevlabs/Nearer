@@ -6,18 +6,29 @@ import { serverLedger, serverStore } from "@/lib/llm-server";
 import { dbAddCard, dbListCards, dbListMembers } from "@/lib/db";
 import { isKid } from "@/lib/kids";
 import { eventFromText, fileCard, titleAlbum, type EventKind } from "@/lib/albums";
-import { listDocs, putDoc } from "@/lib/family-docs";
-import { checkRateLimit, requireSession } from "@/lib/auth";
+import { listDocsMany, putDoc } from "@/lib/family-docs";
+import { checkRateLimit, requireSession, sessionFromRequest } from "@/lib/auth";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAddressed } from "@/lib/push/events";
 import { addressees } from "@/lib/households";
 import { withListen } from "@/lib/listen";
 
+/** The shelf and the two document kinds it is filtered by (one query for both kinds). */
+function readShelf(familyId: string) {
+  return Promise.all([dbListCards(familyId), listDocsMany(familyId, ["chitthi", "card_listen"] as const)]);
+}
+
 async function getHandler(req: Request): Promise<Response> {
+  // The reads start with the session check, not after it (the signed cookie names the family; a refused request throws them away).
+  const claimed = sessionFromRequest(req);
+  const early = claimed ? readShelf(claimed.familyId) : null;
+  early?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [stored, letters, listen] = await Promise.all([dbListCards(auth.familyId), listDocs(auth.familyId, "chitthi"), listDocs(auth.familyId, "card_listen").catch(() => [])]);
+  const [stored, docs] = await (early && claimed?.familyId === auth.familyId ? early : readShelf(auth.familyId));
+  const letters = docs.chitthi;
+  const listen = docs.card_listen;
   // "How to listen" is added only for the people a note was sent to (lib/listen.ts).
   const cards = withListen(withDemoShelf(stored, auth.familyId), listen, auth.memberId);
   // Today's answers are open to everyone at once. Only morning letters wait:

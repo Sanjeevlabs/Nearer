@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_VIEWER_ID, DEMO_FAMILY, DEMO_MEMBERS, signalLineFor } from "@/lib/family";
 import { normalizeDisplayLang, type SupportedLang } from "@/lib/i18n";
 import type { Member, Relationship } from "@/lib/schemas";
+import { fetchFirst } from "@/lib/early";
 import { prefetchJson } from "@/lib/use-json";
 import { Waiting } from "@/components/waiting";
 
@@ -36,23 +37,24 @@ async function fetchRelationships(): Promise<Relationship[]> {
   return ((await res.json()) as { relationships: Relationship[] }).relationships;
 }
 
-async function fetchMembers(): Promise<Member[]> {
-  const res = await fetch("/api/members", { cache: "no-store" });
-  if (!res.ok) throw new Error("members-fetch-failed");
-  const data = (await res.json()) as { members: Member[] };
-  return data.members;
+interface SessionAnswer {
+  memberId: string;
+  status?: "active" | "pending";
+  waitingFor?: string | null;
+  /** With ?family=1, for an active member: the family (as /api/members) and how everyone is related. */
+  members?: Member[];
+  relationships?: Relationship[];
 }
 
-// A returning, signed-in visitor: remembered (not the session itself) so the family can be asked for
-// at the same moment as the session, not after it.
+/** Who am I, with my family and its relationships: one request (GET /api/session?family=1). Null when signed out. */
+async function fetchSessionWithFamily(): Promise<SessionAnswer | null> {
+  const res = await fetchFirst("/api/session?family=1");
+  if (!res.ok) return null;
+  return (await res.json()) as SessionAnswer;
+}
+
+// Remembered so other screens can tell a returning, signed-in visitor (never the session itself).
 const SIGNED_KEY = "aangan:signed";
-const wasSignedIn = (): boolean => {
-  try {
-    return localStorage.getItem(SIGNED_KEY) === "1";
-  } catch {
-    return false;
-  }
-};
 const rememberSignedIn = (on: boolean): void => {
   try {
     if (on) localStorage.setItem(SIGNED_KEY, "1");
@@ -89,22 +91,26 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
 
   const refreshMembers = useCallback(async () => {
     try {
-      const [fresh, rels] = await Promise.all([fetchMembers(), fetchRelationships().catch(() => [] as Relationship[])]);
-      if (fresh.length > 0) setMembers(fresh);
-      setRelationships(rels);
+      const s = await fetchSessionWithFamily();
+      if (!s?.members) throw new Error("members-fetch-failed");
+      if (s.members.length > 0) setMembers(s.members);
+      setRelationships(s.relationships ?? (await fetchRelationships().catch(() => [] as Relationship[])));
     } catch {
       // Offline or server hiccup: keep the seeded demo members.
     }
   }, []);
 
   // The viewer is whoever the session cookie says, never a hard-coded member.
+  // A second sync (a switch while one is still answering) wins; the older answer is dropped.
+  const syncSeq = useRef(0);
   const syncSession = useCallback(async () => {
+    const seq = ++syncSeq.current;
     try {
-      // Members and relationships need only the cookie, not the session answer: start them together.
-      const early = wasSignedIn() ? Promise.all([fetchMembers().catch(() => [] as Member[]), fetchRelationships().catch(() => [] as Relationship[])]) : null;
-      const res = await fetch("/api/session", { cache: "no-store" });
-      if (res.ok) {
-        const s = (await res.json()) as { memberId: string; status?: "active" | "pending"; waitingFor?: string | null };
+      // The session, the family and its relationships in one request; on the first screen it was
+      // started by the page's inline script before this code loaded (lib/early.ts).
+      const s = await fetchSessionWithFamily();
+      if (seq !== syncSeq.current) return;
+      if (s) {
         if (s.status === "pending") {
           // Every other API is shut until an admin lets them in.
           setViewerIdState(s.memberId);
@@ -114,11 +120,10 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         setWaiting(null);
-        // The first screen's one payload starts now, alongside members and relationships (not after them).
+        // The window's payload, if the inline script didn't start it already (lib/use-json.ts takes the early one).
         if (window.location.pathname === "/") prefetchJson("/api/window");
-        const [fresh, rels] = await (early ?? Promise.all([fetchMembers().catch(() => [] as Member[]), fetchRelationships().catch(() => [] as Relationship[])]));
-        if (fresh.length > 0) setMembers(fresh);
-        setRelationships(rels);
+        if (s.members && s.members.length > 0) setMembers(s.members);
+        setRelationships(s.relationships ?? []);
         setViewerIdState(s.memberId);
         setSignedIn(true);
         rememberSignedIn(true);
@@ -128,9 +133,9 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
         rememberSignedIn(false);
       }
     } catch {
-      setSignedIn(false);
+      if (seq === syncSeq.current) setSignedIn(false);
     } finally {
-      setReady(true);
+      if (seq === syncSeq.current) setReady(true);
     }
   }, []);
 

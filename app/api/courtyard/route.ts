@@ -48,7 +48,7 @@ async function getHandler(req: Request): Promise<Response> {
   // document kinds) starts now, in the same wave as the auth lookup; the slices
   // then find it already read (lib/request-data.ts).
   const claimed = sessionFromRequest(req);
-  if (claimed) preloadCourtyard(req, claimed.familyId);
+  if (claimed) preloadCourtyard(req, claimed);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const me = await memberFor(req, auth.memberId);

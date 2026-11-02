@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { isDemoFamily, requireSession, sessionCookieHeader, signSession } from "@/lib/auth";
-import { dbAddMember, dbCreateFamily, dbCreateInvite, dbGetFamilyName, dbListCards, dbGetMember, dbLinkMembers, dbListMembers, dbListRelationships, dbListSides, dbUpdateMemberProfile } from "@/lib/db";
+import { isDemoFamily, requireSession, sessionCookieHeader, sessionFromRequest, signSession } from "@/lib/auth";
+import { dbLive } from "@/lib/family-db";
+import { isSeedFamily } from "@/lib/family";
+import { dbAddMember, dbCreateFamily, dbCreateInvite, dbGetFamilyName, dbListCards, dbLinkMembers, dbListMembers, dbListRelationships, dbListSides, dbListSidesNamed, dbUpdateMemberProfile } from "@/lib/db";
 import { allowAuthAttempt } from "@/lib/otp";
 import type { Member } from "@/lib/schemas";
 import { isAdmin, isGrownUp } from "@/lib/permissions";
@@ -32,17 +34,18 @@ const WEEK_MS = 7 * 86_400_000;
  * counts and a call name cross over — never the other family's tree.
  */
 async function sidesOf(me: Member, req?: Request) {
-  const rows = await dbListSides(me);
   const since = Date.now() - WEEK_MS;
+  // The other homes' names, people and this week's cards come with the sides query itself (one round trip).
+  const rows = await dbListSidesNamed(me, { since: new Date(since).toISOString() });
   return Promise.all(
-    rows.map(async (m) => {
+    rows.map(async ({ member: m, familyName, people: theirPeople, recent }) => {
       // Only this week's cards are counted, so the other homes are asked for just those.
       // The viewer's own Nearer is shared with the other courtyard slices when there is a request to share it on.
       const own = req && m.familyId === me.familyId;
       const [name, people, cards] = await Promise.all([
-        own ? familyNameFor(req, m.familyId) : dbGetFamilyName(m.familyId),
-        own ? membersFor(req, m.familyId) : dbListMembers(m.familyId),
-        own ? cardsFor(req, m.familyId) : dbListCards(m.familyId, { since: new Date(since).toISOString() }),
+        own ? familyNameFor(req, m.familyId) : familyName !== null ? familyName : dbGetFamilyName(m.familyId),
+        own ? membersFor(req, m.familyId) : theirPeople ? theirPeople.filter((p) => p.status !== "pending") : dbListMembers(m.familyId),
+        own ? cardsFor(req, m.familyId) : recent ?? dbListCards(m.familyId, { since: new Date(since).toISOString() }),
       ]);
       const host = people.find((p) => p.access === "owner" && p.id !== m.id && p.email) ?? people.find((p) => isAdmin(p) && p.id !== m.id && p.email) ?? null;
       return {
@@ -70,17 +73,21 @@ async function getHandler(req: Request): Promise<Response> {
 }
 
 async function postHandler(req: Request): Promise<Response> {
+  const parsed = Body.safeParse(await req.json().catch(() => null));
+  const claimed = sessionFromRequest(req);
+  // A switch reads the target home's people in the same wave as the session check (one round trip, not three).
+  const targetPeople = claimed && parsed.success && parsed.data.action === "switch" && !(dbLive() && isSeedFamily(parsed.data.familyId)) ? dbListMembers(parsed.data.familyId, { includePending: true }) : null;
+  targetPeople?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid-sides" }, { status: 400 });
   const body = parsed.data;
-  const me = await dbGetMember(auth.memberId);
+  const me = await memberFor(req, auth.memberId);
   if (!me || me.familyId !== auth.familyId) return Response.json({ error: "unknown-member" }, { status: 404 });
 
   if (body.action === "switch") {
-    // Only to a home where this same person already has a place.
-    const target = (await dbListSides(me)).find((m) => m.familyId === body.familyId);
+    // Only to a home where this same person already has a place: their own row there (same person id).
+    const target = body.familyId === me.familyId ? me : me.personId && targetPeople ? (await targetPeople).find((m) => m.personId === me.personId) : undefined;
     if (!target) return Response.json({ error: "not-your-family" }, { status: 403 });
     const signed = signSession({ familyId: target.familyId, memberId: target.id });
     if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });

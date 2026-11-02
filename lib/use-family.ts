@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { fetchFirst } from "./early";
 import type { Card } from "./schemas";
 
 // One shared, cached fetch of the family's cards. Every screen reads from the
@@ -11,6 +12,10 @@ let cache: Card[] | null = null;
 let inflight: Promise<Card[]> | null = null;
 let loadedAt = 0;
 let loadedKey = -1;
+/** The refresh key the mounted readers last asked with (a load the switch starts counts as theirs). */
+let wantedKey = 0;
+/** Moves on with every reset: an answer read for the last person or family is never kept. */
+let gen = 0;
 const listeners = new Set<() => void>();
 
 // The server already joins the demo shelf (demo family only) and holds back
@@ -21,18 +26,22 @@ function merge(server: Card[]): Card[] {
 
 async function load(): Promise<Card[]> {
   if (inflight) return inflight;
-  inflight = fetch("/api/cards", { cache: "no-store" })
+  const asked = gen;
+  // The first screen's request may already be on its way (lib/early.ts).
+  const mine: Promise<Card[]> = fetchFirst("/api/cards")
     .then((r) => (r.ok ? (r.json() as Promise<{ cards: Card[]; familyId?: string }>) : { cards: [] as Card[], familyId: undefined }))
     .then((d) => merge(d.cards))
     .catch(() => [] as Card[])
     .then((cards) => {
+      if (asked !== gen) return cards;
       cache = cards;
       inflight = null;
       loadedAt = Date.now();
       listeners.forEach((l) => l());
       return cards;
     });
-  return inflight;
+  inflight = mine;
+  return mine;
 }
 
 function subscribe(onChange: () => void): () => void {
@@ -55,6 +64,7 @@ export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] 
     // Two mounts in the same moment (shell + room) share one fetch; a later mount revalidates.
     if (cache && refreshKey === loadedKey && Date.now() - loadedAt < 2000) return;
     loadedKey = refreshKey;
+    wantedKey = refreshKey;
     void load();
   }, [refreshKey, enabled]);
   return { cards };
@@ -62,6 +72,7 @@ export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] 
 
 /** Forget the cached snapshot (sign-out, switching family). */
 export function resetFamilyCards(): void {
+  gen++;
   cache = null;
   inflight = null;
   loadedAt = 0;
@@ -74,6 +85,11 @@ if (typeof window !== "undefined") {
   window.addEventListener("aangan:auth", () => {
     resetFamilyCards();
     listeners.forEach((l) => l());
+    // Someone is showing cards: read the new person's or side's now (a reader that remounts a moment later shares it).
+    if (listeners.size > 0) {
+      loadedKey = wantedKey;
+      void load();
+    }
   });
   window.addEventListener("aangan:changed", () => {
     loadedAt = 0;
