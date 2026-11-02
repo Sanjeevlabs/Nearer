@@ -370,12 +370,13 @@ def doors(base: str, browser, problems: list[str]) -> None:
         problems.append(f"doors: arjun sign-in failed {res.status}")
         return
     family = res.json()["familyId"]
-    people = a.request.get("/api/members").json().get("members", [])
+    got = a.request.get("/api/members")
+    people = got.json().get("members", []) if got.ok else []
     ids = {}
     for seed in ("dadi", "leo"):
-        hit = next((m for m in people if m["familyId"] == family and (m["id"] == seed or m["id"].endswith("-" + seed))), None)
+        hit = next((m for m in people if m.get("familyId", family) == family and (m["id"] == seed or m["id"].endswith("-" + seed))), None)
         if not hit:
-            problems.append(f"doors: no {seed} in the demo family")
+            problems.append(f"doors: no {seed} in the demo family ({got.status}, {len(people)} people: {[m['id'] for m in people][:8]})")
             return
         ids[seed] = hit["id"]
         made_pass = a.request.post("/api/session/pass", data=json.dumps({"memberId": hit["id"]}), headers={"content-type": "application/json"})
