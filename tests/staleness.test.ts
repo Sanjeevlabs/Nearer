@@ -9,7 +9,7 @@ import { GET as suggestionsGET } from "@/app/api/suggestions/route";
 import { dbAddSuggestion } from "@/lib/db";
 import { listDocs, putDoc } from "@/lib/family-docs";
 import { dismiss, listDismissed } from "@/lib/gather-store";
-import { BEAT_TTL_MS, FADE_HOURS, glowFrom } from "@/lib/lamp";
+import { BEAT_TTL_MS, LAMP_GLOW_HOURS, glowFrom } from "@/lib/lamp";
 import { purgeExpired, TTL } from "@/lib/purge";
 import { resetDemo } from "@/lib/store";
 import { authedGet, authedJson } from "./auth-helper";
@@ -32,8 +32,8 @@ describe("staleness", () => {
     const lit = T0.toISOString();
     expect(glowFrom(lit, T0.getTime())).toBe(1);
     expect(glowFrom(lit, T0.getTime() + H)).toBe(0.5);
-    expect(glowFrom(lit, T0.getTime() + FADE_HOURS * H)).toBe(0);
-    expect(glowFrom(lit, T0.getTime() + (FADE_HOURS + 1) * H)).toBe(0);
+    expect(glowFrom(lit, T0.getTime() + LAMP_GLOW_HOURS * H)).toBe(0);
+    expect(glowFrom(lit, T0.getTime() + (LAMP_GLOW_HOURS + 1) * H)).toBe(0);
   });
 
   it("a heartbeat between homes is felt for 2 days, then /api/lamp no longer returns it", async () => {

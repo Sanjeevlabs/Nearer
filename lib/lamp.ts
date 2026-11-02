@@ -10,8 +10,11 @@ import type { Lamp } from "./kinds";
 
 /** The glow is full when lit and gone this many hours later. */
 export const LAMP_GLOW_HOURS = 2;
-/** Older name, read by the window's words: the hour the glow reaches nothing. */
-export const FADE_HOURS = LAMP_GLOW_HOURS;
+/**
+ * How long the window's WORDS still say who lit it ("Lit by Maa, yesterday", lib/window-words.ts).
+ * That is history in words, not the glow: the glow is LAMP_GLOW_HOURS.
+ */
+export const FADE_HOURS = 72;
 /** A heartbeat waits this long to be felt, then it's gone (no backlog of old pulses). */
 export const BEAT_TTL_MS = 2 * 86_400_000;
 /** A light that arrived while the viewer was away still shows once ("Arjun is thinking of you") for this long. */
