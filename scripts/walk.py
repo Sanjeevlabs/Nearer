@@ -227,6 +227,14 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
                     name = page.locator("[data-ui=room-header] h1").first.inner_text().strip()
                     if name != room:
                         problems.append(f"{person} {href}: header says {name!r}, the room is {room!r}")
+                    # The tab row fills once the family has loaded (components/ui/kit.tsx RoomHeader).
+                    if len(tabs) > 1:
+                        try:
+                            page.locator("[data-ui=room-tabs] a").first.wait_for(timeout=8_000)
+                        except Exception:
+                            pass
+                    else:
+                        page.wait_for_timeout(1_500)
                     pills = page.locator("[data-ui=room-tabs] a").count()
                     if (pills > 0) != (len(tabs) > 1):
                         problems.append(f"{person} {href}: {pills} tab pills for a room with {len(tabs)} pages")
