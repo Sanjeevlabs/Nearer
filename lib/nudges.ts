@@ -76,10 +76,14 @@ export async function enqueueNudge(familyId: string, input: NudgeInput, now: Dat
   const id = `nudge-${hash(`${week}|${input.kind}:${input.href}:${input.toMemberId}`)}`;
   const mine = (await listDocs(familyId, "nudge")).filter((n) => n.toMemberId === input.toMemberId && weekStartOf(new Date(n.at)) === week);
   if (mine.some((n) => n.id === id)) return null;
-  if (input.kind !== "letter") {
+  // "This week in your family" comes once a week, outside the event count, and only for people who haven't asked for fewer nudges (0 a week = none).
+  if (input.kind === "digest") {
+    const settings = await nudgeSettingsFor(familyId, to.id, to);
+    if (settings.maxPerWeek === 0 || mine.some((n) => n.kind === "digest")) return null;
+  } else if (input.kind !== "letter") {
     const settings = await nudgeSettingsFor(familyId, to.id, to);
     const cap = Math.min(MAX_EVENT_NUDGES_PER_WEEK, settings.maxPerWeek);
-    if (mine.filter((n) => n.kind !== "letter").length >= cap) return null;
+    if (mine.filter((n) => n.kind !== "letter" && n.kind !== "digest").length >= cap) return null;
   }
   return putDoc(familyId, "nudge", {
     id,
@@ -112,7 +116,7 @@ export async function pendingFor(familyId: string, memberId: string): Promise<Nu
 }
 
 /** How long an unopened nudge keeps waiting once it is due: "the call is tomorrow" is stale in two days. */
-export const WAIT_MS: Record<NudgeKind, number> = { heard: 7 * 86_400_000, blessed: 7 * 86_400_000, shared: 7 * 86_400_000, letter: 7 * 86_400_000, occasion: 2 * 86_400_000, call: 2 * 86_400_000 };
+export const WAIT_MS: Record<NudgeKind, number> = { heard: 7 * 86_400_000, blessed: 7 * 86_400_000, shared: 7 * 86_400_000, letter: 7 * 86_400_000, digest: 7 * 86_400_000, occasion: 2 * 86_400_000, call: 2 * 86_400_000 };
 
 /**
  * What is waiting for this person to open: due (their 8 AM has come), not yet

@@ -95,6 +95,13 @@ function Book() {
         </div>
       </section>
 
+      {chapters.length > 0 && (
+        <Link href={`/book/print?member=${encodeURIComponent(memberId)}`} className="press mt-4 flex h-12 items-center justify-center gap-2 rounded-full bg-surface px-5 text-callout font-semibold text-ink no-underline">
+          <Icon name="download" size={16} />
+          Download the book
+        </Link>
+      )}
+
       {failed ? (
         <div className="mt-6 rounded-[22px] bg-surface p-4">
           <p className="m-0 text-body">The book didn&rsquo;t open just now.</p>

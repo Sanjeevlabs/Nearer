@@ -21,7 +21,7 @@ from playwright.sync_api import sync_playwright
 
 # Mirrors lib/menu.ts roomsFor(); the walk fails if the house sheet disagrees.
 ROOMS = {
-    "Memories": ["/lane", "/stories"],
+    "Memories": ["/lane", "/stories", "/ask-family"],
     "Kitchen": ["/kitchen"],
     "Care": ["/care", "/care/helpers", "/nearby"],
     # Kids (/bond/kids) is there because the demo family has children.

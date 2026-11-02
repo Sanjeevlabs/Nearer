@@ -364,7 +364,7 @@ Rooms,/advice,5,tab,Kids,/bond/kids,room-tabs,arjun dadi,,keep,
 Rooms,/advice,6,tab,The Book,/book,room-tabs,arjun dadi,,keep,
 Rooms,/advice,7,tab,Advice,/advice,room-tabs,arjun dadi,,keep,
 Rooms,/advice,8,tab,Portrait,/portrait,room-tabs,arjun dadi,,keep,
-Rooms,/advice,9,button,Ask,,,arjun aria,,keep,
+Rooms,/advice,9,button,Ask,,,arjun aria,dup,review,
 Rooms,/advice,10,toggle,All N,,,arjun dadi aria,,keep,
 Rooms,/advice,11,toggle,Health habits N,,,arjun dadi aria,,keep,
 Rooms,/advice,12,toggle,Blessings for occasions N,,,arjun dadi aria,,keep,
@@ -381,6 +381,20 @@ Rooms,/advice,22,heading,Blessings for occasions,,~Blessings for occasions,arjun
 Rooms,/advice,23,button,Share these words,,~Blessings for occasions,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
 Rooms,/advice,24,button,Play Papa's voice note,,~Blessings for occasions,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/advice,25,button,Voice note options,,~Blessings for occasions,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/ask-family,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/ask-family,1,h1,Ask the family,,room-header,arjun dadi aria,,keep,
+Rooms,/ask-family,2,nav,Memories,,room-tabs,arjun dadi,,keep,
+Rooms,/ask-family,3,tab,Memory Lane,/lane,room-tabs,arjun dadi,,keep,
+Rooms,/ask-family,4,tab,Stories,/stories,room-tabs,arjun dadi,,keep,
+Rooms,/ask-family,5,tab,Ask,/ask-family,room-tabs,arjun dadi,,keep,
+Rooms,/ask-family,6,input:text,Ask the family,,,arjun dadi aria,,keep,
+Rooms,/ask-family,7,button,Ask,,,arjun dadi aria,icon-only dup,review,
+Rooms,/ask-family,8,button,How did Maa learn to swim?,,,arjun aria,,keep,
+Rooms,/ask-family,8,button,How did Papa learn to swim?,,,dadi,,keep,
+Rooms,/ask-family,9,button,What advice did Maa give?,,,arjun aria,,keep,
+Rooms,/ask-family,9,button,What advice did Papa give?,,,dadi,,keep,
+Rooms,/ask-family,10,button,How does Maa make their favourite dish?,,,arjun aria,,keep,
+Rooms,/ask-family,10,button,How does Papa make their favourite dish?,,,dadi,,keep,
 Rooms,/bond,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/bond,1,h1,Family tree,,room-header,arjun dadi aria,,review,icon-only control: its name is only an aria-label
 Rooms,/bond,2,nav,Family,,room-tabs,arjun dadi,,keep,
@@ -542,12 +556,13 @@ Rooms,/book,9,nav,Whose book,,,arjun dadi aria,,keep,
 Rooms,/book,10,link,Maa,/book?member=dadi,~Whose book,arjun dadi aria,dup,review,icon-only control: its name is only an aria-label
 Rooms,/book,11,link,Papa,/book?member=dada,~Whose book,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
 Rooms,/book,12,section,Cover,,,arjun dadi aria,,keep,
-Rooms,/book,13,section,N,,,arjun dadi aria,,keep,
-Rooms,/book,14,heading,N,,~2026,arjun dadi aria,,keep,
-Rooms,/book,15,heading,"One thing you miss about Arjun, Kavya & Rohan",,~2026,dadi aria,,keep,
-Rooms,/book,15,heading,"The most wonderful day you remember with Arjun, Kavya & Rohan",,~2026,arjun dadi aria,,keep,
-Rooms,/book,16,button,Play this answer in their voice,,~2026,arjun dadi aria,,keep,
-Rooms,/book,17,heading,"Something Arjun, Kavya & Rohan taught you",,~2026,arjun dadi aria,,keep,
+Rooms,/book,13,link,Download the book,/book/print?member=dadi,,arjun dadi aria,,keep,
+Rooms,/book,14,section,N,,,arjun dadi aria,,keep,
+Rooms,/book,15,heading,N,,~2026,arjun dadi aria,,keep,
+Rooms,/book,16,heading,"One thing you miss about Arjun, Kavya & Rohan",,~2026,dadi aria,,keep,
+Rooms,/book,16,heading,"The most wonderful day you remember with Arjun, Kavya & Rohan",,~2026,arjun dadi aria,,keep,
+Rooms,/book,17,button,Play this answer in their voice,,~2026,arjun dadi aria,,keep,
+Rooms,/book,18,heading,"Something Arjun, Kavya & Rohan taught you",,~2026,arjun dadi aria,,keep,
 Rooms,/care,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/care,1,h1,Care tasks,,room-header,arjun dadi aria,,keep,
 Rooms,/care,2,nav,Care,,room-tabs,arjun dadi,,keep,
@@ -710,38 +725,39 @@ Rooms,/lane,1,h1,Memory Lane,,room-header,arjun dadi aria,,keep,
 Rooms,/lane,2,nav,Memories,,room-tabs,arjun dadi aria,,keep,
 Rooms,/lane,3,tab,Memory Lane,/lane,room-tabs,arjun dadi aria,,keep,
 Rooms,/lane,4,tab,Stories,/stories,room-tabs,arjun dadi aria,,keep,
-Rooms,/lane,5,toggle,Everyone,,,arjun dadi aria,,keep,
-Rooms,/lane,6,toggle,Maa Maa,,,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
-Rooms,/lane,7,image,Maa,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/lane,8,toggle,Papa,,,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
-Rooms,/lane,9,toggle,Arjun Arjun,,,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
-Rooms,/lane,10,image,Arjun,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/lane,11,toggle,Vihaan Vihaan,,,arjun dadi aria,,keep,
-Rooms,/lane,12,image,Vihaan,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/lane,13,toggle,Anika Anika,,,arjun dadi aria,,keep,
-Rooms,/lane,14,image,Anika,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/lane,15,section,Albums,,,arjun dadi aria,,keep,
-Rooms,/lane,16,heading,Albums,,~Albums,arjun dadi aria,,keep,
-Rooms,/lane,17,button,Sort older photos into albums,,~Albums,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/lane,18,link,Together A <day> morning in the courtyard N · <date>,/lane/album/album-courtyard-N,~Albums,arjun dadi aria,,keep,
-Rooms,/lane,19,section,Photos,,,arjun dadi aria,,keep,
-Rooms,/lane,20,heading,Photos,,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,21,button,"My house, with the sun and all of us.",,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,22,button,My top spun for a whole minute.,,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,23,button,Maa's tulsi in the morning sun.,,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,24,button,"The old window, winter light.",,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,25,button,Anika shows Maa the picture she drew.,,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,26,button,"Vihaan and his spinning tops, all over the courtyard floor.",,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,27,button,"Maa on the courtyard steps, between her pots of tulsi.",,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,28,button,आँगन में धूप और चाय।,,~Photos,arjun dadi aria,,keep,
-Rooms,/lane,29,section,Voice notes,,,arjun dadi aria,,keep,
-Rooms,/lane,30,heading,Voice notes,,~Voice notes,arjun dadi aria,,keep,
-Rooms,/lane,31,button,"Vihaan's voice note, Nov ’N",,~Voice notes,arjun dadi aria,,keep,
-Rooms,/lane,32,button,"Maa's voice note, Nov ’N",,~Voice notes,arjun dadi aria,,keep,
-Rooms,/lane,34,button,"Anika's voice note, Nov ’N",,~Voice notes,arjun dadi aria,,keep,
-Rooms,/lane,36,button,"Maa's voice note, Oct ’N",,~Voice notes,arjun dadi aria,,keep,
-Rooms,/lane,38,button,"Arjun's voice note, Oct ’N",,~Voice notes,arjun dadi aria,,keep,
-Rooms,/lane,40,button,"Papa's voice note, Oct ’N",,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,5,tab,Ask,/ask-family,room-tabs,arjun dadi,,keep,
+Rooms,/lane,6,toggle,Everyone,,,arjun dadi aria,,keep,
+Rooms,/lane,7,toggle,Maa Maa,,,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
+Rooms,/lane,8,image,Maa,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/lane,9,toggle,Papa,,,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
+Rooms,/lane,10,toggle,Arjun Arjun,,,arjun dadi aria,dup,review,on more than 2 screens: one path per job?
+Rooms,/lane,11,image,Arjun,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/lane,12,toggle,Vihaan Vihaan,,,arjun dadi aria,,keep,
+Rooms,/lane,13,image,Vihaan,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/lane,14,toggle,Anika Anika,,,arjun dadi aria,,keep,
+Rooms,/lane,15,image,Anika,,,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/lane,16,section,Albums,,,arjun dadi aria,,keep,
+Rooms,/lane,17,heading,Albums,,~Albums,arjun dadi aria,,keep,
+Rooms,/lane,18,button,Sort older photos into albums,,~Albums,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/lane,19,link,Together A <day> morning in the courtyard N · <date>,/lane/album/album-courtyard-N,~Albums,arjun dadi aria,,keep,
+Rooms,/lane,20,section,Photos,,,arjun dadi aria,,keep,
+Rooms,/lane,21,heading,Photos,,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,22,button,"My house, with the sun and all of us.",,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,23,button,My top spun for a whole minute.,,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,24,button,Maa's tulsi in the morning sun.,,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,25,button,"The old window, winter light.",,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,26,button,Anika shows Maa the picture she drew.,,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,27,button,"Vihaan and his spinning tops, all over the courtyard floor.",,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,28,button,"Maa on the courtyard steps, between her pots of tulsi.",,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,29,button,आँगन में धूप और चाय।,,~Photos,arjun dadi aria,,keep,
+Rooms,/lane,30,section,Voice notes,,,arjun dadi aria,,keep,
+Rooms,/lane,31,heading,Voice notes,,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,32,button,"Vihaan's voice note, Nov ’N",,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,33,button,"Maa's voice note, Nov ’N",,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,35,button,"Anika's voice note, Nov ’N",,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,37,button,"Maa's voice note, Oct ’N",,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,39,button,"Arjun's voice note, Oct ’N",,~Voice notes,arjun dadi aria,,keep,
+Rooms,/lane,41,button,"Papa's voice note, Oct ’N",,~Voice notes,arjun dadi aria,,keep,
 Rooms,/nearby,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/nearby,1,h1,Trusted nearby,,room-header,arjun dadi aria,,keep,
 Rooms,/nearby,2,nav,Care,,room-tabs,arjun dadi,,keep,
@@ -889,47 +905,48 @@ Rooms,/stories,1,h1,Stories,,room-header,arjun dadi aria,,keep,
 Rooms,/stories,2,nav,Memories,,room-tabs,arjun dadi aria,,keep,
 Rooms,/stories,3,tab,Memory Lane,/lane,room-tabs,arjun dadi aria,,keep,
 Rooms,/stories,4,tab,Stories,/stories,room-tabs,arjun dadi aria,,keep,
-Rooms,/stories,5,button,"Bedtime Stories in a row, then lights out",,,arjun dadi aria,,keep,
-Rooms,/stories,6,button,Tell a story,,,arjun dadi,,keep,
-Rooms,/stories,7,button,Ask for a story,,,arjun dadi aria,,keep,
+Rooms,/stories,5,tab,Ask,/ask-family,room-tabs,arjun dadi,,keep,
+Rooms,/stories,6,button,"Bedtime Stories in a row, then lights out",,,arjun dadi aria,,keep,
+Rooms,/stories,7,button,Tell a story,,,arjun dadi,,keep,
 Rooms,/stories,7,section,Ask Maa,,,aria,,keep,
+Rooms,/stories,8,button,Ask for a story,,,arjun dadi aria,,keep,
 Rooms,/stories,8,heading,Ask Maa,,~Ask Maa,aria,,keep,
-Rooms,/stories,8,section,A story to tell tonight,,,arjun dadi,,keep,
-Rooms,/stories,9,button,Record it for the children,,~A story to tell tonight,arjun dadi,,keep,
 Rooms,/stories,9,button,Tell me about a time the whole family laughed until they cried,,~Ask Maa,aria,,keep,
+Rooms,/stories,9,section,A story to tell tonight,,,arjun dadi,,keep,
+Rooms,/stories,10,button,Record it for the children,,~A story to tell tonight,arjun dadi,,keep,
 Rooms,/stories,10,button,Tell me about where you grew up and what the street sounded like,,~Ask Maa,aria,,keep,
-Rooms,/stories,10,button,The day you got lost at the mela,,,dadi,,keep,
-Rooms,/stories,10,section,Maa's stories,,,arjun dadi aria,,keep,
 Rooms,/stories,11,button,Tell me about how the two of you met,,~Ask Maa,aria,,keep,
-Rooms,/stories,11,button,What Papa was like at my age,,,dadi,,keep,
-Rooms,/stories,11,image,Maa,,~Maa's stories,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/stories,12,button,An animal that lived near your home,,,dadi,,keep,
+Rooms,/stories,11,button,The day you got lost at the mela,,,dadi,,keep,
+Rooms,/stories,11,section,Maa's stories,,,arjun dadi aria,,keep,
 Rooms,/stories,12,button,Tell me about a hard year and how the family came through,,~Ask Maa,aria,,keep,
-Rooms,/stories,12,heading,Maa's stories,,~Maa's stories,arjun aria,,keep,
-Rooms,/stories,13,button,A story your grandmother told you,,,dadi,,keep,
-Rooms,/stories,13,button,"Play The elephant and the tailor, told by Maa",,~Maa's stories,arjun dadi aria,,keep,
+Rooms,/stories,12,button,What Papa was like at my age,,,dadi,,keep,
+Rooms,/stories,12,image,Maa,,~Maa's stories,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/stories,13,button,An animal that lived near your home,,,dadi,,keep,
 Rooms,/stories,13,button,Tell me about the day I was born,,~Ask Maa,aria,,keep,
-Rooms,/stories,14,button,Share these words,,~Maa's stories,arjun dadi,icon-only dup,review,icon-only control: its name is only an aria-label
-Rooms,/stories,14,button,The naughtiest thing you ever did,,,dadi,,keep,
-Rooms,/stories,15,button,A lullaby you sang to your children,,,dadi,,keep,
-Rooms,/stories,15,button,The elephant and the tailor options,,~Maa's stories,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/stories,16,button,"Play When I got lost at the fair, told by Maa",,~Maa's stories,arjun dadi aria,,keep,
-Rooms,/stories,16,section,Stories only you can tell,,,dadi,,keep,
-Rooms,/stories,17,heading,Stories only you can tell,,~Stories only you can tell,dadi,,keep,
-Rooms,/stories,18,button,A time the whole family laughed until they cried Who was there and where Record…,,~Stories only you can tell,dadi,,keep,
-Rooms,/stories,18,button,When I got lost at the fair options,,~Maa's stories,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/stories,19,button,"Play Your papa and the mango tree, told by Maa",,~Maa's stories,arjun dadi aria,,keep,
-Rooms,/stories,19,button,"Where you grew up, and what the street sounded like The house, the lane, the sm…",,~Stories only you can tell,dadi,,keep,
-Rooms,/stories,20,button,How the two of you met The first time you saw each other Record this story,,~Stories only you can tell,dadi,,keep,
-Rooms,/stories,21,button,"A hard year, and how the family came through What went wrong that year Record t…",,~Stories only you can tell,dadi,,keep,
-Rooms,/stories,21,button,Your papa and the mango tree options,,~Maa's stories,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/stories,22,button,The day Rohan was born Where you were and who was with you Record this story,,~Stories only you can tell,dadi,,keep,
-Rooms,/stories,22,section,Papa's stories,,,arjun dadi aria,,keep,
-Rooms,/stories,23,heading,Papa's stories,,~Papa's stories,arjun dadi aria,,keep,
-Rooms,/stories,24,button,"Play How Papa learned to swim, told by Papa",,~Papa's stories,arjun dadi aria,,keep,
-Rooms,/stories,25,button,Share these words,,~Papa's stories,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
-Rooms,/stories,25,heading,Your stories,,~Maa's stories,dadi,,keep,
-Rooms,/stories,26,button,How Papa learned to swim options,,~Papa's stories,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/stories,13,heading,Maa's stories,,~Maa's stories,arjun aria,,keep,
+Rooms,/stories,14,button,A story your grandmother told you,,,dadi,,keep,
+Rooms,/stories,14,button,"Play The elephant and the tailor, told by Maa",,~Maa's stories,arjun dadi aria,,keep,
+Rooms,/stories,15,button,Share these words,,~Maa's stories,arjun dadi,icon-only dup,review,icon-only control: its name is only an aria-label
+Rooms,/stories,15,button,The naughtiest thing you ever did,,,dadi,,keep,
+Rooms,/stories,16,button,A lullaby you sang to your children,,,dadi,,keep,
+Rooms,/stories,16,button,The elephant and the tailor options,,~Maa's stories,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/stories,17,button,"Play When I got lost at the fair, told by Maa",,~Maa's stories,arjun dadi aria,,keep,
+Rooms,/stories,17,section,Stories only you can tell,,,dadi,,keep,
+Rooms,/stories,18,heading,Stories only you can tell,,~Stories only you can tell,dadi,,keep,
+Rooms,/stories,19,button,A time the whole family laughed until they cried Who was there and where Record…,,~Stories only you can tell,dadi,,keep,
+Rooms,/stories,19,button,When I got lost at the fair options,,~Maa's stories,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/stories,20,button,"Play Your papa and the mango tree, told by Maa",,~Maa's stories,arjun dadi aria,,keep,
+Rooms,/stories,20,button,"Where you grew up, and what the street sounded like The house, the lane, the sm…",,~Stories only you can tell,dadi,,keep,
+Rooms,/stories,21,button,How the two of you met The first time you saw each other Record this story,,~Stories only you can tell,dadi,,keep,
+Rooms,/stories,22,button,"A hard year, and how the family came through What went wrong that year Record t…",,~Stories only you can tell,dadi,,keep,
+Rooms,/stories,22,button,Your papa and the mango tree options,,~Maa's stories,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/stories,23,button,The day Rohan was born Where you were and who was with you Record this story,,~Stories only you can tell,dadi,,keep,
+Rooms,/stories,23,section,Papa's stories,,,arjun dadi aria,,keep,
+Rooms,/stories,24,heading,Papa's stories,,~Papa's stories,arjun dadi aria,,keep,
+Rooms,/stories,25,button,"Play How Papa learned to swim, told by Papa",,~Papa's stories,arjun dadi aria,,keep,
+Rooms,/stories,26,button,Share these words,,~Papa's stories,arjun,icon-only dup,review,icon-only control: its name is only an aria-label
+Rooms,/stories,26,heading,Your stories,,~Maa's stories,dadi,,keep,
+Rooms,/stories,27,button,How Papa learned to swim options,,~Papa's stories,arjun,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/together/holidays,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/together/holidays,1,h1,Holidays,,room-header,arjun dadi aria,,keep,
 Rooms,/together/holidays,2,nav,Celebrations,,room-tabs,arjun dadi,,keep,

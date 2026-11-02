@@ -23,7 +23,7 @@ describe("the five rooms", () => {
   it("groups the rooms as agreed, in order", () => {
     const tabs = Object.fromEntries(roomsFor(false).map((r) => [r.title, r.tabs.map((t) => `${t.label} ${t.href}`)]));
     expect(tabs).toEqual({
-      Memories: ["Memory Lane /lane", "Stories /stories"],
+      Memories: ["Memory Lane /lane", "Stories /stories", "Ask /ask-family"],
       Kitchen: ["Recipes /kitchen"],
       Care: ["Care tasks /care", "Helpers /care/helpers", "Nearby /nearby"],
       Family: ["Family tree /bond", "Homes /bond/homes", "The Book /book", "Advice /advice", "Portrait /portrait"],
@@ -40,7 +40,7 @@ describe("the five rooms", () => {
   });
 
   it("shows each room's tabs on its pages, with the right one active; Kitchen and pages outside rooms have none", () => {
-    expect(tabLabels("/stories")).toEqual(["Memory Lane", "Stories"]);
+    expect(tabLabels("/stories")).toEqual(["Memory Lane", "Stories", "Ask"]);
     expect(tabLabels("/book")).toEqual(["Family tree", "Homes", "The Book", "Advice", "Portrait"]);
     expect(tabLabels("/care/helpers")).toEqual(["Care tasks", "Helpers", "Nearby"]);
     expect(tabsFor("/send")).toBeNull();
