@@ -43,6 +43,25 @@ async function fetchMembers(): Promise<Member[]> {
   return data.members;
 }
 
+// A returning, signed-in visitor: remembered (not the session itself) so the family can be asked for
+// at the same moment as the session, not after it.
+const SIGNED_KEY = "aangan:signed";
+const wasSignedIn = (): boolean => {
+  try {
+    return localStorage.getItem(SIGNED_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+const rememberSignedIn = (on: boolean): void => {
+  try {
+    if (on) localStorage.setItem(SIGNED_KEY, "1");
+    else localStorage.removeItem(SIGNED_KEY);
+  } catch {
+    /* no storage */
+  }
+};
+
 export function ViewerProvider({ children }: { children: React.ReactNode }) {
   const [members, setMembers] = useState<Member[]>(DEMO_MEMBERS);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
@@ -81,6 +100,8 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
   // The viewer is whoever the session cookie says, never a hard-coded member.
   const syncSession = useCallback(async () => {
     try {
+      // Members and relationships need only the cookie, not the session answer: start them together.
+      const early = wasSignedIn() ? Promise.all([fetchMembers().catch(() => [] as Member[]), fetchRelationships().catch(() => [] as Relationship[])]) : null;
       const res = await fetch("/api/session", { cache: "no-store" });
       if (res.ok) {
         const s = (await res.json()) as { memberId: string; status?: "active" | "pending"; waitingFor?: string | null };
@@ -89,19 +110,22 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
           setViewerIdState(s.memberId);
           setWaiting({ hostName: s.waitingFor ?? null });
           setSignedIn(true);
+          rememberSignedIn(true);
           return;
         }
         setWaiting(null);
         // The first screen's one payload starts now, alongside members and relationships (not after them).
         if (window.location.pathname === "/") prefetchJson("/api/window");
-        const [fresh, rels] = await Promise.all([fetchMembers().catch(() => [] as Member[]), fetchRelationships().catch(() => [] as Relationship[])]);
+        const [fresh, rels] = await (early ?? Promise.all([fetchMembers().catch(() => [] as Member[]), fetchRelationships().catch(() => [] as Relationship[])]));
         if (fresh.length > 0) setMembers(fresh);
         setRelationships(rels);
         setViewerIdState(s.memberId);
         setSignedIn(true);
+        rememberSignedIn(true);
       } else {
         setSignedIn(false);
         setWaiting(null);
+        rememberSignedIn(false);
       }
     } catch {
       setSignedIn(false);

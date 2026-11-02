@@ -39,7 +39,7 @@ function RowHead({ title, count, range, extra }: { title: string; count: number;
   );
 }
 
-function Tile({ card, kind, onOpen }: { card: Card; kind: LaneKind; onOpen: () => void }) {
+function Tile({ card, kind, onOpen, eager = false }: { card: Card; kind: LaneKind; onOpen: () => void; eager?: boolean }) {
   const { members } = useViewer();
   const { current, isPlaying } = usePlayer();
   const author = members.find((m) => m.id === card.authorId);
@@ -53,7 +53,7 @@ function Tile({ card, kind, onOpen }: { card: Card; kind: LaneKind; onOpen: () =
       data-card={card.id}
       className={cn("press relative shrink-0 snap-start overflow-hidden rounded-[18px] bg-surface text-left", voice ? "h-[112px] w-[112px]" : "h-[150px] w-[120px]")}
     >
-      <Photo src={cardCover(card, members)} alt="" sizes="240px" position="center 30%" />
+      <Photo src={cardCover(card, members)} alt="" sizes="240px" position="center 30%" priority={eager} />
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.28),transparent_38%,transparent_58%,rgba(0,0,0,.55))]" aria-hidden="true" />
       <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-caption font-semibold">{monthChip(card.takenAt)}</span>
       {kind !== "photo" && (
@@ -81,7 +81,7 @@ function Row({ children, label }: { children: React.ReactNode; label: string }) 
 }
 
 export default function LanePage() {
-  const { members } = useViewer();
+  const { members, ready } = useViewer();
   const { refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const [who, setWho] = useState<string | null>(null);
@@ -109,6 +109,8 @@ export default function LanePage() {
     const mine = who && cards ? all.filter((a) => a.cardIds.some((id) => cards.find((c) => c.id === id)?.authorId === who)) : all;
     return kidsOnly ? [] : [...mine].sort((a, b) => b.endAt.localeCompare(a.endAt));
   }, [albumsQ.data, who, cards, kidsOnly]);
+  // Albums sit above the rows: wait for them too, or the rows slide down when they arrive.
+  const loading = groups === null || !ready || (albumsQ.data === null && !albumsQ.failed);
   const total = groups ? groups.photo.length + groups.video.length + groups.audio.length : 0;
   // Only people with something on this page get a chip.
   const authors = useMemo(() => new Set((shown ?? []).filter((c) => !skip?.has(c.id)).map((c) => c.authorId)), [shown, skip]);
@@ -146,7 +148,7 @@ export default function LanePage() {
     <div>
       <RoomHeader title="Memory Lane" subtitle="Everyday photos and voices, by the years" />
 
-      {groups !== null && (people.length > 1 || kidsOnly) && (
+      {!loading && (people.length > 1 || kidsOnly) && (
         <div className="no-scrollbar -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4" role="radiogroup" aria-label="Show memories from">
           <button type="button" role="radio" aria-checked={who === null && !kidsOnly} onClick={() => { setWho(null); setKidsOnly(false); }} className={cn("press h-10 shrink-0 rounded-full px-4 text-callout font-medium", who === null && !kidsOnly ? "bg-accent text-accent-ink" : "bg-surface")}>
             Everyone
@@ -165,7 +167,7 @@ export default function LanePage() {
         </div>
       )}
 
-      {groups === null ? (
+      {loading || groups === null ? (
         <div key="loading" className="space-y-5" aria-busy="true" aria-label="Loading memories">
           {[0, 1, 2].map((i) => (
             <div key={i}>
@@ -203,8 +205,8 @@ export default function LanePage() {
               />
               {albums.length > 0 ? (
                 <Row label="Albums">
-                  {albums.map((a) => (
-                    <AlbumCover key={a.id} album={a} cards={cards} compact />
+                  {albums.map((a, i) => (
+                    <AlbumCover key={a.id} album={a} cards={cards} compact eager={i < 2} />
                   ))}
                 </Row>
               ) : (
@@ -216,12 +218,14 @@ export default function LanePage() {
           {LANE_ROWS.map((r) => {
             const list = groups[r.kind];
             if (!list.length) return null;
+            // The first screen's tiles load at once; the rest wait their turn.
+            const first = !albums.length && LANE_ROWS.find((x) => groups[x.kind].length)?.kind === r.kind;
             return (
               <Boundary key={r.kind} label={r.title}><section aria-label={r.title}>
                 <RowHead title={r.title} count={list.length} range={rangeLabel(list)} />
                 <Row label={r.title}>
                   {list.map((c, i) => (
-                    <Tile key={c.id} card={c} kind={r.kind} onOpen={() => setOpen({ kind: r.kind, index: i })} />
+                    <Tile key={c.id} card={c} kind={r.kind} eager={first && i < 3} onOpen={() => setOpen({ kind: r.kind, index: i })} />
                   ))}
                 </Row>
               </section></Boundary>
