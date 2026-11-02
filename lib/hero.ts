@@ -13,6 +13,31 @@ export const WINDOW_SIZES = "(min-width: 480px) 480px, 100vw";
  */
 export const DEFAULT_IMAGE = "/demo/home-courtyard.jpg";
 
+/**
+ * THE ONE PLACE TO SWITCH the first screen's picture of their home:
+ * "drawn" = DrawnScene, an inline SVG of their open space under the real sky (default);
+ * "photo" = PhotoScene, a photo per space / phase / weather from /window/ with only the
+ * lamp glow and particles drawn over it. A viewer's own photo (Settings, Your window,
+ * Photo) always wins over both.
+ */
+export type SceneRenderer = "drawn" | "photo";
+export const SCENE_RENDERER: SceneRenderer = "drawn";
+
+/** The component each renderer value selects (components/window-scene.tsx). */
+export const RENDERER_COMPONENT: Record<SceneRenderer, "DrawnScene" | "PhotoScene"> = { drawn: "DrawnScene", photo: "PhotoScene" };
+
+export type SceneSpace = "window" | "balcony" | "courtyard";
+
+/**
+ * PhotoScene's files, best first: the exact space/phase/weather, the same phase
+ * clear, day clear, then the viewer's own photo (if any). Never a stock photo.
+ */
+export function photoSceneCandidates(space: SceneSpace, phase: string, weather: string | null, own: string | null): string[] {
+  const out = [`/window/${space}-${phase}-${weather ?? "clear"}.webp`, `/window/${space}-${phase}-clear.webp`, `/window/${space}-day-clear.webp`];
+  if (own) out.push(own);
+  return Array.from(new Set(out));
+}
+
 /** Height of the photo: under half the screen (44vh, 260-400px), so the name and the lamp row fit above the fold on a phone. */
 export const WINDOW_PHOTO_HEIGHT = "clamp(260px, 44vh, 400px)";
 

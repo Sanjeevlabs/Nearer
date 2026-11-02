@@ -31,6 +31,10 @@ export interface LampHome {
 export interface LampView {
   lamps: LampHome[];
   beats: { from: string; at: string }[];
+  /** Another home lit its lamp since the viewer last felt one: show it once, then post "felt". */
+  arrived: { from: string; at: string } | null;
+  /** Someone in another home felt the viewer's latest light or heartbeat ("Maa felt it · 7:12"). */
+  felt: { by: string; at: string } | null;
 }
 
 /**
@@ -41,7 +45,28 @@ export interface LampView {
 export function lampView(homes: Household[], lamps: Lamp[], viewerId: string, hidden: Set<string> = new Set(), now = Date.now()): LampView {
   const mine = homes.find((h) => h.members.some((m) => m.id === viewerId));
   const known = new Set(homes.flatMap((h) => h.members.map((m) => m.id)));
+  const myLamp = lamps.find((l) => l.id === mine?.id);
+  const others = homes.filter((h) => h.id !== mine?.id);
+  // The viewer's latest reach-out: lighting their own lamp, or a heartbeat into another home.
+  const reach = [myLamp?.litBy === viewerId ? myLamp.litAt : null, ...lamps.flatMap((l) => l.beats.filter((b) => b.from === viewerId).map((b) => b.at))].filter((t): t is string => Boolean(t)).sort().pop() ?? null;
+  let felt: LampView["felt"] = null;
+  let arrived: LampView["arrived"] = null;
+  const seen = myLamp?.felt[viewerId] ?? "";
+  for (const h of others) {
+    const lamp = lamps.find((l) => l.id === h.id);
+    if (!lamp) continue;
+    if (reach) {
+      for (const m of h.members) {
+        const at = lamp.felt[m.id];
+        if (at && at >= reach && !hidden.has(m.id) && (!felt || at > felt.at)) felt = { by: m.id, at };
+      }
+    }
+    const lit = lamp.litAt && lamp.litBy && lamp.litBy !== viewerId && !hidden.has(lamp.litBy) && lamp.litAt > seen && Date.parse(lamp.litAt) <= now && glowFrom(lamp.litAt, now) > 0 ? { from: lamp.litBy, at: lamp.litAt } : null;
+    if (lit && (!arrived || lit.at > arrived.at)) arrived = lit;
+  }
   return {
+    arrived,
+    felt,
     lamps: homes.map((h) => {
       const lamp = lamps.find((l) => l.id === h.id);
       const shown = lamp && lamp.litAt && lamp.litBy && !hidden.has(lamp.litBy) && Date.parse(lamp.litAt) <= now ? lamp : undefined;

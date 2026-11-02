@@ -7,7 +7,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { whatsappInvite } from "@/lib/invite-link";
 import { haptic } from "@/lib/native";
 import type { Knock, SafetyCheckin } from "@/lib/kinds";
-import { DEFAULT_IMAGE, rememberHero } from "@/lib/hero";
+import { rememberHero, type SceneSpace } from "@/lib/hero";
+import type { LampView } from "@/lib/lamp";
+import { skyState } from "@/lib/sky-state";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { callName, memberPhoto } from "@/lib/people";
 import { stateOf, type SafetyState } from "@/lib/safety";
@@ -18,7 +20,7 @@ import { ALIVE_LOOK, type Alive } from "@/lib/status";
 import { invalidateJson, postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import type { Weather } from "@/lib/weather";
-import { badgeParts, clockWord, dayWord, lampToday, type DayMoment } from "@/lib/window-words";
+import { badgeParts, clockWord, dayWord, firstNameOf, LAMP_WHY, lampState, moonLine, type DayMoment } from "@/lib/window-words";
 import { timeIn } from "@/lib/zones";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import { PeoplePicker } from "./people-picker";
@@ -28,7 +30,7 @@ import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
 import { Avatar, Icon, Photo, type IconName } from "./ui/kit";
 import { useViewer } from "./viewer";
-import { HeroBox, earlyHeroSrc } from "./window-hero";
+import { WindowScene } from "./window-scene";
 
 // The first screen. A real photograph of their home, full width and about half
 // the screen, with one small badge on it (their time, weather, sun or moon).
@@ -62,6 +64,8 @@ interface WindowData {
   call: { good: boolean; text: string };
   glance?: Glance;
   homePhoto?: string | null;
+  place?: { lat: number; lon: number } | null;
+  scene?: SceneSpace;
 }
 
 export const WELCOME_KEY = "aangan:welcome";
@@ -166,70 +170,7 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
 }
 
 /* ------------------------------------------------- the light, and their voice */
-interface LampData {
-  lamps: { homeKey: string; memberIds: string[]; litAt: string | null; litBy: string | null; glow: number }[];
-  beats: { from: string; at: string }[];
-}
-
-/** "Light the lamp": tap lights it, hold sends a heartbeat. */
-function LampButton({ lit, onLight, onHold, pulseKey }: { lit: boolean; onLight: () => void; onHold: () => void; pulseKey: number }) {
-  const held = useRef<number | "held" | null>(null);
-  return (
-    <button
-      type="button"
-      aria-label="Light the lamp. Hold to send a heartbeat"
-      title="Tap to light · hold for a heartbeat"
-      className="press flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 text-callout font-semibold text-white"
-      onPointerDown={() => {
-        held.current = window.setTimeout(() => {
-          held.current = "held";
-          onHold();
-        }, 600);
-      }}
-      onPointerUp={() => {
-        if (held.current === "held") return void (held.current = null);
-        if (held.current !== null) window.clearTimeout(held.current);
-        held.current = null;
-        onLight();
-      }}
-      onPointerLeave={() => {
-        if (typeof held.current === "number") window.clearTimeout(held.current);
-        held.current = null;
-      }}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <span key={pulseKey} className={cn("grid place-items-center", pulseKey > 0 && "lamp-ring rounded-full")}>
-        <Icon name="lamp" size={17} className={lit ? "text-[#ffd48a]" : undefined} />
-      </span>
-      Light the lamp
-    </button>
-  );
-}
-
-/** The lamp as a picture: unlit and lit stacked, a 200 ms crossfade between them (none with reduced motion). */
-function LampPhoto({ lit, className, sizes }: { lit: boolean; className?: string; sizes: string }) {
-  return (
-    <span className={cn("relative block overflow-hidden bg-[#2a211b]", className)}>
-      <Photo src="/demo/lamp-unlit.jpg" alt="" sizes={sizes} />
-      <span className={cn("absolute inset-0 transition-opacity duration-200 ease-out motion-reduce:transition-none", lit ? "opacity-100" : "opacity-0")}>
-        <Photo src="/demo/lamp-lit.jpg" alt="" sizes={sizes} />
-      </span>
-    </span>
-  );
-}
-
-/** Tap the lamp: the big picture, and who lit it today in both homes. */
-function LampSheet({ open, onClose, lit, rows }: { open: boolean; onClose: () => void; lit: boolean; rows: { key: string; who: string; at: string }[] }) {
-  return (
-    <BottomSheet open={open} onClose={onClose} label="The lamp">
-      <div data-ui="lamp-sheet">
-        <LampPhoto lit={lit} sizes="(max-width: 480px) 100vw, 440px" className="mx-auto aspect-square w-full max-w-[360px] rounded-[24px]" />
-        <h3 className="m-0 mt-4 text-headline font-semibold">{lit ? "The lamp is lit" : "The lamp is out"}</h3>
-        <SheetList title="Lit today" empty="Nobody has lit it today." rows={rows.map((r) => ({ key: r.key, at: r.at, main: r.who }))} />
-      </div>
-    </BottomSheet>
-  );
-}
+type LampData = LampView;
 
 /* ------------------------------------------------------- safe & sound */
 const STATUS_WORD: Partial<Record<Alive, { word: string; ink: string }>> = {
@@ -467,7 +408,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const [welcome, setWelcome] = useState<string | null>(null);
   const [lampNote, setLampNote] = useState<string | null>(null);
   const [pulse, setPulse] = useState(0);
-  const [lampOpen, setLampOpen] = useState(false);
   const data = win.data;
   // The lamp and their latest voice come with the window (one request on first paint).
   // A light just tapped shows at once, before the server answers.
@@ -478,6 +418,8 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
   const statusOf = (id: string) => data?.people.find((p) => p.id === id);
   const waiting = Boolean(data && (!data.far || data.joined === false));
   const names = data?.far?.names ?? "";
+  // Lines about one person use the first person's own first name ("Maa"), never the joined list.
+  const first = firstNameOf([callName(members.find((mm) => mm.id === data?.far?.ids.find((id) => members.find((x) => x.id === id)?.role !== "child")))]) || firstNameOf([names]);
   const now = new Date();
 
   const talk = (ids?: string[]) => {
@@ -510,7 +452,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     const beats = lamp.data?.beats ?? [];
     if (!beats.length) return;
     const from = members.find((mm) => mm.id === beats[beats.length - 1].from);
-    setLampNote(`${callName(from)} sent you a heartbeat`);
+    setLampNote(`${firstNameOf([callName(from)])} sent you a heartbeat`);
     let n = 0;
     const iv = window.setInterval(() => {
       setPulse((k) => k + 1);
@@ -522,16 +464,26 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lamp.data?.beats?.length]);
 
+  // Their light arrived since you last looked: it shows in the state line; tell them you felt it.
+  const arrivedAt = lamp.data?.arrived?.at ?? null;
+  useEffect(() => {
+    if (!arrivedAt || lamp.data?.beats?.length) return;
+    setPulse((k) => k + 1);
+    void haptic("light");
+    void postJson("/api/lamp", { action: "felt" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arrivedAt]);
+
   const latestVoice: Card | undefined = data?.voice ?? undefined;
   const voiceBy = members.find((mm) => mm.id === latestVoice?.authorId);
   const knock = (sit.data?.knocks ?? []).find((k) => farIds.has(k.memberId));
 
-  // The photo: their own home photo, else the one chosen, else the default. Remembered for the next load.
-  const heroRef = data ? (data.homePhoto ?? data.imageRef) : null;
-  const heroSrc = heroRef ? (resolveMediaUrl(heroRef) ?? DEFAULT_IMAGE) : earlyHeroSrc();
+  // Their own home photo (Settings, Your window, Photo) shows as is; otherwise the scene is drawn.
+  const ownRef = data?.homePhoto ?? null;
+  const ownPhoto = ownRef ? resolveMediaUrl(ownRef) : null;
   useEffect(() => {
-    if (heroRef) rememberHero(heroRef);
-  }, [heroRef]);
+    if (ownRef) rememberHero(ownRef);
+  }, [ownRef]);
 
   // The light between your home and theirs: whoever reached out last.
   const pair = useMemo(() => {
@@ -539,15 +491,13 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
     const theirs = ls.find((l) => l.memberIds.some((id) => farIds.has(id)));
     const mine = ls.find((l) => l.memberIds.includes(viewer.id));
     const last = [theirs, mine].filter((l): l is NonNullable<typeof l> => Boolean(l?.litAt)).sort((a, b) => (b.litAt ?? "").localeCompare(a.litAt ?? ""))[0];
-    return { glow: Math.max(theirs?.glow ?? 0, mine?.glow ?? 0), last };
+    return { glow: Math.max(theirs?.glow ?? 0, mine?.glow ?? 0), last, theirs, mine };
   }, [lamp.data, farIds, viewer.id, litNow]);
-  const lastBy = members.find((mm) => mm.id === pair.last?.litBy);
-  const today = lampToday(pair.last, pair.last?.litBy === viewer.id ? "you" : callName(lastBy), now);
-  // Who lit it today, in both homes (the sheet).
-  const litToday = (lamp.data?.lamps ?? [])
-    .filter((l) => l.litAt && l.litBy && dayWord(l.litAt, now, viewer.tz) === "today")
-    .sort((a, b) => (b.litAt ?? "").localeCompare(a.litAt ?? ""))
-    .map((l) => ({ key: `${l.homeKey}-${l.litAt}`, who: l.litBy === viewer.id ? "You" : callName(members.find((mm) => mm.id === l.litBy)) || "Someone", at: clockWord(l.litAt as string, viewer.tz) }));
+  const nameOf = (id: string) => firstNameOf([callName(members.find((mm) => mm.id === id))]);
+  const lampNow = lampState({ theirs: pair.theirs, mine: pair.mine, viewerId: viewer.id, nameOf, city: data?.far?.city ?? "", felt: lamp.data?.felt ?? null, now, tz: viewer.tz });
+  // The real sky over their city, now; the lamp glows from whoever lit it last.
+  const sky = skyState({ lat: data?.place?.lat, lon: data?.place?.lon, tz: data?.far?.tz ?? viewer.tz, now, weatherCode: data?.weather?.code ?? null, lampLitAt: pair.last?.litAt ?? null });
+  const moon = moonLine(sky.moonVisible, data?.far?.city ?? "", sky.moon.illumination);
 
   const checkOf = (id: string): SafetyState | null => {
     const s = stateOf(safety.data?.checkins ?? [], id);
@@ -585,21 +535,28 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
   const playing = latestVoice && current?.id === latestVoice.id && isPlaying;
   const clock = data?.far ? timeIn(data.far.tz, now) : "";
-  const lampLoading = !lamp.data && !lamp.failed;
   const cardsLoading = !data;
 
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-paper text-ink" style={{ overscrollBehavior: "contain" }}>
       <div className="mx-auto flex min-h-full w-full max-w-[480px] flex-col">
-        {/* The photograph: the whole width, about half the screen. The badge is the only thing on it besides your own face. */}
-        <HeroBox src={heroSrc}>
+        {/* Their home under their real sky, with the lamp hanging in it (a real button). */}
+        <WindowScene
+          sky={sky}
+          space={data?.scene ?? "window"}
+          ownPhoto={ownPhoto}
+          onLight={() => void light()}
+          onHold={() => void heartbeat()}
+          pulseKey={pulse}
+          lampLabel={`${lampNow.lit ? "The lamp is lit" : "The lamp is not lit"}. Tap to light it for ${first || "them"}; hold to send a heartbeat`}
+        >
           <button type="button" onClick={() => router.push("/settings")} aria-label="Your profile and settings" className="press absolute left-3 grid h-[44px] w-[44px] place-items-center rounded-full" style={{ top: "calc(6px + env(safe-area-inset-top))" }}>
             <span className="rounded-full ring-2 ring-white/70">
               <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={36} />
             </span>
           </button>
           {data?.far && <Badge time={clock} weather={data.weather} glyph={data.sky.glyph} />}
-        </HeroBox>
+        </WindowScene>
 
         <div className="flex flex-1 flex-col gap-3 px-4 pt-4" style={{ paddingBottom: 12 }}>
           {/* Who, where, and one true line */}
@@ -617,9 +574,9 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                   </p>
                 )}
                 {data.line && <p className="m-0 mt-1.5 text-callout leading-snug">{data.line}</p>}
-                {data.sky.bothNight && data.far && (
-                  <p className="m-0 mt-1.5 flex items-center gap-1.5 text-footnote leading-snug text-ink-soft">
-                    <Icon name="moon" size={14} /> Look up: {names.split(" & ")[0]} can see this same moon tonight, {Math.round(data.sky.moon.illumination * 100)}% full
+                {moon && (
+                  <p data-ui="window-moon" className="m-0 mt-1.5 flex items-center gap-1.5 text-footnote leading-snug text-ink-soft">
+                    <Icon name="moon" size={14} /> {moon}
                   </p>
                 )}
                 {welcome && <p className="voice m-0 mt-1.5 text-body">{welcome}</p>}
@@ -650,28 +607,24 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
             </>
           )}
 
-          {data && waiting && <WaitingCard names={names} />}
+          {/* The lamp: why it is there, and where it stands. Shown even before they join. */}
+          {data && (
+            <section data-ui="window-lamp" aria-label="The lamp" aria-live="polite" className="px-0.5">
+              <p className="m-0 text-callout font-semibold leading-snug" suppressHydrationWarning>
+                {lampNote ?? lampNow.line}
+              </p>
+              {lampNow.felt && <p className="m-0 mt-0.5 text-footnote text-ink-soft" suppressHydrationWarning>{lampNow.felt}</p>}
+              <p className="m-0 mt-0.5 text-footnote leading-snug text-ink-soft">{LAMP_WHY}</p>
+            </section>
+          )}
+
+          {data && waiting && <WaitingCard names={first} />}
 
           {data && !waiting && (
             <>
               {/* 1. The lamp, and their latest voice */}
-              <section data-ui="window-lamp" className={cn(CARD, "px-4")} style={EDGE} aria-label="The lamp and their latest voice">
+              <section data-ui="window-voice" className={cn(CARD, "px-4")} style={EDGE} aria-label="Their latest voice">
                 <div className="flex min-h-[56px] items-center gap-3 py-2">
-                  <button type="button" onClick={() => setLampOpen(true)} aria-label="See the lamp" className="press h-14 w-14 shrink-0 overflow-hidden rounded-2xl">
-                    <LampPhoto lit={today.lit || Boolean(lampNote?.startsWith("You lit"))} sizes="56px" className="h-full w-full" />
-                  </button>
-                  <p className="m-0 min-w-0 flex-1 text-callout leading-snug" suppressHydrationWarning>
-                    {lampNote ?? (lamp.failed && !lamp.data ? "Couldn't reach the lamp" : lampLoading ? " " : today.line)}
-                  </p>
-                  {lamp.failed && !lamp.data ? (
-                    <button type="button" onClick={() => void lamp.reload()} className="press h-11 shrink-0 rounded-full bg-ink px-4 text-callout font-semibold text-white">
-                      Try again
-                    </button>
-                  ) : (
-                    <LampButton lit={today.lit} onLight={() => void light()} onHold={() => void heartbeat()} pulseKey={pulse} />
-                  )}
-                </div>
-                <div className="flex min-h-[56px] items-center gap-3 border-t border-[var(--line)] py-2">
                   {cardsLoading ? (
                     <div className="skeleton h-[44px] w-full" aria-busy="true" aria-label="Looking for their latest voice" />
                   ) : latestVoice ? (
@@ -691,7 +644,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
                       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black/[.06] text-ink-soft" aria-hidden="true">
                         <Icon name="mic" size={18} />
                       </span>
-                      <p className="m-0 min-w-0 flex-1 text-callout leading-snug text-ink-soft">No voice note from {names.split(" & ")[0] || "them"} yet</p>
+                      <p className="m-0 min-w-0 flex-1 text-callout leading-snug text-ink-soft">No voice note from {first || "them"} yet</p>
                     </>
                   )}
                 </div>
@@ -764,7 +717,6 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
         onPick={(ids) => talk(ids)}
         onClose={() => setPicking(false)}
       />
-      <LampSheet open={lampOpen} onClose={() => setLampOpen(false)} lit={today.lit || Boolean(lampNote?.startsWith("You lit"))} rows={litToday} />
       <PersonSheet person={open} st={open ? statusOf(open.id) : undefined} onTalk={() => open && talk([open.id])} onCall={() => void call()} onClose={() => setOpen(null)} />
     </div>
   );

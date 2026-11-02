@@ -56,6 +56,51 @@ export function lampToday(last: { litAt: string | null } | undefined, who: strin
   return { lit: true, line: `Lit by ${who || "someone"} · ${ago}` };
 }
 
+/** Why the lamp is there, said once under the scene. */
+export const LAMP_WHY = "The lamp: light it to say you're thinking of them. It glows in their window for 3 days.";
+
+/**
+ * The lamp's state line under the scene. Whoever lit it last within the day:
+ * "Maa lit it for you · 8:10 AM" / "You lit it · glowing in Amritsar", else
+ * "Not lit today". `felt`: the sender also sees "Maa felt it · 7:12 AM".
+ * Clocks are in the viewer's zone.
+ */
+export function lampState(i: {
+  theirs: { litAt: string | null; litBy: string | null } | undefined;
+  mine: { litAt: string | null; litBy: string | null } | undefined;
+  viewerId: string;
+  nameOf: (id: string) => string;
+  city: string;
+  felt: { by: string; at: string } | null;
+  now: Date;
+  tz: string;
+}): { lit: boolean; line: string; felt: string | null } {
+  const fresh = (l?: { litAt: string | null; litBy: string | null }) => {
+    if (!l?.litAt || !l.litBy) return null;
+    const h = (i.now.getTime() - Date.parse(l.litAt)) / 3_600_000;
+    return h >= 0 && h < 24 ? { at: l.litAt, by: l.litBy } : null;
+  };
+  const cands = [fresh(i.theirs), fresh(i.mine)].filter((x): x is { at: string; by: string } => Boolean(x)).sort((a, b) => b.at.localeCompare(a.at));
+  const last = cands[0];
+  if (!last) return { lit: false, line: "Not lit today", felt: null };
+  if (last.by === i.viewerId) {
+    const felt = i.felt && i.felt.at >= last.at ? `${i.nameOf(i.felt.by) || "They"} felt it · ${clockWord(i.felt.at, i.tz)}` : null;
+    return { lit: true, line: `You lit it · glowing in ${i.city || "their home"}`, felt };
+  }
+  return { lit: true, line: `${i.nameOf(last.by) || "Someone"} lit it for you · ${clockWord(last.at, i.tz)}`, felt: null };
+}
+
+/** "The same moon is over Amritsar tonight, 62% full": only at night at their end, with the real figure. */
+export function moonLine(visible: boolean, city: string, illumination: number): string | null {
+  if (!visible || !city) return null;
+  return `The same moon is over ${city} tonight, ${Math.round(illumination * 100)}% full`;
+}
+
+/** The first person's own name, for lines about one person ("Maa", never "Maa, Papa"). */
+export function firstNameOf(names: string[]): string {
+  return (names[0] ?? "").trim().split(/[\s,&]+/)[0] ?? "";
+}
+
 /** "Chai · 6:40 AM"-style facts for one shared moment. */
 export interface DayMoment {
   label: string;

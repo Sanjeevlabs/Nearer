@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { Avatar, Icon } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
-import { DEFAULT_IMAGE } from "@/lib/hero";
 import { processHomeImage } from "@/lib/media-client";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { callName, memberPhoto } from "@/lib/people";
@@ -25,7 +24,14 @@ interface W {
   people: { id: string }[];
   homePhoto?: string | null;
   quietAfterHours?: number;
+  scene?: "window" | "balcony" | "courtyard";
 }
+
+const SPACES = [
+  { id: "window", label: "Window" },
+  { id: "balcony", label: "Balcony" },
+  { id: "courtyard", label: "Courtyard" },
+] as const;
 
 /** Loads the saved first screen, then hands it to the form below. */
 export function WindowOptions({ onMessage }: { onMessage?: (m: string) => void } = {}) {
@@ -40,7 +46,7 @@ export function WindowOptions({ onMessage }: { onMessage?: (m: string) => void }
       </div>
     );
   if (!data) return <div key="loading" className="skeleton mb-6 h-[360px] rounded-card" aria-busy="true" aria-label="Loading your first screen" />;
-  const initial: WindowDraft = { photo: data.homePhoto ?? null, people: data.people.map((p) => p.id), quietAfterHours: data.quietAfterHours ?? QUIET_HOURS };
+  const initial: WindowDraft = { photo: data.homePhoto ?? null, people: data.people.map((p) => p.id), quietAfterHours: data.quietAfterHours ?? QUIET_HOURS, scene: data.scene ?? "window" };
   return <WindowForm initial={initial} reload={reload} onMessage={onMessage} />;
 }
 
@@ -84,15 +90,27 @@ function WindowForm({ initial, reload, onMessage }: { initial: WindowDraft; relo
         return r;
       }}
     >
-      <p className="m-0 text-footnote font-medium text-ink-soft">The photo you see first</p>
-      <div className="mt-2 grid grid-cols-2 gap-3" role="radiogroup" aria-label="The photo you see first">
-        <button type="button" role="radio" aria-checked={nowPhoto === null} disabled={busy} onClick={() => form.set({ photo: null })} className="text-left">
-          <span className={tile(nowPhoto === null)}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={DEFAULT_IMAGE} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          </span>
-          <span className="mt-1.5 block text-callout font-semibold">Default photo</span>
-        </button>
+      <p className="m-0 text-footnote font-medium text-ink-soft">Their home, drawn under their real sky</p>
+      <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Their open space">
+        {SPACES.map((sp) => {
+          const on = nowPhoto === null && (form.draft.scene ?? "window") === sp.id;
+          return (
+            <button
+              key={sp.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              disabled={busy}
+              onClick={() => form.set({ photo: null, scene: sp.id })}
+              className={cn("press min-h-[44px] rounded-full text-callout font-semibold", on ? "bg-ink text-white" : "bg-surface text-ink-soft")}
+            >
+              {sp.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="m-0 mt-5 text-footnote font-medium text-ink-soft">Or a photo of their home</p>
+      <div className="mt-2 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Photo of their home">
         <button type="button" role="radio" aria-checked={nowPhoto !== null} disabled={busy || uploading} onClick={() => input.current?.click()} className="text-left">
           <span className={cn(tile(nowPhoto !== null), "grid place-items-center")}>
             {url ? (

@@ -88,6 +88,10 @@ export interface WindowState {
   glance: Glance;
   /** A photo of their actual home as the view (a media ref), else null: the default photo. */
   homePhoto: string | null;
+  /** Their city's coordinates (a city, never a person's location), for the real sky; null when unknown. */
+  place: { lat: number; lon: number } | null;
+  /** Which open space the drawn scene shows: window (default), balcony or courtyard. */
+  scene: "window" | "balcony" | "courtyard";
   /** Every home's lamp and the heartbeats waiting for the viewer (the same shape as GET /api/lamp). */
   lamp: LampView;
   /** The latest voice note from someone at the window (from the recent shelf), else null. */
@@ -347,6 +351,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
     glance: glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous }),
     homePhoto: own.homePhoto,
+    place: farPlace ? { lat: Math.round(farPlace.lat * 100) / 100, lon: Math.round(farPlace.lon * 100) / 100 } : null,
+    scene: own.scene ?? "window",
     lamp,
     voice,
   };
