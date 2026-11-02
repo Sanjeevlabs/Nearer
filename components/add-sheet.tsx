@@ -21,6 +21,7 @@ import { Avatar, Button, Icon, LiveDot, PlayButton } from "./ui/kit";
 import { PeoplePicker } from "./people-picker";
 import { BottomSheet } from "./ui/bottom-sheet";
 import { useViewer } from "./viewer";
+import { Teleprompter } from "./prompt-text";
 import { useJson } from "@/lib/use-json";
 
 export type AddTab = "photos" | "voice" | "video" | "ask";
@@ -447,7 +448,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
     <div className="flex min-h-[460px] flex-col">
       {purpose ? (
         <div className="rounded-[20px] bg-surface px-4 py-3">
-          {(contribution?.kind === "answer" || contribution?.kind === "today" || (contribution?.kind === "story" && contribution.prompt)) && <p className="voice m-0 mb-1 text-title leading-snug text-ink">“{contribution.prompt}”</p>}
+          {(contribution?.kind === "answer" || contribution?.kind === "today" || (contribution?.kind === "story" && contribution.prompt)) && contribution.prompt && <Teleprompter text={contribution.prompt} />}
           {contribution?.kind === "recipe" && contribution.title && <p className="m-0 mb-1 text-headline font-semibold">{contribution.title}</p>}
           <p className="m-0 text-callout text-ink-soft">{purpose.hint}</p>
         </div>

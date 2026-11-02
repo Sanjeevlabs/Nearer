@@ -20,6 +20,7 @@ import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import { familyStoriesFor, resolveIdea, type StoryIdea } from "@/lib/story-ideas";
 import { Boundary } from "@/components/ui/boundary";
+import { PromptText } from "@/components/prompt-text";
 
 // Stories: the kids' corner. Grandparents tell, children listen (at bedtime
 // too), and ask for the next one. Muse only labels a story; it never writes one.
@@ -94,7 +95,7 @@ function Stories() {
             return (
               <div key={q.id} className="rounded-card bg-well p-4">
                 <p className="m-0 text-footnote font-medium text-ink-soft">{callName(by)} asked you</p>
-                <p className="voice m-0 mt-1 text-title leading-snug">&ldquo;{q.text}&rdquo;</p>
+                <p className="voice m-0 mt-1 text-title leading-snug">&ldquo;<PromptText text={q.text} sourceLang={q.lang} />&rdquo;</p>
                 <div className="mt-3 flex gap-2">
                   <Button className="flex-1" onClick={() => openAdd("voice", { kind: "story", questionId: q.id, prompt: q.text })}>
                     <Icon name="mic" size={18} />
@@ -126,10 +127,10 @@ function Stories() {
       {canTell && data?.idea && (
         <section aria-label="A story to tell tonight" className="mt-4 rounded-card p-4 text-white" style={{ background: "linear-gradient(160deg,#2d2a5a,#4a3f7a)" }}>
           <p className="m-0 text-caption font-semibold uppercase tracking-[0.1em] text-white/65">Tell this one, in your own words</p>
-          <p className="m-0 mt-1 text-title font-semibold leading-tight">{data.idea.title}</p>
+          <p className="m-0 mt-1 text-title font-semibold leading-tight"><PromptText text={data.idea.title} /></p>
           <ol className="m-0 mt-2.5 space-y-1 pl-5 text-callout text-white/85">
             {data.idea.beats.map((b) => (
-              <li key={b}>{b}</li>
+              <li key={b}><PromptText text={b} /></li>
             ))}
           </ol>
           <p className="voice m-0 mt-2 text-body text-white/75">{data.idea.lesson}</p>
@@ -144,7 +145,7 @@ function Stories() {
           <div className="flex flex-wrap gap-1.5">
             {STARTERS.map((s) => (
               <button key={s} type="button" onClick={() => openAdd("voice", { kind: "story", prompt: s })} className="press rounded-full bg-surface px-3 py-2 text-footnote">
-                {s}
+                <PromptText text={s} />
               </button>
             ))}
           </div>
@@ -265,8 +266,8 @@ function OnlyYouCanTell({ onTell }: { onTell: (prompt: string) => void }) {
           <li key={i.id}>
             <button type="button" onClick={() => onTell(i.title)} className="press flex min-h-[56px] w-full items-center gap-3 rounded-[18px] bg-surface px-4 py-2.5 text-left">
               <span className="min-w-0 flex-1">
-                <span className="block text-body font-semibold leading-snug">{i.title}</span>
-                <span className="mt-0.5 block text-footnote text-ink-soft">{i.beats[0]}</span>
+                <span className="block text-body font-semibold leading-snug"><PromptText text={i.title} /></span>
+                <span className="mt-0.5 block text-footnote text-ink-soft"><PromptText text={i.beats[0]} /></span>
               </span>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink" aria-hidden="true">
                 <Icon name="mic" size={18} />

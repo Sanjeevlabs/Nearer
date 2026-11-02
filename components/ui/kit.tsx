@@ -94,6 +94,7 @@ const ICONS = {
   info: L.Info,
   question: L.CircleHelp,
   star: L.Star,
+  textSize: L.ALargeSmall,
   search: L.Search,
 } satisfies Record<string, L.LucideIcon>;
 
