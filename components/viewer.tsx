@@ -49,6 +49,8 @@ interface SessionAnswer {
 /** Who am I, with my family and its relationships: one request (GET /api/session?family=1). Null when signed out. */
 async function fetchSessionWithFamily(): Promise<SessionAnswer | null> {
   const res = await fetchFirst("/api/session?family=1");
+  // Only a real "no session" signs someone out; a host hiccup (5xx) must not.
+  if (res.status >= 500) throw new Error(`session-${res.status}`);
   if (!res.ok) return null;
   return (await res.json()) as SessionAnswer;
 }
@@ -103,6 +105,8 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
   // The viewer is whoever the session cookie says, never a hard-coded member.
   // A second sync (a switch while one is still answering) wins; the older answer is dropped.
   const syncSeq = useRef(0);
+  const hiccups = useRef(0);
+  const syncSessionRef = useRef<(() => Promise<void>) | null>(null);
   const syncSession = useCallback(async () => {
     const seq = ++syncSeq.current;
     try {
@@ -110,6 +114,7 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
       // started by the page's inline script before this code loaded (lib/early.ts).
       const s = await fetchSessionWithFamily();
       if (seq !== syncSeq.current) return;
+      hiccups.current = 0;
       if (s) {
         if (s.status === "pending") {
           // Every other API is shut until an admin lets them in.
@@ -132,12 +137,20 @@ export function ViewerProvider({ children }: { children: React.ReactNode }) {
         setWaiting(null);
         rememberSignedIn(false);
       }
-    } catch {
-      if (seq === syncSeq.current) setSignedIn(false);
+    } catch (err) {
+      if (seq !== syncSeq.current) return;
+      // A host hiccup is not a sign-out: try again shortly (twice), keeping whoever was signed in.
+      if (err instanceof Error && err.message.startsWith("session-5") && hiccups.current < 2) {
+        hiccups.current += 1;
+        setTimeout(() => void syncSessionRef.current?.(), 1500);
+        return;
+      }
+      setSignedIn(false);
     } finally {
       if (seq === syncSeq.current) setReady(true);
     }
   }, []);
+  syncSessionRef.current = syncSession;
 
   useEffect(() => {
     void syncSession();
