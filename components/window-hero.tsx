@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_IMAGE, WINDOW_PHOTO_HEIGHT, WINDOW_SIZES, rememberedHero } from "@/lib/hero";
+import { WINDOW_PHOTO_HEIGHT, WINDOW_SIZES, rememberedHero } from "@/lib/hero";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { Photo } from "./ui/kit";
 
@@ -19,10 +19,10 @@ export function HeroBox({ src, children }: { src: string | null; children?: Reac
   );
 }
 
-/** What to paint before the window's data arrives: the photo this phone showed last, else the default. */
-export function earlyHeroSrc(): string {
+/** What to paint before the window's data arrives: the family's own photo this phone showed last, else nothing (plain ground). */
+export function earlyHeroSrc(): string | null {
   const ref = rememberedHero();
-  return (ref ? resolveMediaUrl(ref) : null) ?? DEFAULT_IMAGE;
+  return ref ? resolveMediaUrl(ref) : null;
 }
 
 /** The loading frame: the photo box and quiet placeholders sized like the real thing. */

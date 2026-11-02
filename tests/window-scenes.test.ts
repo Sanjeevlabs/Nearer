@@ -23,18 +23,20 @@ beforeEach(() => {
 });
 
 describe("first screen: scene, pots, home photo", () => {
-  it("defaults: one still photo; the old scene, pots and album fields stay in the document but are not on the first screen", async () => {
+  it("defaults: the drawn window; pots and album fields stay in the document but are not on the first screen", async () => {
     const real = defaultView("some-family", "m1");
     expect(real).toMatchObject({ style: "still", scene: "window", pots: [], homePhoto: null, mixAlbum: true });
     const st = await state();
     expect(st).toMatchObject({ homePhoto: null, imageRef: DEFAULT_IMAGE });
-    expect(st.scene).toBeUndefined();
+    // The open space the drawn scene shows (Settings, Your window): the window by default.
+    expect(st.scene).toBe("window");
     expect(st.pots).toBeUndefined();
     expect(st.mixAlbum).toBeUndefined();
   });
 
-  it("still accepts scene, pots and wall (older clients) without changing what is shown", async () => {
+  it("accepts the open space; pots and wall (older clients) change nothing shown", async () => {
     expect((await post("arjun", { action: "scene", scene: "balcony" })).status).toBe(200);
+    expect((await state()).scene).toBe("balcony");
     expect((await post("arjun", { action: "scene", scene: "rooftop" })).status).toBe(400);
     expect((await post("arjun", { action: "pots", pots: ["rose", "succulent", "rose"] })).status).toBe(200);
     expect((await post("arjun", { action: "pots", pots: ["cactus"] })).status).toBe(400);

@@ -258,14 +258,14 @@ describe("database round trips", () => {
 });
 
 describe("the sky never holds the window", () => {
-  it("answers with no weather after about 1.5 s when the weather service hangs", async () => {
+  it("answers with no weather after about 600 ms when the weather service hangs", async () => {
     vi.stubGlobal("fetch", () => new Promise((_, reject) => setTimeout(() => reject(new Error("slow")), 3000)));
     const t0 = Date.now();
     const state = await windowState(familyId, memberId);
     const ms = Date.now() - t0;
     expect(state.weather).toBeNull();
-    expect(ms).toBeGreaterThanOrEqual(1400);
-    expect(ms).toBeLessThan(2400);
-    await new Promise((r) => setTimeout(r, 1600)); // let the hung lookups end before the next test
+    expect(ms).toBeGreaterThanOrEqual(550);
+    expect(ms).toBeLessThan(1400);
+    await new Promise((r) => setTimeout(r, 2600)); // let the hung lookups end before the next test
   }, 10_000);
 });

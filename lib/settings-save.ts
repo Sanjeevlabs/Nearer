@@ -108,9 +108,12 @@ export interface WindowDraft {
   photo: string | null;
   people: string[];
   quietAfterHours: number;
+  /** The drawn scene's open space (absent: unchanged, the window). */
+  scene?: "window" | "balcony" | "courtyard";
 }
 
 export const sameWindow = (a: WindowDraft, b: WindowDraft): boolean =>
+  (a.scene ?? "window") === (b.scene ?? "window") &&
   a.photo === b.photo && a.quietAfterHours === b.quietAfterHours && [...a.people].sort().join() === [...b.people].sort().join();
 
 export async function saveWindow(f: F, d: WindowDraft, saved: WindowDraft): Promise<SaveResult<WindowDraft>> {
@@ -122,6 +125,7 @@ export async function saveWindow(f: F, d: WindowDraft, saved: WindowDraft): Prom
     return r.ok;
   };
   const ok =
+    (await step((d.scene ?? "window") !== (saved.scene ?? "window"), { action: "scene", scene: d.scene ?? "window" }, (w) => ({ ...w, scene: d.scene }))) &&
     (await step(d.photo !== saved.photo, { action: "homePhoto", ref: d.photo }, (w) => ({ ...w, photo: d.photo }))) &&
     (await step([...d.people].sort().join() !== [...saved.people].sort().join(), { action: "people", people: d.people }, (w) => ({ ...w, people: d.people }))) &&
     (await step(d.quietAfterHours !== saved.quietAfterHours, { action: "quiet", hours: d.quietAfterHours }, (w) => ({ ...w, quietAfterHours: d.quietAfterHours })));

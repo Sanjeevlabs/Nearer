@@ -46,30 +46,67 @@ export function clearJsonCache(): void {
 if (typeof window !== "undefined") window.addEventListener("aangan:auth", clearJsonCache);
 
 // Mounted readers (one per useJson on screen), so a write can make them refetch.
-const readers = new Set<() => void>();
+// A reader with a url is only told about writes that touch that url (or about every write).
+const readers = new Map<() => void, string | null>();
 let pending: ReturnType<typeof setTimeout> | null = null;
+/** null: everything (a full invalidate is pending); else the url prefixes to refetch. */
+let pendingKeys: Set<string> | null = new Set();
 
 /** A reader asks to be told when something was written (the hook does; tests too). Returns the unsubscribe. */
-export function subscribeInvalidate(fn: () => void): () => void {
-  readers.add(fn);
+export function subscribeInvalidate(fn: () => void, url: string | null = null): () => void {
+  readers.set(fn, url);
   return () => {
     readers.delete(fn);
   };
+}
+
+function dropCached(prefixes: string[]): void {
+  for (const k of Array.from(cache.keys())) if (prefixes.some((p) => k.startsWith(p))) cache.delete(k);
+  try {
+    for (const k of Object.keys(sessionStorage)) if (k.startsWith(KEY) && prefixes.some((p) => k.slice(KEY.length).startsWith(p))) sessionStorage.removeItem(k);
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
  * Something was written (a card posted, a reaction, an approval, a play): every
  * cached payload is dropped, so nothing deleted or changed can come back from
  * the cache, and every list on screen quietly refetches (coalesced, 200 ms).
+ * With `keys` (url prefixes) only those payloads are dropped and only their
+ * readers refetch: lighting the lamp touches the lamp and the window, nothing else.
  */
-export function invalidateJson(): void {
-  clearJsonCache();
+export function invalidateJson(keys?: string[]): void {
+  if (keys && keys.length) {
+    dropCached(keys);
+    if (pendingKeys) keys.forEach((k) => pendingKeys?.add(k));
+  } else {
+    clearJsonCache();
+    pendingKeys = null;
+  }
   if (pending) return;
   pending = setTimeout(() => {
     pending = null;
-    readers.forEach((r) => r());
-    if (typeof window !== "undefined") window.dispatchEvent(new Event("aangan:changed"));
+    const only = pendingKeys;
+    pendingKeys = new Set();
+    readers.forEach((url, r) => {
+      if (!only || (url !== null && Array.from(only).some((k) => url.startsWith(k)))) r();
+    });
+    if (!only && typeof window !== "undefined") window.dispatchEvent(new Event("aangan:changed"));
   }, 200);
+}
+
+/** Writes that change only a few payloads: path -> the url prefixes to refetch. */
+const SCOPED_WRITES: [RegExp, string[]][] = [[/^\/api\/lamp$/, ["/api/lamp", "/api/window"]]];
+
+export function scopeOfWrite(url: string): string[] | null {
+  let path = url;
+  try {
+    path = new URL(url, "http://x").pathname;
+  } catch {
+    /* keep as given */
+  }
+  return SCOPED_WRITES.find(([re]) => re.test(path))?.[1] ?? null;
 }
 
 /** Writes that are not a change to anything shown: the "I opened Nearer" heartbeat and pure computations. */
@@ -105,7 +142,7 @@ export function watchWrites(): () => void {
     try {
       const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
       const method = init?.method ?? (typeof input === "object" && "method" in input ? input.method : undefined);
-      if (res.ok && isChangingWrite(url, method, init?.body)) invalidateJson();
+      if (res.ok && isChangingWrite(url, method, init?.body)) invalidateJson(scopeOfWrite(url) ?? undefined);
       // The session is gone: nothing cached may paint for the next person.
       if (res.status === 401 && new URL(url, "http://x").pathname.startsWith("/api/")) clearJsonCache();
     } catch {
@@ -117,6 +154,19 @@ export function watchWrites(): () => void {
     window.fetch = original;
     w.__aanganWatched = false;
   };
+}
+
+// A fetch started early (prefetchJson), shared with the hook that mounts a moment later.
+const flights = new Map<string, Promise<{ data: unknown; stale: boolean; failed: boolean }>>();
+
+/** Start fetching `url` now (before the screen that reads it has mounted); the hook picks up the same request. */
+export function prefetchJson(url: string): void {
+  if (flights.has(url)) return;
+  const p = revalidate(url).finally(() => {
+    // Keep the answer briefly so a hook mounting just after still shares it.
+    setTimeout(() => flights.delete(url), 1500);
+  });
+  flights.set(url, p);
 }
 
 /**
@@ -158,7 +208,9 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
   const load = useCallback(async (quiet: boolean) => {
     if (!url) return;
     if (!quiet) setFailed(false);
-    const r = await revalidate<T>(url);
+    const early = flights.get(url) as Promise<{ data: T | null; stale: boolean; failed: boolean }> | undefined;
+    if (early) flights.delete(url);
+    const r = early ? await early : await revalidate<T>(url);
     if (!live.current) return;
     if (r.data !== null) setData(r.data);
     setStale(r.stale);
@@ -177,7 +229,7 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
   // A write elsewhere on the page: refetch quietly so nothing shown is stale.
   useEffect(() => {
     if (!url) return;
-    return subscribeInvalidate(() => void load(true));
+    return subscribeInvalidate(() => void load(true), url);
   }, [url, load]);
   useEffect(() => {
     if (!url || !every) return;
@@ -201,7 +253,7 @@ export async function postJson<T = Record<string, unknown>>(url: string, body: u
     const res = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) return null;
     // A write through fetch is already noticed by watchWrites; this covers a page that never installed it.
-    if (typeof window !== "undefined" && !(window as typeof window & { __aanganWatched?: boolean }).__aanganWatched) invalidateJson();
+    if (typeof window !== "undefined" && !(window as typeof window & { __aanganWatched?: boolean }).__aanganWatched) invalidateJson(scopeOfWrite(url) ?? undefined);
     return (await res.json()) as T;
   } catch {
     return null;

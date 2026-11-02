@@ -3,12 +3,15 @@
 import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
-import { dbListCards, dbListMembers, dbListPlays, dbListReactions, dbListRelationships } from "./db";
+import { dbListCards, dbListMembers, dbListPlays, dbListRelationships } from "./db";
 import { listDocs, listDocsMany } from "./family-docs";
 import { withDeadline } from "./deadline";
 import { getRitualSettings } from "./occasion-settings";
 import type { Nudge, Presence, WindowView } from "./kinds";
 import { museJson } from "./muse";
+import { households } from "./households";
+import { lampView, type LampView } from "./lamp";
+import { inBackground } from "./push/background";
 import { MOMENT_LABEL, todayFor } from "./presence";
 import type { Card, Member, Play, Relationship } from "./schemas";
 import { fetchWeather, geocode, mockPlace, mockWeather, phaseFor, type DayPhase, type PlaceHint, type Weather } from "./weather";
@@ -23,16 +26,15 @@ import type { Wall } from "./kinds";
 import { withDemoShelf } from "./demo";
 import { isDemoFamily } from "./auth";
 import { createDownloadUrl } from "./storage";
-import { sinceLines } from "./since";
 import { answeredAt, expireCheckin } from "./safety";
 import { describeLang } from "./languages";
 import { isMockMode } from "./config";
-import { awakeNow, callTile, nextUp, waitingForYou, type Glance } from "./glance";
+import { awakeNow, callTile, nextLine, nextUp, waitingForYou, type Glance } from "./glance";
 import { askCardIds, guardianMap, kidsTile } from "./kids";
 import { renderNudgeText, unseenFor } from "./nudges";
 import { listEvents } from "./gather-store";
 import type { FamilyEvent } from "./events";
-import { familyHolidays } from "./occasions-server";
+import { familyHolidaysNow } from "./occasions-server";
 import { occasionsInRange, addDays, type CalHoliday } from "./occasion-calendar";
 import { dateIn } from "./today";
 
@@ -64,8 +66,8 @@ export interface WindowState {
   people: WindowPerson[];
   /** This viewer's amber threshold, in hours. */
   quietAfterHours: number;
-  /** The viewer's previous visit and what happened after it, in plain words (newest first, at most three). */
-  since: { at: string | null; lines: string[]; line?: string };
+  /** The viewer's previous visit (the inbox holds what happened since; the window no longer lists it). */
+  since: { at: string | null };
   /** A family photo was chosen for this window. */
   chosen: boolean;
   /** Someone on the other side has signed in (has an account). Emails never leave the server. */
@@ -86,6 +88,16 @@ export interface WindowState {
   glance: Glance;
   /** A photo of their actual home as the view (a media ref), else null: the default photo. */
   homePhoto: string | null;
+  /** Their city's coordinates (a city, never a person's location), for the real sky; null when unknown. */
+  place: { lat: number; lon: number } | null;
+  /** Which open space the drawn scene shows: window (default), balcony or courtyard. */
+  scene: "window" | "balcony" | "courtyard";
+  /** The one "Next" line: the weekly call in both zones, or the next occasion / visit, whichever is first. */
+  next: { text: string; href: string } | null;
+  /** Every home's lamp and the heartbeats waiting for the viewer (the same shape as GET /api/lamp). */
+  lamp: LampView;
+  /** The latest voice note from someone at the window (from the recent shelf), else null. */
+  voice: Card | null;
 }
 
 /**
@@ -163,17 +175,18 @@ function localDay(iso: string, tz: string): string {
 }
 
 /** The family-wide reads the window needs, all started at once (one wave of round trips). */
-const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask"] as const;
+const WINDOW_KINDS = ["window_view", "safety_checkin", "care_settings", "question", "today_task", "need", "weekly_call", "kid_ask", "lamp"] as const;
 /** The rhythm looks back 15 days: a time window, not the newest 500 (heartbeats pile up). */
 const PRESENCE_WINDOW_MS = 16 * 86_400_000;
 /** The window needs the recent shelf (latest voice, last signs, what waits), never the whole lane. */
 const CARD_WINDOW_DAYS = 60;
 const CARD_WINDOW_LIMIT = 200;
-/** A slow sky never holds the window: past this the weather badge just hides. */
-export const WEATHER_DEADLINE_MS = 1500;
-const HOLIDAYS_DEADLINE_MS = 1500;
-/** A model call never holds the first screen. */
-const SINCE_DEADLINE_MS = 700;
+/**
+ * A slow sky never holds the window: past this the weather is left out (the
+ * scene draws the sun or moon only) and the fetch carries on in the background,
+ * so the next 60 s poll has it from the cache.
+ */
+export const WEATHER_DEADLINE_MS = 600;
 
 type WindowDocs = Awaited<ReturnType<typeof listDocsMany<typeof WINDOW_KINDS>>>;
 
@@ -189,7 +202,7 @@ export interface WindowReads {
   cards: Card[];
   plays: Play[];
   events: FamilyEvent[];
-  /** The calendar the family keeps; resolves on its own clock (the feed is a network fetch) and never rejects. */
+  /** The calendar the family keeps: this isolate's cached feed or the bundled list, never a wait on the network. */
   holidays: Promise<CalHoliday[]>;
 }
 
@@ -205,10 +218,11 @@ export function readWindow(familyId: string, now: Date = new Date(), viewerId?: 
   const membersP = dbListMembers(familyId);
   const since = new Date(now.getTime() - CARD_WINDOW_DAYS * 86_400_000).toISOString();
   // Holidays need the members' zones for the country, but the settings read does not wait for them.
-  // The live calendar feed is a network fetch; if it is slow the bundled calendar (what a failed fetch uses anyway) stands in.
-  const bundled = () => membersP.then((ms) => familyHolidays(familyId, ms, { fetchText: () => Promise.reject(new Error("slow")) }, { settings }).then((h) => h.visible));
-  const holidays = withDeadline(membersP.then((ms) => familyHolidays(familyId, ms, {}, { settings }).then((h) => h.visible)), HOLIDAYS_DEADLINE_MS, null)
-    .then((visible) => visible ?? bundled())
+  // The live calendar feed is never awaited here: the cached feed (or the bundled calendar) answers
+  // now, and a missing feed is fetched in the background for the next request.
+  const holidays = membersP
+    .then((ms) => familyHolidaysNow(familyId, ms, settings, inBackground))
+    .then((h) => h.visible)
     .catch((): CalHoliday[] => []);
   return Promise.all([
     membersP,
@@ -244,19 +258,19 @@ export async function windowState(familyId: string, viewerId: string, now = new 
   const hereHint: PlaceHint = { country: countryOfMember(viewer), tz: viewer?.tz };
   // The sky is the only thing that needs the city, so it starts now and runs while the rest is worked out.
   // Each piece is waited for at most WEATHER_DEADLINE_MS; a late one is left out, never guessed.
-  const skyP = Promise.all([
-    withDeadline(weatherFor(city, farHint), WEATHER_DEADLINE_MS, null),
-    withDeadline(placeFor(city, farHint), WEATHER_DEADLINE_MS, null),
-    withDeadline(placeFor(viewer?.city ?? "", hereHint), WEATHER_DEADLINE_MS, null),
-  ]);
+  // Both cities are looked up at once (the weather's own geocode of their city is the same in-flight fetch).
+  const wxP = weatherFor(city, farHint);
+  const farP = placeFor(city, farHint);
+  const hereP = placeFor(viewer?.city ?? "", hereHint);
+  // A late answer still fills the caches: keep the isolate alive for it.
+  if (!mock()) inBackground(() => Promise.allSettled([wxP, farP, hereP]));
+  const skyP = Promise.all([withDeadline(wxP, WEATHER_DEADLINE_MS, null), withDeadline(farP, WEATHER_DEADLINE_MS, null), withDeadline(hereP, WEATHER_DEADLINE_MS, null)]);
   // Since you were here: the visit before this one (the latest "here" is this visit).
   const visits = presence
     .filter((p) => p.memberId === viewerId && p.moment === "here" && Date.parse(p.at) <= now.getTime())
     .map((p) => p.at)
     .sort();
   const previous = visits.length >= 2 ? visits[visits.length - 2] : null;
-  // The one read that has to wait for another: it is only needed once there was a previous visit.
-  const reactionsP = previous ? dbListReactions(undefined, familyId) : null;
   const ids = home?.members.map((m) => m.id) ?? [];
   const today: Presence[] = ids.flatMap((id) => todayFor(id, presence, tz, now)).filter((p) => p.moment !== "here");
   today.sort((a, b) => b.at.localeCompare(a.at));
@@ -309,27 +323,18 @@ export async function windowState(familyId: string, viewerId: string, now = new 
       .sort((a, b) => a.at.localeCompare(b.at));
     return { moments, checkins: mine };
   }
-  let sinceWords: string[] = [];
-  if (previous && reactionsP) {
-    const reactions = await reactionsP;
-    const sharing = new Set((home?.members ?? []).filter((m) => settings.find((s) => s.memberId === m.id)?.shareVisits ?? true).map((m) => m.id));
-    sinceWords = sinceLines({
-      viewerId,
-      at: previous,
-      now,
-      names: Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName])),
-      farIds: ids,
-      cards: shelf,
-      plays,
-      reactions,
-      checkins: checkins.filter((c) => sharing.has(c.memberId)),
-    });
-  }
-  // Muse's one-sentence catch-up is nice, not necessary: it gets SINCE_DEADLINE_MS, then the plain
-  // lines show and the finished sentence is cached for the next look.
-  const [sinceLine, [weather, farPlace, herePlace], hol] = await Promise.all([withDeadline(sinceSentence(familyId, viewerId, viewer?.displayLang ?? "en", sinceWords), SINCE_DEADLINE_MS, null), skyP, holidays]);
+  // The lamp between the homes, from the lamp documents only (no cards).
+  const hiddenVisits = new Set(settings.filter((s) => s.shareVisits === false && s.memberId !== viewerId).map((s) => s.memberId));
+  const lamp = lampView(households(members, relationships), docs.lamp, viewerId, hiddenVisits, now.getTime());
+  // Their latest voice: the newest audio card from someone at the window, from the bounded recent shelf.
+  const atWindow = new Set(ids);
+  const voice = shelf.find((c) => c.type === "audio" && c.authorId !== null && atWindow.has(c.authorId) && Date.parse(c.takenAt) <= now.getTime()) ?? null;
+  const [[weather, farPlace, herePlace], hol] = await Promise.all([skyP, holidays]);
   const line = composedLine({ who: today[0] ? nameOfId(today[0].memberId) : who, moment: today[0] ? { label: MOMENT_LABEL[today[0].moment].label, at: today[0].at } : null, weather, city, tz });
   const own = view ?? defaultView(familyId, viewerId);
+  const glance = glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous });
+  const myTz = viewer?.tz ?? "UTC";
+  const next = nextLine({ call: docs.weekly_call.find((d) => d.id === "weekly-call"), myTz, theirTz: home?.tz ?? null, next: glance.next, now, today: dateIn(myTz, now) });
   const imageRef = view?.imageRef ?? DEFAULT_IMAGE;
   return {
     view: view ? { ...view, style: "still" } : null,
@@ -340,7 +345,7 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     line,
     moments: today.slice(0, 4).map((p) => ({ memberId: p.memberId, label: MOMENT_LABEL[p.moment].line, at: p.at })),
     people,
-    since: { at: previous, lines: sinceWords, ...(sinceLine ? { line: sinceLine } : {}) },
+    since: { at: previous },
     quietAfterHours: view?.quietAfterHours ?? 4,
     chosen: Boolean(view?.cardId && view.imageRef),
     km: distanceKm(farPlace, herePlace),
@@ -349,8 +354,13 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     call: callHint(tz, viewer?.tz ?? tz, home?.members.filter((m) => m.role !== "child").map((m) => m.displayName || m.firstName) ?? [], now),
     // Signed in, or has done anything in Nearer (the demo family has no emails).
     joined: (home?.members ?? []).some((m) => m.role !== "child" && (Boolean(m.email) || lastSeen(m.id) !== null)),
-    glance: glanceFrom({ viewerId, members, relationships, theirTz: home?.tz ?? null, cards: shelf, now, lastSeen, plays, docs, nudges, events, holidays: hol, previousVisit: previous }),
+    glance,
+    next,
     homePhoto: own.homePhoto,
+    place: farPlace ? { lat: Math.round(farPlace.lat * 100) / 100, lon: Math.round(farPlace.lon * 100) / 100 } : null,
+    scene: own.scene ?? "window",
+    lamp,
+    voice,
   };
 }
 

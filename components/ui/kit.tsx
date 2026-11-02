@@ -107,7 +107,7 @@ export function Icon({ name, size = 22, className, strokeWidth = 2 }: { name: Ic
 
 /** The bundled demo photos come in small WebP widths too (scripts/demo-variants.mjs). */
 function demoWidths(src: string): number[] | null {
-  if (src === "/demo/courtyard.jpg" || /^\/demo\/home-(courtyard|balcony|window)\.jpg$/.test(src)) return [390, 780];
+  if (/^\/demo\/home-(courtyard|balcony|window)\.jpg$/.test(src)) return [390, 780];
   if (/^\/demo\/venues\/[a-z]+\.jpg$/.test(src)) return [390, 780, 1600];
   if (/^\/demo\/family-[a-z]+\.webp$/.test(src)) return [440, 880];
   if (/^\/demo\/lamp-(lit|unlit)\.jpg$/.test(src)) return [160, 390];
@@ -416,7 +416,7 @@ export function MuseMark({ children = "powered by Muse", tone = "soft", classNam
  * clear action. Suggestions (what the code can already start) go underneath.
  */
 export function EmptyState({
-  photo = "/demo/courtyard.jpg",
+  photo,
   position = "center",
   title,
   line,
@@ -424,7 +424,7 @@ export function EmptyState({
   children,
   className,
 }: {
-  photo?: string;
+  photo?: string | null;
   position?: string;
   title: React.ReactNode;
   line: React.ReactNode;
@@ -435,7 +435,12 @@ export function EmptyState({
   return (
     <section className={cn("overflow-hidden rounded-card bg-card shadow-card", className)}>
       <div className="relative h-[152px]">
-        <Photo src={photo} sizes="(max-width: 480px) 100vw, 480px" position={position} />
+        {photo ? (
+          <Photo src={photo} sizes="(max-width: 480px) 100vw, 480px" position={position} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/brand/mark.svg" alt="" width={56} height={56} className="absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 opacity-60" />
+        )}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--card)] to-transparent" aria-hidden="true" />
       </div>
       <div className="px-4 pb-5">

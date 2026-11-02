@@ -9,7 +9,6 @@ import type { Card, Member } from "@/lib/schemas";
 import { useDisplayText } from "@/lib/use-display-text";
 import { useEvents } from "@/lib/gather-client";
 import { useCourtyard } from "@/lib/courtyard-data";
-import { HERO_SIZES } from "@/lib/hero";
 import { useFamilyCards } from "@/lib/use-family";
 import { ago, postJson, useJson } from "@/lib/use-json";
 import { isAwake, placeFromTz, timeIn } from "@/lib/zones";
@@ -32,6 +31,7 @@ import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Icon, Monogram, Photo } from "./ui/kit";
+import { Mark } from "./brand";
 import { useViewer } from "./viewer";
 
 // The courtyard (SPEC §30.2): behind the door. A real courtyard as the header, then
@@ -284,9 +284,10 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
     <div>
       <style>{LAMP_CSS}</style>
       <header data-ui="courtyard-header" className="pt-4">
-        <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-[#2a211b]">
-          <Photo src="/demo/courtyard.jpg" alt="" sizes={HERO_SIZES} priority position="center 55%" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/65" aria-hidden="true" />
+        <div className="relative h-[150px] overflow-hidden rounded-[26px] bg-ink">
+          <span className="absolute left-4 top-4 opacity-90" aria-hidden="true">
+            <Mark size={36} />
+          </span>
           <div className="absolute right-3 top-3 flex items-center gap-2">
             <button type="button" onClick={onCloseDoor} aria-label="Close the door, back to the window" className="press glass grid h-11 w-11 place-items-center rounded-full text-white">
               <Icon name="doorClosed" size={20} strokeWidth={1.8} />

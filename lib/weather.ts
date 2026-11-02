@@ -16,6 +16,8 @@ export interface Weather {
   label: string;
   source: "open-meteo" | "mock";
   at: string;
+  /** The Open-Meteo WMO weather_code it came from (the scene draws from this). */
+  code?: number;
   /** City coordinates (for the sun's position over their home). Never a person's location. */
   lat?: number;
   lon?: number;
@@ -70,7 +72,7 @@ export function mockWeather(city: string, now = new Date()): Weather {
   const codes = [0, 2, 61, 3, 45];
   const sky = skyFromWmo(codes[pick]);
   const ll = KNOWN[nameOf(city).toLowerCase()];
-  return { city, tempC: 14 + ((h >> 3) % 16), ...sky, source: "mock", at: now.toISOString(), ...(ll ? { lat: ll[0], lon: ll[1] } : {}) };
+  return { city, tempC: 14 + ((h >> 3) % 16), ...sky, code: codes[pick], source: "mock", at: now.toISOString(), ...(ll ? { lat: ll[0], lon: ll[1] } : {}) };
 }
 
 /** Which Amritsar: the member's country (from their time zone) and the zone itself. */
@@ -167,7 +169,7 @@ export async function fetchWeather(city: string, hint: PlaceHint = {}, fetcher: 
       if (!res.ok) return null;
       const d = (await res.json()) as { current?: { temperature_2m?: number; weather_code?: number } };
       if (typeof d.current?.temperature_2m !== "number" || typeof d.current.weather_code !== "number") return null;
-      const w: Weather = { city, tempC: Math.round(d.current.temperature_2m), ...skyFromWmo(d.current.weather_code), source: "open-meteo", at: new Date().toISOString(), lat: place.lat, lon: place.lon };
+      const w: Weather = { city, tempC: Math.round(d.current.temperature_2m), ...skyFromWmo(d.current.weather_code), code: d.current.weather_code, source: "open-meteo", at: new Date().toISOString(), lat: place.lat, lon: place.lon };
       CACHE.set(key, { at: Date.now(), w });
       await edgePut(`wx:${key}`, w, TTL / 1000);
       return w;

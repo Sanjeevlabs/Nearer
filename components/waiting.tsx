@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Icon, Photo } from "./ui/kit";
+import { Mark } from "./brand";
+import { Icon } from "./ui/kit";
 
-const COURTYARD = "/demo/courtyard.jpg";
 const CHECK_MS = 30_000;
 
 /**
@@ -36,7 +36,9 @@ export function Waiting({ hostName, onCheck }: { hostName: string | null; onChec
 
   return (
     <div className="fixed inset-0 z-30 overflow-hidden bg-[#2a211c]">
-      <Photo src={COURTYARD} alt="" sizes="100vw" priority />
+      <div className="absolute inset-0 grid place-items-center opacity-25" aria-hidden="true">
+        <Mark size={160} />
+      </div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/40" aria-hidden="true" />
       <main className="relative mx-auto flex h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(20px + env(safe-area-inset-top))", paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
         <p className="m-0 px-2 text-title font-bold tracking-[-0.02em] text-white drop-shadow">Nearer</p>

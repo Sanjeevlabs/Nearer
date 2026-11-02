@@ -4,7 +4,7 @@
 //  - /api GETs: network first, then the last copy (never media, session, auth or push)
 //  - push: shows the notification the server sent; a tap focuses Nearer (or opens it) at data.url
 // Pages and API copies are family data: the app posts "clear" on sign-in / sign-out.
-const VERSION = "v1";
+const VERSION = "v2"; // v2: drops the retired courtyard photos v1 cached
 const STATIC = `aangan-static-${VERSION}`;
 const DATA = `aangan-data-${VERSION}`;
 const SHELL = ["/offline.html", "/manifest.webmanifest", "/icons/icon-192.png"];

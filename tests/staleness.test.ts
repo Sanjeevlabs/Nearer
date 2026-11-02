@@ -28,10 +28,11 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("staleness", () => {
-  it("lamp glow fades to nothing at 72 h", () => {
+  it("lamp glow is full for 24 h, then fades to nothing at 72 h", () => {
     const lit = T0.toISOString();
     expect(glowFrom(lit, T0.getTime())).toBe(1);
-    expect(glowFrom(lit, T0.getTime() + 36 * H)).toBe(0.5);
+    expect(glowFrom(lit, T0.getTime() + 24 * H)).toBe(1);
+    expect(glowFrom(lit, T0.getTime() + 48 * H)).toBe(0.5);
     expect(glowFrom(lit, T0.getTime() + FADE_HOURS * H)).toBe(0);
     expect(glowFrom(lit, T0.getTime() + (FADE_HOURS + 1) * H)).toBe(0);
   });

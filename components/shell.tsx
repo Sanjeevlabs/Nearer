@@ -126,9 +126,12 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
 function Dock() {
   const { openAdd, openRooms, refreshKey, chromeHidden, dockOn } = useShell();
   const { viewer, members } = useViewer();
-  const { cards } = useFamilyCards(refreshKey);
   const { current, open: playerOpen } = usePlayer();
   const pathname = usePathname();
+  // The dock only needs the family's cards (who to talk to first) once it is on screen:
+  // the window, its first screen, never pays for the full card list.
+  const show = ((pathname === "/" && dockOn) || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
+  const { cards } = useFamilyCards(refreshKey, show);
   const [picking, setPicking] = useState(false);
   const [inviting, setInviting] = useState(false);
   const pickerEver = useEver(picking);
@@ -145,7 +148,6 @@ function Dock() {
   const waitingList = wait?.items ?? [];
   const waiting = useMemo(() => new Set((wait?.items ?? []).flatMap((i) => (i.fromId ? [i.fromId] : []))), [wait]);
   const others = useMemo(() => peopleByRecency(viewer.id, members, cards ?? []).sort((a, b) => Number(waiting.has(b.id)) - Number(waiting.has(a.id)) || Number(a.role === "child") - Number(b.role === "child")), [viewer.id, members, cards, waiting]);
-  const show = ((pathname === "/" && dockOn) || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
   const voice = () => {
     if (pagePerson && pagePerson.id !== viewer.id) return openAdd("voice", null, [pagePerson.id]);
     if (others.length === 1) return openAdd("voice", null, [others[0].id]);
