@@ -28,7 +28,8 @@ export const en = {
   "auth.namesJoin": " & ",
   "auth.titleWelcomeBack": "Welcome back",
   "auth.titleEmail": "Your email",
-  "auth.titleSignInUp": "Sign in or sign up",
+  "auth.titleSignIn": "Sign in",
+  "auth.titleSignUp": "Start your family",
   "auth.titleCheck": "Check your email",
   "auth.titleCreate": "Open your window",
   "auth.titleJoinHost": "Join {host}'s window",
@@ -69,7 +70,11 @@ export const en = {
 
   // Auth: email + code
   "auth.emailSub": "We'll email you a 6-digit code. No password.",
-  "auth.emailSubSignin": "New or returning, it's the same: Google, or a 6-digit code by email. No password.",
+  "auth.emailSubSignin": "Welcome back. Use the Google account or email you signed up with. No password.",
+  "auth.emailSubSignup": "First, sign up with Google or your email. Then you'll name your family. No password.",
+  "auth.newToNearer": "New to Nearer?",
+  "auth.haveFamily": "Already have a family?",
+  "auth.signInLink": "Sign in",
   "auth.noFamilyTitle": "You're in. No family yet.",
   "auth.startFamily": "Start a family",
   "auth.openMyFamily": "Open my family",

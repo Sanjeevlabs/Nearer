@@ -42,6 +42,20 @@ describe("accounts: email code sign-up and sign-in", () => {
     expect((await startAuth(post("http://test/api/auth/start", { email: "not-an-email" }))).status).toBe(400);
   });
 
+  it("starting a family again with the same email opens the first one instead of making a second", async () => {
+    const addr = email();
+    const first = await createFamily(addr);
+    expect(first.res.status).toBe(200);
+    clearAuthAttempts();
+    const again = await verifyAuth(
+      post("http://test/api/auth/verify", { email: addr.toUpperCase(), code: MOCK_OTP, intent: { type: "create", familyName: "Singh", firstName: "Sanjeev" } }),
+    );
+    expect(again.status).toBe(200);
+    const body = (await again.json()) as { familyId: string; memberId: string; existing?: boolean };
+    expect(body).toMatchObject({ familyId: first.body.familyId, memberId: first.body.memberId, existing: true });
+    expect((body as { welcome?: string }).welcome).toMatch(/already have a family/);
+  });
+
   it("a wrong code never creates anything", async () => {
     const res = await verifyAuth(post("http://test/api/auth/verify", { email: email(), code: "123456", intent: { type: "create", familyName: "X", firstName: "Y" } }));
     expect(res.status).toBe(401);
@@ -68,17 +82,24 @@ describe("accounts: email code sign-up and sign-in", () => {
     expect(nobody.status).toBe(404);
   });
 
-  it("an email that creates again gets another side (same person), up to four", async () => {
+  it("another side (up to four) comes only by joining with that family's invite code", async () => {
     const addr = email();
     const first = await createFamily(addr);
     const sides = [first.body.familyId];
+    const joinOther = async () => {
+      const other = await createFamily(email());
+      const inv = (await (await createInvite(post("http://test/api/invites", {}, other.cookie))).json()) as { invite: { code: string } };
+      return verifyAuth(post("http://test/api/auth/verify", { email: addr, code: MOCK_OTP, intent: { type: "join", inviteCode: inv.invite.code, firstName: "Sanjeev" } }));
+    };
     for (let i = 0; i < 3; i++) {
-      const again = await createFamily(addr);
-      expect(again.res.status).toBe(200);
-      sides.push(again.body.familyId);
+      clearAuthAttempts();
+      const joined = await joinOther();
+      expect(joined.status).toBe(200);
+      sides.push(((await joined.json()) as { familyId: string }).familyId);
     }
     expect(new Set(sides).size).toBe(4);
-    expect((await createFamily(addr)).res.status).toBe(409);
+    clearAuthAttempts();
+    expect((await joinOther()).status).toBe(409);
   });
 
   it("join with a live invite adds the person to that family only", async () => {

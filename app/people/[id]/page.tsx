@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { placeFromTz } from "@/lib/zones";
 import { PersonDetails } from "@/components/person-details";
 
@@ -31,7 +32,7 @@ export default function PersonPage() {
   const { id } = useParams<{ id: string }>();
   const { members, relationships } = useViewer();
   const { refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
   const person = members.find((m) => m.id === id);
   const [now, setNow] = useState("");
 
@@ -94,6 +95,10 @@ export default function PersonPage() {
         <h2 className="m-0 mb-1 text-title">Voice memories</h2>
         {cards === null ? (
           <div className="skeleton mt-3 h-16" />
+        ) : cardsFailed && cards.length === 0 ? (
+          <div className="mt-3">
+            <LoadFailed what="Voice memories" ui="person-retry" onRetry={retryCards} />
+          </div>
         ) : voices.length === 0 ? (
           <EmptyLine>No voice memories from {callName(person)} yet. Ask them something.</EmptyLine>
         ) : (

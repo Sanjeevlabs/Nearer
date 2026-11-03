@@ -10,6 +10,7 @@ import type { Card, Member, RitualRun, Wish } from "@/lib/schemas";
 import { buildReelSegments, reelTitle, type ReelSegment } from "@/lib/reel";
 import { memberPhoto } from "@/lib/people";
 import { Icon, Photo, PlayButton } from "@/components/ui/kit";
+import { fetchGet } from "@/lib/retry";
 
 // Petals: small falling dots over the reel. Pure CSS, still under
 // prefers-reduced-motion (global rule kills the animation).
@@ -50,10 +51,10 @@ export function ReelPlayer({ runId }: { runId: string }) {
   useEffect(() => {
     let live = true;
     Promise.all([
-      fetch("/api/ritual-runs", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)),
-      fetch(`/api/wishes?runId=${encodeURIComponent(runId)}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/cards", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)),
-      fetch("/api/members", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)),
+      fetchGet("/api/ritual-runs").then((r) => (r.ok ? r.json() : null)),
+      fetchGet(`/api/wishes?runId=${encodeURIComponent(runId)}`).then((r) => (r.ok ? r.json() : null)),
+      fetchGet("/api/cards").then((r) => (r.ok ? r.json() : null)),
+      fetchGet("/api/members").then((r) => (r.ok ? r.json() : null)),
     ])
       .then(([runsData, wishesData, cardsData, membersData]: [
         { runs?: RitualRun[] } | null,
@@ -73,7 +74,7 @@ export function ReelPlayer({ runId }: { runId: string }) {
           setSegments(buildReelSegments(found, ws, cs, ms));
           const celebrant = celebrantOf(found, ms);
           if (celebrant && celebrant.id !== viewer.id) {
-            fetch(`/api/kinship?from=${viewer.id}&to=${celebrant.id}&lang=${displayLang}`, { cache: "no-store" })
+            fetchGet(`/api/kinship?from=${viewer.id}&to=${celebrant.id}&lang=${displayLang}`)
               .then((r) => (r.ok ? r.json() : null))
               .then((data: { terms?: string } | null) => {
                 if (live) setKinship(data?.terms ?? null);

@@ -73,7 +73,15 @@ export default function AuthCallback() {
       // "No family yet" keeps the Supabase session: /create and /join reuse it, so Google isn't asked twice.
       const out = await verifyAccessToken(sb, { accessToken: token, intent: saved.intent, tz: saved.tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone, birthday: saved.birthday, city: saved.city }, (e) => e === "no-family");
       const after = afterSignin(out);
-      if (after.kind === "chooser") return setState("no-family");
+      if (after.kind === "chooser") {
+        // Came to start a family and has none: on to the form (the Supabase session is kept).
+        if (go.noFamilyTo) {
+          clearIntent();
+          window.location.replace(go.noFamilyTo);
+          return;
+        }
+        return setState("no-family");
+      }
       if (after.kind === "failed" || !out.ok) return setState("failed");
       clearIntent();
       try {
@@ -84,7 +92,8 @@ export default function AuthCallback() {
       }
       resetFamilyCards();
       window.dispatchEvent(new Event("aangan:auth"));
-      window.location.replace(saved.mode === "create" ? "/create?resume=other-side" : "/");
+      // Already had a family: the server opened it, so no "other side" step for a family that wasn't made.
+      window.location.replace(saved.mode === "create" && !out.existing ? "/create?resume=other-side" : "/");
     })();
   }, []);
 

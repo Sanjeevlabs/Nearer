@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGUES, translate as translateAll } from "@/lib/ui-strings";
+import { CATALOGUES, en, type UiKey, translate as translateAll } from "@/lib/ui-strings";
 import { LOADERS, ensureCatalogue, hasUiCatalogue, translate } from "@/lib/ui-strings/lazy";
 
 // The app reads the per-language loader (lib/ui-strings/lazy.ts) so a phone downloads one
@@ -7,6 +7,17 @@ import { LOADERS, ensureCatalogue, hasUiCatalogue, translate } from "@/lib/ui-st
 describe("lazy UI catalogues", () => {
   it("list the same languages as the single module", () => {
     expect(Object.keys(LOADERS).sort()).toEqual(Object.keys(CATALOGUES).sort());
+  });
+
+  it("covers every English UI key in each translated catalogue", () => {
+    const keys = (Object.keys(en) as UiKey[]).sort();
+    const placeholders = (text: string) => (text.match(/\{\w+\}/g) ?? []).sort();
+    for (const [code, catalogue] of Object.entries(CATALOGUES)) {
+      expect(Object.keys(catalogue).sort(), code).toEqual(keys);
+      for (const key of keys) {
+        expect(placeholders(catalogue[key] ?? ""), `${code}: ${key}`).toEqual(placeholders(en[key]));
+      }
+    }
   });
 
   it("each loader resolves to the same catalogue", async () => {

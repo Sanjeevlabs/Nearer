@@ -78,7 +78,7 @@ describe("identity first, then family", () => {
   });
 
   it("after auth with a next, go to the form and do not verify; without one, verify as sign-in", () => {
-    expect(afterAuth({ next: "create" })).toEqual({ to: "/create", verify: false });
+    expect(afterAuth({ next: "create" })).toEqual({ verify: true, noFamilyTo: "/create" });
     expect(afterAuth({ next: "join", code: "A B" })).toEqual({ to: "/join?code=A%20B", verify: false });
     expect(afterAuth({ next: null })).toEqual({ verify: true });
     expect(nextHref({ next: null })).toBe("/");
@@ -136,6 +136,25 @@ describe("sign out", () => {
       "/signin?next=create",
     );
     expect(log).toEqual(["stop", "push", "delete", "supabase", "storage", "caches", "sw", "go:/signin?next=create"]);
+  });
+
+  it("sign-out waits for the service worker caches to clear before the next page loads", async () => {
+    const log: string[] = [];
+    const noop = async () => undefined;
+    await signOutEverywhere({
+      stopPollers: () => undefined,
+      forgetPush: noop,
+      deleteSession: noop,
+      supabaseSignOut: noop,
+      clearStorage: () => undefined,
+      clearCaches: () => undefined,
+      clearServiceWorker: async () => {
+        await new Promise((r) => setTimeout(r, 5));
+        log.push("sw-cleared");
+      },
+      goTo: () => void log.push("go"),
+    });
+    expect(log).toEqual(["sw-cleared", "go"]);
   });
 
   it("the clearing cookie has the attributes of the session cookie, so it replaces it (production adds Secure)", async () => {

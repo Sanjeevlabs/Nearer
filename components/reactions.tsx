@@ -10,6 +10,7 @@ import type { Member, Play, Reaction } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { useViewer } from "./viewer";
 import { heardLine } from "@/lib/voice";
+import { fetchGet } from "@/lib/retry";
 
 // What the family calls this person (Dadi, Dad, Maa). Same word in every UI language.
 function kinshipName(member: Member | undefined, _displayLang: string): string {
@@ -19,7 +20,7 @@ function kinshipName(member: Member | undefined, _displayLang: string): string {
 
 async function fetchMembers(): Promise<Member[]> {
   try {
-    const res = await fetch("/api/members", { cache: "no-store" });
+    const res = await fetchGet("/api/members");
     if (!res.ok) return [];
     const data = (await res.json()) as { members: Member[] };
     return data.members;
@@ -37,7 +38,7 @@ export function HeardChip({ cardId }: { cardId: string }) {
   useEffect(() => {
     let live = true;
     Promise.all([
-      fetch(`/api/plays?cardId=${encodeURIComponent(cardId)}`, { cache: "no-store" })
+      fetchGet(`/api/plays?cardId=${encodeURIComponent(cardId)}`)
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null),
       fetchMembers(),
@@ -175,7 +176,7 @@ export function useCardReactions(cardId: string | null) {
   const load = useCallback(async () => {
     if (!cardId) return;
     try {
-      const res = await fetch(`/api/reactions?cardId=${encodeURIComponent(cardId)}`, { cache: "no-store" });
+      const res = await fetchGet(`/api/reactions?cardId=${encodeURIComponent(cardId)}`);
       if (res.ok) setReactions(((await res.json()) as { reactions: Reaction[] }).reactions);
     } catch {
       // Offline: keep what we have.

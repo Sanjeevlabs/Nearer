@@ -12,6 +12,19 @@ The app itself is in English. What the family shares (voices, recipes, questions
 
 Live: https://nearer.site (tap *Try the demo family*, or use the code `NEARER-DEMO`). To see both homes, open a door as Arjun, tap *Demo: see it arrive on their side*, and scan the code on a second phone: it becomes Maa in the same demo family.
 
+## For judges (2 minutes)
+
+Open [Nearer](https://nearer.site) and tap **Try the demo family**. No sign-up is needed. Try these in order.
+
+1. **Look through the window.** See the sky and local time at the other home. Weather and time come from weather data and the home's time zone.
+2. **Tap the lamp.** Send a quiet “thinking of you.” Nearer handles the signal directly.
+3. **Play Maa’s voice note.** Follow her words in the player. Muse Voice Transcribe writes down recordings and Muse Spark translates when the listener’s language differs. The demo uses prepared examples.
+4. **Slide the key.** The family page opens. This is ordinary app navigation.
+5. **Open House → Kitchen.** Pick a recipe taught by voice. Muse Voice Transcribe captures the words and Muse Spark structures the recipe from what the cook said.
+6. **Open For you.** Tap the bell on the window, or your profile photo on the family page. Nearer assembles what the family sent you from shared items and activity.
+
+[See how Nearer works](docs/architecture.md).
+
 ### One hero: the parent far away
 
 **Nearer keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or brings them **together** by invitation.
@@ -36,16 +49,35 @@ Solo Indie-track entry, Meta Global AI Developer Hackathon. Deadline 4 Nov 2026,
 
 Everything in this repo was built during the event window (27 Oct – 4 Nov 2026); see [BUILD_LOG.md](BUILD_LOG.md) for the day-by-day record. Stack: Next.js 16 PWA on Cloudflare Workers (OpenNext; see [docs/DEPLOY.md](docs/DEPLOY.md)), Supabase (Postgres + private Storage + RLS by `family_id`), one Next.js app, no queues or workers. Sign-in is an email code; invite codes let someone take a place the family made for them. Two synthetic demo families (`demo-family` = Sharma, `demo-iyer` = Iyer) open with the public demo code.
 
-Run it:
+### Run the demo locally
 
-- `npm install`, then `npm run dev` — local dev server (mock mode unless `.env.local` sets keys + `MOCK=false`).
+Use Node.js 20.9 or later (CI uses Node.js 20). From a fresh clone, no environment file or service credentials are needed for the mock demo.
+
+```sh
+git clone https://github.com/Sanjeevlabs/Nearer.git
+cd Nearer
+npm ci
+MOCK=true NEXT_PUBLIC_MOCK=true npx next build
+MOCK=true NEXT_PUBLIC_MOCK=true SESSION_SECRET="$(node -p 'require("node:crypto").randomBytes(20).toString("hex")')" npx next start -p 3000
+```
+
+Open [http://localhost:3000/home](http://localhost:3000/home), tap **Try the demo family**, then **Open Nearer** if prompted. You can also join with the code `NEARER-DEMO`. The demo opens on the family window.
+
+Run the mock tests from the repo directory in a second terminal:
+
+```sh
+npx vitest run
+```
+
+Other local commands:
+
 - `npm run lint` — secret scan + no hard-coded festivals in app logic.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run test:mock` — mock-mode unit + smoke tests (no network, no cost).
 - `npm run eval:golden` — manual live golden eval. Needs `META_API_KEY`. Never in CI.
 - `node scripts/seed.mjs` — generates the consistent demo-family photos (needs `META_API_KEY`).
 
-Environment (see `.env.example`; never commit `.env.local`):
+For live mode, configure Supabase and Meta using the variables below. See `.env.example` for the full list and never commit `.env.local`.
 
 - `META_API_KEY` — Meta model calls. Environment only, never written to any file.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project.
@@ -105,3 +137,5 @@ This entry was built with AI coding assistants (Claude Code and Muse Code), as t
 ## Build notes
 
 Nearer (codename Aangan during development). Internal storage keys, the session cookie, Modal app names and the Cloudflare Worker name keep the codename on purpose, so existing sessions and secrets survive the rename.
+
+**Before a live demo, run `node scripts/warm.mjs`** (optionally `node scripts/warm.mjs https://nearer.site 6`). It hits the judge-path pages and APIs in parallel a few times to warm the Worker's isolates and prints status counts. The free plan cuts off a few percent of requests that pass 10 ms of CPU (a 503); the app retries reads (up to 3 times, `lib/retry.ts`) and the service worker retries, then falls back to a kept copy or a self-retrying page (`public/sw.js`), so a cut-off should never show.

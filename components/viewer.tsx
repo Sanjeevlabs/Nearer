@@ -7,6 +7,7 @@ import type { Member, Relationship } from "@/lib/schemas";
 import { fetchFirst } from "@/lib/early";
 import { prefetchJson } from "@/lib/use-json";
 import { Waiting } from "@/components/waiting";
+import { fetchGet } from "@/lib/retry";
 
 interface ViewerState {
   /** True once the session and family have loaded (or there is no session). */
@@ -32,7 +33,7 @@ const fallbackViewer = (): Member =>
   DEMO_MEMBERS.find((m) => m.id === DEFAULT_VIEWER_ID) ?? DEMO_MEMBERS[0];
 
 async function fetchRelationships(): Promise<Relationship[]> {
-  const res = await fetch("/api/relationships", { cache: "no-store" });
+  const res = await fetchGet("/api/relationships");
   if (!res.ok) return [];
   return ((await res.json()) as { relationships: Relationship[] }).relationships;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { useState } from "react";
 import { DOT, SafetyRow, type SafetyData } from "@/components/safety";
 import { Avatar, Button, EmptyLine, Icon, RoomHeader, SectionTitle } from "@/components/ui/kit";
@@ -21,7 +22,7 @@ const JOURNEY_ETAS = [2, 4, 8, 12, 18];
 
 export default function SafePage() {
   const { viewer, members } = useViewer();
-  const { data, reload } = useJson<SafetyData>("/api/safety");
+  const { data, failed, reload } = useJson<SafetyData>("/api/safety");
   const others = members.filter((m) => m.id !== viewer.id);
   const sharing = (data?.sharing ?? [])
     .map((id) => ({ member: members.find((m) => m.id === id), state: data ? stateOf(data.checkins, id) : null }))
@@ -31,7 +32,9 @@ export default function SafePage() {
   return (
     <div>
       <RoomHeader title="Safe & sound" subtitle="Let the people you choose know you got home. Not tracking: you tell them." />
-      {!data ? (
+      {!data && failed ? (
+        <LoadFailed what="Safe & sound" ui="safe-retry" onRetry={() => void reload()} />
+      ) : !data ? (
         <div className="skeleton h-40 rounded-card" aria-busy="true" />
       ) : (
         <>

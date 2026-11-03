@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -102,12 +103,9 @@ function Book() {
         </Link>
       )}
 
-      {failed ? (
-        <div className="mt-6 rounded-[22px] bg-surface p-4">
-          <p className="m-0 text-body">The book didn&rsquo;t open just now.</p>
-          <button type="button" onClick={() => void reload()} className="press mt-3 h-10 rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink">
-            Try again
-          </button>
+      {failed && !data ? (
+        <div className="mt-6">
+          <LoadFailed what="The book" ui="book-retry" onRetry={() => void reload()} />
         </div>
       ) : data === null ? (
         <div className="mt-6 space-y-3" aria-busy="true" aria-label="Loading">
