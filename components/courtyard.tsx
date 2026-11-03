@@ -144,7 +144,6 @@ function PersonChip({ member, lamp, onOpen }: { member: Member; lamp: { glow: bo
         </span>
         <span className="mt-2 block truncate text-footnote font-semibold">{callName(member)}</span>
         <span className="block truncate text-caption text-ink-soft">{lamp.line}</span>
-        <span className="sr-only">Open their day</span>
       </button>
     </li>
   );
