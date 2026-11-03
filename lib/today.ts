@@ -3,6 +3,7 @@
 // responsibility, and the reward is the other side's voice: you hear their
 // answer after you give yours. Answers are voice notes, so they land in
 // Memories on their own. Pure helpers (client + server).
+import { dateInZone } from "./time-format";
 import type { TodayTask } from "./kinds";
 
 export interface TodayPrompt {
@@ -46,7 +47,7 @@ export function fill(text: string, child: string, parents: string): string {
 /** YYYY-MM-DD in a zone. */
 export function dateIn(tz: string, at = new Date()): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+    return dateInZone(tz).format(at);
   } catch {
     return at.toISOString().slice(0, 10);
   }

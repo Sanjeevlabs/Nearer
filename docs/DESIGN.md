@@ -74,7 +74,7 @@ Inside a room: the two-row header, no dock. Rooms are places you visit, then ret
 | **Landing** (signed out) | Say what Nearer is in one breath | Get started | Full-bleed home photo, one line ("Hear the people you love, every day"), Sign in as a text link |
 | **Sign in** | Get back in without passwords | Send code | Email, then a 6-digit code. "Explore a demo family" link for judges |
 | **Create family** | Start a courtyard | Create | Family name, your first name, your relation (e.g. son) |
-| **Join family** | Join with a code from a relative | Join | Invite code, then "Who are you?": pick yourself or add yourself |
+| **Join family** | Open the link a relative sent (`/join/<CODE>`) | Join | Sign in on that page, then "Which one are you?": pick yourself or add yourself |
 | **Home photo** (onboarding) | Make it yours | Use this photo | "The home you miss: a courtyard, a window, a doorway". Skippable |
 | **Home** (the courtyard) | Feel someone today | Play the hero | In the seven days before a festival the family keeps, a Festival Week card sits on top (the ritual JSON's colour, greeting and steps; the family's own photos from earlier years; one role line: the elder leads and teaches the steps, a child asks them, a grown-up records a wish) and the lamp rings glow in the ritual's colour. Hero now-playing card (latest voice from family), heard line, **Your family** row (one album per person), next occasion, next gathering, one memory from years ago |
 | **Person** (album) | Everything from one person | Talk to them | Big portrait, their voices as a track list, their photos, relation line ("Your grandmother · Pune") |

@@ -154,7 +154,7 @@ function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSave
   );
 }
 
-export function PersonDay({ member, cards, onClose }: { member: Member; cards: Card[]; onClose: () => void }) {
+export function PersonDay({ member, cards, onClose, startEditing = false }: { member: Member; cards: Card[]; onClose: () => void; /** Open with the status line ready to write. */ startEditing?: boolean }) {
   const { viewer, members } = useViewer();
   const { openAdd } = useShell();
   const player = usePlayer();
@@ -163,7 +163,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
   const [at, setAt] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [editingLine, setEditingLine] = useState(false);
+  const [editingLine, setEditingLine] = useState(startEditing && member.id === viewer.id);
   const { line, reload: reloadLine } = useDayLine(member.id);
   const videoRef = useRef<HTMLVideoElement>(null);
   const card = items.length ? items[Math.min(at, items.length - 1)] : undefined;
@@ -399,6 +399,16 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
               />
             ) : (
               <div className="space-y-2">
+                <div data-ui="own-day-add" className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { close(); openAdd("photos"); }} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black">
+                    <Icon name="camera" size={18} />
+                    Add a photo
+                  </button>
+                  <button type="button" onClick={() => { close(); openAdd("voice"); }} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black">
+                    <Icon name="mic" size={18} />
+                    Record a voice
+                  </button>
+                </div>
                 <button type="button" onClick={() => setEditingLine(true)} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/35 bg-white/10 text-body font-semibold backdrop-blur">
                   <Icon name="edit" size={18} />
                   {line ? "Change today's line" : "A line about today"}

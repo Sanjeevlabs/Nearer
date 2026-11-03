@@ -1,14 +1,17 @@
 // The words on the first screen. Pure (client + server), so each sentence can be
 // tested: every one states only what the data says, and says nothing when the
 // data is missing (no weather fetched, no lamp lit, nothing shared yet).
+import { dateInZone, clockInZone, zonedFormatter } from "./time-format";
 import { FADE_HOURS, LAMP_ARRIVED_HOURS, LAMP_GLOW_HOURS } from "./lamp";
 import type { SafetyCheckin } from "./kinds";
 import { answeredAt } from "./safety";
 import type { Weather } from "./weather";
 
+const weekdayInZone = zonedFormatter("en-US", { weekday: "long" });
+
 function localDay(at: Date, tz: string): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+    return dateInZone(tz).format(at);
   } catch {
     return at.toISOString().slice(0, 10);
   }
@@ -21,7 +24,7 @@ export function dayWord(iso: string, now: Date, tz: string): string {
   if (day === localDay(now, tz)) return "today";
   if (day === localDay(new Date(now.getTime() - 86_400_000), tz)) return "yesterday";
   try {
-    return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(at);
+    return weekdayInZone(tz).format(at);
   } catch {
     return "";
   }
@@ -30,7 +33,7 @@ export function dayWord(iso: string, now: Date, tz: string): string {
 /** "9:12 AM" in that zone. */
 export function clockWord(iso: string, tz: string): string {
   try {
-    return new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+    return clockInZone(tz).format(new Date(iso));
   } catch {
     return "";
   }
