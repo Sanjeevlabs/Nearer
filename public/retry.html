@@ -33,14 +33,18 @@
 <script>
   // The service worker serves this page, at the address that failed, when a page could not be loaded
   // (the host cut the request off) and no copy is kept. Reload up to 3 times, then stay calm.
+  // The count lives in sessionStorage, with the address's #r=N as a fallback when storage is blocked,
+  // so a page can never reload itself forever.
   var key = "nearer:retry:" + location.pathname + location.search;
-  var n = 0;
+  var m = /(?:^#|&)r=(\d)/.exec(location.hash);
+  var n = m ? Number(m[1]) : 0;
   try {
     var s = JSON.parse(sessionStorage.getItem(key) || "null");
-    if (s && Date.now() - s.at < 30000) n = s.n;
+    if (s && Date.now() - s.at < 30000) n = Math.max(n, s.n);
   } catch (e) {}
   function go() {
     try { sessionStorage.setItem(key, JSON.stringify({ n: n + 1, at: Date.now() })); } catch (e) {}
+    location.replace(location.pathname + location.search + "#r=" + (n + 1));
     location.reload();
   }
   if (n < 3) {
@@ -50,7 +54,7 @@
     document.getElementById("calm").style.display = "block";
     document.getElementById("again").addEventListener("click", function () {
       try { sessionStorage.removeItem(key); } catch (e) {}
-      location.reload();
+      location.replace(location.pathname + location.search);
     });
   }
 </script>

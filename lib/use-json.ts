@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { clearSwCachesQuietly } from "./sw-clear";
 import { useCourtyardSlice } from "./courtyard-data";
 import { dropEarly, takeEarly } from "./early";
 import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
-import { retryGet } from "./retry";
+import { attemptInit, retryGet } from "./retry";
 
 // Last good payload per URL: a route paints from it at once and refreshes in
 // the background. Kept in memory and (small payloads) in sessionStorage.
@@ -164,7 +165,10 @@ export function watchWrites(): () => void {
       const method = init?.method ?? (typeof input === "object" && "method" in input ? input.method : undefined);
       if (res.ok && isChangingWrite(url, method, init?.body)) invalidateJson(scopeOfWrite(url) ?? undefined);
       // The session is gone: nothing cached may paint for the next person.
-      if (res.status === 401 && new URL(url, "http://x").pathname.startsWith("/api/")) clearJsonCache();
+      if (res.status === 401 && new URL(url, "http://x").pathname.startsWith("/api/")) {
+        clearJsonCache();
+        void clearSwCachesQuietly();
+      }
     } catch {
       /* never break a request for bookkeeping */
     }
@@ -202,8 +206,8 @@ export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fet
     const early = takeEarly(url);
     // Nothing waits forever: a request that does not answer in time ends as a failure (a retry card, never a skeleton).
     // The host sometimes cuts one request off (a 503 under its CPU limit): up to 3 quiet retries (lib/retry.ts).
-    const ask = (left?: number) => fetchWithTimeout(f, url, { cache: "no-store" }, left);
-    const res = await retryGet((n, left) => (n === 0 && early ? raceTimeout(early, EARLY_WAIT_MS).catch(() => ask(left)) : ask(left)));
+    const ask = (n: number, left?: number) => fetchWithTimeout(f, url, attemptInit(n, { cache: "no-store" }), left);
+    const res = await retryGet((n, left) => (n === 0 && early ? raceTimeout(early, EARLY_WAIT_MS).catch(() => ask(n, left)) : ask(n, left)));
     if (!res.ok) {
       status = res.status;
       throw new Error(String(res.status));

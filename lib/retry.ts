@@ -78,7 +78,22 @@ export async function retryGet(attempt: (n: number, remainingMs: number) => Prom
   }
 }
 
+/**
+ * The header that tells the service worker "the client will try again": it then passes a 5xx straight
+ * through instead of retrying itself or answering with an old copy, so one read reaches the host at most
+ * 4 times and a kept copy (served only on the last try or a network error) is never mistaken for fresh.
+ */
+export const CLIENT_RETRIES_HEADER = "x-nearer-retry";
+
+/** `init` for attempt `n` (0-based): marked while more retries follow. */
+export function attemptInit(n: number, init: RequestInit = {}, delays: readonly number[] = RETRY_DELAYS_MS): RequestInit {
+  if (n >= delays.length) return init;
+  const headers = new Headers(init.headers);
+  headers.set(CLIENT_RETRIES_HEADER, "1");
+  return { ...init, headers };
+}
+
 /** GET with the bounded retry and the 40 s overall timeout. The drop-in for `fetch(url, { cache: "no-store" })` on reads. */
 export function fetchGet(url: string, init: RequestInit = {}, f: typeof fetch = (...a) => fetch(...a)): Promise<Response> {
-  return retryGet((_n, left) => fetchWithTimeout(f, url, { cache: "no-store", ...init }, left), { method: init.method });
+  return retryGet((n, left) => fetchWithTimeout(f, url, attemptInit(n, { cache: "no-store", ...init }), left), { method: init.method });
 }

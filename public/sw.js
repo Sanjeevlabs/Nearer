@@ -6,7 +6,7 @@
 //  - /api GETs: network first, then the last copy (never media, session, auth or push)
 //  - push: shows the notification the server sent; a tap focuses Nearer (or opens it) at data.url
 // Pages and API copies are family data: the app posts "clear" on sign-in / sign-out.
-const VERSION = "v4"; // v4: page retries, kept page copies, /retry.html; v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
+const VERSION = "v5"; // v5: /api retries left to the app when it marks them; v4: page retries, kept page copies, /retry.html; v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
 importScripts("/sw-core.js");
 const PAGES = `aangan-pages-${VERSION}`;
 const STATIC = `aangan-static-${VERSION}`;
@@ -91,9 +91,13 @@ async function page(event) {
 
 async function networkFirst(req, fallback) {
   const cache = await caches.open(DATA);
+  // The app's own retry layer (lib/retry.ts) marks a request it will try again: pass a 5xx straight through,
+  // so retries never multiply and an old copy is never served as if it were fresh. Unmarked (the last try,
+  // or a caller without retries): one quick retry here, then the last copy.
+  const clientRetries = req.headers.get("x-nearer-retry") === "1";
   try {
     let res = await fetch(req);
-    if (RETRY.includes(res.status)) {
+    if (RETRY.includes(res.status) && !clientRetries) {
       await new Promise((r) => setTimeout(r, 250));
       res = await fetch(req);
       if (RETRY.includes(res.status)) {
@@ -103,7 +107,8 @@ async function networkFirst(req, fallback) {
     }
     if (res.ok) cache.put(req, res.clone());
     return res;
-  } catch {
+  } catch (err) {
+    if (clientRetries) throw err;
     return (await cache.match(req)) || (fallback ? await fallback() : Response.error());
   }
 }

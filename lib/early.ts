@@ -4,7 +4,7 @@
 // Client only.
 
 import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
-import { retryGet } from "./retry";
+import { attemptInit, retryGet } from "./retry";
 
 type Early = Record<string, { at: number; p: Promise<Response> }>;
 type W = typeof window & { __nearerEarly?: Early };
@@ -33,7 +33,7 @@ export function fetchFirst(url: string): Promise<Response> {
   // Neither an early request nor a fresh one may hang the first screen: they are cut off (see lib/first-screen.ts).
   const early = takeEarly(url);
   return retryGet((n, left) => {
-    const fresh = () => fetchWithTimeout((...a) => fetch(...a), url, { cache: "no-store" }, left);
+    const fresh = () => fetchWithTimeout((...a) => fetch(...a), url, attemptInit(n, { cache: "no-store" }), left);
     return n === 0 && early ? raceTimeout(early, EARLY_WAIT_MS).catch(fresh) : fresh();
   });
 }
