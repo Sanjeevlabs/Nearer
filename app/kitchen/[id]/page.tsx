@@ -9,7 +9,7 @@ import { RecipeCover, COURSE_LOOK, minutes, totalTime } from "@/components/recip
 import { RecipeEditor } from "@/components/recipe-editor";
 import { ShareRecipe } from "@/components/share-recipe";
 import { useShell } from "@/components/shell";
-import { ActionMenu, Avatar, Button, Icon, MuseMark, Photo, PlayButton, RoomHeader, SectionTitle } from "@/components/ui/kit";
+import { ActionMenu, Avatar, Button, EmptyLine, Icon, MuseMark, Photo, PlayButton, RoomHeader, SectionTitle } from "@/components/ui/kit";
 import { cn } from "@/lib/utils";
 import { canChange } from "@/lib/permissions";
 import { useViewer } from "@/components/viewer";
@@ -33,13 +33,21 @@ export default function RecipePage() {
   const { refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const { play, current, isPlaying, toggle } = usePlayer();
-  const { data, failed, reload } = useJson<Payload>(`/api/kitchen/${encodeURIComponent(id)}?lang=${encodeURIComponent(displayLang)}`);
+  const { data, failed, notFound, reload } = useJson<Payload>(`/api/kitchen/${encodeURIComponent(id)}?lang=${encodeURIComponent(displayLang)}`);
   const [showOriginal, setShowOriginal] = useState(false);
   const search = useSearchParams();
   const [editing, setEditing] = useState(search.get("edit") === "1");
   const [have, setHave] = useState<Set<number>>(new Set());
   const router = useRouter();
 
+  if (notFound) {
+    return (
+      <div>
+        <RoomHeader title="Recipe" />
+        <EmptyLine>This recipe isn&rsquo;t in your family&rsquo;s Kitchen.</EmptyLine>
+      </div>
+    );
+  }
   if (failed && !data) {
     return (
       <div>

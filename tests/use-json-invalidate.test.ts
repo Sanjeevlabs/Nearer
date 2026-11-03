@@ -123,3 +123,21 @@ describe("every path that changes who is signed in, or which family, tells the a
     for (const { p, s } of reloaders) expect(s, p).toContain('"aangan:auth"');
   });
 });
+
+describe("revalidate status", () => {
+  const status = (code: number) => (async () => new Response("{}", { status: code })) as unknown as typeof fetch;
+  it("a 404 with nothing cached reports failed with status 404 (a missing page, not an outage)", async () => {
+    clearJsonCache();
+    const r = await revalidate("/api/kitchen/none", status(404));
+    expect(r).toMatchObject({ data: null, failed: true, status: 404 });
+  });
+  it("a 503 reports failed with status 503", async () => {
+    clearJsonCache();
+    vi.useFakeTimers();
+    const p = revalidate("/api/kitchen/x", status(503));
+    await vi.advanceTimersByTimeAsync(500);
+    const r = await p;
+    vi.useRealTimers();
+    expect(r).toMatchObject({ data: null, failed: true, status: 503 });
+  });
+});
