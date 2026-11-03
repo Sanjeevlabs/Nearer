@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePlayer } from "@/components/player";
+import { VoiceCard } from "@/components/voice-card";
 import { useShell } from "@/components/shell";
 import { PushAsk } from "@/components/push-ask";
 import { Avatar, EmptyLine, Icon, RoomHeader, type IconName } from "@/components/ui/kit";
@@ -110,6 +111,8 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
   }
 
   const pill = "press flex h-11 items-center gap-1.5 rounded-full px-4 text-callout font-semibold no-underline";
+  // A voice for you plays like a song, right in the row.
+  const voice = item.action === "play" && card?.type === "audio" ? card : null;
   return (
     <li data-inbox={item.kind} className="rounded-card bg-card p-3 shadow-card">
       <div className="flex items-center gap-3">
@@ -125,8 +128,9 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
           {meta}
         </div>
       </div>
+      {voice && <VoiceCard card={voice} variant="row" className="mt-3" />}
       <div className="mt-2.5 flex flex-wrap items-center gap-2 ps-[56px]">
-        {item.action === "play" && card ? (
+        {voice ? null : item.action === "play" && card ? (
           <button type="button" onClick={() => (on ? toggle() : play(card))} className={`${pill} ${item.waiting ? "bg-accent text-accent-ink" : "bg-well text-ink"}`} aria-label={`${on && isPlaying ? "Pause" : "Play"}: ${item.text}`}>
             <Icon name={on && isPlaying ? "pause" : "play"} size={15} />
             {on && isPlaying ? "Pause" : "Play"}

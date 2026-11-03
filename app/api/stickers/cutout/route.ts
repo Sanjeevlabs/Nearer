@@ -5,6 +5,7 @@ import { withDemoShelf } from "@/lib/demo";
 import { getDoc } from "@/lib/family-docs";
 import { decodePhoto, mayCutOut, samConfigured, samMask, takeCutoutSlot } from "@/lib/stickers-server";
 import { guardApi } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // GET  → { available }: whether a SAM cut-out can be made here (no SAM, or mock: false).
 // POST → { source, image, point } → the cut-out mask as a PNG (white = keep).
@@ -33,7 +34,7 @@ async function postHandler(req: Request): Promise<Response> {
   const me = await dbGetMember(auth.memberId);
   if (!me) return Response.json({ error: "unknown-member" }, { status: 404 });
   const { source } = body.data;
-  const card = source.kind === "card" ? (withDemoShelf(await dbListCards(auth.familyId), auth.familyId).find((c) => c.id === source.id) ?? null) : null;
+  const card = source.kind === "card" ? (seenBy(withDemoShelf(await dbListCards(auth.familyId), auth.familyId), auth.memberId).find((c) => c.id === source.id) ?? null) : null;
   const recipeExists = source.kind === "recipe" ? Boolean(await getDoc(auth.familyId, "recipe", source.id)) : false;
   if (!mayCutOut(me, source, { card, recipeExists })) return Response.json({ error: "not-allowed" }, { status: 403 });
   const photo = decodePhoto(body.data.image);

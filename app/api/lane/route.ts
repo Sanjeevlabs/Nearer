@@ -6,6 +6,7 @@ import { listDocsMany } from "@/lib/family-docs";
 import { laneElsewhere } from "@/lib/lane-groups";
 import { claimedByOccasions } from "@/lib/occasion-album";
 import { guardApi } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // GET /api/lane → { elsewhere }: ids of the cards another tab shows
 // (Occasions, Stories, The Book, Advice). Memory Lane leaves them out, so it
@@ -27,7 +28,7 @@ async function getHandler(req: Request): Promise<Response> {
   const f = auth.familyId;
   const [stored, docs, runs, wishes, members] = await (early && claimed?.familyId === f ? early : readLane(req, f));
   const { album: albums, story: stories, question: questions, today_task: tasks } = docs;
-  const cards = withDemoShelf(stored, f);
+  const cards = seenBy(withDemoShelf(stored, f), auth.memberId);
   const wishCards = wishes.filter((w) => w.ritualRunId && w.cardId).map((w) => ({ ritualRunId: w.ritualRunId, cardId: w.cardId }));
   const elsewhere = laneElsewhere({
     occasions: claimedByOccasions(cards, albums, runs, wishCards),
