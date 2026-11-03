@@ -1,10 +1,10 @@
 # Nearer
 
-**The window between two homes.**
+**The voice-first window between two homes.**
 
 Arjun lives in Bengaluru. His parents, Maa and Papa, live in Amritsar, 1,600 km away. At 8 PM he opens Nearer and sees their window: their sky right now, the time there, and what they chose to share today ("Maa · visitors, 7:00 PM"). He doesn't call to check. He looks. He taps the **lamp**, and Maa's phone says *Arjun is thinking of you*. Maa has **opened her door** for chai; he joins with his voice, and nothing starts until he taps. Last week she taught him her dal by voice, in Hindi; Muse wrote it down as a recipe in English. On Sunday he cooked it, and Maa saw *Arjun cooked your dal*. Diwali is in five days: Dadi (Maa, to his children) leads, the kids record their wishes, and on the day the **Chorus** plays them one after another. Her voice stays in **Memories**, starred, searchable and in the family's Book.
 
-That is the whole product: **a window between two homes** that keeps parents **needed, not monitored**. Nothing is inferred from app use, the clock or silence: the app shows only what someone chose to share.
+That is the whole product: **a voice-first window between two homes** that keeps parents **needed, not monitored**. Nothing is inferred from app use, the clock or silence: the app shows only what someone chose to share.
 
 Values, in priority order: **Needed** (elders give and have a role) · **Heard** (acknowledgement) · **Present** (together at the same time, by invitation) · **Remembered** (memories) · **Never watched** (no monitoring, no guilt, no streaks, no sealed answers). Calm by design: no feed, no counts, no status.
 
@@ -16,12 +16,12 @@ Live: https://nearer.site (tap *Try the demo family*, or use the code `NEARER-DE
 
 **Nearer keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or brings them **together** by invitation.
 
-The first screen is the window onto the parents' home: **Their day** (their time, sky and what they shared), the **lamp** (a 2-hour glow and a "thinking of you" note; never a check-in), and **Spend a little time together** (an open door for chai, dinner, a story; join with audio or video only after a tap). Slide the key and you're inside; the house opens five rooms:
+The first screen is the window onto the parents' home: **Their day** (their time, sky and what they shared), the **lamp** (a 2-hour glow and a "thinking of you" note; never a check-in), and **Spend a little time together** (an open door for chai, dinner, a story; join with audio or video only after a tap). Slide the key and you step straight into the family page. Nearer is voice-first: the bottom bar has two buttons, **Voice** (talk, don't type; Nearer writes it down and translates it) and **House**, which opens five rooms (a photo is one tap inside the voice sheet; For you, Settings and Sign out are behind your own photo):
 
 | Room | Tabs |
 |---|---|
 | **Living Room** | Time together · Coming up · Occasions (wishes and the Chorus) |
-| **Memories** | Memory Lane (photos and voice memories, ⭐ starred, searchable) · Stories · The Book · Advice · Ask the family |
+| **Memories** | Memory Lane (voice memories and photos, ⭐ starred, searchable) · Stories · The Book · Advice · Ask the family |
 | **Kitchen** | Recipes (taught by voice, scanned from a card) |
 | **Our People** | Family tree · Homes · Kids · Visits |
 | **Care** | Care tasks · Helpers · Nearby (who to call first) |

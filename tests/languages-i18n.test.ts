@@ -58,7 +58,7 @@ describe("UI catalogues", () => {
   });
 
   it("falls back to English per key and fills placeholders", () => {
-    expect(translate("fr", "landing.tagline")).toBe("The window between two homes.");
+    expect(translate("fr", "landing.tagline")).toBe("The voice-first window between two homes.");
     expect(translate("hi-deva", "welcome.title", { name: "Asha" })).toBe("घर में स्वागत है, Asha");
     expect(translate("es", "window.callGood")).toBe("Buen momento para llamar");
     expect(translate("hi-latn", "landing.create")).toBe("Create");

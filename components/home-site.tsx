@@ -13,17 +13,17 @@ import { useEffect, useState } from "react";
 
 // What a family chat can't do, in the words people use. Facts about the app, no claims about outcomes.
 const NOT_CHAT: { chat: string; nearer: string }[] = [
-  { chat: "A group chat waits for someone to type.", nearer: "Their window shows Maa's evening (her sky, her time, what she shared) without anyone asking." },
-  { chat: "\"Are you okay?\" needs a reply.", nearer: "A lamp says \"thinking of you\" to one person. Nothing to answer." },
+  { chat: "A group chat waits for someone to type.", nearer: "Press Voice and talk. Nearer writes it down and translates it, so nobody has to type." },
+  { chat: "Her voice notes scroll away.", nearer: "Her voice is kept: recipes, stories and blessings, written down, searchable, starred, in the family's Book." },
   { chat: "A call is all or nothing.", nearer: "Maa opens her door for chai when she's free. Join by voice, only if you tap." },
-  { chat: "Her voice notes scroll away.", nearer: "Her recipes, stories and blessings are kept: searchable, starred, in the family's Book." },
+  { chat: "\"Are you okay?\" needs a reply.", nearer: "A lamp says \"thinking of you\" to one person. Nothing to answer." },
 ];
 
 const FEATURES: { img: string; title: string; line: string }[] = [
+  { img: "/home/memories.webp", title: "Talk, don't type", line: "Press Voice and say it, in any language. Nearer writes it down, translates it for each of them and keeps her voice, with her recipes and stories. Photos are there too, when words aren't enough." },
+  { img: "/home/chorus.webp", title: "Everyone wishes, together", line: "A week before a birthday or a festival, everyone records a wish by voice. On the day, the Chorus plays them one after another." },
   { img: "/home/window.webp", title: "A window into their day", line: "Their sky and the time there, the lamp you keep lit for each other, and what they chose to share today." },
   { img: "/home/together.webp", title: "A little time together", line: "Open your door for chai, dinner or a story. They join when they can, by voice or video, and only when they tap." },
-  { img: "/home/chorus.webp", title: "Everyone wishes, together", line: "A week before a birthday or a festival, everyone records a wish. On the day, the Chorus plays them one after another." },
-  { img: "/home/memories.webp", title: "Memories that stay", line: "Their voices, photos and stories, kept by the family. Recipes taught by voice, in the Kitchen." },
 ];
 
 function useQr(path: string): string | null {
@@ -68,9 +68,9 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             <Mark size={96} className="md:!h-[140px] md:!w-[140px]" />
             <Wordmark width={140} className="md:!h-[34px] md:!w-[188px]" />
           </div>
-          <h1 data-display className="m-0 text-display md:text-[clamp(44px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">The window between two homes.</h1>
-          <p className="voice m-0 mt-5 max-w-[34ch] text-title leading-snug text-ink-soft">A window into your parents&rsquo; day, and theirs into yours.</p>
-          <p className="m-0 mt-3 max-w-[34ch] text-body leading-snug">Open Nearer and you&rsquo;ll know how they are, with nothing else to check.</p>
+          <h1 data-display className="m-0 text-display md:text-[clamp(44px,5.4vw,68px)] font-light leading-[1.02] tracking-[-0.025em]">Talk, don&rsquo;t type.</h1>
+          <p className="voice m-0 mt-5 max-w-[34ch] text-title leading-snug text-ink-soft">Her voice is kept, written down, and never lost.</p>
+          <p className="m-0 mt-3 max-w-[34ch] text-body leading-snug">Nearer is the voice-first window between two homes: their sky, their time, and what they chose to share.</p>
           {/* The way in: on every screen when signed in, and on a phone when not (no QR there). */}
           <div className={signedIn ? "mt-7 flex flex-col gap-2.5 sm:max-w-[320px]" : "mt-7 flex flex-col gap-2.5 sm:max-w-[320px] md:hidden"} data-ui="home-actions">
             {signedIn ? (
@@ -139,7 +139,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             </div>
           ))}
         </dl>
-        <p className="m-0 mt-3 text-footnote text-ink-soft">Keep your family group. Nearer is the window and the keepsake box beside it.</p>
+        <p className="m-0 mt-3 text-footnote text-ink-soft">Keep your family group. Nearer is where you talk instead of type, and where her voice is kept.</p>
       </section>
 
       {/* The film: one minute, played only when asked (no autoplay, nothing loaded until then). */}
