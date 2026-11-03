@@ -977,16 +977,18 @@ export async function dbListInvites(): Promise<Invite[]> {
  * invites. Demo invites live in memory and are checked first, like
  * dbListInvites merges them.
  */
-export async function dbFindInvite(code: string): Promise<Invite | undefined> {
+/** A live invite by code. `{ expired: true }` also finds one past its 7 days (to say whom to ask for a new one); a revoked code is gone either way. */
+export async function dbFindInvite(code: string, opts: { expired?: boolean } = {}): Promise<Invite | undefined> {
   const want = code.trim().toUpperCase();
   if (!want) return undefined;
   const nowMs = Date.now();
-  const match = (i: Invite) => i.code.toUpperCase() === want && new Date(i.expiresAt).getTime() > nowMs;
+  const match = (i: Invite) => i.code.toUpperCase() === want && (opts.expired || new Date(i.expiresAt).getTime() > nowMs);
   const sb = dbFor(null);
   if (!sb) return memListInvites().find(match);
   const demo = memListInvites().find((i) => isDemoFamily(i.familyId) && match(i));
   if (demo) return demo;
-  const { data, error } = await sb.from("invites").select("*").eq("code", want).gt("expires_at", new Date(nowMs).toISOString()).limit(1);
+  const base = sb.from("invites").select("*").eq("code", want);
+  const { data, error } = await (opts.expired ? base : base.gt("expires_at", new Date(nowMs).toISOString())).limit(1);
   if (error) throw new DbReadError("invites", error.message);
   if (!data) return memListInvites().find(match);
   const r = data[0];

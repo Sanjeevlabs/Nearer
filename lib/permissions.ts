@@ -35,6 +35,7 @@ export type Action =
 
 export const MAX_ADMINS = 3; // owner included
 export const MAX_PEOPLE = 50; // per family, everyone counted
+export const MAX_SIDES = 4; // families per person: their own and the ones they joined
 export const MAX_FAMILIES = 4; // per person (sides)
 
 const MEMBER: Action[] = ["tree.add", "tree.edit", "tree.remove", "invite.create", "care.manage", "care.write", "partners.order", "window.at", "events.plan"];
