@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { checkRateLimit, requireSession } from "@/lib/auth";
+import { checkRateLimit, requireSession, sessionFromRequest } from "@/lib/auth";
 import { eventFromText, fileCard } from "@/lib/albums";
 import { dbListCards } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, putDoc } from "@/lib/family-docs";
@@ -24,9 +24,13 @@ const Body = z.discriminatedUnion("action", [
 ]);
 
 async function getHandler(req: Request): Promise<Response> {
+  // The read starts with the session check, not after it (a refused request throws it away).
+  const claimed = sessionFromRequest(req);
+  const early = claimed ? listDocs(claimed.familyId, "album") : null;
+  early?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const albums = (await listDocs(auth.familyId, "album")).sort((a, b) => b.endAt.localeCompare(a.endAt));
+  const albums = (await (early && claimed?.familyId === auth.familyId ? early : listDocs(auth.familyId, "album"))).sort((a, b) => b.endAt.localeCompare(a.endAt));
   return Response.json({ albums });
 }
 
