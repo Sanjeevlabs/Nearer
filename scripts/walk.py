@@ -244,6 +244,11 @@ def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[st
                         problems.append(f"{person} {href}: header is {h['height']:.0f}px, over 104")
             if href == "/lane":
                 # Memory Lane: voice memories (never "voice notes"), a Starred filter and a search box.
+                # The filters render once the Lane has loaded (live: a few seconds), so wait for them.
+                try:
+                    page.get_by_role("radio", name=re.compile(r"Starred")).first.wait_for(timeout=10_000)
+                except Exception:
+                    pass
                 if page.get_by_text(re.compile(r"\bvoice notes?\b", re.I)).count():
                     problems.append(f"{person} /lane: still says 'voice note'")
                 if page.get_by_role("radio", name=re.compile(r"Starred")).count() == 0:
