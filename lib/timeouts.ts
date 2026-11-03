@@ -14,22 +14,33 @@ export const SERVICE_TIMEOUT_MS = 10_000;
 /** Reading a family photo (≤5 MB) from storage for a Muse image call. */
 export const MEDIA_READ_TIMEOUT_MS = 20_000;
 
-function combine(own: AbortSignal | undefined | null, timer: AbortSignal): AbortSignal {
-  if (!own) return timer;
-  if (typeof AbortSignal.any === "function") return AbortSignal.any([own, timer]);
-  // No AbortSignal.any: wire both into one controller by hand (never drop the limit).
+/**
+ * An AbortSignal that aborts after `ms` with a TimeoutError, or when `own` aborts (with its reason).
+ * Built from an AbortController and setTimeout, not AbortSignal.timeout/any: Node 20 lets the source
+ * timeout of AbortSignal.any be garbage-collected, so the combined signal can silently never abort.
+ * The timer keeps the controller alive until it fires; aborting a finished request does nothing.
+ */
+function limitSignal(ms: number, own?: AbortSignal | null): AbortSignal {
   const ctl = new AbortController();
-  const stop = (s: AbortSignal) => () => ctl.abort(s.reason);
-  if (own.aborted) ctl.abort(own.reason);
-  else if (timer.aborted) ctl.abort(timer.reason);
-  own.addEventListener("abort", stop(own), { once: true });
-  timer.addEventListener("abort", stop(timer), { once: true });
+  if (own?.aborted) {
+    ctl.abort(own.reason);
+    return ctl.signal;
+  }
+  const timer = setTimeout(() => ctl.abort(new DOMException(`timeout after ${ms} ms`, "TimeoutError")), ms);
+  own?.addEventListener(
+    "abort",
+    () => {
+      clearTimeout(timer);
+      ctl.abort(own.reason);
+    },
+    { once: true },
+  );
   return ctl.signal;
 }
 
 /** A signal that aborts after `ms`, or when the caller's own signal aborts, whichever is first. */
 export function deadline(ms: number, signal?: AbortSignal | null): AbortSignal {
-  return combine(signal, AbortSignal.timeout(ms));
+  return limitSignal(ms, signal);
 }
 
 /** Did this call end because a time limit ran out (or was aborted)? Such a call is not retried: the same host rarely answers on a second try, and the wait would stack. */
@@ -45,11 +56,12 @@ export function isTimeout(err: unknown): boolean {
 export function fetchWithTimeout(ms: number, base: typeof fetch = fetch): typeof fetch {
   return async (input, init) => {
     const own = init?.signal ?? (typeof Request !== "undefined" && input instanceof Request ? input.signal : undefined);
-    const timer = AbortSignal.timeout(ms);
+    const signal = limitSignal(ms, own);
     try {
-      return await base(input, { ...init, signal: combine(own, timer) });
+      return await base(input, { ...init, signal });
     } catch (e) {
-      if (timer.aborted && !own?.aborted) throw new DOMException(`timeout after ${ms} ms`, "AbortError");
+      // Our own limit (not the caller's abort) surfaces as an AbortError, which postgrest treats as final.
+      if (signal.aborted && !own?.aborted) throw new DOMException(`timeout after ${ms} ms`, "AbortError");
       throw e;
     }
   };
