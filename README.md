@@ -12,6 +12,19 @@ The app itself is in English. What the family shares (voices, recipes, questions
 
 Live: https://nearer.site (tap *Try the demo family*, or use the code `NEARER-DEMO`). To see both homes, open a door as Arjun, tap *Demo: see it arrive on their side*, and scan the code on a second phone: it becomes Maa in the same demo family.
 
+## For judges (2 minutes)
+
+Open [Nearer](https://nearer.site) and tap **Try the demo family**. No sign-up is needed. Try these in order.
+
+1. **Look through the window.** See the sky and local time at the other home. Weather and time come from weather data and the home's time zone.
+2. **Tap the lamp.** Send a quiet “thinking of you.” Nearer handles the signal directly.
+3. **Play Maa’s voice note.** Follow her words in the player. Muse Voice Transcribe writes down recordings and Muse Spark translates when the listener’s language differs. The demo uses prepared examples.
+4. **Slide the key.** The family page opens. This is ordinary app navigation.
+5. **Open House → Kitchen.** Pick a recipe taught by voice. Muse Voice Transcribe captures the words and Muse Spark structures the recipe from what the cook said.
+6. **Open For you.** Tap the bell on the window, or your profile photo on the family page. Nearer assembles what the family sent you from shared items and activity.
+
+[See how Nearer works](docs/architecture.md).
+
 ### One hero: the parent far away
 
 **Nearer keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or brings them **together** by invitation.
