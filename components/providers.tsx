@@ -1,6 +1,7 @@
 "use client";
 
 import { installFetchGate } from "@/lib/net-gate";
+import { clearSwCachesQuietly } from "@/lib/sw-clear";
 import { MotionConfig } from "framer-motion";
 import { useEffect } from "react";
 import { isNative } from "@/lib/native";
@@ -21,7 +22,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     if (process.env.NODE_ENV !== "production" || isNative() || !("serviceWorker" in navigator)) return;
     void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     // Cached pages and API copies are family data: drop them when the person changes.
-    const clear = () => navigator.serviceWorker.controller?.postMessage("clear");
+    const clear = () => void clearSwCachesQuietly();
     window.addEventListener("aangan:auth", clear);
     return () => window.removeEventListener("aangan:auth", clear);
   }, []);

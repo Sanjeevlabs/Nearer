@@ -118,7 +118,7 @@ export interface SignOutSteps {
   /** In-memory caches: family cards, early requests, JSON cache. */
   clearCaches(): void;
   /** Cached pages and API copies in the service worker. */
-  clearServiceWorker(): void;
+  clearServiceWorker(): void | Promise<void>;
   /** A full page load, so no in-memory state survives. */
   goTo(path: string): void;
 }
@@ -135,13 +135,17 @@ export async function signOutEverywhere(steps: SignOutSteps, to = "/"): Promise<
   await quiet(steps.forgetPush);
   await quiet(steps.deleteSession);
   await quiet(steps.supabaseSignOut);
-  for (const f of [steps.clearStorage, steps.clearCaches, steps.clearServiceWorker]) {
+  for (const f of [steps.clearStorage, steps.clearCaches]) {
     try {
       f();
     } catch {
       /* ignore */
     }
   }
+  // Awaited: the next page load must not find the last person's kept pages or API copies.
+  await quiet(async () => {
+    await steps.clearServiceWorker();
+  });
   steps.goTo(to);
 }
 

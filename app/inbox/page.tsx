@@ -9,6 +9,7 @@ import { Avatar, EmptyLine, Icon, RoomHeader, type IconName } from "@/components
 import { useViewer } from "@/components/viewer";
 import type { InboxItem } from "@/lib/inbox";
 import { callName, memberPhoto } from "@/lib/people";
+import { LoadFailed } from "@/components/load-failed";
 import { useFamilyCards } from "@/lib/use-family";
 import { useJson } from "@/lib/use-json";
 
@@ -183,12 +184,7 @@ export default function InboxPage() {
       <RoomHeader title="For you" subtitle="What people sent you in the last 30 days" />
       <PushAsk className="mb-6" />
       {failed && !data ? (
-        <div className="rounded-card bg-card p-4 text-center shadow-card" role="alert">
-          <p className="m-0 text-headline font-semibold">Couldn&rsquo;t load what&rsquo;s for you.</p>
-          <button type="button" onClick={() => void reload()} className="press mt-3 h-11 rounded-full bg-well px-5 text-callout font-semibold">
-            Try again
-          </button>
-        </div>
+        <LoadFailed what="Things for you" ui="inbox-retry" onRetry={() => void reload()} />
       ) : !data ? (
         <div key="loading" className="space-y-2.5" aria-busy="true" aria-label="Loading">
           {[0, 1, 2].map((i) => (

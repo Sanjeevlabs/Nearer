@@ -15,6 +15,8 @@ import type { Question, Story } from "@/lib/kinds";
 import { canChange } from "@/lib/permissions";
 import { callName, memberPhoto } from "@/lib/people";
 import type { Card, Member } from "@/lib/schemas";
+import { LoadFailed } from "@/components/load-failed";
+import { loadView } from "@/lib/load-state";
 import { useFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
@@ -52,8 +54,8 @@ export default function StoriesPage() {
 function Stories() {
   const { viewer, members } = useViewer();
   const { openAdd, refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
-  const { data, reload } = useJson<StoriesData>(`/api/stories?k=${refreshKey}`);
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
+  const { data, failed, reload } = useJson<StoriesData>(`/api/stories?k=${refreshKey}`);
   const { play, current, isPlaying, toggle } = usePlayer();
   const [bedtime, setBedtime] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -64,6 +66,7 @@ function Stories() {
   const stories = (data?.stories ?? []).filter((s) => cardOf(s));
   const byId = (id: string) => members.find((x) => x.id === id);
   const rank = (id: string) => (byId(id)?.role === "elder" ? 0 : id === viewer.id ? 1 : 2);
+  const view = loadView({ loading: data === null || cards === null, failed: (failed && !data) || (cardsFailed && (cards?.length ?? 0) === 0), hasData: stories.length > 0 });
   const tellers = Array.from(new Set(stories.map((s) => s.tellerId))).sort((a, b) => rank(a) - rank(b));
   const toMe = (data?.requests ?? []).filter((q) => q.toMemberId === viewer.id);
   const mine = (data?.requests ?? []).filter((q) => q.askedBy === viewer.id);
@@ -155,7 +158,12 @@ function Stories() {
       {viewer.role === "elder" && <OnlyYouCanTell onTell={(prompt) => openAdd("voice", { kind: "story", prompt })} />}
       {viewer.role === "child" && data && <AskElder asked={mine.map((q) => q.text)} onAsked={() => void reload()} />}
 
-      {data === null && <div className="skeleton mt-6 h-[220px] rounded-card" aria-busy="true" aria-label="Loading stories" />}
+      {view === "loading" && <div className="skeleton mt-6 h-[220px] rounded-card" aria-busy="true" aria-label="Loading stories" />}
+      {view === "failed" && (
+        <div className="mt-6">
+          <LoadFailed what="Stories" ui="stories-retry" onRetry={() => { void reload(); retryCards(); }} />
+        </div>
+      )}
 
       {tellers.map((id) => {
         const teller = byId(id);
@@ -211,7 +219,7 @@ function Stories() {
         );
       })}
 
-      {data && stories.length === 0 && (
+      {view === "show" && data && stories.length === 0 && (
         <div className="mt-6 rounded-hero bg-surface px-6 py-10 text-center">
           <p className="m-0 text-title font-semibold">No stories yet</p>
           <p className="mx-auto mt-2 max-w-[300px] text-body text-ink-soft">{elderNames ? `Ask ${elderNames} for one.` : "Ask a grandparent for one."} Their voice, at bedtime, wherever the children are.</p>

@@ -19,11 +19,11 @@ const NOT_CHAT: { chat: string; nearer: string }[] = [
   { chat: "\"Are you okay?\" needs a reply.", nearer: "A lamp says \"thinking of you\" to one person. Nothing to answer." },
 ];
 
-const FEATURES: { img: string; title: string; line: string }[] = [
-  { img: "/home/memories.webp", title: "Say it once, in any language", line: "Press Voice and say it, in any language. Nearer writes it down, translates it for each of them and keeps her voice, with her recipes and stories. Photos are there too, when words aren't enough." },
-  { img: "/home/chorus.webp", title: "Everyone wishes, together", line: "A week before a birthday or a festival, everyone records a wish by voice. On the day, the Chorus plays them one after another." },
-  { img: "/home/window.webp", title: "A window into their day", line: "Their sky and the time there, the lamp you keep lit for each other, and what they chose to share today." },
-  { img: "/home/together.webp", title: "A little time together", line: "Open your door for chai, dinner or a story. They join when they can, by voice or video, and only when they tap." },
+const FEATURES: { img: string; alt: string; pos: string; title: string; line: string }[] = [
+  { img: "/home/voice.webp", alt: "The voice sheet: a short voice memory for Maa, with the words Nearer wrote down beneath it and a Send button", pos: "object-bottom", title: "Say it once, in any language", line: "Press Voice and say it, in any language. Nearer writes it down, translates it for each of them and keeps her voice, with her recipes and stories. Photos are there too, when words aren't enough." },
+  { img: "/home/chorus.webp", alt: "The Chorus: a birthday with a photo and four voice wishes from the family, each with its words and a play button", pos: "object-top", title: "Everyone wishes, together", line: "A week before a birthday or a festival, everyone records a wish by voice. On the day, the Chorus plays them one after another." },
+  { img: "/home/window.webp", alt: "The window into Maa and Papa's home at night, with the lamp lit and what each of them is doing", pos: "object-top", title: "A window into their day", line: "Their sky and the time there, the lamp you keep lit for each other, and what they chose to share today." },
+  { img: "/home/together.webp", alt: "The Living Room: Maa's door is open for chai, with a Join button, and doors you can open for dinner, a story or a quiz", pos: "object-top", title: "A little time together", line: "Open your door for chai, dinner or a story. They join when they can, by voice or video, and only when they tap." },
 ];
 
 function useQr(path: string): string | null {
@@ -167,7 +167,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             <article key={f.title}>
               <div className="overflow-hidden rounded-[26px] bg-paper ring-1 ring-[var(--line)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.img} alt="" className="block aspect-[390/560] w-full object-cover object-top" loading="lazy" />
+                <img src={f.img} alt={f.alt} className={`block aspect-[390/560] w-full object-cover ${f.pos}`} loading="lazy" />
               </div>
               <h2 className="m-0 mt-4 text-title font-semibold">{f.title}</h2>
               <p className="m-0 mt-1.5 text-body leading-relaxed text-ink-soft">{f.line}</p>
