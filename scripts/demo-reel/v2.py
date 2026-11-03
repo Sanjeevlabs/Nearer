@@ -34,7 +34,7 @@ XF = shots.XFADE
 FRESH = False
 INTRO, END = 2.5, 4.5
 VOICE = "facebook/mms-tts-eng"  # Meta MMS-TTS, English
-LENGTH_SCALE = 1.1  # a little slower than the voice's default: calm, about 150 words a minute (speaking_rate = 1 / this)
+SPEAKING_RATE = 1.15  # MMS speaks slowly with long pauses; 1.15 keeps every line inside its shot
 VO_LEAD = 0.5  # the voice starts this long after its shot starts
 FONTS = ["/usr/share/fonts/opentype/inter/Inter-Medium.otf", "/usr/share/fonts/opentype/inter/Inter-Regular.otf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
 
@@ -224,7 +224,7 @@ def voice_files() -> dict:
         sys.exit(f"Meta MMS-TTS needs: pip install transformers torch scipy ({e})")
     tok = AutoTokenizer.from_pretrained(VOICE)
     model = VitsModel.from_pretrained(VOICE)
-    model.speaking_rate = 1.0 / LENGTH_SCALE
+    model.speaking_rate = SPEAKING_RATE
     model.eval()
     vo = WORK / "vo"
     vo.mkdir(parents=True, exist_ok=True)
