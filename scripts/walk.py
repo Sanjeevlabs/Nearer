@@ -157,7 +157,7 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
         dock_overlaps(page, "/ (courtyard)", problems, person)
         # Voice first: the bottom bar is Voice and House, nothing else.
         names = page.evaluate("[...document.querySelectorAll('[data-ui=dock] a, [data-ui=dock] button')].map((e) => e.getAttribute('aria-label') || e.textContent.trim())")
-        if len(names) != 2 or not names[0].startswith(("Voice memory", "Invite family")) or names[1] != "Open the house":
+        if len(names) != 2 or not names[0].startswith(("Record a voice note", "Invite family")) or names[1] != "Open the house":
             problems.append(f"{person} /: the dock should be Voice and House only, found {names}")
     except Exception:
         problems.append(f"{person} /: no dock on the family page")
@@ -334,7 +334,7 @@ def voice_sheet_photo(page, person: str, problems: list[str]) -> None:
     """Photos are one tap inside the voice sheet: 'Add a photo instead' swaps it for the photo composer."""
     page.goto("/", wait_until="load")
     page.wait_for_timeout(1200)
-    voice = page.locator("[data-ui=dock] button[aria-label^='Voice memory']")
+    voice = page.locator("[data-ui=dock] button[aria-label^='Record a voice note']")
     if voice.count() == 0:
         return  # nobody to talk to yet: the dock shows Invite family
     voice.first.click()
@@ -406,7 +406,7 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
     plan = [
         ("/", "the house", lambda: page.get_by_role("button", name="Open the house")),
         ("/", "your photo menu", lambda: page.get_by_role("button", name=re.compile(r"account and settings|profile and settings"))),
-        ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Voice memory"))),
+        ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Record a voice note"))),
         ("/", "invite family", lambda: page.get_by_role("button", name="Invite family")),
         ("/bond", "invite (family page)", lambda: page.get_by_role("button", name=re.compile(r"^Invite$"))),
         ("/bond", "add someone", lambda: page.get_by_role("button", name=re.compile(r"^Add someone"))),

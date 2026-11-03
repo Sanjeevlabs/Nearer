@@ -154,7 +154,7 @@ function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSave
   );
 }
 
-export function PersonDay({ member, cards, onClose }: { member: Member; cards: Card[]; onClose: () => void }) {
+export function PersonDay({ member, cards, onClose, startEditing = false }: { member: Member; cards: Card[]; onClose: () => void; /** Open with the status line ready to write. */ startEditing?: boolean }) {
   const { viewer, members } = useViewer();
   const { openAdd } = useShell();
   const player = usePlayer();
@@ -163,7 +163,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
   const [at, setAt] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [editingLine, setEditingLine] = useState(false);
+  const [editingLine, setEditingLine] = useState(startEditing && member.id === viewer.id);
   const { line, reload: reloadLine } = useDayLine(member.id);
   const videoRef = useRef<HTMLVideoElement>(null);
   const card = items.length ? items[Math.min(at, items.length - 1)] : undefined;

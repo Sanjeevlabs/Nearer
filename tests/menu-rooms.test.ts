@@ -75,11 +75,13 @@ describe("the five rooms", () => {
   it("the dock is Voice and House only: no photo, no bell", () => {
     const src = readFileSync(join(__dirname, "../components/shell.tsx"), "utf8");
     const dock = src.slice(src.indexOf("function Dock("), src.indexOf("function useHeartbeat"));
-    expect(dock).toContain("Voice memory");
+    expect(dock).toContain("Record a voice note");
+    expect(dock).not.toMatch(/>Voice</);
     expect(dock).toContain('aria-label="Open the house"');
     expect(dock).not.toMatch(/aria-label="Photo"|name="camera"|openAdd\("photos"\)|href="\/inbox"/);
-    // Photos stay one tap inside the voice sheet; For you and Sign out live behind your own photo.
-    expect(readFileSync(join(__dirname, "../components/add-sheet.tsx"), "utf8")).toContain("Add a photo instead");
+    // Photos start from your own picture on the family page (Photo, Voice note, Status), not the voice sheet; For you and Sign out live behind your own photo.
+    expect(readFileSync(join(__dirname, "../components/add-sheet.tsx"), "utf8")).not.toContain("Add a photo instead");
+    expect(readFileSync(join(__dirname, "../components/courtyard.tsx"), "utf8")).toContain("Add to your day");
     const menu = readFileSync(join(__dirname, "../components/profile-menu.tsx"), "utf8");
     expect(menu.indexOf("Sign out")).toBeLessThan(menu.indexOf("For you"));
     expect(menu.indexOf("For you")).toBeLessThan(menu.indexOf("Settings"));

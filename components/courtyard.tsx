@@ -34,6 +34,7 @@ import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Button, Icon, Monogram, Photo } from "./ui/kit";
+import { BottomSheet } from "./ui/bottom-sheet";
 import { familyHomePhoto } from "@/lib/family";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { useViewer } from "./viewer";
@@ -253,6 +254,9 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
   // Your own chip goes straight to your day, where you add to it.
   const [dayOfId, setDayOfId] = useState<string | null>(null);
   const [sheetId, setSheetId] = useState<string | null>(null);
+  // Your own picture: what would you like to add to your day?
+  const [addDay, setAddDay] = useState(false);
+  const [writeStatus, setWriteStatus] = useState(false);
   const win = useJson<{ people: WindowPersonData[] }>("/api/window", { every: 60_000 });
 
   const people = useMemo(() => peopleByRecency(viewer.id, members, cards ?? []), [viewer.id, members, cards]);
@@ -300,7 +304,7 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/window/courtyard-band.svg" alt="" className="absolute inset-0 h-full w-full object-cover" />
           {/* The family's home: your own home photo, else a Muse-made one. The drawn band stays under it while it loads. */}
-          <Photo src={homePhoto} alt="" sizes="(max-width: 480px) 100vw, 448px" priority position="center 55%" />
+          <Photo src={homePhoto} alt="" sizes="(max-width: 480px) 100vw, 448px" priority position="center" />
           <span className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/60" aria-hidden="true" />
           <button type="button" onClick={onBack} aria-label="Back to the window" className="press glass absolute left-3 top-3 grid h-11 w-11 place-items-center rounded-full text-white">
             <Icon name="chevron" size={20} strokeWidth={1.8} className="rotate-180" />
@@ -332,7 +336,7 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
             <ChipsSkeleton />
           ) : (
             <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2 overflow-x-auto px-4 pb-1 pt-2" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 16 }}>
-              <MyDayChip member={viewer} onOpen={() => setDayOfId(viewer.id)} />
+              <MyDayChip member={viewer} onOpen={() => setAddDay(true)} />
               {people.map((mm) => (
                 <PersonChip key={mm.id} member={mm} lamp={lampFor(mm, lampData)} onOpen={() => setSheetId(mm.id)} />
               ))}
@@ -387,7 +391,23 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
         onClose={() => setSheetId(null)}
       />
       {doorFor !== undefined && <OpenDoorSheet open={doorFor !== null} preset={doorFor ? { only: doorFor } : undefined} onClose={() => setDoorFor(null)} />}
-      {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} onClose={() => setDayOfId(null)} />}
+      <BottomSheet open={addDay} onClose={() => setAddDay(false)} title="Add to your day" dataUi="add-to-day">
+        <div className="grid gap-2.5 pb-2">
+          <button type="button" onClick={() => { setAddDay(false); openAdd("photos"); }} className="press flex h-14 items-center gap-3 rounded-full bg-surface px-5 text-body font-semibold text-ink">
+            <Icon name="camera" size={20} /> Photo
+          </button>
+          <button type="button" onClick={() => { setAddDay(false); openAdd("voice"); }} className="press flex h-14 items-center gap-3 rounded-full bg-surface px-5 text-body font-semibold text-ink">
+            <Icon name="mic" size={20} /> Voice note
+          </button>
+          <button type="button" onClick={() => { setAddDay(false); setWriteStatus(true); setDayOfId(viewer.id); }} className="press flex h-14 items-center gap-3 rounded-full bg-surface px-5 text-body font-semibold text-ink">
+            <Icon name="edit" size={20} /> Status
+          </button>
+          <button type="button" onClick={() => { setAddDay(false); setWriteStatus(false); setDayOfId(viewer.id); }} className="press flex h-12 items-center justify-center rounded-full text-callout font-semibold text-ink-soft">
+            See your day
+          </button>
+        </div>
+      </BottomSheet>
+      {dayPerson && <PersonDay member={dayPerson} cards={cards ?? []} startEditing={writeStatus} onClose={() => { setDayOfId(null); setWriteStatus(false); }} />}
     </div>
   );
 }
