@@ -78,7 +78,7 @@ describe("identity first, then family", () => {
   });
 
   it("after auth with a next, go to the form and do not verify; without one, verify as sign-in", () => {
-    expect(afterAuth({ next: "create" })).toEqual({ to: "/create", verify: false });
+    expect(afterAuth({ next: "create" })).toEqual({ verify: true, noFamilyTo: "/create" });
     expect(afterAuth({ next: "join", code: "A B" })).toEqual({ to: "/join?code=A%20B", verify: false });
     expect(afterAuth({ next: null })).toEqual({ verify: true });
     expect(nextHref({ next: null })).toBe("/");

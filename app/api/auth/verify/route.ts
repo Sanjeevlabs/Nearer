@@ -95,7 +95,11 @@ async function postHandler(req: Request): Promise<Response> {
   let memberId: string;
   let welcome: string | undefined;
 
-  if (intent.type === "signin") {
+  // "Start a family" by someone who already has one opens theirs: a second family is never made by
+  // signing in again (Google remembers you, so the create form is easy to reach twice). Joining
+  // another family (the other side of a marriage) is still a join with that family's invite code.
+  const opensExisting = intent.type === "create" && Boolean(existing);
+  if (intent.type === "signin" || opensExisting) {
     if (!existing) return Response.json({ error: "no-family" }, { status: 404 });
     // In several families? Open the one used last (never one still waiting for an admin, if another is open).
     const sides = await dbListSides(existing);
@@ -105,6 +109,8 @@ async function postHandler(req: Request): Promise<Response> {
     const here = pool.find((m) => m.id === lastId) ?? pool[0];
     familyId = here.familyId;
     memberId = here.id;
+    // Say why the family name they just typed didn't make a new one.
+    if (opensExisting) welcome = "You already have a family on Nearer, so we opened it.";
   } else if (intent.type === "join" && existing) {
     // Already in one Nearer, joining another (my wife's family, say): the same
     // person gets a place on both sides, linked by personId.
@@ -146,30 +152,6 @@ async function postHandler(req: Request): Promise<Response> {
       memberId = member.id;
       if (member.status !== "pending") welcome = await welcomeLine(familyId, member);
     }
-  } else if (intent.type === "create" && existing) {
-    // Already in one Nearer, starting another (their side of a marriage, say): a new family with this same
-    // person in it, linked by personId. At most four sides.
-    const sides = await dbListSides(existing);
-    if (sides.length >= 4) return Response.json({ error: "too-many-sides" }, { status: 409 });
-    const personId = existing.personId ?? `p-${crypto.randomUUID().slice(0, 16)}`;
-    if (!existing.personId) await dbUpdateMemberProfile(existing.id, { personId });
-    familyId = await dbCreateFamily(intent.familyName);
-    const member = await dbAddMember({
-      familyId,
-      firstName: intent.firstName,
-      displayName: intent.callName || intent.firstName,
-      role: existing.role === "child" ? "child" : "adult",
-      lang: existing.lang,
-      displayLang: existing.displayLang,
-      tz: existing.tz,
-      birthday: existing.birthday,
-      city: existing.city,
-      email,
-      access: "owner",
-      status: "active",
-      personId,
-    });
-    memberId = member.id;
   } else {
     if (existing) return Response.json({ error: "already-member" }, { status: 409 });
     let invite: Invite | undefined;
@@ -210,7 +192,7 @@ async function postHandler(req: Request): Promise<Response> {
   const cookie = await issueSessionCookie(req, { familyId, memberId }).catch(() => null);
   if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
   const nowStatus = (await dbGetMember(memberId))?.status ?? "active";
-  return Response.json({ familyId, memberId, status: nowStatus, ...(welcome ? { welcome } : {}) }, { headers: { "set-cookie": cookie } });
+  return Response.json({ familyId, memberId, status: nowStatus, ...(welcome ? { welcome } : {}), ...(opensExisting ? { existing: true } : {}) }, { headers: { "set-cookie": cookie } });
 }
 
 export const POST = guardApi(postHandler);
