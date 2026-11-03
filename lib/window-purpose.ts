@@ -19,6 +19,11 @@ export function whoLooksOnto(names: string, viewerRole: string | undefined): { w
   return { who: viewerRole === "elder" ? "your family" : "your parents", known: false };
 }
 
+/** Total travel of a press: the furthest the pointer has been from where it went down (never the step since the last move). */
+export function travelSoFar(prev: number, downX: number, x: number): number {
+  return Math.max(prev, Math.abs(x - downX));
+}
+
 /** A press on the key: a tap (barely moved) opens; a slide opens past 80%; anything else springs back. */
 export function keyOutcome(travelPx: number, progress: number): "open" | "back" {
   return travelPx < TAP_SLOP || progress > 0.8 ? "open" : "back";

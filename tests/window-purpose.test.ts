@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { en } from "@/lib/ui-strings/en";
-import { TAP_SLOP, keyOutcome, showWindowIntro, whoLooksOnto } from "@/lib/window-purpose";
+import { TAP_SLOP, keyOutcome, showWindowIntro, travelSoFar, whoLooksOnto } from "@/lib/window-purpose";
 
 describe("the first-visit card", () => {
   it("waits for the window, shows until dismissed, never again after", () => {
@@ -29,6 +29,29 @@ describe("the key", () => {
     expect(keyOutcome(120, 0.81)).toBe("open");
     expect(keyOutcome(120, 0.5)).toBe("back");
     expect(keyOutcome(TAP_SLOP, 0.1)).toBe("back");
+  });
+});
+
+describe("a slow half-drag on the key", () => {
+  it("springs back: many 1px moves past the tap slop but short of the end do not open it", () => {
+    const track = 220;
+    let travel = 0;
+    const downX = 100;
+    let x = downX;
+    for (let i = 0; i < 90; i++) {
+      x += 1; // each step is far under TAP_SLOP
+      travel = travelSoFar(travel, downX, x);
+    }
+    expect(travel).toBe(90);
+    expect(keyOutcome(travel, (x - downX) / track)).toBe("back");
+    // A real slide to the end still opens.
+    for (let i = 0; i < 100; i++) travel = travelSoFar(travel, downX, (x += 1));
+    expect(keyOutcome(travel, (x - downX) / track)).toBe("open");
+  });
+  it("a tap with a little jitter still opens", () => {
+    let travel = 0;
+    for (const x of [100, 101, 99, 102, 100]) travel = travelSoFar(travel, 100, x);
+    expect(keyOutcome(travel, 0)).toBe("open");
   });
 });
 

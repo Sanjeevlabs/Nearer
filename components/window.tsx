@@ -25,7 +25,7 @@ import { LAMP_GLOW_HOURS } from "@/lib/lamp";
 import { arrivedLine, badgeParts, clockWord, dayWord, firstNameOf, lampState, lampWhy, moonLine, theirDayRows } from "@/lib/window-words";
 import { timeIn } from "@/lib/zones";
 import { useT } from "@/lib/use-t";
-import { WINDOW_INTRO_KEY, keyOutcome, showWindowIntro, whoLooksOnto } from "@/lib/window-purpose";
+import { WINDOW_INTRO_KEY, keyOutcome, showWindowIntro, travelSoFar, whoLooksOnto } from "@/lib/window-purpose";
 import { InviteSheet, inviteCode } from "./invite-sheet";
 import dynamic from "next/dynamic";
 import { PeoplePicker } from "./people-picker";
@@ -119,7 +119,9 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
   const t = useT();
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<number | null>(null);
+  // Total travel since the press (the furthest the finger got from where it went down), not the step since the last move.
   const travel = useRef(0);
+  const downX = useRef(0);
   const doneRef = useRef(false);
   const [x, setX] = useState(0);
   const [done, setDone] = useState(false);
@@ -166,11 +168,12 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
           if (done) return;
           start.current = e.clientX - x;
           travel.current = 0;
+          downX.current = e.clientX;
           (e.target as HTMLElement).setPointerCapture(e.pointerId);
         }}
         onPointerMove={(e) => {
           if (start.current === null) return;
-          travel.current = Math.max(travel.current, Math.abs(e.clientX - start.current - x));
+          travel.current = travelSoFar(travel.current, downX.current, e.clientX);
           setX(Math.min(max(), Math.max(0, e.clientX - start.current)));
         }}
         onPointerUp={() => {
@@ -242,16 +245,16 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
   const now = new Date();
   const { who, known } = whoLooksOnto(names, viewer.role);
 
-  // The first-visit card: once per device (undefined: not read yet, so it never flashes).
-  const [introStored, setIntroStored] = useState<string | null | undefined>(undefined);
-  useEffect(() => {
+  // The first-visit card: once per device. Read at the first render (this screen never renders on the server)
+  // so the card is in the first paint and nothing moves when the data lands.
+  const [introStored, setIntroStored] = useState<string | null>(() => {
     try {
-      setIntroStored(localStorage.getItem(WINDOW_INTRO_KEY));
+      return localStorage.getItem(WINDOW_INTRO_KEY);
     } catch {
-      setIntroStored(null);
+      return null;
     }
-  }, []);
-  const showIntro = introStored !== undefined && showWindowIntro(introStored, Boolean(data));
+  });
+  const showIntro = showWindowIntro(introStored, true);
   const dismissIntro = () => {
     setIntroStored("1");
     try {
@@ -466,10 +469,16 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
                   {names || "Your window"}
                   {data.far && <span className="font-normal text-ink-soft">{` · ${data.far.city || "Their home"} · ${clock}`}</span>}
                 </h1>
-                {/* What this screen is for, in one line. */}
-                <p data-ui="window-purpose" className="m-0 mt-1 text-footnote leading-snug text-ink-soft">
-                  {known ? t("window.purpose", { who }) : t("window.purposeNoNames", { who })}
-                </p>
+              </>
+            ) : win.failed ? null : (
+              <div className="skeleton h-[26px] w-[70%]" />
+            )}
+            {/* What this screen is for: there from the first paint, two lines of room reserved, so nothing moves when the data lands. */}
+            <p data-ui="window-purpose" className="m-0 mt-1 min-h-[36px] text-footnote leading-snug text-ink-soft">
+              {known ? t("window.purpose", { who }) : t("window.purposeNoNames", { who })}
+            </p>
+            {data && (
+              <>
                 {moon && (
                   <p data-ui="window-moon" className="m-0 mt-1 flex items-center gap-1.5 text-footnote leading-snug text-ink-soft">
                     <Icon name="moon" size={14} /> {moon}
@@ -477,8 +486,6 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
                 )}
                 {welcome && <p className="voice m-0 mt-1.5 text-body">{welcome}</p>}
               </>
-            ) : win.failed ? null : (
-              <div className="skeleton h-[26px] w-[70%]" />
             )}
           </header>
 
@@ -499,21 +506,22 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
             </>
           )}
 
+          {/* First visit only: what this screen is, what you can do here, what is inside. In the first paint, in flow. */}
+          {showIntro && !(!data && win.failed) && (
+            <section data-ui="window-intro" className={cn(CARD, "p-4")} style={EDGE} aria-label={t("window.intro.title", { who })}>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="m-0 min-w-0 text-body font-semibold">{t("window.intro.title", { who })}</h2>
+                <button type="button" onClick={dismissIntro} className="press h-11 shrink-0 rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink">
+                  {t("window.intro.gotIt")}
+                </button>
+              </div>
+              <WhyPoints />
+              <p className="m-0 mt-3 text-footnote leading-snug text-ink-soft">{t("window.intro.why")}</p>
+            </section>
+          )}
+
           {data && (
             <>
-              {/* First visit only: what this screen is, what you can do here, what is inside. */}
-              {showIntro && (
-                <section data-ui="window-intro" className={cn(CARD, "p-4")} style={EDGE} aria-label={t("window.intro.title", { who })}>
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="m-0 min-w-0 text-body font-semibold">{t("window.intro.title", { who })}</h2>
-                    <button type="button" onClick={dismissIntro} className="press h-11 shrink-0 rounded-full bg-accent px-4 text-callout font-semibold text-accent-ink">
-                      {t("window.intro.gotIt")}
-                    </button>
-                  </div>
-                  <WhyPoints />
-                  <p className="m-0 mt-3 text-footnote leading-snug text-ink-soft">{t("window.intro.why")}</p>
-                </section>
-              )}
 
               {/* Their day: one row per person, only what they chose to share (and their own check-ins). Tap for more. */}
               <section data-ui="window-day" className={cn(CARD, "flex min-h-[56px] flex-col justify-center py-1 pl-2 pr-3")} style={EDGE} aria-label="Their day">
