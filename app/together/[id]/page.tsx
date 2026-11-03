@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { PlanBadge, daysUntil } from "@/components/together-art";
@@ -24,7 +25,7 @@ export default function ProjectPage() {
   const [editingPlan, setEditingPlan] = useState(false);
   const p = data?.projects.find((x) => x.id === id);
 
-  if (failed && !data) return <div><RoomHeader title="Plan" /><EmptyLine>Couldn&rsquo;t load this plan. Try again in a moment.</EmptyLine></div>;
+  if (failed && !data) return <div><RoomHeader title="Plan" /><LoadFailed what="This plan" ui="plan-retry" onRetry={() => void reload()} /></div>;
   if (!data) return <div className="skeleton mt-16 h-[420px] rounded-card" aria-busy="true" />;
   if (!p) {
     return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import Link from "next/link";
 import { useEffect, useMemo, useRef } from "react";
 import { RoomHeader, Avatar, Icon } from "@/components/ui/kit";
@@ -182,6 +183,8 @@ export default function KidsPageRoute() {
       <RoomHeader title="Kids" subtitle="What the children shared, asked and were told" />
       {isKid(viewer) ? (
         <p className="m-0 text-body text-ink-soft">This page is for the grown-ups. Your things are on your first screen.</p>
+      ) : q.data === null && q.failed ? (
+        <LoadFailed what="Kids" ui="kids-retry" onRetry={() => void q.reload()} />
       ) : q.data === null ? (
         <div className="skeleton h-[420px] rounded-card" aria-busy="true" aria-label="Loading the kids" />
       ) : (

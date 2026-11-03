@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { useState } from "react";
 import { Suggestions } from "@/components/suggestions";
 import { EmptyLine, Icon, MuseMark, RoomHeader, SectionTitle } from "@/components/ui/kit";
@@ -26,7 +27,7 @@ interface TraceData {
 // with the model, time and cost of each step. Nothing Muse proposes runs
 // without a person approving it.
 export function TraceView() {
-  const { data, failed } = useJson<TraceData>("/api/trace");
+  const { data, failed, reload } = useJson<TraceData>("/api/trace");
   const [showRuns, setShowRuns] = useState(false);
   const calls = data?.museCalls ?? [];
   const cached = calls.filter((c) => c.cached).length;
@@ -57,7 +58,7 @@ export function TraceView() {
       </div>
 
       <SectionTitle>Recent steps</SectionTitle>
-      {failed && <EmptyLine>Activity is unavailable offline.</EmptyLine>}
+      {failed && !data && <LoadFailed what="Activity" ui="trace-retry" onRetry={() => void reload()} />}
       {data === null && !failed && <div className="skeleton h-40 rounded-card" aria-busy="true" />}
       {data && calls.length === 0 && <EmptyLine>Nothing yet. Teach a recipe or record a voice memory and Muse will help.</EmptyLine>}
       <ol className="m-0 list-none p-0">
