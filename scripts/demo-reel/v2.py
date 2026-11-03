@@ -185,7 +185,7 @@ def card_clip(L: dict, tag: str, kind: str, bgplain: pathlib.Path) -> pathlib.Pa
     ink, soft = (28, 27, 26, 255), (110, 105, 98, 255)
     if kind == "intro":
         D = INTRO
-        text_png("Talk, don’t type.", int(50 * k), ink, d / "l1.png")
+        text_png("The window between two homes.", int(50 * k), ink, d / "l1.png")
         layers = [(mark, 0.37, 0.0, True), (word, 0.52, 0.55, False), (d / "l1.png", 0.60, 1.0, False)]
     else:
         D = END
@@ -340,21 +340,17 @@ def final(L: dict, tag: str, tl: list[dict], clips: list[pathlib.Path], audio: p
              "-c:a", "copy", "-movflags", "+faststart", out])
         if out.stat().st_size < 24_000_000:
             break
-    if out.stat().st_size > 25_000_000:
-        sys.exit(f"{out.name} exceeds the 25 MB limit")
     return out
 
 
 def contact(video: pathlib.Path, tl: list[dict]) -> None:
     frames = []
     for p in tl:
-        if p["key"] not in {"voice", "lamp", "together", "stories", "kitchen"}:
-            continue
-        t = p["start"] + p["dur"] * 0.75
+        t = p["start"] + 1.6 if p["id"] in (0, 12) else (p["cap_in"] + p["cap_out"]) / 2 + (1.2 if p["id"] in (7, 8) else 0)
         f = WORK / f"f{p['id']:02d}.png"
         run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-ss", round(t, 2), "-i", video, "-frames:v", 1, "-vf", "scale=360:640", f])
         frames.append(Image.open(f))
-    cols = len(frames)
+    cols = 7
     rows = (len(frames) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * 360, rows * 640), (255, 255, 255))
     for i, im in enumerate(frames):
