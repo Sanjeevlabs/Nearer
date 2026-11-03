@@ -215,8 +215,8 @@ export function LanguageSection({ onMessage }: { onMessage: (m: string) => void 
       }}
     >
       <LanguagePicker value={form.draft.lang} onPick={(lang) => form.set({ lang })} />
-      <p className="m-0 mt-2 text-footnote text-ink-faint">{t("settings.languageNote")}</p>
-      <p className="m-0 mt-1.5 flex items-center gap-1.5 text-footnote text-ink-faint">
+      <p className="m-0 mt-2 text-footnote text-ink-soft">{t("settings.languageNote")}</p>
+      <p className="m-0 mt-1.5 flex items-center gap-1.5 text-footnote text-ink-soft">
         <Icon name="check" size={13} />
         {t("settings.appSpeaks")}
       </p>

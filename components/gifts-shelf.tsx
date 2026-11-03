@@ -34,7 +34,7 @@ export function GiftsShelf() {
                 <Avatar src={memberPhoto(by)} name={callName(by)} size={36} />
                 <span className="min-w-0 flex-1 text-body leading-snug">
                   <span className="font-semibold">{callName(by)}</span> {g.text}
-                  <span className="whitespace-nowrap text-ink-faint">{" "}· {dayName(g.at)}</span>
+                  <span className="whitespace-nowrap text-ink-soft">{" "}· {dayName(g.at)}</span>
                 </span>
               </Link>
             </li>

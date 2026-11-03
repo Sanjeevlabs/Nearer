@@ -183,7 +183,7 @@ export default function RecipePage() {
 
       <section aria-label="Ingredients">
         <SectionTitle>
-          Ingredients <span className="text-body font-medium text-ink-faint">· {r.ingredients.length}</span>
+          Ingredients <span className="text-body font-medium text-ink-soft">· {r.ingredients.length}</span>
         </SectionTitle>
         <ul className="m-0 list-none divide-y divide-[var(--line)] rounded-card bg-surface p-0 px-2">
           {r.ingredients.map((i, n) => {
@@ -197,14 +197,14 @@ export default function RecipePage() {
                   <span className={cn("min-w-0 flex-1 text-body font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
                   <span className="shrink-0 text-right">
                     {i.said && <span className="voice block text-body">{i.said}</span>}
-                    {i.approx && <span className="tnum block text-footnote text-ink-faint">{i.said ? "≈ " : ""}{i.approx.replace(/^(about|≈)\s*/i, "")}</span>}
+                    {i.approx && <span className="tnum block text-footnote text-ink-soft">{i.said ? "≈ " : ""}{i.approx.replace(/^(about|≈)\s*/i, "")}</span>}
                   </span>
                 </button>
               </li>
             );
           })}
         </ul>
-        <p className="m-0 mt-2 px-1 text-caption text-ink-faint">Tap to tick what you have. Amounts are as {callName(cook)} says them; ≈ is a rough guide.</p>
+        <p className="m-0 mt-2 px-1 text-caption text-ink-soft">Tap to tick what you have. Amounts are as {callName(cook)} says them; ≈ is a rough guide.</p>
       </section>
 
       <section aria-label="Method">
@@ -217,7 +217,7 @@ export default function RecipePage() {
                 <p className="m-0 text-headline leading-snug">{st.text}</p>
                 {st.tip && (
                   <p className="voice m-0 mt-1.5 text-headline text-ink-soft">
-                    &ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-faint">— {callName(cook)}</span>
+                    &ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-soft">— {callName(cook)}</span>
                   </p>
                 )}
               </div>
@@ -290,7 +290,7 @@ function Cooked({ recipe, attempts, cookName, onChange, viewerId }: { recipe: Re
                 <div className="flex items-center gap-2.5">
                   <Avatar src={memberPhoto(who)} name={callName(who)} size={32} />
                   <span className="text-body font-semibold">{a.memberId === viewerId ? "You" : callName(who)}</span>
-                  <span className="text-footnote text-ink-faint">{ago(a.createdAt)}</span>
+                  <span className="text-footnote text-ink-soft">{ago(a.createdAt)}</span>
                   <span className="flex-1" />
                   {canChange(me, a.memberId) && (
                     <ActionMenu

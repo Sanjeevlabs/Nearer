@@ -155,7 +155,7 @@ function MyDayChip({ member, onOpen }: { member: Member; onOpen: () => void }) {
   const photo = memberPhoto(member);
   return (
     <li className="w-[92px] shrink-0 text-center" style={{ scrollSnapAlign: "start" }}>
-      <button type="button" onClick={onOpen} className="press block w-full text-ink">
+      <button type="button" onClick={onOpen} data-ui="my-day" className="press block w-full text-ink">
         <span className="relative mx-auto block h-[68px] w-[68px] rounded-full ring-1 ring-black/15">
           <span className="absolute inset-[3px] overflow-hidden rounded-full bg-surface">{photo ? <Photo src={photo} alt="" sizes="140px" position="center 30%" /> : <Monogram name={callName(member)} size={62} />}</span>
           <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-deep text-white ring-2 ring-white" aria-hidden="true">

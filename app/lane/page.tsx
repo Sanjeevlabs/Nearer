@@ -34,7 +34,7 @@ function RowHead({ title, count, range, extra }: { title: string; count: number;
   return (
     <div className="mb-2 flex items-baseline gap-2">
       <h2 className="m-0 text-headline">{title}</h2>
-      <span className="tnum text-footnote text-ink-faint">{count}</span>
+      <span className="tnum text-footnote text-ink-soft">{count}</span>
       <span className="flex-1" />
       {extra}
       {range && <span className="tnum text-caption text-ink-soft">{range}</span>}

@@ -54,7 +54,10 @@ def main():
                     raise RuntimeError(f"{member}: demo sign-in failed with {response.status}")
                 page = ctx.new_page()
                 if kind != "child":
-                    visit(page, "/?demo=1", "[data-ui=window-lamp]")
+                    visit(page, "/", "button:has-text('Open Nearer')")  # signed in: the home page first, then the window
+                    audit(page, f"{member}: Home (signed in)", problems)
+                    page.get_by_role("button", name="Open Nearer").first.click()
+                    page.locator("[data-ui=window-lamp]").first.wait_for(state="visible")
                     audit(page, f"{member}: Window", problems)
                 ctx.add_init_script(HOUSE_STATE)
                 if kind == "child":
@@ -68,12 +71,8 @@ def main():
                 audit(page, f"{member}: Profile menu", problems)
                 page.keyboard.press("Escape")
                 page.locator("[data-ui=profile-menu]").wait_for(state="hidden")
-                page.locator("[data-ui=dock] button[aria-label^='Voice memory']").first.click()
-                page.locator("[role=dialog]").first.wait_for()
-                if not page.locator("[data-ui=voice-add-photo]").count():
-                    page.locator("[role=dialog] button:not([aria-label=Close])").first.click()
+                page.locator("[data-ui=dock] button[aria-label^='Record a voice note']").first.click()
                 page.locator("[role=dialog]").last.wait_for()
-                page.locator("[data-ui=voice-add-photo]").wait_for()
                 audit(page, f"{member}: Voice sheet", problems)
                 for path in ("/lane", "/kitchen", "/kitchen/recipe-dadi-dal", "/stories", "/care", "/inbox", "/settings"):
                     visit(page, path, "h1")

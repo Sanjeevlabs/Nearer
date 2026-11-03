@@ -227,7 +227,7 @@ function RecipeTile({ recipe, attempts, canManage, onDeleted }: { recipe: Recipe
           {recipe.videoCardId && <Icon name="camera" size={12} className="text-ink-soft" />}
         </p>
         {recipe.scanRef && <p className="m-0 font-hand text-body leading-tight text-ink-soft">from the handwritten card</p>}
-        {attempts.length > 0 && <p className="m-0 text-caption text-ink-faint">cooked {attempts.length}×</p>}
+        {attempts.length > 0 && <p className="m-0 text-caption text-ink-soft">cooked {attempts.length}×</p>}
       </Link>
       {canManage && (
         <div className="absolute right-1.5 top-1.5">
