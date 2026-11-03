@@ -10,6 +10,7 @@ import { recordTeenConsent } from "@/lib/roles";
 import { guardWrites } from "@/lib/api-guard";
 import { memberFor } from "@/lib/request-memo";
 import { cardsFor, familyNameFor, membersFor } from "@/lib/request-data";
+import { seenBy } from "@/lib/card-privacy";
 
 // Two courtyards, one door. Each family keeps its own Nearer; a married couple
 // and their children belong to both. Nothing crosses between homes: this
@@ -54,7 +55,7 @@ async function sidesOf(me: Member, req?: Request) {
         name: name.replace(/^the\s+/i, "").replace(/\s+family$/i, "") || "Family",
         people: people.length,
         addedBy: m.access === "owner" ? null : host ? host.displayName || host.firstName : null,
-        fresh: cards.filter((c) => c.authorId && c.authorId !== m.id && Date.parse(c.takenAt) > since && Date.parse(c.takenAt) <= Date.now()).length,
+        fresh: seenBy(cards, m.id).filter((c) => c.authorId && c.authorId !== m.id && Date.parse(c.takenAt) > since && Date.parse(c.takenAt) <= Date.now()).length,
       };
     }),
   );

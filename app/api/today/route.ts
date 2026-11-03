@@ -8,6 +8,7 @@ import { nextOccasionFor } from "@/lib/occasions-server";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { docsFor, holidaysOf, membersFor, relationshipsFor } from "@/lib/request-data";
+import { seenBy } from "@/lib/card-privacy";
 
 // Today: one task, both homes. Your answer is a voice note you recorded; everyone
 // hears every answer at once (nothing is sealed, and there is no streak).
@@ -41,7 +42,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (!task) return Response.json({ error: "unknown-task" }, { status: 404 });
   if (!sideOf(task, auth.memberId)) return Response.json({ error: "not-your-task" }, { status: 403 });
   // The answer must be your own voice note in this family.
-  const card = withDemoShelf(await dbListCards(auth.familyId), auth.familyId).find((c) => c.id === parsed.data.cardId);
+  const card = seenBy(withDemoShelf(await dbListCards(auth.familyId), auth.familyId), auth.memberId).find((c) => c.id === parsed.data.cardId);
   if (!card || card.authorId !== auth.memberId || card.type !== "audio") return Response.json({ error: "not-your-card" }, { status: 403 });
   if (task.answers.some((a) => a.cardId === card.id)) return Response.json({ task: viewFor(task, auth.memberId) });
   const now = new Date().toISOString();

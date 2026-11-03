@@ -4,6 +4,7 @@ import { docsFor } from "@/lib/request-data";
 import { dbListCards } from "@/lib/db";
 import { putDoc } from "@/lib/family-docs";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // Morning letter (SPEC §30.4): a voice note that arrives at their morning.
 // The card is stored as usual; GET /api/cards hides it from everyone but its
@@ -29,7 +30,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid-letter" }, { status: 400 });
   const at = Date.parse(parsed.data.deliverAt);
   if (at <= Date.now() || at - Date.now() > MAX_AHEAD) return Response.json({ error: "invalid-time" }, { status: 400 });
-  const card = (await dbListCards(auth.familyId)).find((c) => c.id === parsed.data.cardId);
+  const card = seenBy(await dbListCards(auth.familyId), auth.memberId).find((c) => c.id === parsed.data.cardId);
   if (!card || card.authorId !== auth.memberId) return Response.json({ error: "unknown-card" }, { status: 404 });
   const letter = await putDoc(auth.familyId, "chitthi", { id: card.id, deliverAt: parsed.data.deliverAt, authorId: auth.memberId, createdAt: new Date().toISOString() });
   return Response.json({ letter });

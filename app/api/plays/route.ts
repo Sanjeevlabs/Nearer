@@ -5,12 +5,16 @@ import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { nudgeHeard } from "@/lib/nudge-producers";
 import { markSeenWhere } from "@/lib/nudges";
+import { canSeeCard, hiddenCardIds } from "@/lib/card-privacy";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const { searchParams } = new URL(req.url);
-  return Response.json({ plays: await dbListPlays(searchParams.get("cardId") ?? undefined, auth.familyId) });
+  const [plays, cards] = await Promise.all([dbListPlays(searchParams.get("cardId") ?? undefined, auth.familyId), dbListCards(auth.familyId)]);
+  // Who heard a note for someone else is theirs to know, not the family's.
+  const hidden = hiddenCardIds(cards, auth.memberId);
+  return Response.json({ plays: hidden.size ? plays.filter((p) => !hidden.has(p.cardId)) : plays });
 }
 
 async function postHandler(req: Request): Promise<Response> {
@@ -31,7 +35,7 @@ async function postHandler(req: Request): Promise<Response> {
   // The demo family's synthetic shelf voices can be heard (and counted as heard) too.
   const cards = withDemoShelf(await dbListCards(auth.familyId), auth.familyId);
   const card = cards.find((c) => c.id === parsed.data.cardId);
-  if (!card) {
+  if (!card || !canSeeCard(card, auth.memberId)) {
     return Response.json({ error: "unknown-card" }, { status: 404 });
   }
   if (!(await dbGetMember(parsed.data.memberId))) {

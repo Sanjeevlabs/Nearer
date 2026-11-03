@@ -5,6 +5,7 @@ import { dbListCards } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, putDoc } from "@/lib/family-docs";
 import { EVENT_KINDS } from "@/lib/kinds";
 import { guardWrites } from "@/lib/api-guard";
+import { hiddenCardIds } from "@/lib/card-privacy";
 
 // Albums. GET → albums (newest first).
 // POST → rename · remove (a photo from an album) · move (to another album) ·
@@ -26,11 +27,17 @@ const Body = z.discriminatedUnion("action", [
 async function getHandler(req: Request): Promise<Response> {
   // The read starts with the session check, not after it (a refused request throws it away).
   const claimed = sessionFromRequest(req);
-  const early = claimed ? listDocs(claimed.familyId, "album") : null;
+  const early = claimed ? Promise.all([listDocs(claimed.familyId, "album"), dbListCards(claimed.familyId)]) : null;
   early?.catch(() => undefined);
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const albums = (await (early && claimed?.familyId === auth.familyId ? early : listDocs(auth.familyId, "album"))).sort((a, b) => b.endAt.localeCompare(a.endAt));
+  const [all, cards] = await (early && claimed?.familyId === auth.familyId ? early : Promise.all([listDocs(auth.familyId, "album"), dbListCards(auth.familyId)]));
+  // A photo sent to particular people never shows in an album anyone else opens.
+  const hidden = hiddenCardIds(cards, auth.memberId);
+  const albums = all
+    .map((a) => (hidden.size && a.cardIds.some((id) => hidden.has(id)) ? { ...a, cardIds: a.cardIds.filter((id) => !hidden.has(id)), coverId: a.coverId && hidden.has(a.coverId) ? (a.cardIds.find((id) => !hidden.has(id)) ?? a.coverId) : a.coverId } : a))
+    .filter((a) => a.cardIds.length > 0)
+    .sort((a, b) => b.endAt.localeCompare(a.endAt));
   return Response.json({ albums });
 }
 

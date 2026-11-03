@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
-import { docsFor } from "@/lib/request-data";
+import { cardsFor, docsFor } from "@/lib/request-data";
 import { dbDeleteCard, dbGetMember, dbListCards, dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, newId, putDoc } from "@/lib/family-docs";
 import { STORY_AGES, STORY_THEMES } from "@/lib/kinds";
@@ -10,6 +10,7 @@ import { ideaFor } from "@/lib/story-ideas";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAsk } from "@/lib/push/events";
 import { nudgeShared } from "@/lib/nudge-producers";
+import { canSeeCard, hiddenCardIds } from "@/lib/card-privacy";
 
 // Stories, the kids' corner.
 // GET  → stories + open story requests
@@ -28,7 +29,10 @@ const Body = z.discriminatedUnion("action", [
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
-  const [stories, questions] = await Promise.all([docsFor(req, auth.familyId, "story"), docsFor(req, auth.familyId, "question")]);
+  const [all, questions, cards] = await Promise.all([docsFor(req, auth.familyId, "story"), docsFor(req, auth.familyId, "question"), cardsFor(req, auth.familyId)]);
+  // A story told from a note for particular people stays theirs.
+  const unseen = hiddenCardIds(cards, auth.memberId);
+  const stories = unseen.size ? all.filter((s) => !unseen.has(s.cardId)) : all;
   // A known tale to retell in your own voice, quietly picked for the day.
   const idea = ideaFor(new Date().toISOString().slice(0, 10), stories.map((s) => s.title));
   return Response.json({ stories, requests: questions.filter((q) => q.topic === "story" && q.askedBy && !q.answeredCardId), idea });
@@ -46,7 +50,7 @@ async function postHandler(req: Request): Promise<Response> {
 
   if (body.action === "tell") {
     const card = (await dbListCards(auth.familyId)).find((c) => c.id === body.cardId);
-    if (!card || (card.type !== "audio" && card.type !== "video")) return Response.json({ error: "unknown-voice-note" }, { status: 404 });
+    if (!card || (card.type !== "audio" && card.type !== "video") || !canSeeCard(card, auth.memberId)) return Response.json({ error: "unknown-voice-note" }, { status: 404 });
     const tellerId = card.authorId ?? auth.memberId;
     if (!canChange(me, tellerId, "edit")) return Response.json({ error: "not-yours" }, { status: 403 });
     const teller = (await dbListMembers(auth.familyId)).find((m) => m.id === tellerId);

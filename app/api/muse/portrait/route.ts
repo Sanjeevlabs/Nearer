@@ -6,6 +6,7 @@ import { listDocs, newId, putDoc } from "@/lib/family-docs";
 import { loadFamilyImage, museImage } from "@/lib/muse-image";
 import { checkPick, PORTRAIT_STYLES, portraitPrompt, quotaLeft } from "@/lib/muse-portrait";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // Family portrait (Muse Image). Nothing here posts anything: the route
 // paints, the person looks, and only /api/muse/keep makes it a family card.
@@ -53,7 +54,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (quotaLeft(runs, "portrait") <= 0) return Response.json({ error: "daily-limit" }, { status: 429 });
 
   // Each person's photo: the one chosen from the family's own photos, else their profile photo.
-  const cards = body.people.some((p) => p.cardId) ? await dbListCards(auth.familyId) : [];
+  const cards = body.people.some((p) => p.cardId) ? seenBy(await dbListCards(auth.familyId), auth.memberId) : [];
   const refs: string[] = [];
   for (const p of body.people) {
     const m = members.find((x) => x.id === p.memberId)!;

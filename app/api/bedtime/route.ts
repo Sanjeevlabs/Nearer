@@ -5,6 +5,7 @@ import { dbListCards } from "@/lib/db";
 import { newId, putDoc } from "@/lib/family-docs";
 import { bedtimePrompt, dayIn, guardiansOf, isKid, kidsOf, tonightFor } from "@/lib/kids";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // Bedtime stories. A grandparent (or parent) records a story for a child; it plays on the
 // child's screen whenever they open it. One prompt a day for the grown-up: recording
@@ -60,7 +61,7 @@ async function postHandler(req: Request): Promise<Response> {
 
   const kid = members.find((m) => m.id === body.forMemberId);
   if (!kid || !isKid(kid) || !guardiansOf(kid.id, rels).includes(me.id)) return Response.json({ error: "not-yours" }, { status: 403 });
-  const card = (await dbListCards(auth.familyId)).find((c) => c.id === body.cardId);
+  const card = seenBy(await dbListCards(auth.familyId), auth.memberId).find((c) => c.id === body.cardId);
   if (!card || card.type !== "audio" || card.authorId !== me.id) return Response.json({ error: "unknown-voice-note" }, { status: 404 });
   const story = await putDoc(auth.familyId, "bedtime_story", { id: newId("bed"), forMemberId: kid.id, byMemberId: me.id, cardId: card.id, at: now.toISOString(), title: body.title });
   return Response.json({ story }, { status: 201 });

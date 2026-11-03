@@ -189,6 +189,19 @@ export async function dbListCards(familyId: string, opts: ListCardsOptions = {})
   return cards;
 }
 
+/**
+ * Who the cards made of this stored file are for (only the columns the media gate needs):
+ * GET /api/media refuses a file when every card made of it is a note for other people.
+ */
+export async function dbCardsWithMedia(familyId: string, ref: string): Promise<Pick<Card, "id" | "authorId" | "addressedTo">[]> {
+  const sb = dbFor(familyId);
+  const pick = (c: Card) => ({ id: c.id, authorId: c.authorId, addressedTo: c.addressedTo });
+  if (!sb) return scoped(memListCards(), familyId).filter((c) => c.mediaRef === ref).map(pick);
+  const { data, error } = await sb.from("cards").select("id, author_id, addressed_to").eq("family_id", familyId).eq("media_ref", ref).limit(20);
+  if (error) throw new DbReadError("cards", error.message);
+  return (data ?? []).map((r: Record<string, unknown>) => ({ id: String(r.id), authorId: (r.author_id as string | null) ?? null, addressedTo: (r.addressed_to as string | null) ?? null }));
+}
+
 /** The cards row for a card (dbAddCard and the demo copy write the same columns). */
 export function cardRow(card: Card): Record<string, unknown> {
   return {
@@ -351,7 +364,7 @@ export interface NamedSide {
   /** With `since`: everyone in that family (waiting joiners too), or null when not read. */
   people: Member[] | null;
   /** With `since`: who shared what in that family since then, or null when not read. */
-  recent: { authorId: string | null; takenAt: string }[] | null;
+  recent: { authorId: string | null; takenAt: string; addressedTo: string | null }[] | null;
 }
 
 /**
@@ -370,7 +383,7 @@ export async function dbListSidesNamed(member: Member, opts: { since?: string } 
   type Row = Record<string, unknown> & { families?: { name?: unknown; members?: unknown; cards?: unknown } | null };
   let rows: Row[] | null = null;
   if (opts.since) {
-    const { data, error } = await sb.from("members").select("*, families(name, members(*), cards(author_id, taken_at))").eq("person_id", member.personId).gte("families.cards.taken_at", opts.since).limit(8);
+    const { data, error } = await sb.from("members").select("*, families(name, members(*), cards(author_id, taken_at, addressed_to))").eq("person_id", member.personId).gte("families.cards.taken_at", opts.since).limit(8);
     if (!error && data) rows = data as Row[];
   }
   if (!rows) {
@@ -389,7 +402,7 @@ export async function dbListSidesNamed(member: Member, opts: { since?: string } 
     if (opts.since && fam && Array.isArray(fam.members) && Array.isArray(fam.cards)) {
       try {
         people = (fam.members as Record<string, unknown>[]).map(memberFromRow);
-        recent = (fam.cards as { author_id?: unknown; taken_at?: unknown }[]).map((c) => ({ authorId: typeof c.author_id === "string" ? c.author_id : null, takenAt: String(c.taken_at ?? "") }));
+        recent = (fam.cards as { author_id?: unknown; taken_at?: unknown; addressed_to?: unknown }[]).map((c) => ({ authorId: typeof c.author_id === "string" ? c.author_id : null, takenAt: String(c.taken_at ?? ""), addressedTo: typeof c.addressed_to === "string" ? c.addressed_to : null }));
       } catch {
         people = null;
         recent = null;

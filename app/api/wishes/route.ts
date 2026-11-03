@@ -2,6 +2,7 @@ import { CreateWishRequestSchema } from "@/lib/schemas";
 import { dbAddWish, dbGetMember, dbListCards, dbListRitualRuns, dbListWishes } from "@/lib/db";
 import { requireMember, requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
@@ -31,7 +32,7 @@ async function postHandler(req: Request): Promise<Response> {
     return Response.json({ error: "unknown-member" }, { status: 404 });
   }
   // The card and the occasion must be this family's own.
-  if (parsed.data.cardId && !(await dbListCards(auth.familyId)).some((c) => c.id === parsed.data.cardId)) return Response.json({ error: "unknown-card" }, { status: 404 });
+  if (parsed.data.cardId && !seenBy(await dbListCards(auth.familyId), auth.memberId).some((c) => c.id === parsed.data.cardId)) return Response.json({ error: "unknown-card" }, { status: 404 });
   if (parsed.data.ritualRunId && !(await dbListRitualRuns(auth.familyId)).some((r) => r.id === parsed.data.ritualRunId)) return Response.json({ error: "unknown-run" }, { status: 404 });
   const wish = await dbAddWish({ ...parsed.data, familyId: auth.familyId });
   return Response.json({ wish }, { status: 201 });

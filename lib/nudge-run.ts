@@ -14,6 +14,7 @@ import type { DocKind } from "./kinds";
 import type { Member } from "./schemas";
 import { weekStartOf } from "./week";
 import { pickWeekMoment } from "./week-moment";
+import { FAMILY_WIDE, seenBy } from "./card-privacy";
 
 const DAY = 86_400_000;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -102,7 +103,7 @@ export async function queueScanNudges(familyId: string, input: NudgeScanInput): 
         dbListReactions(undefined, familyId),
         listDocsMany(familyId, ["recipe", "attempt", "story", "today_task", "chitthi"] as const),
       ]);
-      const moment = pickWeekMoment({ now, members, cards: withDemoShelf(cards, familyId), plays, reactions, recipes: docs.recipe, attempts: docs.attempt, stories: docs.story, tasks: docs.today_task, letters: docs.chitthi });
+      const moment = pickWeekMoment({ now, members, cards: seenBy(withDemoShelf(cards, familyId), FAMILY_WIDE), plays, reactions, recipes: docs.recipe, attempts: docs.attempt, stories: docs.story, tasks: docs.today_task, letters: docs.chitthi });
       if (moment) for (const m of active) await add({ toMemberId: m.id, kind: "digest", text: moment.text, href: moment.href });
     } catch (e) {
       console.error("[nudges] digest failed", familyId, String(e));

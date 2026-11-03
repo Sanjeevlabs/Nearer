@@ -22,6 +22,7 @@ import { hourIn } from "./zones";
 import { isNightAt, moonPhase, skyGlyph } from "./sky";
 import type { Wall } from "./kinds";
 import { withDemoShelf } from "./demo";
+import { canSeeCard, seenBy } from "./card-privacy";
 import { isDemoFamily } from "./auth";
 import { createDownloadUrl } from "./storage";
 import { answeredAt, expireCheckin } from "./safety";
@@ -136,13 +137,13 @@ const STORAGE_PATH = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)+$/;
  * uploaded to its private storage (and that exists), or the photo of one of
  * its own photo cards. Never another family's path, never another host.
  */
-export async function homePhotoOk(familyId: string, ref: string): Promise<boolean> {
+export async function homePhotoOk(familyId: string, ref: string, viewerId: string): Promise<boolean> {
   if (ref.startsWith("storage:")) {
     const path = ref.slice("storage:".length);
     if (!path.startsWith(`${familyId}/`) || path.includes("..") || !STORAGE_PATH.test(path)) return false;
     return (await createDownloadUrl(path)) !== null;
   }
-  const cards = withDemoShelf(await dbListCards(familyId), familyId);
+  const cards = seenBy(withDemoShelf(await dbListCards(familyId), familyId), viewerId);
   return cards.some((c) => c.type === "photo" && c.mediaRef === ref);
 }
 
@@ -278,7 +279,8 @@ export async function windowState(familyId: string, viewerId: string, now = new 
     const m = members.find((x) => x.id === id);
     return m?.displayName || m?.firstName || "";
   };
-  const shelf = withDemoShelf(recent, familyId);
+  // Only what this viewer may see: a note for someone else never surfaces at their window.
+  const shelf = seenBy(withDemoShelf(recent, familyId), viewerId);
   // Something they did and chose to share: a moment, a voice or photo they sent, a safety
   // check-in. The automatic "here" (just opening Nearer) is never shown to anyone else.
   const signs = (id: string): string[] =>
@@ -413,9 +415,9 @@ export function callHint(theirTz: string, myTz: string, names: string[], now = n
 }
 
 /** A photo card from this family, as the window's image. */
-export async function photoRefFor(familyId: string, cardId: string): Promise<string | null> {
+export async function photoRefFor(familyId: string, cardId: string, viewerId: string): Promise<string | null> {
   const card = withDemoShelf(await dbListCards(familyId), familyId).find((c) => c.id === cardId);
-  if (!card || card.type !== "photo") return null;
+  if (!card || card.type !== "photo" || !canSeeCard(card, viewerId)) return null;
   return card.mediaRef;
 }
 

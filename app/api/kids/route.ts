@@ -4,6 +4,7 @@ import { isKid } from "@/lib/kids";
 import { kidsPage } from "@/lib/kids-page";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // The Kids page for grown-ups (/bond/kids) in one round trip: the kids' fridge, what they
 // asked, and the bedtime stories. It reads the same lists the kid
@@ -37,7 +38,7 @@ async function getHandler(req: Request): Promise<Response> {
   const sealed = new Set<string>();
   const now = Date.now();
   for (const l of letters) if (l.authorId !== auth.memberId && Date.parse(l.deliverAt) > now) sealed.add(l.id);
-  const all = withDemoShelf(stored, f);
+  const all = seenBy(withDemoShelf(stored, f), auth.memberId);
   const cards = sealed.size ? all.filter((c) => !sealed.has(c.id)) : all;
   return Response.json(kidsPage({ viewerId: auth.memberId, members, rels, cards, asks, stories, tales }), { headers: { "cache-control": "no-store" } });
 }

@@ -4,6 +4,7 @@ import { dbListCards, dbListMembers, dbListPlays } from "./db";
 import { withDemoShelf } from "./demo";
 import { listDocs } from "./family-docs";
 import { buildSent, SENT_DAYS, type SentItem } from "./sent";
+import { seenBy } from "./card-privacy";
 
 export async function sentFor(familyId: string, viewerId: string, now: Date): Promise<SentItem[]> {
   const since = new Date(now.getTime() - SENT_DAYS * 86_400_000).toISOString();
@@ -18,7 +19,7 @@ export async function sentFor(familyId: string, viewerId: string, now: Date): Pr
     viewerId,
     now,
     members,
-    cards: withDemoShelf(stored, familyId),
+    cards: seenBy(withDemoShelf(stored, familyId), viewerId),
     plays,
     deliverAt: Object.fromEntries(letters.filter((l) => l.authorId === viewerId).map((l) => [l.id, l.deliverAt])),
   });
