@@ -11,13 +11,13 @@ const SECRET_PATTERNS = [/sk-[A-Za-z0-9]{8,}/, /AKIA[0-9A-Z]{16}/, /META_API_KEY
 const FESTIVALS = ["diwali", "christmas", "eid", "hanukkah", "thanksgiving", "lunar new year"];
 const SKIP_DIRS = new Set([".claude", "node_modules", ".next", ".open-next", ".wrangler", ".git", ".hg", ".sl", ".eden"]);
 
-function files(dir) {
+function files(dir, ext = /\.(ts|tsx|js|mjs|json|sql|yml|md)$/) {
   const out = [];
   for (const name of readdirSync(dir)) {
     if (SKIP_DIRS.has(name)) continue;
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) out.push(...files(p));
-    else if (/\.(ts|tsx|js|mjs|json|sql|yml|md)$/.test(name)) out.push(p);
+    if (statSync(p).isDirectory()) out.push(...files(p, ext));
+    else if (ext.test(name)) out.push(p);
   }
   return out;
 }
@@ -55,7 +55,7 @@ const NON_META_HOSTS = /\b(api\.openai\.com|api\.anthropic\.com|generativelangua
 const NON_META_IMPORTS = /from\s+["'](openai|@anthropic-ai\/[a-z-]+|@google\/generative-ai|@google\/genai|@mistralai\/[a-z-]+|cohere-ai|replicate|groq-sdk|together-ai|@huggingface\/inference)["']/;
 for (const f of files(ROOT)) {
   const rel = f.replace(ROOT, "").replace(/^[\\/]/, "").replace(/\\/g, "/");
-  if (!/^(lib|app|components)\//.test(rel)) continue;
+  if (!/^(lib|app|components|scripts)\//.test(rel) || rel === "scripts/lint.mjs") continue;
   const text = readFileSync(f, "utf8");
   if (NON_META_HOSTS.test(text) || NON_META_IMPORTS.test(text)) {
     console.error(`${rel}: runtime code talks to a non-Meta model vendor (hackathon rule: every runtime model is a Meta model)`);
@@ -68,6 +68,39 @@ for (const f of files(ROOT)) {
   const bad = deps.filter((d) => /^(openai|@anthropic-ai\/|@google\/generative-ai|@google\/genai|@mistralai\/|cohere-ai|replicate|groq-sdk|together-ai|@huggingface\/inference)/.test(d));
   if (bad.length) {
     console.error(`package.json depends on non-Meta model SDKs: ${bad.join(", ")}`);
+    failures++;
+  }
+}
+
+// Guard rails for the same rule, wider than the vendor list above: browser ML and media
+// pipelines count too, and so do scripts (the demo narration is a model call as well).
+// Code and config only (docs may name what we do not use); this file is skipped.
+const CODE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs|py|sh|json|yml|yaml|css|html)$/;
+const SKIP_FILES = new Set(["scripts/lint.mjs", "package-lock.json"]);
+const BROWSER_ML = /setVirtualBackground|\bvirtualBackground\b|backgroundBlur|enableVirtualBackground|disableVirtualBackground\s*[:=]\s*["']?false/;
+const NON_META_MODELS = new RegExp(
+  [
+    "piper[-_]tts", "(?:-m|import|from)[\\s\"',]+piper\\b", "rhasspy", "elevenlabs", "coqui", "bark[-_]tts", "suno[-/]bark",
+    "@mediapipe/", "mediapipe", "@tensorflow/", "tensorflow\\.js", "tfjs", "onnxruntime", "bodypix", "selfie_?segmentation",
+    "texttospeech\\.googleapis\\.com", "speech\\.googleapis\\.com", "api\\.deepgram\\.com", "api\\.assemblyai\\.com", "api\\.elevenlabs\\.io",
+    "openai\\.azure\\.com", "bedrock-runtime", "(?:import|from)\\s+(?:openai|anthropic|google\\.generativeai|google\\.genai|cohere|replicate|elevenlabs)\\b",
+    // model files pulled from a hub repo that is not Meta's (facebook/, meta-llama/, meta-models/, meta-sam/)
+    "huggingface\\.co/(?!facebook/|meta-llama/|meta-models/|facebookresearch/)[\\w.-]+/[\\w.-]+/resolve/",
+    "from_pretrained\\(\\s*[\"'](?!facebook/|meta-llama/|meta-models/|facebookresearch/)[\\w.-]+/",
+  ].join("|"),
+  "i",
+);
+for (const f of files(ROOT, CODE_EXT)) {
+  const rel = f.replace(ROOT, "").replace(/^[\\/]/, "").replace(/\\/g, "/");
+  if (SKIP_FILES.has(rel) || /^(docs|android|ios|public)\//.test(rel)) continue;
+  const text = readFileSync(f, "utf8");
+  if (BROWSER_ML.test(text)) {
+    console.error(`${rel}: virtual background / background blur is browser ML from a non-Meta model (hackathon rule: Meta models only)`);
+    failures++;
+  }
+  const hit = NON_META_MODELS.exec(text);
+  if (hit) {
+    console.error(`${rel}: non-Meta model, package or host "${hit[0].trim()}" (hackathon rule: every AI model the project calls is a Meta model)`);
     failures++;
   }
 }

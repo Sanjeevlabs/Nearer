@@ -101,7 +101,7 @@ One bottom bar, home page first on phones, and the lamp as a real photo.
 Kid-first home with bedtime story, Ask, Fridge wall, height marks, and Kids tab.
 
 ### #28 - Sit together
-Venues with seats, shared background, JaaS rooms, and home and venue photos.
+Venues with seats, the venue photo around the call, JaaS rooms, and home and venue photos.
 
 ### #27 - Simpler Courtyard
 Courtyard with one way to plan, one dismiss pattern, and one link on the festival strip.

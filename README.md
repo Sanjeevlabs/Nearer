@@ -91,6 +91,13 @@ How it is kept safe and cheap:
 
 Privacy: the window shows only what someone chose to share. App opens, the lamp and the clock are never read as "all good", "asleep" or "available". The "quiet morning" note exists only if the parent turns it on, and goes to the one person they chose. Calls start only after a tap on a consent screen (audio-only always offered). Nothing is tracked.
 
+## Third-party models and assets
+
+- **Meta models only at runtime.** Muse Spark, Muse Voice Transcribe, Muse Image and Muse Spark Open (Baseten/Modal) in the app; SAM 2.1 / SAM 3 where segmentation is used. No virtual-background, blur or noise-suppression ML runs in calls: the venue photo is a plain CSS frame around the video. `npm run lint` enforces this.
+- **Demo narration:** Meta MMS-TTS (`facebook/mms-tts-eng`), run locally with `transformers` (`scripts/demo-reel/v2.py`). Licence: CC-BY-NC 4.0, so non-commercial use only; it voices the hackathon demo video, not the app.
+- Video calls use Jitsi (JaaS), which is a transport, not an AI model, with its ML features switched off.
+- Demo photos and the fallback courtyard are AI-generated (Muse Image) and labelled in `public/demo/README.md`. Any other third-party asset is licensed for this use and listed here with its source.
+
 ## AI-assistance disclosure
 
 This entry was built with AI coding assistants (Claude Code and Muse Code), as the hackathon rules allow; every model the app itself calls at runtime is a Meta model (Muse Spark, Muse Voice Transcribe, Muse Image via the Meta Model API, with Muse Spark Open on Baseten/Modal as failover). With those assistants, scaffolding, UI implementation, the LLM client, ritual/agent logic, tests, and docs were drafted with agents and verified by the human via `lint` + `typecheck` + mock tests + production builds. Demo photos and the fallback courtyard are AI-generated and labelled as such in `public/demo/README.md`. All family data is synthetic; no real family data, no real people, no real events. No health advice anywhere in the app.

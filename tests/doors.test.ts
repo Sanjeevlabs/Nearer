@@ -194,6 +194,14 @@ describe("the call page's consent gate", () => {
     expect(jitsiHash("audio", "Dadi")).toContain("config.startAudioOnly=true");
   });
 
+  it("no virtual background or noise-suppression ML in the call (Meta-only models)", () => {
+    expect(jitsiConfig("video")).toMatchObject({ disableVirtualBackground: true });
+    const bar = (jitsiConfig("video").toolbarButtons as string[]) ?? [];
+    expect(bar).not.toContain("select-background");
+    expect(bar).not.toContain("noisesuppression");
+    expect(jitsiHash("video", "Dadi")).toContain("config.disableVirtualBackground=true");
+  });
+
   it("an expired or unknown door is closed", () => {
     const t = NOW.getTime();
     expect(stillOpen(undefined, t)).toBe(false);

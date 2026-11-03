@@ -5,8 +5,9 @@ a synthesized voice-over and captions timed to it. Reuses out/demo-reel/raw (run
     python3 scripts/demo-reel/v2.py                 # 1080x1920 + 1920x1080
     python3 scripts/demo-reel/v2.py --only vertical
 
-Voice: Piper (pip install piper-tts), voice en_GB-alba-medium (downloaded to ~/.cache/nearer-demo-voices on first
-use from the rhasspy/piper-voices repo). Offline, no account. Loudness -16 LUFS, AAC 48 kHz. No music.
+Voice: Meta MMS-TTS (facebook/mms-tts-eng), run locally with transformers (VitsModel) + scipy + torch
+(pip install transformers torch scipy). The model is fetched from the Hugging Face hub on first use. No account,
+no other vendor's model. Licence CC-BY-NC 4.0 (non-commercial: fine for the hackathon demo). Loudness -16 LUFS, AAC 48 kHz. No music.
 Writes out/nearer-demo-v2.mp4, out/nearer-demo-v2-16x9.mp4, out/nearer-demo-v2-captions.srt, out/contact-v2.png.
 ffmpeg only for video; Pillow for the still layers (background, phone, captions, cards).
 """
@@ -15,7 +16,6 @@ import json
 import pathlib
 import subprocess
 import sys
-import urllib.request
 import wave
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -33,9 +33,8 @@ PETALS = [(232, 115, 90), (95, 170, 163), (91, 127, 204), (138, 79, 117), (222, 
 XF = shots.XFADE
 FRESH = False
 INTRO, END = 2.5, 4.5
-VOICE = "en_GB-alba-medium"
-VOICE_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/alba/medium/"
-LENGTH_SCALE = 1.1  # a little slower than the voice's default: calm, about 150 words a minute
+VOICE = "facebook/mms-tts-eng"  # Meta MMS-TTS, English
+SPEAKING_RATE = 1.15  # MMS speaks slowly with long pauses; 1.15 keeps every line inside its shot
 VO_LEAD = 0.5  # the voice starts this long after its shot starts
 FONTS = ["/usr/share/fonts/opentype/inter/Inter-Medium.otf", "/usr/share/fonts/opentype/inter/Inter-Regular.otf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
 
@@ -216,21 +215,26 @@ def card_clip(L: dict, tag: str, kind: str, bgplain: pathlib.Path) -> pathlib.Pa
 
 # ---------------------------------------------------------------- voice
 def voice_files() -> dict:
-    cache = pathlib.Path.home() / ".cache" / "nearer-demo-voices"
-    cache.mkdir(parents=True, exist_ok=True)
-    for ext in (".onnx", ".onnx.json"):
-        p = cache / (VOICE + ext)
-        if not p.exists():
-            print(f"downloading {VOICE}{ext}", flush=True)
-            urllib.request.urlretrieve(VOICE_URL + VOICE + ext, p)
+    try:
+        import numpy as np
+        import torch
+        from scipy.io import wavfile
+        from transformers import AutoTokenizer, VitsModel
+    except ImportError as e:
+        sys.exit(f"Meta MMS-TTS needs: pip install transformers torch scipy ({e})")
+    tok = AutoTokenizer.from_pretrained(VOICE)
+    model = VitsModel.from_pretrained(VOICE)
+    model.speaking_rate = SPEAKING_RATE
+    model.eval()
     vo = WORK / "vo"
     vo.mkdir(parents=True, exist_ok=True)
     lines = {}
     for s in shots.ALL:
         wav = vo / f"{s['id']:02d}.wav"
-        r = subprocess.run([sys.executable, "-m", "piper", "-m", str(cache / (VOICE + ".onnx")), "--length-scale", str(LENGTH_SCALE), "-f", str(wav)], input=s["vo"], text=True, capture_output=True)
-        if r.returncode:
-            sys.exit("piper failed (pip install piper-tts): " + r.stderr[-500:])
+        torch.manual_seed(0)  # the VITS sampler is stochastic: same line, same take
+        with torch.no_grad():
+            audio = model(**tok(s["vo"], return_tensors="pt")).waveform[0].numpy()
+        wavfile.write(str(wav), model.config.sampling_rate, (np.clip(audio, -1, 1) * 32767).astype(np.int16))
         w = wave.open(str(wav))
         lines[s["id"]] = (wav, w.getnframes() / w.getframerate())
     return lines
@@ -244,6 +248,21 @@ def timeline() -> list[dict]:
         p["start"] = round(t, 3)
         t += p["dur"] - XF
     return pieces
+
+
+def check_vo() -> None:
+    """Synthesize each voice-over line only (no video) and check it fits its piece of the cut, with the margin."""
+    lines = voice_files()
+    bad = 0
+    for p in timeline():
+        if p["id"] not in lines:
+            continue
+        lead = 0.9 if p["id"] == 12 else VO_LEAD
+        dur = lines[p["id"]][1]
+        margin = p["dur"] - 0.1 - (lead + dur)
+        print(f"line {p['id']:2d}: {dur:4.1f}s of {p['dur']}s, margin {margin:+.1f}s {'ok' if margin >= 0 else 'DOES NOT FIT'}")
+        bad += margin < 0
+    sys.exit(1 if bad else 0)
 
 
 def build_audio(tl: list[dict], lines: dict, total: float) -> pathlib.Path:
@@ -343,7 +362,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", choices=["vertical", "16x9"])
     ap.add_argument("--fresh", action="store_true", help="re-render every clip (default reuses clips already in out/v2)")
+    ap.add_argument("--check-vo", action="store_true", help="synthesize the voice-over lines only and check each fits its shot (no video, no recorded clips needed)")
     a = ap.parse_args()
+    if a.check_vo:
+        WORK.mkdir(parents=True, exist_ok=True)
+        check_vo()
     global FRESH
     FRESH = a.fresh
     if not (OUT / "demo-reel" / "manifest.json").exists():
@@ -360,7 +383,7 @@ def main() -> int:
         if "cap_in" in p:
             srt.append(f"{len(srt) + 1}\n{stamp(p['cap_in'])} --> {stamp(p['cap_out'])}\n{next(s['caption'] for s in shots.SHOTS if s['id'] == p['id'])}\n")
     (OUT / "nearer-demo-v2-captions.srt").write_text("\n".join(srt))
-    vo = ["Nearer product demo v2: voice-over (Piper, en_GB-alba-medium; times on the final cut)", ""]
+    vo = ["Nearer product demo v2: voice-over (Meta MMS-TTS, facebook/mms-tts-eng; times on the final cut)", ""]
     for p in tl:
         if "vo_in" in p:
             s = next(s for s in shots.ALL if s["id"] == p["id"])

@@ -24,6 +24,9 @@ export function mediaAllowed(phase: CallPhase): boolean {
   return phase === "connecting" || phase === "in";
 }
 
+/** The only toolbar buttons: no select-background, no noise-suppression (both run non-Meta ML in the browser). */
+export const CALL_TOOLBAR = ["microphone", "camera", "tileview", "fullscreen", "hangup"] as const;
+
 /** Jitsi options for the chosen media. Our screen is the pre-join, so Jitsi's own stays off. */
 export function jitsiConfig(media: JoinMedia): Record<string, unknown> {
   const audio = media === "audio";
@@ -33,6 +36,9 @@ export function jitsiConfig(media: JoinMedia): Record<string, unknown> {
     startWithVideoMuted: audio,
     startAudioOnly: audio,
     disableDeepLinking: true,
+    // Meta-only models: no in-browser segmentation/noise ML. The venue is a CSS frame around the call.
+    disableVirtualBackground: true,
+    toolbarButtons: [...CALL_TOOLBAR],
   };
 }
 
@@ -43,6 +49,8 @@ export function jitsiHash(media: JoinMedia, displayName: string): string {
     "config.prejoinConfig.enabled=false",
     `config.startWithVideoMuted=${audio}`,
     `config.startAudioOnly=${audio}`,
+    "config.disableVirtualBackground=true",
+    `config.toolbarButtons=${encodeURIComponent(JSON.stringify(CALL_TOOLBAR))}`,
     `userInfo.displayName=%22${encodeURIComponent(displayName)}%22`,
   ].join("&");
 }
