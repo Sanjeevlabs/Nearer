@@ -43,3 +43,7 @@ docs/private/
 # Generated product demo video (npm run demo:reel)
 out/
 __pycache__/
+
+# Python bytecode
+__pycache__/
+*.pyc
