@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -76,12 +77,9 @@ function BookPrint() {
       </div>
       <p className="book-tools m-0 mb-4 text-footnote text-ink-soft">Choose &ldquo;Save as PDF&rdquo; in the print window. Pages are A5; each QR opens that chapter&rsquo;s voice.</p>
 
-      {failed ? (
-        <div className="book-tools rounded-[22px] bg-surface p-4">
-          <p className="m-0 text-body">The book didn&rsquo;t open just now.</p>
-          <button type="button" onClick={() => void reload()} className="press mt-3 h-11 rounded-full bg-ink px-5 text-callout font-semibold text-white">
-            Try again
-          </button>
+      {failed && !data ? (
+        <div className="book-tools">
+          <LoadFailed what="The book" ui="book-print-retry" onRetry={() => void reload()} />
         </div>
       ) : !doc ? (
         <div className="book-tools skeleton h-[420px] rounded-[20px]" aria-busy="true" aria-label="Loading" />

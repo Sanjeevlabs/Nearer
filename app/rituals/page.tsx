@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
@@ -10,7 +11,7 @@ import { OccasionCelebration } from "@/components/occasion-celebration";
 import { TraditionsSheet, type TraditionChoice } from "@/components/occasion-festivals";
 import { usePlayer } from "@/components/player";
 import { useShell } from "@/components/shell";
-import { Avatar, Button, EmptyState, Icon, Photo, RoomHeader } from "@/components/ui/kit";
+import { Avatar, EmptyState, Icon, Photo, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import type { Album } from "@/lib/kinds";
 import { addDays, localTodayIso, occasionsInRange, visibleHolidays, type CalHoliday, type CalOccasion, type OccasionChoices } from "@/lib/occasion-calendar";
@@ -191,13 +192,8 @@ export default function OccasionsPage() {
     <div>
       <RoomHeader title="Occasions" subtitle="Photos and voices from birthdays, weddings and festivals" />
 
-      {failed ? (
-        <div className="py-6 text-center">
-          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load occasions.</p>
-          <Button variant="secondary" className="mx-auto mt-3 !bg-well" onClick={() => void reload()}>
-            Try again
-          </Button>
-        </div>
+      {failed && !data ? (
+        <LoadFailed what="Occasions" ui="rituals-retry" onRetry={() => { void reload(); void albumsQ.reload(); }} />
       ) : !data || groups === null ? (
         <div aria-busy="true" aria-label="Loading occasions" className="space-y-6">
           {[0, 1].map((i) => (

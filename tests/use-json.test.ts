@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { vi, beforeEach, describe, expect, it } from "vitest";
 import { clearJsonCache, readCache, revalidate } from "@/lib/use-json";
 
 const ok = (body: unknown) => (async () => new Response(JSON.stringify(body))) as unknown as typeof fetch;
@@ -23,9 +23,18 @@ describe("useJson stale-while-revalidate core", () => {
   });
 
   it("an error with nothing cached is failed, and caches are per URL", async () => {
-    expect(await revalidate("/api/y", down)).toEqual({ data: null, stale: false, failed: true });
+    // A network error is retried quietly (3 times, lib/retry.ts) before it counts as failed.
+    vi.useFakeTimers();
+    const first = revalidate("/api/y", down);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(await first).toEqual({ data: null, stale: false, failed: true });
+    vi.useRealTimers();
     await revalidate("/api/x", ok({ n: 1 }));
-    expect((await revalidate("/api/y", down)).data).toBeNull();
+    vi.useFakeTimers();
+    const second = revalidate("/api/y", down);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect((await second).data).toBeNull();
+    vi.useRealTimers();
   });
 
   it("clearJsonCache forgets everything (sign-out)", async () => {
