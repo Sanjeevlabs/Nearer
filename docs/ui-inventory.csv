@@ -22,7 +22,7 @@ Entry,courtyard,9,button,Play the story,,kid-tonight,aria,icon-only,review,
 Entry,courtyard,9,button,Record your wish,,~Diwali week,arjun,,keep,
 Entry,courtyard,10,button,Another one?,,kid-tonight,aria,,keep,
 Entry,courtyard,10,section,Everyone,,courtyard-everyone,arjun dadi,,keep,
-Entry,courtyard,11,button,Voice memory,,dock,aria,,keep,
+Entry,courtyard,11,button,Record a voice note,,dock,aria,icon-only,review,
 Entry,courtyard,11,heading,Everyone,,courtyard-everyone,arjun dadi,,keep,
 Entry,courtyard,12,link,Family tree,/bond,courtyard-everyone,arjun dadi,icon-only dup,review,icon-only control: its name is only an aria-label
 Entry,courtyard,13,button,"Your day: add a voice memory, a photo or a line about today",,courtyard-everyone,arjun dadi,,keep,
@@ -75,7 +75,7 @@ Entry,courtyard,54,image,Dancing in the baraat till the band gave up.,,~Now in t
 Entry,courtyard,55,button,Show N of N,,~Now in the family,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,56,section,"This week, your gifts",,,dadi,,keep,
 Entry,courtyard,57,heading,"This week, your gifts",,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,58,button,"Voice memory, N waiting for your reply",,dock,arjun dadi,,keep,
+Entry,courtyard,58,button,"Record a voice note, N waiting for your reply",,dock,arjun dadi,icon-only,review,
 Entry,courtyard,58,link,Priya heard your voice memory · <day>,/lane,"~This week, your gifts",dadi,,keep,
 Entry,courtyard,59,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Entry,courtyard,59,link,Arjun Arjun cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
@@ -235,9 +235,9 @@ Other,/people/<id>,26,button,Remove: Rohan is Arjun's brother,,~About Arjun,dadi
 Other,/people/<id>,27,button,Remove: Arjun is Vihaan's father,,~About Arjun,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,28,button,Remove: Arjun is Anika's father,,~About Arjun,dadi,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,29,button,Link to someone already here,,~About Arjun,dadi,,keep,
-Other,/people/<id>,29,button,Voice memory to Maa,,dock,aria,,keep,
+Other,/people/<id>,29,button,Record a voice note to Maa,,dock,aria,icon-only,review,
 Other,/people/<id>,30,button,Remove from the family tree,,~About Arjun,dadi,,keep,
-Other,/people/<id>,31,button,"Voice memory to Arjun, N waiting for your reply",,dock,dadi,,keep,
+Other,/people/<id>,31,button,"Record a voice note to Arjun, N waiting for your reply",,dock,dadi,icon-only,review,
 Other,/people/<id>,34,section,Photos,,,arjun dadi aria,,keep,
 Other,/people/<id>,35,heading,Moments,,~Photos,arjun dadi aria,,keep,
 Other,/people/<id>,36,image,Maa's tulsi in the morning sun.,,~Photos,arjun aria,,keep,
@@ -252,7 +252,7 @@ Other,/people/<id>,47,button,Remove: Maa is Arjun's mother,,~About Maa,arjun,ico
 Other,/people/<id>,48,button,Remove: Papa is Maa's husband,,~About Maa,arjun,icon-only,review,icon-only control: its name is only an aria-label
 Other,/people/<id>,49,button,Link to someone already here,,~About Maa,arjun,,keep,
 Other,/people/<id>,50,button,Remove from the family tree,,~About Maa,arjun,,keep,
-Other,/people/<id>,51,button,"Voice memory to Maa, N waiting for your reply",,dock,arjun,,keep,
+Other,/people/<id>,51,button,"Record a voice note to Maa, N waiting for your reply",,dock,arjun,icon-only,review,
 Other,/people/<id>,52,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/safe,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Other,/safe,1,h1,Safe & sound,,room-header,arjun dadi aria,,keep,
@@ -1078,26 +1078,27 @@ Settings,/settings#you,47,button,Use my location,,~Where you are,arjun dadi aria
 Settings,/settings#you,48,button,Change,,~Where you are,arjun dadi aria,,keep,
 Settings,/settings#you,49,button,Save Where you are,,~Where you are,arjun dadi aria,,keep,
 Settings,/settings#you,50,button,Sign out,,,arjun dadi aria,,keep,
-Sheets,sheet:add,0,button,Close,,person-day,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Sheets,sheet:add,0,heading,Who is it for?,,people-picker,aria,,keep,
-Sheets,sheet:add,1,button,Close,,people-picker,aria,icon-only,review,icon-only control: its name is only an aria-label
-Sheets,sheet:add,1,button,Previous,,person-day,arjun dadi,icon-only,review,
-Sheets,sheet:add,2,button,Back N seconds,,person-day,arjun dadi,icon-only,review,
+Sheets,sheet:add,0,heading,Who is it for?,,people-picker,arjun dadi aria,,keep,
+Sheets,sheet:add,1,button,Close,,people-picker,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Sheets,sheet:add,2,button,Maa Arjun Everyone Everyone in the family hears it,,people-picker,aria,,keep,
-Sheets,sheet:add,3,button,Pause,,person-day,arjun dadi,icon-only,review,
-Sheets,sheet:add,3,image,Maa,,people-picker,aria,,review,icon-only control: its name is only an aria-label
-Sheets,sheet:add,4,button,Forward N seconds,,person-day,arjun dadi,icon-only,review,
-Sheets,sheet:add,4,image,Arjun,,people-picker,aria,,review,icon-only control: its name is only an aria-label
-Sheets,sheet:add,5,button,Maa Maa & Papa Only this home hears it,,people-picker,aria,,keep,
-Sheets,sheet:add,5,button,Next,,person-day,arjun dadi,icon-only,review,
-Sheets,sheet:add,6,button,A line about today,,person-day,arjun dadi,,keep,
+Sheets,sheet:add,2,button,Maa Vihaan Everyone Everyone in the family hears it,,people-picker,arjun,,keep,
+Sheets,sheet:add,2,button,Vihaan Anika Everyone Everyone in the family hears it,,people-picker,dadi,,keep,
+Sheets,sheet:add,3,image,Maa,,people-picker,arjun aria,,review,icon-only control: its name is only an aria-label
+Sheets,sheet:add,4,image,Vihaan,,people-picker,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Sheets,sheet:add,5,button,Arjun Vihaan Priya's home Only this home hears it,,people-picker,dadi,,keep,
+Sheets,sheet:add,5,button,Maa Maa & Papa Only this home hears it,,people-picker,arjun aria,,keep,
+Sheets,sheet:add,6,image,Arjun,,people-picker,dadi aria,,review,icon-only control: its name is only an aria-label
 Sheets,sheet:add,7,button,"Arjun Vihaan Arjun, Priya & Vihaan Only this home hears it",,people-picker,aria,,keep,
-Sheets,sheet:add,9,image,Vihaan,,people-picker,aria,,review,icon-only control: its name is only an aria-label
-Sheets,sheet:add,10,button,"Kavya, Rahul & Anaya Only this home hears it",,people-picker,aria,,keep,
-Sheets,sheet:add,11,button,"Rohan, Sneha & Kabir Only this home hears it",,people-picker,aria,,keep,
-Sheets,sheet:add,12,input:search,Search family,,people-picker,aria,,keep,
+Sheets,sheet:add,7,button,"Vihaan Anika Priya, Vihaan & Anika Only this home hears it",,people-picker,arjun,,keep,
+Sheets,sheet:add,9,image,Anika,,people-picker,arjun dadi,,review,icon-only control: its name is only an aria-label
+Sheets,sheet:add,10,button,"Kavya, Rahul & Anaya Only this home hears it",,people-picker,arjun dadi aria,,keep,
+Sheets,sheet:add,10,button,Priya Waiting for your reply,,people-picker,dadi,,keep,
+Sheets,sheet:add,11,button,"Rohan, Sneha & Kabir Only this home hears it",,people-picker,arjun dadi aria,,keep,
+Sheets,sheet:add,12,button,Maa Maa Waiting for your reply,,people-picker,arjun,,keep,
 Sheets,sheet:add,13,button,Maa Maa Only Maa hears it,,people-picker,aria,,keep,
-Sheets,sheet:add,15,button,Show everyone ( N more),,people-picker,aria,,keep,
+Sheets,sheet:add,14,button,Vihaan Vihaan Waiting for your reply,,people-picker,arjun dadi,,keep,
+Sheets,sheet:add,16,input:search,Search family,,people-picker,arjun dadi aria,,keep,
+Sheets,sheet:add,17,button,Show everyone ( N more),,people-picker,arjun dadi aria,,keep,
 Sheets,sheet:house,0,heading,The house,,house-sheet,arjun dadi aria,,keep,
 Sheets,sheet:house,1,button,Close,,house-sheet,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Sheets,sheet:house,2,link,"Living Room Time together now, what is coming up, occasions",/gather/play,house-sheet,arjun dadi,,keep,

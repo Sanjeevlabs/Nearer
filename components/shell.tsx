@@ -147,9 +147,8 @@ function Dock() {
           >
             <div data-ui="dock" className="frost glass-pill flex items-center gap-2 p-1.5">
               {others.length ? (
-                <button type="button" onClick={voice} aria-label={`Voice memory${pagePerson && pagePerson.id !== viewer.id ? ` to ${callName(pagePerson)}` : ""}${waitingList.length ? `, ${waitingList.length} waiting for your reply` : ""}`} className="press relative flex h-14 items-center justify-center gap-2 rounded-full bg-accent px-7 text-accent-ink">
-                  <Icon name="mic" size={25} strokeWidth={1.9} />
-                  <span className="text-headline font-semibold">Voice</span>
+                <button type="button" onClick={voice} aria-label={`Record a voice note${pagePerson && pagePerson.id !== viewer.id ? ` to ${callName(pagePerson)}` : ""}${waitingList.length ? `, ${waitingList.length} waiting for your reply` : ""}`} className="press relative grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink">
+                  <Icon name="mic" size={26} strokeWidth={1.9} />
                   {waitingList.length > 0 && <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-[var(--waiting)] ring-2 ring-white" aria-hidden="true" />}
                 </button>
               ) : (

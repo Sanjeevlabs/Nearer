@@ -6,6 +6,7 @@ import { useViewer } from "@/components/viewer";
 import { type SupportedLang } from "@/lib/i18n";
 import { LANGUAGES, language } from "@/lib/languages";
 import { processHomeImage } from "@/lib/media-client";
+import { HOME_PHOTO_RULE, homePhotoWarning } from "@/lib/home-photo-shape";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { liveFetch, saveLamp, saveLanguage, saveNudges, saveProfile, saveWhere, type LampDraft, type NudgeDraft, type ProfileDraft, type WhereDraft } from "@/lib/settings-save";
 import { useJson } from "@/lib/use-json";
@@ -306,6 +307,7 @@ export function NudgeSettingsSection({ onMessage }: { onMessage: (m: string) => 
 export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) {
   const { viewer, refreshMembers } = useViewer();
   const form = useDraft<WhereDraft>({ tz: viewer.tz, city: viewer.city ?? "", home: null }, { id: "where" });
+  const [shapeWarning, setShapeWarning] = useState<string | null>(null);
   const t = useT();
   const cityAuto = useCityAutofill(form.draft.city, (c) => form.set({ city: c }), t.lang);
   const [busy, setBusy] = useState(false);
@@ -316,6 +318,10 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
     if (file.size > MAX_PHOTO) return setPickError("That photo is over 5 MB. Try a smaller one.");
     setBusy(true);
     try {
+      // The photo's own size, before it is shrunk: warn if it is tall or small (still allowed).
+      const bmp = await createImageBitmap(file).catch(() => null);
+      setShapeWarning(bmp ? homePhotoWarning(bmp.width, bmp.height) : null);
+      bmp?.close();
       const { mediaRef, palette } = await processHomeImage(file);
       form.set({ home: { mediaRef, palette } });
     } catch {
@@ -391,6 +397,14 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
           }}
         />
       </div>
+      <p data-ui="home-photo-rule" className="m-0 mt-2 text-footnote text-ink-soft">
+        {HOME_PHOTO_RULE}
+      </p>
+      {shapeWarning && (
+        <p role="status" className="m-0 mt-1 text-footnote font-medium text-ink">
+          {shapeWarning}
+        </p>
+      )}
       {pickError && (
         <p role="alert" className="m-0 mt-2 text-footnote text-[#c2343a]">
           {pickError}
