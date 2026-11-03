@@ -574,3 +574,7 @@ alter table sessions enable row level security;
 -- One place per person per family, whatever the case of their email. The sign-in route
 -- re-reads and uses the existing member when two requests race (lib/db.ts dbAddMember).
 create unique index if not exists members_family_email_uq on members (family_id, lower(email)) where email is not null;
+
+-- Speed up the media privacy gate for both card media and voice covers.
+create index if not exists cards_family_media_idx on cards (family_id, media_ref);
+create index if not exists cards_family_cover_idx on cards (family_id, cover_ref);
