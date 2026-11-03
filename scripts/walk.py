@@ -407,6 +407,7 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
         return skipped
     page = ctx.new_page()
     plan = [
+        ("/", "habit history", lambda: page.get_by_role("button", name=re.compile(r"^Morning walk ·"))),
         ("/", "the house", lambda: page.get_by_role("button", name="Open the house")),
         ("/", "your photo menu", lambda: page.get_by_role("button", name=re.compile(r"account and settings|profile and settings"))),
         ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Record a voice note"))),

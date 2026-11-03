@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as courtyardGET } from "@/app/api/courtyard/route";
 import { GET as habitsGET, POST as habitsPOST } from "@/app/api/habits/route";
 import { dbUpdateMemberProfile } from "@/lib/db";
-import { deleteDoc, listDocs, putDoc } from "@/lib/family-docs";
-import { habitCan, habitData, habitLine, habitWeekFacts, dayIn, doneLabel, everyoneDone, tickId, timeLabel, todaysTicks, habitTitle } from "@/lib/habits";
+import { deleteDoc, getDoc, listDocs, putDoc, saveHabitAction } from "@/lib/family-docs";
+import { appendHabitEvent, habitCan, habitData, habitLine, habitWeekFacts, dayIn, doneLabel, everyoneDone, tickId, timeLabel, todaysTicks, habitTitle } from "@/lib/habits";
 import { DOC_SCHEMAS } from "@/lib/kinds";
 import { purgeExpired, TTL } from "@/lib/purge";
 import { resetDemo } from "@/lib/store";
@@ -20,6 +20,37 @@ const T0 = new Date("2026-10-28T04:00:00.000Z");
 
 const post = (memberId: string, body: unknown) => habitsPOST(authedJson(URL, body, memberId));
 const get = async (memberId: string) => (await (await habitsGET(authedGet(URL, memberId))).json()) as ReturnType<typeof habitData>;
+
+it("keeps an archived habit's action history and calendar", async () => {
+  const habitId = "habit-morning-walk";
+  for (const body of [
+    { action: "tick" }, { action: "untick" }, { action: "tick" },
+    { action: "rename", name: "Daily walk" }, { action: "retime", hour: 6, minute: 30 },
+    { action: "leave" }, { action: "join" }, { action: "archive" },
+  ]) {
+    expect((await post("arjun", { ...body, habitId })).status).toBe(200);
+  }
+  const url = `${URL}?history=${habitId}`;
+  const res = await habitsGET(authedGet(url, "arjun"));
+  expect(res.status).toBe(200);
+  const { events, calendars } = await res.json();
+  expect(events.map((event: { action: string }) => event.action)).toEqual(["archive", "join", "leave", "retime", "rename", "tick", "untick", "tick"]);
+  expect(events[3]).toMatchObject({ before: "7 AM", after: "6:30 AM" });
+  expect(calendars.find((row: { memberId: string }) => row.memberId === "arjun").days).toHaveLength(49);
+  expect((await habitsGET(new Request(url))).status).toBe(401);
+});
+
+it("retains the latest 200 entries and rejects a stale writer", async () => {
+  const habit = (await getDoc(FAM, "habit", "habit-morning-walk"))!;
+  const base = { action: "rename" as const, memberId: "arjun", day: "2026-10-28", at: T0.toISOString(), zone: "UTC" };
+  let history = habit.history ?? [];
+  for (let i = 0; i < 205; i++) history = appendHabitEvent({ history }, { ...base, id: String(i) });
+  expect(history.map((event) => event.id)).toEqual(Array.from({ length: 200 }, (_, i) => String(i + 5)));
+  const previous = habit.history?.at(-1)?.id ?? null;
+  expect(await saveHabitAction(FAM, { ...habit, name: "First", history }, previous)).toBe(true);
+  expect(await saveHabitAction(FAM, { ...habit, name: "Stale", history }, previous)).toBe(false);
+  expect((await getDoc(FAM, "habit", habit.id))?.name).toBe("First");
+});
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });

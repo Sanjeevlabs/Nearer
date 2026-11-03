@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
-import { DEFAULT_HABIT, HABIT_NAME_MAX, activeHabit, dayIn, habitCan, habitData, tickId, todaysTicks, everyoneDone } from "@/lib/habits";
+import { DEFAULT_HABIT, HABIT_NAME_MAX, activeHabit, appendHabitEvent, dayIn, habitCan, habitData, habitDays, tickId, timeLabel, todaysTicks, everyoneDone } from "@/lib/habits";
+import type { Habit, HabitEvent } from "@/lib/kinds";
 import { habitCompleted } from "@/lib/habits-server";
-import { claimDoc, deleteDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
+import { getDoc, listAllDocs, listDocs, newId, putDoc, saveHabitAction } from "@/lib/family-docs";
 import { docsFor, membersFor } from "@/lib/request-data";
 import { memberFor } from "@/lib/request-memo";
 
@@ -34,8 +35,29 @@ const Body = z.discriminatedUnion("action", [
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
+  const historyId = new URL(req.url).searchParams.get("history");
+  if (historyId !== null) {
+    const [members, habit] = await Promise.all([
+      membersFor(req, auth.familyId), getDoc(auth.familyId, "habit", historyId),
+    ]);
+    if (!members.some((member) => member.id === auth.memberId && member.status !== "pending")) {
+      return Response.json({ error: "not-allowed" }, { status: 403 });
+    }
+    if (!habit) return Response.json({ error: "unknown-habit" }, { status: 404 });
+    const ticks = await listAllDocs(auth.familyId, "habit_tick");
+    const habitTicks = ticks.filter((tick) => tick.habitId === habit.id);
+    const people = new Set([...habit.members, ...habitTicks.map((tick) => tick.memberId), ...(habit.history ?? []).map((event) => event.memberId)]);
+    return Response.json({
+      calendars: members.filter((member) => people.has(member.id) && member.status !== "pending").map((member) => {
+        const done = new Set(habitTicks.filter((tick) => tick.memberId === member.id).map((tick) => tick.day));
+        return { memberId: member.id, days: habitDays(dayIn(member.tz), 49).map((day) => ({ day, done: done.has(day) })) };
+      }),
+      events: [...(habit.history ?? [])].reverse(),
+    });
+  }
   const [members, habits, ticks] = await Promise.all([membersFor(req, auth.familyId), docsFor(req, auth.familyId, "habit"), docsFor(req, auth.familyId, "habit_tick")]);
-  return Response.json(habitData(habits, ticks, members, auth.memberId));
+  const archived = habits.filter((habit) => habit.archivedAt).map(({ id, name }) => ({ id, name }));
+  return Response.json({ ...habitData(habits, ticks, members, auth.memberId), archived });
 }
 
 async function postHandler(req: Request): Promise<Response> {
@@ -48,11 +70,21 @@ async function postHandler(req: Request): Promise<Response> {
   if (!me) return Response.json({ error: "unknown-member" }, { status: 404 });
   if (body.action !== "archive" && !habitCan(body.action, me)) return Response.json({ error: "not-allowed" }, { status: 403 });
   const now = new Date();
+  const day = dayIn(me.tz, now);
+  const event: HabitEvent = { id: newId("event"), action: body.action, memberId: me.id, day, at: now.toISOString(), zone: me.tz || "UTC" };
+  const withEvent = (habit: Habit, details?: Pick<HabitEvent, "before" | "after">) =>
+    ({ ...habit, history: appendHabitEvent(habit, { ...event, ...details }) });
+  const save = async (habit: Habit, details?: Pick<HabitEvent, "before" | "after">) => {
+    const next = withEvent(habit, details);
+    return await saveHabitAction(auth.familyId, next, habit.history?.at(-1)?.id ?? null)
+      ? Response.json({ habit: next }) : conflict();
+  };
+  const conflict = () => Response.json({ error: "habit-changed" }, { status: 409 });
   const [members, habits] = await Promise.all([membersFor(req, auth.familyId), docsFor(req, auth.familyId, "habit")]);
 
   if (body.action === "create") {
     if (activeHabit(habits)) return Response.json({ error: "have-one" }, { status: 409 });
-    const habit = await putDoc(auth.familyId, "habit", { id: newId("habit"), name: body.name, hour: body.hour, minute: body.minute, createdBy: me.id, createdAt: now.toISOString(), members: [me.id], archivedAt: null });
+    const habit = await putDoc(auth.familyId, "habit", withEvent({ id: newId("habit"), name: body.name, hour: body.hour, minute: body.minute, createdBy: me.id, createdAt: now.toISOString(), members: [me.id], archivedAt: null }));
     return Response.json({ habit }, { status: 201 });
   }
 
@@ -61,36 +93,34 @@ async function postHandler(req: Request): Promise<Response> {
 
   if (body.action === "archive") {
     if (!habitCan("archive", me, habit)) return Response.json({ error: "not-allowed" }, { status: 403 });
-    return Response.json({ habit: await putDoc(auth.familyId, "habit", { ...habit, archivedAt: now.toISOString() }) });
+    return save({ ...habit, archivedAt: now.toISOString() });
   }
   if (body.action === "join") {
     if (habit.members.includes(me.id)) return Response.json({ habit });
-    return Response.json({ habit: await putDoc(auth.familyId, "habit", { ...habit, members: [...habit.members, me.id] }) });
+    return save({ ...habit, members: [...habit.members, me.id] });
   }
   if (body.action === "leave") {
     if (!habit.members.includes(me.id)) return Response.json({ habit });
-    return Response.json({ habit: await putDoc(auth.familyId, "habit", { ...habit, members: habit.members.filter((id) => id !== me.id) }) });
+    return save({ ...habit, members: habit.members.filter((id) => id !== me.id) });
   }
-  if (body.action === "rename") return Response.json({ habit: await putDoc(auth.familyId, "habit", { ...habit, name: body.name }) });
-  if (body.action === "retime") return Response.json({ habit: await putDoc(auth.familyId, "habit", { ...habit, hour: body.hour, minute: body.minute }) });
+  if (body.action === "rename") return save({ ...habit, name: body.name }, { before: habit.name, after: body.name });
+  if (body.action === "retime") return save({ ...habit, hour: body.hour, minute: body.minute }, { before: timeLabel(habit.hour, habit.minute), after: timeLabel(body.hour, body.minute) });
 
   // tick / untick: yourself only, on your own local day.
-  const day = dayIn(me.tz, now);
   const id = tickId(habit.id, me.id, day);
-  if (body.action === "untick") {
-    await deleteDoc(auth.familyId, "habit_tick", id);
-    return Response.json({ ok: true, ticked: false, day });
-  }
-  if (!habit.members.includes(me.id)) return Response.json({ error: "not-joined" }, { status: 409 });
-  const created = await claimDoc(auth.familyId, "habit_tick", { id, habitId: habit.id, memberId: me.id, day, at: now.toISOString() });
-  if (created) {
+  if (body.action === "tick" && !habit.members.includes(me.id)) return Response.json({ error: "not-joined" }, { status: 409 });
+  const saved = await saveHabitAction(auth.familyId, withEvent(habit), habit.history?.at(-1)?.id ?? null, {
+    mode: body.action, value: { id, habitId: habit.id, memberId: me.id, day, at: now.toISOString() },
+  });
+  if (!saved) return conflict();
+  if (body.action === "tick") {
     // The family's glow: this was the last one in. (Reads fresh: the ticks of the others are already written.)
     const ticks = await listDocs(auth.familyId, "habit_tick");
     const inIds = habit.members.filter((m) => members.some((x) => x.id === m && x.status !== "pending"));
     const done = todaysTicks({ id: habit.id, members: inIds }, ticks, members, now).map((t) => t.memberId);
     if (everyoneDone(inIds, done)) await habitCompleted(auth.familyId, habit, inIds, me.id, now);
   }
-  return Response.json({ ok: true, ticked: true, day });
+  return Response.json({ ok: true, ticked: body.action === "tick", day });
 }
 
 export const GET = guardWrites(getHandler);
