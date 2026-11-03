@@ -5,6 +5,7 @@ import { translateText } from "@/lib/llm";
 import { serverLedger, serverStore } from "@/lib/llm-server";
 import { normalizeDisplayLang } from "@/lib/i18n";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { guardApi } from "@/lib/api-guard";
 
 const QuerySchema = z.object({
   from: z.string().min(1),
@@ -14,7 +15,7 @@ const QuerySchema = z.object({
 
 // Viewer-relative kinship: deterministic BFS path -> kinship_cache keyed by
 // (path, display_lang). The model (translate) runs only on a cache miss.
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!checkRateLimit(auth, "/api/kinship")) return Response.json({ error: "rate-limited" }, { status: 429 });
@@ -37,3 +38,5 @@ export async function GET(req: Request): Promise<Response> {
   });
   return Response.json({ path: result.path, terms: result.terms, cached: result.cached });
 }
+
+export const GET = guardApi(getHandler);

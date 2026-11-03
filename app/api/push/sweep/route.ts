@@ -16,13 +16,13 @@ async function getHandler(req: Request): Promise<Response> {
     try {
       told += await sweepOverdue(familyId);
     } catch (e) {
-      console.error("[push] sweep failed", familyId, String(e));
+      console.error("[push] sweep failed", familyId, e instanceof Error ? e.name : "error");
     }
     // A parent who has not said "I'm okay" by their usual time + 2 h: one gentle invitation to the far child.
     try {
       invited += await sweepQuietMornings(familyId);
     } catch (e) {
-      console.error("[push] quiet-morning sweep failed", familyId, String(e));
+      console.error("[push] quiet-morning sweep failed", familyId, e instanceof Error ? e.name : "error");
     }
   }
   return Response.json({ told, invited });

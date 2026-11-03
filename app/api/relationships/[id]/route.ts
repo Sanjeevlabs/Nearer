@@ -1,8 +1,9 @@
 import { requireCan, requireSession } from "@/lib/auth";
 import { dbDeleteRelationship, dbListRelationships } from "@/lib/db";
+import { guardApi } from "@/lib/api-guard";
 
 // Remove one link from the tree (a mistake, or a relation that's wrong).
-export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function deleteHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
@@ -13,3 +14,5 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
   await dbDeleteRelationship(rel.id, auth.familyId);
   return Response.json({ removed: rel.id });
 }
+
+export const DELETE = guardApi(deleteHandler);

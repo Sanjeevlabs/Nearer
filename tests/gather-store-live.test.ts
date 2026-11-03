@@ -44,6 +44,7 @@ const h = vi.hoisted(() => {
 vi.mock("@/lib/supabase", () => ({ isDbLive: () => true, supabaseServer: () => h.fake }));
 
 import { fallbackPlan } from "@/lib/events";
+import { DbReadError } from "@/lib/family-db";
 import { dismiss, listDismissed, listEvents, putEvent, resetEvents } from "@/lib/gather-store";
 
 const FAM = "fam-real0000001";
@@ -81,9 +82,9 @@ describe("gather-store with the database live", () => {
     expect(await listDismissed(FAM, "m1")).toEqual([]);
   });
 
-  it("when the database cannot be read, this Worker's copy is the fallback", async () => {
+  it("when the database cannot be read, the read fails loudly (this Worker's memory is not the store)", async () => {
     await dismiss(FAM, "m1", "suggest:diwali:all:2026-11-08");
     h.state.failReads = true;
-    expect(await listDismissed(FAM, "m1")).toEqual(["suggest:diwali:all:2026-11-08"]);
+    await expect(listDismissed(FAM, "m1")).rejects.toBeInstanceOf(DbReadError);
   });
 });

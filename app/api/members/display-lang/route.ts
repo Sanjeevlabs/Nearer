@@ -1,8 +1,9 @@
 import { DisplayLangRequestSchema } from "@/lib/schemas";
 import { dbSetMemberDisplayLang } from "@/lib/db";
 import { requireMember, requireSession } from "@/lib/auth";
+import { guardApi } from "@/lib/api-guard";
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   let body: unknown;
@@ -21,3 +22,5 @@ export async function POST(req: Request): Promise<Response> {
   if (!member) return Response.json({ error: "unknown-member" }, { status: 404 });
   return Response.json({ member });
 }
+
+export const POST = guardApi(postHandler);

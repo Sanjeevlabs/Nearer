@@ -2,12 +2,13 @@ import { z } from "zod";
 import { dbGetMember, dbListMembers, dbRemoveMember } from "@/lib/db";
 import { requireMember, requireSession } from "@/lib/auth";
 import { deleteDocsForMember } from "@/lib/family-docs";
+import { guardApi } from "@/lib/api-guard";
 
 const BodySchema = z.object({ memberId: z.string().min(1) });
 
 // "Leave family": remove the member completely (member, edges, traces).
 // Shared family cards are kept — the UI says exactly this.
-export async function DELETE(req: Request): Promise<Response> {
+async function deleteHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   let body: unknown;
@@ -35,3 +36,5 @@ export async function DELETE(req: Request): Promise<Response> {
   await deleteDocsForMember(auth.familyId, parsed.data.memberId);
   return Response.json({ left: true });
 }
+
+export const DELETE = guardApi(deleteHandler);

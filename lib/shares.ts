@@ -9,7 +9,7 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { COURSES } from "./kind-values";
 import { isSeedFamily } from "./family";
-import { dbFor } from "./family-db";
+import { DbReadError, dbFor } from "./family-db";
 import { IngredientSchema, StepSchema } from "./kinds";
 
 export const PublicRecipeSchema = z.object({
@@ -77,7 +77,8 @@ export async function getShare(token: string): Promise<Share | null> {
   const sb = dbFor(null);
   let share: Share | null;
   if (sb) {
-    const { data } = await sb.from("public_shares").select("*").eq("token", token).maybeSingle();
+    const { data, error } = await sb.from("public_shares").select("*").eq("token", token).maybeSingle();
+    if (error) throw new DbReadError("public_shares", error.message);
     share = data ? fromRow(data as Record<string, unknown>) : null;
     // The seed families never live in the database: a stray row there is ignored, theirs are in memory.
     if (share && isSeedFamily(share.familyId)) share = null;
@@ -104,7 +105,8 @@ export async function listShares(familyId: string): Promise<Share[]> {
   const local = Array.from(mem.values()).filter((s) => s.familyId === familyId);
   const sb = dbFor(familyId);
   if (!sb) return local;
-  const { data } = await sb.from("public_shares").select("*").eq("family_id", familyId).order("created_at", { ascending: false }).limit(200);
+  const { data, error } = await sb.from("public_shares").select("*").eq("family_id", familyId).order("created_at", { ascending: false }).limit(200);
+  if (error) throw new DbReadError("public_shares", error.message);
   const rows = (data ?? []).map((r) => fromRow(r as Record<string, unknown>)).filter((s): s is Share => s !== null);
   const tokens = new Set(rows.map((r) => r.token));
   return [...rows, ...local.filter((s) => !tokens.has(s.token))];

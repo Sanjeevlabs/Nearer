@@ -9,7 +9,7 @@
 // and out; in-memory in mock mode and as a fallback. Server only.
 import { z } from "zod";
 import { RITUAL_FILES } from "@/rituals";
-import { DbWriteError, dbFor } from "./family-db";
+import { DbReadError, DbWriteError, dbFor } from "./family-db";
 import { isDemoFamily } from "./family";
 
 export const RitualSettingsSchema = z.object({
@@ -58,7 +58,8 @@ export async function getRitualSettings(familyId: string): Promise<RitualSetting
   const sb = dbFor(familyId);
   if (!sb) return local ?? empty(familyId);
   const { data, error } = await sb.from("family_docs").select("data").eq("id", `${familyId}:${ID}`).eq("kind", KIND).maybeSingle();
-  if (error || !data) return local ?? empty(familyId);
+  if (error) throw new DbReadError("family_docs", error.message);
+  if (!data) return local ?? empty(familyId);
   const parsed = RitualSettingsSchema.safeParse((data as { data: unknown }).data);
   return parsed.success ? parsed.data : (local ?? empty(familyId));
 }

@@ -4,6 +4,7 @@ import { dbGetMember, dbListCards } from "@/lib/db";
 import { withDemoShelf } from "@/lib/demo";
 import { getDoc } from "@/lib/family-docs";
 import { decodePhoto, mayCutOut, samConfigured, samMask, takeCutoutSlot } from "@/lib/stickers-server";
+import { guardApi } from "@/lib/api-guard";
 
 // GET  → { available }: whether a SAM cut-out can be made here (no SAM, or mock: false).
 // POST → { source, image, point } → the cut-out mask as a PNG (white = keep).
@@ -17,13 +18,13 @@ const Body = z.object({
   point: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }),
 });
 
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   return Response.json({ available: samConfigured() });
 }
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!takeCutoutSlot(auth.memberId)) return Response.json({ error: "rate-limited" }, { status: 429 });
@@ -42,3 +43,6 @@ export async function POST(req: Request): Promise<Response> {
   if ("error" in out) return Response.json({ mask: null, fallback: "crop", reason: out.error });
   return new Response(out.png as unknown as BodyInit, { headers: { "content-type": "image/png", "cache-control": "no-store" } });
 }
+
+export const GET = guardApi(getHandler);
+export const POST = guardApi(postHandler);

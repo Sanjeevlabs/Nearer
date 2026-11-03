@@ -6,6 +6,7 @@ import { getDoc } from "@/lib/family-docs";
 import { canChange } from "@/lib/permissions";
 import { createShare, listShares, revokeShare } from "@/lib/shares";
 import { isKid } from "@/lib/kids";
+import { guardApi } from "@/lib/api-guard";
 
 // GET    → this family's public links (what's out there, and how often opened)
 // POST   → share one recipe publicly; returns the link
@@ -13,14 +14,14 @@ import { isKid } from "@/lib/kids";
 const Post = z.object({ kind: z.literal("recipe"), id: z.string().min(1) });
 const Del = z.object({ token: z.string().min(20).max(64) });
 
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const shares = (await listShares(auth.familyId)).filter((s) => !s.revokedAt);
   return Response.json({ shares: shares.map((s) => ({ token: s.token, kind: s.kind, refId: s.refId, title: s.snapshot.title, views: s.views, createdBy: s.createdBy, createdAt: s.createdAt })) });
 }
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const body = Post.safeParse(await req.json().catch(() => null));
@@ -54,7 +55,7 @@ export async function POST(req: Request): Promise<Response> {
   return Response.json({ token: share.token, path: `/r/${share.token}`, views: share.views }, { status: 201 });
 }
 
-export async function DELETE(req: Request): Promise<Response> {
+async function deleteHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const body = Del.safeParse(await req.json().catch(() => null));
@@ -67,3 +68,7 @@ export async function DELETE(req: Request): Promise<Response> {
   await revokeShare(auth.familyId, share.token);
   return Response.json({ revoked: share.token });
 }
+
+export const GET = guardApi(getHandler);
+export const POST = guardApi(postHandler);
+export const DELETE = guardApi(deleteHandler);

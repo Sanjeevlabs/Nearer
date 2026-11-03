@@ -2,6 +2,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { dbUpdateMemberProfile } from "@/lib/db";
 import { BirthdayInput } from "@/lib/schemas";
+import { guardApi } from "@/lib/api-guard";
 
 const ProfileSchema = z.object({
   firstName: z.string().trim().min(1).max(40).optional(),
@@ -25,7 +26,7 @@ const ProfileSchema = z.object({
 });
 
 // The session member edits only their own profile; no member id is accepted.
-export async function PATCH(req: Request): Promise<Response> {
+async function patchHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   let body: unknown;
@@ -40,3 +41,5 @@ export async function PATCH(req: Request): Promise<Response> {
   if (!member) return Response.json({ error: "unknown-member" }, { status: 404 });
   return Response.json({ member });
 }
+
+export const PATCH = guardApi(patchHandler);

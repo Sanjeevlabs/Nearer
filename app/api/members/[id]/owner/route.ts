@@ -2,11 +2,12 @@ import { isDemoFamily, requireCan, requireSession } from "@/lib/auth";
 import { dbGetMember, dbListMembers, dbUpdateMemberProfile } from "@/lib/db";
 import { MAX_ADMINS } from "@/lib/permissions";
 import { adminCount } from "@/lib/roles";
+import { guardApi } from "@/lib/api-guard";
 
 // Hand the family over: the owner makes someone else the owner and becomes
 // an admin. Owner only. The new owner must be an active grown-up (admin or
 // member) with their own account, and the admin cap (3, owner included) holds.
-export async function POST(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function postHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
@@ -31,3 +32,5 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
   }
   return Response.json({ owner, previous: was });
 }
+
+export const POST = guardApi(postHandler);

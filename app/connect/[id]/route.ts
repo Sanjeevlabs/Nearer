@@ -2,13 +2,14 @@ import { requireSession } from "@/lib/auth";
 import { clearFlowCookie, exchangeCode, readFlow } from "@/lib/partners/oauth";
 import { getAccount } from "@/lib/partners/registry";
 import { saveToken } from "@/lib/partners/tokens";
+import { guardApi } from "@/lib/api-guard";
 
 // OAuth redirect URI (/connect/{partner}): the partner sends the member back
 // here with ?code&state. The flow cookie must match the state and the same
 // signed-in member; the token is stored server-side, never sent on.
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function getHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const acct = /^[a-z0-9-]{1,32}$/.test(params.id) ? getAccount(params.id) : undefined;
   const finish = (status: "ok" | "error" | "denied") =>
@@ -30,3 +31,5 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
     return finish("error");
   }
 }
+
+export const GET = guardApi(getHandler);

@@ -3,6 +3,7 @@ import { normalizeDisplayLang } from "@/lib/i18n";
 import { transcribeVoice } from "@/lib/llm";
 import { serverLedger, serverStore } from "@/lib/llm-server";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { guardApi } from "@/lib/api-guard";
 
 const FieldsSchema = z.object({
   langHint: z.string().min(2).max(8).default("en"),
@@ -12,7 +13,7 @@ const FieldsSchema = z.object({
 // Voice transcription from the RECORDED bytes (06_muse_voice/01): multipart
 // `audio` (WAV) + fields. Cache key = sha256 of the bytes. Failures return
 // "Transcript unavailable" — never a model-written transcript.
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!checkRateLimit(auth, "/api/transcribe")) return Response.json({ error: "rate-limited" }, { status: 429 });
@@ -45,3 +46,5 @@ export async function POST(req: Request): Promise<Response> {
   );
   return Response.json({ transcript, cached, cost, unavailable });
 }
+
+export const POST = guardApi(postHandler);

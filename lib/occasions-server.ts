@@ -9,6 +9,7 @@ import { cleanTitle, visibleHolidays, type CalHoliday, type OccasionConfig } fro
 import { getRitualSettings, type RitualSettings } from "./occasion-settings";
 import { loadRitualConfig } from "./rituals";
 import type { Member } from "./schemas";
+import { orUnlessRead } from "./family-db";
 
 export interface Occasion {
   slug: string;
@@ -117,6 +118,6 @@ export function nextOccasion(members: Member[], now = new Date(), within = 30, h
 
 /** nextOccasion with the family's own calendar looked up. */
 export async function nextOccasionFor(familyId: string, members: Member[], now = new Date(), within = 30, holidays?: Promise<Pick<FamilyHolidays, "visible">>): Promise<Occasion | null> {
-  const { visible } = await (holidays ?? familyHolidays(familyId, members)).catch(() => ({ visible: [] as HolidayItem[] }));
+  const { visible } = await (holidays ?? familyHolidays(familyId, members)).catch(orUnlessRead({ visible: [] as HolidayItem[] }));
   return nextOccasion(members, now, within, visible);
 }

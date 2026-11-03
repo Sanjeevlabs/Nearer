@@ -35,6 +35,33 @@ export class DbWriteError extends Error {
 }
 
 /**
+ * A read from the live database failed (error or timeout). Thrown instead of
+ * falling back to this isolate's memory, which on Workers is empty: the family
+ * would see an empty feed instead of an error. Memory is the store only when
+ * the database is off. GET routes turn it into 503 "read-failed" (lib/api-guard.ts).
+ */
+export class DbReadError extends Error {
+  constructor(
+    public readonly table: string,
+    message: string,
+  ) {
+    super(`${table}: ${message}`);
+    this.name = "DbReadError";
+  }
+}
+
+/**
+ * For a `.catch` that stands in a fallback for a best-effort failure: a failed
+ * live READ is never "nothing there", so it is re-thrown for the route guard.
+ */
+export const orUnlessRead =
+  <T>(fallback: T) =>
+  (e: unknown): T => {
+    if (e instanceof DbReadError) throw e;
+    return fallback;
+  };
+
+/**
  * The database client for this family's data, or null when it must stay in
  * memory (mock mode, no keys, or a demo family). A missing family id means
  * data that isn't tied to one family; it follows dbLive().

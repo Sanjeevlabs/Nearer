@@ -4,6 +4,7 @@ import { deleteDocsForMember } from "@/lib/family-docs";
 import { can } from "@/lib/permissions";
 import { breaksAdminCap, recordTeenConsent, teenConsentProblem } from "@/lib/roles";
 import { UpdateMemberRequestSchema, type Member } from "@/lib/schemas";
+import { guardApi } from "@/lib/api-guard";
 
 // Editing and removing people in the tree, and assigning access roles.
 // - A person without an account (added by a relative) can be edited or
@@ -23,7 +24,7 @@ async function target(req: Request, id: string): Promise<{ auth: { familyId: str
   return { auth, member, me };
 }
 
-export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function patchHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const t = await target(req, params.id);
   if (t instanceof Response) return t;
@@ -62,7 +63,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
   return Response.json({ member, ...(consent ? { consent } : {}) });
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function deleteHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const t = await target(req, params.id);
   if (t instanceof Response) return t;
@@ -78,3 +79,6 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
   await deleteDocsForMember(t.auth.familyId, t.member.id);
   return Response.json({ removed: t.member.id });
 }
+
+export const PATCH = guardApi(patchHandler);
+export const DELETE = guardApi(deleteHandler);

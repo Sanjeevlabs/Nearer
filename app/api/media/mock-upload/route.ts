@@ -1,13 +1,14 @@
 import { mockPutBlob, usesMockStorage } from "@/lib/storage";
 import { requireSession } from "@/lib/auth";
 import { isMediaMime } from "@/lib/media-types";
+import { guardApi } from "@/lib/api-guard";
 
 
 
 // In-memory upload target: the client PUTs bytes here in mock mode, and for
 // the demo families even when the database is live. Real families' live
 // traffic goes straight to the signed bucket URL instead.
-export async function PUT(req: Request): Promise<Response> {
+async function putHandler(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url);
   const path = searchParams.get("path");
   // With a live database, only demo-family paths may use this seam.
@@ -25,3 +26,5 @@ export async function PUT(req: Request): Promise<Response> {
   mockPutBlob(path, new Uint8Array(buf), mime);
   return Response.json({ ok: true, path });
 }
+
+export const PUT = guardApi(putHandler);

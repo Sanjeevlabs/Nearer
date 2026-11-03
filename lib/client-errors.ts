@@ -115,11 +115,12 @@ export async function recordClientError(familyId: string, report: Omit<ClientErr
 
 /** The newest errors for one family, newest first. Bounded: one query, `limit` rows. */
 export async function listClientErrors(familyId: string, limit = ERRORS_SHOWN): Promise<ClientError[]> {
-  const { dbFor } = await import("./family-db");
+  const { dbFor, DbReadError } = await import("./family-db");
   const sb = dbFor(familyId);
   if (!sb) return mem.filter((e) => e.familyId === familyId).slice(0, limit);
   const { data, error } = await sb.from("client_errors").select("*").eq("family_id", familyId).order("at", { ascending: false }).limit(limit);
-  if (error || !data) return mem.filter((e) => e.familyId === familyId).slice(0, limit);
+  if (error) throw new DbReadError("client_errors", error.message);
+  if (!data) return mem.filter((e) => e.familyId === familyId).slice(0, limit);
   return (data as Row[]).map(fromRow);
 }
 

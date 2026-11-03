@@ -1,13 +1,14 @@
 import { mockGetBlob, usesMockStorage } from "@/lib/storage";
 import { requireSession } from "@/lib/auth";
 import { isMediaMime } from "@/lib/media-types";
+import { guardApi } from "@/lib/api-guard";
 
 
 
 // In-memory byte server (mock mode, and the demo families when the database
 // is live). Real families' live traffic is redirected to signed bucket URLs
 // by /api/media/[...path] instead.
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url);
   const path = searchParams.get("path");
   // With a live database, only demo-family paths may use this seam.
@@ -21,3 +22,5 @@ export async function GET(req: Request): Promise<Response> {
     headers: { "content-type": blob.mime, "cache-control": "private, max-age=300", "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; sandbox" },
   });
 }
+
+export const GET = guardApi(getHandler);

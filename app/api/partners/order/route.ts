@@ -6,6 +6,7 @@ import { NeedsConnect } from "@/lib/partners/adapter";
 import { candidateFromRef } from "@/lib/partners/catalog";
 import { confirmPreview, createPreview } from "@/lib/partners/orders";
 import { getAccount } from "@/lib/partners/registry";
+import { guardApi } from "@/lib/api-guard";
 
 // Two steps, both from the signed-in member's own partner account:
 //   {action:"preview", suggestionId, forMemberId, addressId?} → cart, total, address
@@ -16,7 +17,7 @@ const BodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("confirm"), previewId: z.string().max(8000).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/), confirm: z.literal(true) }).strict(),
 ]);
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   // Send something is for grown-ups with an account (never a teen or child).
@@ -50,3 +51,5 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "partner-unavailable" }, { status: 502 });
   }
 }
+
+export const POST = guardApi(postHandler);

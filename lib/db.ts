@@ -61,7 +61,7 @@ import {
   listConsents as memListConsents,
   type Invite as MemInvite,
 } from "./store";
-import { DbWriteError, dbFor } from "./family-db";
+import { DbReadError, DbWriteError, dbFor } from "./family-db";
 import { removeAllForMember } from "./push/store";
 import { DEMO_FAMILY_IDS, isDemoFamily, isSeedFamily } from "./family";
 import { baseLang } from "./languages";
@@ -144,7 +144,8 @@ export async function dbListFamilyIds(): Promise<string[]> {
   // cron pass over it would do nothing anyone sees (and spend on Muse calls).
   const realMem = fromMem.filter((id) => !isDemoFamily(id));
   const { data, error } = await sb.from("families").select("id");
-  if (error || !data) return realMem;
+  if (error) throw new DbReadError("families", error.message);
+  if (!data) return realMem;
   return data.map((r) => String(r.id)).filter((id) => !isDemoFamily(id));
 }
 
@@ -174,7 +175,8 @@ export async function dbListCards(familyId: string, opts: ListCardsOptions = {})
   q = q.order("taken_at", { ascending: false });
   if (opts.limit !== undefined) q = q.limit(opts.limit);
   const { data, error } = await q;
-  if (error || !data) return bound(scoped(memListCards(), familyId));
+  if (error) throw new DbReadError("cards", error.message);
+  if (!data) return bound(scoped(memListCards(), familyId));
   // One malformed row must never blank the whole feed: skip it and log the id.
   const cards: Card[] = [];
   for (const row of data) {
@@ -238,7 +240,8 @@ async function listMembersAll(familyId: string): Promise<Member[]> {
   const sb = dbFor(familyId);
   if (!sb) return scoped(memListMembers(), familyId);
   const { data, error } = await sb.from("members").select("*").eq("family_id", familyId);
-  if (error || !data) return scoped(memListMembers(), familyId);
+  if (error) throw new DbReadError("members", error.message);
+  if (!data) return scoped(memListMembers(), familyId);
   return data.map(memberFromRow);
 }
 
@@ -246,7 +249,8 @@ export async function dbGetMember(id: string): Promise<Member | undefined> {
   const sb = dbFor(memberFamily(id));
   if (!sb) return memGetMember(id);
   const { data, error } = await sb.from("members").select("*").eq("id", id).maybeSingle();
-  if (error || !data) return memGetMember(id);
+  if (error) throw new DbReadError("members", error.message);
+  if (!data) return memGetMember(id);
   const m = memberFromRow(data as Record<string, unknown>);
   // The demo rows schema.sql seeds are never served: the demo lives in memory.
   return isSeedFamily(m.familyId) ? memGetMember(id) : m;
@@ -326,7 +330,8 @@ export async function dbFindMemberByEmail(email: string): Promise<Member | undef
   // The demo's people live in memory (and carry no email); the demo rows in
   // schema.sql are never a sign-in.
   const { data, error } = await sb.from("members").select("*").eq("email", e).limit(8); // exact: ilike would treat "_" and "%" as wildcards
-  if (error || !data) return undefined;
+  if (error) throw new DbReadError("members", error.message);
+  if (!data) return undefined;
   const row = data.find((r) => !isDemoFamily(String((r as { family_id?: unknown }).family_id ?? "")));
   return row ? memberFromRow(row as Record<string, unknown>) : undefined;
 }
@@ -370,7 +375,8 @@ export async function dbListSidesNamed(member: Member, opts: { since?: string } 
   }
   if (!rows) {
     const { data, error } = await sb.from("members").select("*, families(name)").eq("person_id", member.personId).limit(8);
-    if (error || !data) return bare(local);
+    if (error) throw new DbReadError("members", error.message);
+    if (!data) return bare(local);
     rows = data as Row[];
   }
   const out: NamedSide[] = [];
@@ -431,7 +437,8 @@ export async function dbListPlays(cardId: string | undefined, familyId: string, 
   if (cardId) q = q.eq("card_id", cardId);
   if (since) q = q.gte("played_at", since);
   const { data, error } = await q;
-  if (error || !data) return mem();
+  if (error) throw new DbReadError("plays", error.message);
+  if (!data) return mem();
   return data.map((r) =>
     PlaySchema.parse({
       id: r.id,
@@ -470,7 +477,8 @@ export async function dbListReactions(cardId: string | undefined, familyId: stri
   if (cardId) q = q.eq("card_id", cardId);
   if (since) q = q.gte("created_at", since);
   const { data, error } = await q;
-  if (error || !data) return mem();
+  if (error) throw new DbReadError("reactions", error.message);
+  if (!data) return mem();
   return data.map((r) =>
     ReactionSchema.parse({
       id: r.id,
@@ -487,7 +495,8 @@ export async function dbListRelationships(familyId: string): Promise<Relationshi
   const sb = dbFor(familyId);
   if (!sb) return scoped(memListRelationships(), familyId);
   const { data, error } = await sb.from("relationships").select("*").eq("family_id", familyId);
-  if (error || !data) return scoped(memListRelationships(), familyId);
+  if (error) throw new DbReadError("relationships", error.message);
+  if (!data) return scoped(memListRelationships(), familyId);
   const rows = data.map((r) =>
     RelationshipSchema.parse({
       id: r.id,
@@ -627,7 +636,8 @@ export async function dbListSuggestions(status: Suggestion["status"] | undefined
   if (status) q = q.eq("status", status);
   q = q.eq("family_id", familyId);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListSuggestions(status), familyId);
+  if (error) throw new DbReadError("suggestions", error.message);
+  if (!data) return scoped(memListSuggestions(status), familyId);
   return data.map((r) => suggestionFromRow(r as Record<string, unknown>));
 }
 
@@ -670,7 +680,8 @@ export async function dbListAgentRuns(familyId: string): Promise<AgentRun[]> {
   let q = sb.from("agent_runs").select("*").order("created_at", { ascending: false }).limit(50);
   if (familyId) q = q.eq("family_id", familyId);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListAgentRuns(), familyId);
+  if (error) throw new DbReadError("agent_runs", error.message);
+  if (!data) return scoped(memListAgentRuns(), familyId);
   return data.map((r) =>
     AgentRunSchema.parse({
       id: r.id,
@@ -714,7 +725,8 @@ export async function dbListWishes(runId: string | undefined, familyId: string, 
   if (familyId) q = q.eq("family_id", familyId);
   if (since) q = q.gte("created_at", since);
   const { data, error } = await q;
-  if (error || !data) return mem();
+  if (error) throw new DbReadError("wishes", error.message);
+  if (!data) return mem();
   return data.map((r) =>
     WishSchema.parse({
       id: r.id,
@@ -758,7 +770,8 @@ export async function dbListRitualRuns(familyId: string): Promise<RitualRun[]> {
   let q = sb.from("ritual_runs").select("*").order("occasion_date", { ascending: true });
   if (familyId) q = q.eq("family_id", familyId);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListRitualRuns(), familyId);
+  if (error) throw new DbReadError("ritual_runs", error.message);
+  if (!data) return scoped(memListRitualRuns(), familyId);
   return data.map((r) =>
     RitualRunSchema.parse({
       id: r.id,
@@ -811,7 +824,8 @@ export async function dbListDailyRoles(familyId: string): Promise<DailyRole[]> {
   let q = sb.from("daily_roles").select("*");
   if (familyId) q = q.eq("family_id", familyId);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListRoles(), familyId);
+  if (error) throw new DbReadError("daily_roles", error.message);
+  if (!data) return scoped(memListRoles(), familyId);
   return data.map((r) =>
     DailyRoleSchema.parse({
       id: r.id,
@@ -842,7 +856,8 @@ export async function dbListGatherSessions(familyId: string): Promise<GatherSess
   let q = sb.from("gather_sessions").select("*").order("starts_at", { ascending: false });
   if (familyId) q = q.eq("family_id", familyId);
   const { data, error } = await q;
-  if (error || !data) return scoped(memListGather(), familyId);
+  if (error) throw new DbReadError("gather_sessions", error.message);
+  if (!data) return scoped(memListGather(), familyId);
   return data.map((r) =>
     GatherSessionSchema.parse({
       id: r.id,
@@ -945,7 +960,8 @@ export async function dbListInvites(): Promise<Invite[]> {
   // live ones (the NEARER-DEMO code itself needs no invite row).
   const demo = memListInvites().filter((i) => isSeedFamily(i.familyId));
   const { data, error } = await sb.from("invites").select("*").order("created_at", { ascending: false });
-  if (error || !data) return memListInvites();
+  if (error) throw new DbReadError("invites", error.message);
+  if (!data) return memListInvites();
   const rows = data.map((r) => ({
     id: r.id as string,
     code: r.code as string,
@@ -971,7 +987,8 @@ export async function dbFindInvite(code: string): Promise<Invite | undefined> {
   const demo = memListInvites().find((i) => isDemoFamily(i.familyId) && match(i));
   if (demo) return demo;
   const { data, error } = await sb.from("invites").select("*").eq("code", want).gt("expires_at", new Date(nowMs).toISOString()).limit(1);
-  if (error || !data) return memListInvites().find(match);
+  if (error) throw new DbReadError("invites", error.message);
+  if (!data) return memListInvites().find(match);
   const r = data[0];
   if (!r || isDemoFamily(r.family_id as string)) return undefined;
   return { id: r.id as string, code: r.code as string, familyId: r.family_id as string, expiresAt: iso(r.expires_at), createdBy: (r.created_by as string | null) ?? null };
@@ -1025,7 +1042,8 @@ export async function dbListConsents(familyId: string): Promise<Consent[]> {
   const sb = dbFor(familyId);
   if (!sb) return memListConsents(familyId);
   const { data, error } = await sb.from("consents").select("*").eq("family_id", familyId).order("created_at", { ascending: false });
-  if (error || !data) return memListConsents(familyId);
+  if (error) throw new DbReadError("consents", error.message);
+  if (!data) return memListConsents(familyId);
   return data.map((r) =>
     ConsentSchema.parse({ id: r.id, familyId: r.family_id, memberId: r.member_id, parentMemberId: r.parent_member_id ?? null, kind: r.kind, method: r.method, createdAt: iso(r.created_at) }),
   );

@@ -4,6 +4,7 @@ import { dbGetMember, dbListMembers, dbRemoveMember, dbUpdateMemberProfile } fro
 import { deleteDocsForMember } from "@/lib/family-docs";
 import { MAX_PEOPLE } from "@/lib/permissions";
 import { recordTeenConsent, teenConsentProblem } from "@/lib/roles";
+import { guardApi } from "@/lib/api-guard";
 
 // Waiting to join: an owner/admin lets a joiner in (as a member, or as a teen
 // with a parent's consent) or declines them (their place is removed).
@@ -12,7 +13,7 @@ const Body = z.object({
   access: z.enum(["member", "teen"]).default("member"),
 });
 
-export async function POST(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function postHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
@@ -42,3 +43,5 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
   const consent = teen ? await recordTeenConsent(auth.familyId, who.id, me.id) : null;
   return Response.json({ member, ...(consent ? { consent } : {}) });
 }
+
+export const POST = guardApi(postHandler);

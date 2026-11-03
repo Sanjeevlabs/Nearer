@@ -1,8 +1,9 @@
 import { HomeImageRequestSchema } from "@/lib/schemas";
 import { dbSetMemberHome } from "@/lib/db";
 import { requireMember, requireSession } from "@/lib/auth";
+import { guardApi } from "@/lib/api-guard";
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   let body: unknown;
@@ -23,3 +24,5 @@ export async function POST(req: Request): Promise<Response> {
   }
   return Response.json({ member });
 }
+
+export const POST = guardApi(postHandler);
