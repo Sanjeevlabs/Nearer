@@ -1,49 +1,59 @@
 # Notifications
 
-Nearer sends push notes to bring you back for something kind, not to chase you. Notes are calm by design.
+Nearer sends push notes calmly, by design. A few family moments arrive right away. Kinder updates wait for one morning summary. Urgent safety notes always arrive.
 
-## Where notes arrive
+## Where notes can arrive
 
-- In the Android app, as native push.
-- In the installed web app, as web push. This includes Android Chrome and desktop browsers, and on iPhone and iPad from iOS 16.4+ once Nearer is on the Home Screen with Share, then Add to Home Screen.
-- iOS app support is 'not verified'.
+- In the Nearer Android app.
+- In the installed web app on Android Chrome and desktop browsers, and on iPhone and iPad on iOS 16.4+ when Nearer is added to the Home Screen.
+- iOS app push: not verified.
 
-Nearer never asks for permission on load. It asks from a soft card or from Settings.
+On iPhone and iPad, notes only work from the Home Screen version. The app says so instead of showing a prompt that cannot work.
 
-## What triggers a note
+Notes are never asked for on load. The gentle ask appears from a soft card or Settings.
 
-| What happened | When you get it | It opens |
+## What arrives right away
+
+| What happened | When you get it | Tapping it opens |
 |---|---|---|
-| A voice note, photo, or video sent to you | Now | `/lane` for that card |
-| Someone lit the lamp for you | Now | `/` |
-| A question, a request for a story or recipe, or a child's ask for you | Now | `/inbox` |
-| “I need help”, or an overdue Safe & sound check-in | Always, at any hour | `/safe` |
-| Blessings, “heard”, shared, occasion, call, and letter updates | Together, in the 8 AM summary as “3 things from your family” | `/inbox` |
+| A voice memory, photo, or video sent to you | Now | The card in the lane |
+| Someone lit the lamp for you | Now | Home |
+| A question, a request for a story or recipe, or a child's ask for you | Now | Inbox |
+| A door opened only for you, for chai, dinner, a catch-up, or a story | Once, never resent | Together |
 
-The note text never carries what was said, only who sent what. It uses your language where a translation exists, else English.
+Right-away notes respect quiet hours and the daily cap below. Anything held back joins the morning summary.
 
-## Calm rules
+## What waits for the morning
 
-- Immediate notes respect quiet hours: 22:00 to 07:00 where you are.
-- There is a cap of 6 a day per person.
-- Anything held back by quiet hours or the cap joins the 8 AM summary instead.
-- “I need help” and overdue check-ins are outside quiet hours and outside the cap.
+Blessings, “heard”, shared notes, occasions, calls, and letters arrive together in the 8 AM run as “3 things from your family”.
+
+They open in the inbox.
+
+## What always arrives
+
+“I need help” and an overdue Safe & sound check-in reach the people chosen, at any hour, outside the cap.
+
+They open Safe & sound.
+
+## Quiet hours and calm rules
+
+- Quiet hours are 22:00 to 07:00 where the recipient is.
+- At most 6 immediate notes a day per person.
+- Notes held by quiet hours or the cap join the 8 AM summary, except a one-person door invite, which is dropped and not saved for morning.
+- The lamp tells the other person someone is thinking of them, at most one push per pair per 2 hours, with quiet hours respected.
 - Never sent: counts of inactivity, streaks, or “you haven’t opened Nearer”.
+- Note text never carries what was said, only who sent what. It uses the recipient’s language where available, else English.
 
 ## Overdue check-ins
 
-If someone misses a Safe & sound check-in, Nearer sweeps for overdue check-ins every 15 minutes so her chosen people hear within minutes. The daily scan also runs the sweep.
+The app checks for overdue Safe & sound check-ins every 15 minutes, so the people chosen hear within minutes. The daily scan also checks.
 
-## Settings that control it
+## Settings that control notes
 
-Go to Settings, then You, then Notifications.
-
-- There is a switch per kind.
-- You can choose “Send me a test”.
-- The soft ask says “Get a gentle note when family sends you something”. It never appears on load, and stays away for 30 days after “Not now”.
-- On iPhone and iPad, if web push cannot work because Nearer is not on the Home Screen, the app says so instead of showing a prompt.
-- Notes belong to the signed-in person. Sign-out and leaving the family remove them.
+- Go to Settings, You, Notifications for a switch per kind, plus “Send me a test”.
+- The soft ask, “Get a gentle note when family sends you something”, never appears on load and stays away for 30 days after “Not now”.
+- Signing out or leaving the family removes that device’s notes.
 
 ---
 
-Written by Muse Spark (Meta) from the build log on 2026-11-02.
+Written by Muse Spark (Meta) from the build log on 2026-11-03.

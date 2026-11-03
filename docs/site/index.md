@@ -4,77 +4,93 @@
 
 Nearer is **the window between two homes**.
 
-It opens onto the people you love: their live time, weather and sky, a **Safe & sound** that says they are well, and a **lamp** you light so they know you are thinking of them. When you want more than a glance you **Sit together** at a venue, like a kitchen table, courtyard, or balcony, where the video room is already there.
+Arjun lives in Bengaluru. His parents, Maa and Papa, live in Amritsar, 1,600 km away. At 8 PM he opens Nearer and sees their window: their sky right now, the time there, and what they chose to share today. He taps the **lamp**, and Maa's phone says *Arjun is thinking of you*. Maa has opened her door for chai; he joins with his voice, and nothing starts until he taps.
 
-Nothing crosses between homes unless someone shares it.
+That is the whole product: a window that keeps parents **needed, not monitored**. The app shows only what someone chose to share. Nothing is inferred from app use, the clock, or silence.
 
-Nearer is calm by design: no stories, status, counts, comments, or infinite feed.
+Calm by design: no feed, no counts, no status.
+
+## Who it is for
+
+Nearer keeps your parents needed. The first screen is the window onto the parents' home:
+
+- **Their day** — their time, sky, and what they shared
+- **The lamp** — a 2-hour glow and a thinking-of-you note, never a check-in
+- **Spend a little time together** — an open door for chai, dinner, or a story, joined only after a tap
 
 Values, in priority order:
 
 - **Needed** — elders give and have a role
 - **Heard** — acknowledgement
-- **Present** — together at the same time
+- **Present** — together at the same time, by invitation
 - **Remembered** — memories
-- **Never watched** — no monitoring, no guilt
+- **Never watched** — no monitoring, no guilt, no streaks
 
-## Who it is for
+The app itself is in English. What the family shares reaches each person in their own language: 55 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic and Chinese.
 
-Nearer is built for families split by distance: two homes, one window.
+Every family keeps its own space. A married couple and their children belong to **both** sides: Priya opens on the Iyer side, Arjun on the Sharma side, and the children switch between sides. Nothing crosses between homes unless someone shares it.
 
-The first focus is the parent far away. Every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or keeps them **able to give**.
+## The five rooms
 
-Kids and grandparents get the same window: a child's day reaches a grandparent in words and pictures, and a grandparent can ask the children for the one thing only they can give.
+Slide the key and you are inside. The house opens five rooms:
 
-The app itself is in English. What the family shares — voices, recipes, questions, care notes — reaches each person in their own language: 55 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic, and Chinese.
-
-## The app and the rooms
-
-The first screen is the window onto the parents' home: Safe & sound, a voice note, a video call, and a way to send them something.
-
-Inside, a floating dock holds three things:
-
-- **Talk to `<person>`** — voice-first reply to whoever you last heard from
-- **Camera** — share a photo or short video from today
-- **House** — opens the five rooms
-
-The five rooms:
-
-| Room | What is inside |
+| Room | Tabs |
 |---|---|
-| **Memories** | Memory Lane, Stories |
-| **Kitchen** | Recipes |
-| **Care** | Send something, Care tasks, Helpers, Nearby |
-| **Family** | Family tree, The Book, Advice, Portrait |
-| **Celebrations** | Coming up, Occasions, Visits, Holidays, Play |
+| **Living Room** | Time together · Coming up · Occasions (wishes and the Chorus) |
+| **Memories** | Memory Lane (photos and voice memories, starred, searchable) · Stories · The Book · Advice · Ask the family |
+| **Kitchen** | Recipes (taught by voice, scanned from a card) |
+| **Our People** | Family tree · Homes · Kids · Visits |
+| **Care** | Care tasks · Helpers · Nearby (who to call first) |
+
+Two synthetic demo families are included: `demo-family` (Sharma) and `demo-iyer` (Iyer). Live at `nearer.site` with the demo code `NEARER-DEMO`.
+
+## The app underneath
+
+One Next.js 16 PWA, with no queues or workers:
+
+- Next.js 16 PWA on Cloudflare Workers via OpenNext
+- Supabase for Postgres, private Storage, and RLS by `family_id`
+- Sign-in with an email code; invite codes let someone take a place the family made for them
+- 43 pages and 99 API routes in this build
+
+Every read and write is scoped to the session's family. Server routes use a server-only key that never reaches the browser.
 
 ## The Muse helper
 
-**Muse** is the family agent behind Nearer. It drafts the morning letter, keeps recipes and stories, suggests what to send, translates voices, recipes, questions, and notes, and transcribes voice notes.
+Every model called at runtime is a Meta model. Muse is the family's helper, but it is **never a family member**: it writes down, translates, asks and proposes, and it always brings people back to each other.
 
-Muse is **never a family member**: it writes down, translates, asks, and proposes, and it always brings people back to each other. It never chats in place of children, never posts as a person, and never gives medical advice.
+It never chats with lonely parents in place of their children, never posts as a person, and never gives medical advice.
 
-Every Muse output is schema-checked, grounded in the family's own data, and logged to the family's *What Muse did* page. Agents propose, people approve.
+| Meta model | Where it works |
+|---|---|
+| `muse-voice-transcribe` | Every voice note, wish, blessing, recipe lesson, story answer, and spoken request for help |
+| `muse-spark-1.3` structured output | Recipe scribe, story keeper, care tasks, translation into 55 languages, captions, kinship terms, playlists, festival dates |
+| `muse-image-1.0` | Painted family portrait and old-photo restore, marked in the pixels |
+| `muse-spark-1.3` vision | Scan a handwritten or printed recipe card into the recipe editor |
 
-## Hosting, data, and native apps
+Safety rules:
 
-Nearer is one Next.js app, with no queues or workers:
+- **One door** in `lib/muse.ts`: validated structured output, one retry, then a safe fallback
+- Grounding checks reject invented ingredients or repeated questions
+- Cached by input, so the same recipe or translation is never done twice
+- Every call is logged to the family's *What Muse did* page
+- Agents propose, people approve
 
-- **Hosting:** Next.js PWA on Cloudflare Workers
-- **Data:** Supabase with Postgres, private storage, and row-level scoping by `family_id`
-- **Sign-in:** email code; invite codes let someone take a place the family made for them
-- **Two homes:** a couple and their children can belong to both sides and switch between them; each side keeps its own space
-- **Native apps:** Android and iOS shells are listed in the package, plus the installed web app for push
+## Native apps and hosting
+
+- The same Next.js app ships as a PWA and as native wrappers
+- The repo includes Capacitor for Android and iOS, with `cap:sync`, `cap:android`, `cap:ios`, and `android:apk` scripts
+- Push reaches the Android app, the installed web app, and the iOS app once configured
+- Hosting is Cloudflare Workers for the app and Supabase for data and private media
 
 ## Tests and checks
 
-- `npm run dev` — local dev server in mock mode
-- `npm run lint` — secret scan and logic checks
+- 128 test files, about 1047 test cases
+- `npm run test:mock` — mock-mode unit and smoke tests, no network
+- `npm run lint` — secret scan and no hard-coded festivals in app logic
 - `npm run typecheck` — `tsc --noEmit`
-- `npm run test:mock` — mock-mode unit and smoke tests, with no network
-- About 105 test files, about 837 test cases
 
-## Learn more
+## Where to go next
 
 - [Architecture](/docs/architecture)
 - [Muse](/docs/muse)
@@ -85,4 +101,4 @@ Nearer is one Next.js app, with no queues or workers:
 
 ---
 
-Written by Muse Spark (Meta) from the build log on 2026-11-02.
+Written by Muse Spark (Meta) from the build log on 2026-11-03.
