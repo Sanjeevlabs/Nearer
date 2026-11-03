@@ -36,16 +36,35 @@ Solo Indie-track entry, Meta Global AI Developer Hackathon. Deadline 4 Nov 2026,
 
 Everything in this repo was built during the event window (27 Oct – 4 Nov 2026); see [BUILD_LOG.md](BUILD_LOG.md) for the day-by-day record. Stack: Next.js 16 PWA on Cloudflare Workers (OpenNext; see [docs/DEPLOY.md](docs/DEPLOY.md)), Supabase (Postgres + private Storage + RLS by `family_id`), one Next.js app, no queues or workers. Sign-in is an email code; invite codes let someone take a place the family made for them. Two synthetic demo families (`demo-family` = Sharma, `demo-iyer` = Iyer) open with the public demo code.
 
-Run it:
+### Run the demo locally
 
-- `npm install`, then `npm run dev` — local dev server (mock mode unless `.env.local` sets keys + `MOCK=false`).
+Use Node.js 20.9 or later (CI uses Node.js 20). From a fresh clone, no environment file or service credentials are needed for the mock demo.
+
+```sh
+git clone https://github.com/Sanjeevlabs/Nearer.git
+cd Nearer
+npm ci
+MOCK=true NEXT_PUBLIC_MOCK=true npx next build
+MOCK=true NEXT_PUBLIC_MOCK=true SESSION_SECRET="$(node -p 'require("node:crypto").randomBytes(20).toString("hex")')" npx next start -p 3000
+```
+
+Open [http://localhost:3000/home](http://localhost:3000/home), tap **Try the demo family**, then **Open Nearer** if prompted. You can also join with the code `NEARER-DEMO`. The demo opens on the family window.
+
+Run the mock tests from the repo directory in a second terminal:
+
+```sh
+npx vitest run
+```
+
+Other local commands:
+
 - `npm run lint` — secret scan + no hard-coded festivals in app logic.
 - `npm run typecheck` — `tsc --noEmit`.
 - `npm run test:mock` — mock-mode unit + smoke tests (no network, no cost).
 - `npm run eval:golden` — manual live golden eval. Needs `META_API_KEY`. Never in CI.
 - `node scripts/seed.mjs` — generates the consistent demo-family photos (needs `META_API_KEY`).
 
-Environment (see `.env.example`; never commit `.env.local`):
+For live mode, configure Supabase and Meta using the variables below. See `.env.example` for the full list and never commit `.env.local`.
 
 - `META_API_KEY` — Meta model calls. Environment only, never written to any file.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project.
