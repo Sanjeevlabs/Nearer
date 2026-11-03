@@ -54,6 +54,12 @@ describe("outbound time limits", () => {
     expect(isTimeout(s.reason)).toBe(true);
   });
 
+  it("an already-aborted caller signal ends at once with its own reason", () => {
+    const s = deadline(10_000, AbortSignal.abort(new Error("x")));
+    expect(s.aborted).toBe(true);
+    expect((s.reason as Error).message).toBe("x");
+  });
+
   it("a stalled Supabase read is tried once, not retried with back-off (postgrest treats it as final)", async () => {
     const calls = { n: 0 };
     const pg = new PostgrestClient("https://db.example.invalid/rest/v1", { fetch: fetchWithTimeout(60, stalled(calls)) });

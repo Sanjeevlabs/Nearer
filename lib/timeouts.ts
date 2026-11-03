@@ -27,6 +27,8 @@ function limitSignal(ms: number, own?: AbortSignal | null): AbortSignal {
     return ctl.signal;
   }
   const timer = setTimeout(() => ctl.abort(new DOMException(`timeout after ${ms} ms`, "TimeoutError")), ms);
+  // On Node a pending timer would keep a script or test alive until it fires (AbortSignal.timeout did not); on Workers this is a no-op.
+  (timer as { unref?: () => void }).unref?.();
   own?.addEventListener(
     "abort",
     () => {
