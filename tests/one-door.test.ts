@@ -9,7 +9,7 @@ import { GET as peekRoute } from "@/app/api/invites/peek/route";
 import { DELETE as revoke, POST as createInvite } from "@/app/api/invites/route";
 import { POST as addOtherSide } from "@/app/api/members/other-side/route";
 import { GET as sidesGet, POST as sidesPost } from "@/app/api/sides/route";
-import { dbAddMember, dbGetMember } from "@/lib/db";
+import { dbAddMember, dbGetMember, dbRemoveMember } from "@/lib/db";
 import { codeFromInput, joinLink, whatsappInvite } from "@/lib/invite-link";
 import { clearAuthAttempts, MOCK_OTP } from "@/lib/otp";
 import { MAX_PEOPLE, MAX_SIDES } from "@/lib/permissions";
@@ -101,6 +101,19 @@ describe("2. new, with a link: /join/<CODE>, sign in there, pick, in", () => {
     expect(await json(res)).toMatchObject({ status: "active" });
     // No name and no place: the page asks for a name first.
     expect((await verify({ email: email(), code: MOCK_OTP, intent: { type: "join", inviteCode: await linkOf(host.cookie) } })).status).toBe(400);
+  });
+});
+
+describe("a removed person's links", () => {
+  it("stop working the moment they're removed: no stranger walks in on an old link", async () => {
+    const host = await family("Sharma");
+    const sib = await verify({ email: email(), code: MOCK_OTP, intent: { type: "join", inviteCode: await linkOf(host.cookie), firstName: "Ravi" } });
+    const sibId = (await json<{ memberId: string }>(sib.clone())).memberId;
+    const sibLink = await linkOf(cookieOf(sib));
+    expect((await peek(sibLink)).status).toBe(200);
+    expect(await dbRemoveMember(sibId)).toBe(true);
+    const res = await verify({ email: email(), code: MOCK_OTP, intent: { type: "join", inviteCode: sibLink, firstName: "Stranger" } });
+    expect(res.status).not.toBe(200);
   });
 });
 

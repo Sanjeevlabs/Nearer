@@ -53,6 +53,7 @@ import {
   setSuggestionStatus as memSetSuggestionStatus,
   mockAddMember as memAddMember,
   revokeInvite as memRevokeInvite,
+  revokeInvitesBy as memRevokeInvitesBy,
   updateCard as memUpdateCard,
   deleteCard as memDeleteCard,
   removeReaction as memRemoveReaction,
@@ -1069,8 +1070,13 @@ export async function dbRemoveMember(memberId: string): Promise<boolean> {
   await revokeMembers([memberId]).catch(() => undefined);
   // Their phones stop receiving at once (the database cascades too, memory does not).
   if (fam) await removeAllForMember(fam, memberId).catch(() => undefined);
+  // Links they shared die with their place: join needs no approval, so a removed person's link must not
+  // keep letting people in (the database would only null created_by, which reads as a maker-less link).
+  memRevokeInvitesBy(memberId);
   const sb = dbFor(fam);
   if (!sb) return memRemoveMember(memberId);
+  const gone = await sb.from("invites").delete().eq("created_by", memberId);
+  if (gone.error) return false;
   await sb.from("relationships").delete().or(`member_id.eq.${memberId},relation_member_id.eq.${memberId}`);
   const tables = ["wishes", "reactions", "plays", "daily_roles"];
   for (const t of tables) {
