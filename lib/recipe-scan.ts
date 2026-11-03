@@ -18,6 +18,7 @@ export const ScannedRecipeSchema = RecipeSchema.pick({
   serves: true,
   prepMins: true,
   cookMins: true,
+  caloriesPerServing: true,
   prepWork: true,
   outcome: true,
   ingredients: true,
@@ -34,7 +35,7 @@ export const SCAN_SYSTEM =
   '"ingredients": [{"item": string, "said": string, "approx": string}], "steps": [{"text": string, "tip": string}], "lang": short language code}. ' +
   "Write down ONLY what is on the card, in the card's own language and words. said = the amount exactly as written (\"1 katori\", \"a fistful\"); " +
   "approx = a cautious everyday equivalent only when the written amount is vague, else empty. Never invent an ingredient, step, time or amount. " +
-  "Use null for times that are not written. If you cannot read a recipe in the photo, return {\"title\": \"\", \"ingredients\": [], \"steps\": []}.";
+  "Use null for times that are not written. Include caloriesPerServing as an approximate integer only when quantities and serving size are clear. If you cannot read a recipe in the photo, return {\"title\": \"\", \"ingredients\": [], \"steps\": []}.";
 
 /** A fixed synthetic card for mock mode and the demo without a key. */
 export const MOCK_SCAN: ScannedRecipe = {
@@ -43,6 +44,7 @@ export const MOCK_SCAN: ScannedRecipe = {
   serves: "about 12 ladoos",
   prepMins: null,
   cookMins: 25,
+  caloriesPerServing: 240,
   prepWork: ["Sift the besan", "Powder the sugar"],
   outcome: "Smells nutty, the colour of sand at sunset; holds when you press it.",
   ingredients: [

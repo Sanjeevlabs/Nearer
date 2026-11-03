@@ -9,6 +9,7 @@ import { museJson } from "./muse";
 import { callName } from "./people";
 import type { Suggestion } from "./schemas";
 import { weekStartOf } from "./week";
+import { canSeeCard, FAMILY_WIDE } from "./card-privacy";
 
 export const LETTER_TITLE_MAX = 60;
 export const LETTER_BODY_MAX = 900;
@@ -77,6 +78,8 @@ export async function gatherWeekFacts(familyId: string, weekStart?: string, now:
   const hidden = new Set<string>();
   for (const l of chitthi) if (Date.parse(l.deliverAt) > now.getTime()) hidden.add(l.id);
   for (const t of tasks) if (!t.completedAt) for (const a of t.answers) hidden.add(a.cardId);
+  // The letter goes to everyone, so a note for particular people never appears in it.
+  for (const c of cards) if (!canSeeCard(c, FAMILY_WIDE)) hidden.add(c.id);
   const visible = cards.filter((c) => !hidden.has(c.id));
   const what = (c: { type: string }) => (c.type === "audio" ? "voice memory" : c.type === "video" ? "video" : "photo");
 

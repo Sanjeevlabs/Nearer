@@ -3,6 +3,7 @@
 // results into `suggestions`; the approve route executes them after review.
 import type { AgentTool } from "./agent";
 import { dbListCards, dbListMembers, dbListRelationships, dbListWishes } from "./db";
+import { FAMILY_WIDE, seenBy } from "./card-privacy";
 import { gatherWeekFacts, LETTER_GOAL, writeLetter, type WeeklyLetterPayload } from "./weekly-letter";
 
 type LetterOpts = { lang?: "en" | "hi"; minFacts?: number };
@@ -46,7 +47,8 @@ export function agentTools(familyId: string, opts: LetterOpts = {}): AgentTool[]
         },
       },
       run: async (args) => {
-        const all = await dbListCards(familyId);
+        // The family agent works for everyone: notes for particular people are never its to read.
+        const all = seenBy(await dbListCards(familyId), FAMILY_WIDE);
         const type = typeof args.type === "string" ? args.type : undefined;
         const slug = typeof args.ritualSlug === "string" ? args.ritualSlug : undefined;
         const limit = typeof args.limit === "number" ? Math.min(20, Math.max(1, args.limit)) : 8;

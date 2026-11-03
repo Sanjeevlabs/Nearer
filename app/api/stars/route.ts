@@ -6,6 +6,7 @@ import { getDoc, putDoc } from "@/lib/family-docs";
 import { toggleStar } from "@/lib/stars";
 import { defaultView } from "@/lib/window-server";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // "My favourites": your own starred photos and voice memories. A star is
 // yours alone (kept on your window_view doc), so nobody else's list changes.
@@ -30,7 +31,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid-star" }, { status: 400 });
   const { cardId, on } = parsed.data;
   // Only this family's own photos, videos and voice memories.
-  const card = withDemoShelf(await dbListCards(auth.familyId), auth.familyId).find((c) => c.id === cardId);
+  const card = seenBy(withDemoShelf(await dbListCards(auth.familyId), auth.familyId), auth.memberId).find((c) => c.id === cardId);
   if (!card) return Response.json({ error: "unknown-card" }, { status: 404 });
   const mine = await getDoc(auth.familyId, "window_view", auth.memberId);
   const base = mine ?? defaultView(auth.familyId, auth.memberId);
