@@ -46,9 +46,18 @@ describe("outbound time limits", () => {
   });
 
   it("deadline aborts on its own, and with a caller signal", async () => {
+    // Wait for the abort itself (a fixed sleep raced the timer on a busy CI runner).
     const s = deadline(20, new AbortController().signal);
-    await new Promise((r) => setTimeout(r, 60));
+    expect(s.aborted).toBe(false);
+    await new Promise<void>((resolve) => (s.aborted ? resolve() : s.addEventListener("abort", () => resolve(), { once: true })));
     expect(s.aborted).toBe(true);
+    expect(isTimeout(s.reason)).toBe(true);
+  });
+
+  it("an already-aborted caller signal ends at once with its own reason", () => {
+    const s = deadline(10_000, AbortSignal.abort(new Error("x")));
+    expect(s.aborted).toBe(true);
+    expect((s.reason as Error).message).toBe("x");
   });
 
   it("a stalled Supabase read is tried once, not retried with back-off (postgrest treats it as final)", async () => {
