@@ -9,6 +9,8 @@ import type { Card } from "./schemas";
 // needlessly. refreshKey (from the shell) forces a revalidation after uploads.
 
 let cache: Card[] | null = null;
+/** The last read did not come back (an error, or no answer in time): the shelf shows as empty, with a way to try again. */
+let failedLast = false;
 let inflight: Promise<Card[]> | null = null;
 let loadedAt = 0;
 let loadedKey = -1;
@@ -27,14 +29,23 @@ function merge(server: Card[]): Card[] {
 async function load(): Promise<Card[]> {
   if (inflight) return inflight;
   const asked = gen;
+  let ok = true;
   // The first screen's request may already be on its way (lib/early.ts).
   const mine: Promise<Card[]> = fetchFirst("/api/cards")
-    .then((r) => (r.ok ? (r.json() as Promise<{ cards: Card[]; familyId?: string }>) : { cards: [] as Card[], familyId: undefined }))
+    .then((r) => {
+      if (!r.ok) ok = false;
+      return r.ok ? (r.json() as Promise<{ cards: Card[]; familyId?: string }>) : { cards: [] as Card[], familyId: undefined };
+    })
     .then((d) => merge(d.cards))
-    .catch(() => [] as Card[])
+    .catch(() => {
+      ok = false;
+      return [] as Card[];
+    })
     .then((cards) => {
       if (asked !== gen) return cards;
-      cache = cards;
+      // A read that failed never wipes a shelf already shown.
+      cache = ok ? cards : (cache ?? cards);
+      failedLast = !ok;
       inflight = null;
       loadedAt = Date.now();
       listeners.forEach((l) => l());
@@ -56,8 +67,9 @@ function subscribe(onChange: () => void): () => void {
  * snapshot (null, as the server rendered it) even if the fetch already landed,
  * so a page that hydrates late never mismatches (React error #418).
  */
-export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] | null } {
+export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] | null; failed: boolean; retry: () => void } {
   const cards = useSyncExternalStore(subscribe, () => cache, () => null);
+  const failed = useSyncExternalStore(subscribe, () => failedLast, () => false);
   useEffect(() => {
     // Not needed yet (the dock while it is hidden): read nothing.
     if (!enabled) return;
@@ -67,13 +79,20 @@ export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] 
     wantedKey = refreshKey;
     void load();
   }, [refreshKey, enabled]);
-  return { cards };
+  return { cards, failed, retry: retryFamilyCards };
+}
+
+/** Read the shelf again now (the "Try again" after a read that failed). */
+export function retryFamilyCards(): void {
+  loadedAt = 0;
+  void load();
 }
 
 /** Forget the cached snapshot (sign-out, switching family). */
 export function resetFamilyCards(): void {
   gen++;
   cache = null;
+  failedLast = false;
   inflight = null;
   loadedAt = 0;
   loadedKey = -1;

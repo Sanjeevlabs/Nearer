@@ -3,6 +3,8 @@
 // loaded. Whoever reads a URL first takes its request; later readers fetch as usual.
 // Client only.
 
+import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
+
 type Early = Record<string, { at: number; p: Promise<Response> }>;
 type W = typeof window & { __nearerEarly?: Early };
 
@@ -30,7 +32,8 @@ export function dropEarly(): void {
 const RETRYABLE = new Set([502, 503, 504]);
 
 export function fetchFirst(url: string): Promise<Response> {
-  const fresh = () => fetch(url, { cache: "no-store" });
+  // Neither an early request nor a fresh one may hang the first screen: they are cut off (see lib/first-screen.ts).
+  const fresh = () => fetchWithTimeout((...a) => fetch(...a), url, { cache: "no-store" });
   const again = async (res: Response): Promise<Response> => {
     if (!RETRYABLE.has(res.status)) return res;
     await new Promise((r) => setTimeout(r, 250));
@@ -38,7 +41,7 @@ export function fetchFirst(url: string): Promise<Response> {
     return second;
   };
   const early = takeEarly(url);
-  return (early ? early.catch(fresh) : fresh()).then(again);
+  return (early ? raceTimeout(early, EARLY_WAIT_MS).catch(fresh) : fresh()).then(again);
 }
 
 /**

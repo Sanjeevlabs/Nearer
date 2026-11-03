@@ -48,7 +48,10 @@ interface SessionAnswer {
 
 /** Who am I, with my family and its relationships: one request (GET /api/session?family=1). Null when signed out. */
 async function fetchSessionWithFamily(): Promise<SessionAnswer | null> {
-  const res = await fetchFirst("/api/session?family=1");
+  // No answer in time (or no connection) is a hiccup like a 5xx: tried again, never an endless "Opening Nearer".
+  const res = await fetchFirst("/api/session?family=1").catch(() => {
+    throw new Error("session-504");
+  });
   // Only a real "no session" signs someone out; a host hiccup (5xx) must not.
   if (res.status >= 500) throw new Error(`session-${res.status}`);
   if (!res.ok) return null;
