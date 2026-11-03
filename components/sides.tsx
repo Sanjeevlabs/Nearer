@@ -1,10 +1,8 @@
 "use client";
 
-import { entryHref } from "@/lib/auth-session";
-import { liveAuth } from "@/lib/supabase-browser";
 import { useState, useSyncExternalStore } from "react";
 import { isGrownUp } from "@/lib/permissions";
-import { whatsappInvite } from "@/lib/invite-link";
+import { joinLink, whatsappInvite } from "@/lib/invite-link";
 import { callName, memberPhoto } from "@/lib/people";
 import type { Member, Relationship } from "@/lib/schemas";
 import { resetFamilyCards } from "@/lib/use-family";
@@ -104,7 +102,7 @@ export function SideSwitch() {
 }
 
 /** My spouse and children in this family: the "door" that comes with me. */
-function myHome(viewerId: string, members: Member[], rels: Relationship[]): Member[] {
+export function myHome(viewerId: string, members: Member[], rels: Relationship[]): Member[] {
   const ids = new Set<string>();
   for (const r of rels) {
     if (r.memberId === viewerId && (r.canonicalKind === "spouse" || r.canonicalKind === "child")) ids.add(r.relationMemberId);
@@ -116,7 +114,7 @@ function myHome(viewerId: string, members: Member[], rels: Relationship[]): Memb
 /**
  * "You're in N families": each family that added you, who added you, what's
  * new there, and a switch. Never the other families' trees.
- * Join another family = /join with its code and the same email.
+ * Join another family = open its link (/join/<CODE>) while signed in.
  */
 export function BothSides() {
   const { viewer, members, relationships } = useViewer();
@@ -132,7 +130,7 @@ export function BothSides() {
         <h2 className="m-0 text-title">{n > 1 ? `You're in ${n} families` : "Your family"}</h2>
         {grownUp && !demo && n < 4 && (
           <div className="flex gap-1">
-            <a href={entryHref(liveAuth(), "join")} aria-label="Join another family with a code" className="press grid h-10 w-10 place-items-center rounded-full bg-surface text-ink no-underline">
+            <a href="/join" aria-label="Join another family with a link" className="press grid h-10 w-10 place-items-center rounded-full bg-surface text-ink no-underline">
               <Icon name="key" size={18} />
             </a>
             <button type="button" aria-label="Start a family for your side" onClick={() => setAdding(true)} className="press grid h-10 w-10 place-items-center rounded-full bg-surface">
@@ -141,7 +139,7 @@ export function BothSides() {
           </div>
         )}
       </div>
-      <p className="m-0 mb-3 mt-1 min-h-[42px] text-callout text-ink-soft">{n > 1 ? "Each family keeps its own tree. Switch to see theirs." : "Married into another family? Join theirs with their code and the same email."}</p>
+      <p className="m-0 mb-3 mt-1 min-h-[42px] text-callout text-ink-soft">{n > 1 ? "Each family keeps its own tree. Switch to see theirs." : "Married into another family? Open the link they send you: you'll be in both."}</p>
       {loading && <div className="skeleton h-[68px] rounded-card" aria-busy="true" aria-label="Loading families" />}
       {failed && (
         <button type="button" onClick={() => void reload()} className="press h-11 w-full rounded-full bg-surface text-callout text-ink-soft">
@@ -187,7 +185,7 @@ export function BothSides() {
   );
 }
 
-function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }) {
+export function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }) {
   const [name, setName] = useState("");
   const [bring, setBring] = useState<string[]>(home.map((m) => m.id));
   const [busy, setBusy] = useState(false);
@@ -198,8 +196,8 @@ function AddSideSheet({ home, onClose }: { home: Member[]; onClose: () => void }
       <div>
         {made ? (
           <>
-            <p className="m-0 text-body text-ink-soft">Send this code to your parents, brothers and sisters. It works for 7 days.</p>
-            <p data-display className="tnum m-0 mt-4 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{made.invite.code}</p>
+            <p className="m-0 text-body text-ink-soft">Send this link to your parents, brothers and sisters. It works for 7 days.</p>
+            <p dir="ltr" className="m-0 mt-4 break-all rounded-[22px] bg-surface px-4 py-4 text-center text-headline font-semibold">{joinLink(window.location.origin, made.invite.code).replace(/^https?:\/\//, "")}</p>
             <a href={whatsappInvite(window.location.origin, made.invite.code)} target="_blank" rel="noopener noreferrer" className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
               <Icon name="whatsapp" size={20} />
               Send on WhatsApp
