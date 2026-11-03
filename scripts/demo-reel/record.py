@@ -11,7 +11,7 @@ UI inventory's Date shim (scripts/ui-inventory.py CLOCK_JS), so both agree: 8 PM
 
 Human pacing: the pointer glides, taps wait 400-700 ms, every step waits on a data-ui / role selector.
 A tap ripple and a pointer dot are injected for the video only (an init script, not app code).
-Exits non-zero if a shot's selector is missing. The shot list never visits a store.
+Exits non-zero if a shot's selector is missing. Never opens a checkout: shot 10 stops at the preview.
 
 Needs a running mock server (scripts/demo-reel/run.sh starts one on :4700 with a fresh in-memory state;
 the lamp, plays and so on are in memory, so re-record against a fresh server).
@@ -235,17 +235,21 @@ def window_ready(c: Clip) -> None:
     """The window with its data in: the sky, the header line, the lamp line (no skeleton)."""
     c.need("[data-ui=window-scene]")
     c.need("[data-ui=window-lamp]")
+    c.need("[data-ui=window-safe] button")
     c.pause(900)  # the sky and the lamp settle
     c.ready()
 
 
 def shot1(c: Clip) -> None:
-    c.page.goto("/")
-    window_ready(c)
-    c.scroll_to("[data-ui=window-voice]", top=420, ms=900)
-    c.tap("[data-ui=window-voice] button", "Maa's latest voice memory", after=700)
-    player = c.need("[role=dialog][aria-label^='Voice memory from']", "the full player")
-    c.need(player.locator("ol li"), "the voice note's words")
+    c.page.goto("/home")
+    c.need("text=Try the demo family")
+    c.pause(500)
+    c.ready()
+    c.pause(1300)
+    c.tap(c.page.get_by_text("Try the demo family").first, "the 'Try the demo family' button", after=700)
+    c.tap(c.page.get_by_role("button", name="Open Nearer").first, "the 'Open Nearer' button", after=900)
+    c.need("[data-ui=window-scene]")
+    c.need("[data-ui=window-lamp]")
     c.hold_until(c.spec["dur"])
 
 
@@ -258,6 +262,20 @@ def shot2(c: Clip) -> None:
     c.hold_until(c.spec["dur"])
 
 
+def shot3(c: Clip) -> None:
+    c.page.goto("/")
+    window_ready(c)
+    c.scroll_to("[data-ui=window-safe]", top=300, ms=900)
+    c.pause(200)
+    c.tap(c.page.locator("[data-ui=window-safe] button").first, "Maa's row in Safe & sound", before=200, after=800)
+    c.need("[role=dialog] [data-ui=person-sheet]", "Maa's day sheet")
+    c.pause(1900)
+    c.scroll(150, ms=800, at=(195, 520))
+    c.pause(1000)
+    c.close_sheet()
+    c.hold_until(c.spec["dur"])
+
+
 def shot4(c: Clip) -> None:
     c.page.goto("/")
     window_ready(c)
@@ -267,54 +285,110 @@ def shot4(c: Clip) -> None:
     c.hold_until(c.spec["dur"])
 
 
+def shot5(c: Clip) -> None:
+    c.page.goto("/")
+    window_ready(c)
+    c.page.wait_for_function("() => /lit it for you/i.test(document.querySelector('[data-ui=window-lamp]')?.textContent || '')", timeout=SELECTOR_TIMEOUT)
+    c.glide(260, 180, ms=800)
+    c.hold_until(c.spec["dur"])
+
+
+def shot6(c: Clip) -> None:
+    c.page.goto("/")
+    window_ready(c)
+    c.scroll_to("[data-ui=window-voice]", top=420, ms=1100)
+    c.tap("[data-ui=window-voice] button", "Maa's latest voice memory play button", after=1400)
+    c.need("[role=dialog][aria-label^='Voice memory from']", "the full player with the words")
+    c.hold_until(c.spec["dur"])
+
+
 def shot7(c: Clip) -> None:
     c.page.goto("/")
     window_ready(c)
-    c.scroll_to("[data-ui=window-actions]", top=400)
-    c.tap(c.page.get_by_role("button", name="Call: open your door"), "open the Together sheet")
-    sheet = c.need("[data-ui=open-door-sheet]")
-    c.tap(sheet.get_by_role("button", name="Chai", exact=True), "choose chai")
-    c.tap("[data-ui=open-door]", "open for chai", after=700)
-    c.need("[data-ui=together-mine]", "the open chai invitation")
-    c.scroll_to("[data-ui=together-mine]", top=320)
+    c.pause(500)
+    knob = c.need("[data-ui=window-key] button", "the key").bounding_box()
+    track = c.need("[data-ui=window-key]").bounding_box()
+    c.glide(knob["x"] + knob["width"] / 2, knob["y"] + knob["height"] / 2, ms=600)
+    c.pause(300)
+    c.page.mouse.down()
+    c.glide(track["x"] + track["width"] - 30, c.y, ms=800)
+    c.pause(150)
+    c.page.mouse.up()
+    c.need("[data-ui=dock]", "the family page dock after the key")
+    c.pause(500)
+    c.scroll(480, ms=1300, at=(195, 500))
     c.hold_until(c.spec["dur"])
 
 
 def shot8(c: Clip) -> None:
-    c.page.goto("/kitchen/recipe-dadi-dal")
-    teaching = c.need("[aria-label='Taught by']", "Maa's recipe by voice")
-    c.scroll_to(teaching, top=300)
+    c.page.goto("/")
+    c.need("[data-ui=dock]", "the courtyard dock")
+    c.need("text=Everyone", "the courtyard content")
+    c.pause(900)
     c.ready()
-    c.tap(teaching.get_by_role("button", name="Hear Maa teach it"), "play the recipe")
+    c.tap(c.page.get_by_role("button", name="Open the house"), "the house button on the dock", after=700)
+    c.tap("[data-ui=house-sheet] [data-room=kitchen]", "the Kitchen room", after=500)
+    c.need("a[href='/kitchen/recipe-dadi-dal']", "Maa's Dal tadka recipe")
+    c.pause(700)
+    c.tap("a[href='/kitchen/recipe-dadi-dal']", "Dal tadka", after=500)
+    c.need("[aria-label='Taught by']", "'Hear Maa teach it'")
+    c.pause(700)
+    c.scroll_to("[aria-label='Cooked by the family']", top=150, ms=1800)
     c.hold_until(c.spec["dur"])
 
 
 def shot9(c: Clip) -> None:
-    c.page.goto("/stories")
-    story = c.need("button[data-card=demo-story-elephant]", "Dadi's elephant story")
-    c.scroll_to(story, top=300)
-    c.ready()
-    c.tap(story, "play Dadi's story")
+    c.page.goto("/")
+    window_ready(c)
+    c.pause(600)
+    c.tap("[data-ui=window-bell]", "the bell (For you)", after=800)
+    c.need("li[data-inbox]", "For you items")
+    c.pause(1500)
+    reply = c.page.locator("button[aria-label^='Reply by voice']")
+    if reply.count():
+        c.tap(reply.first, "Reply by voice", after=1100)
+        c.need("[role=dialog]", "the voice sheet")
+        c.pause(1500)
+        c.close_sheet() if c.page.locator("[role=dialog] button[aria-label=Close]").count() else c.page.keyboard.press("Escape")
+    else:
+        c.notes.append("TODO: no 'Reply by voice' item in Arjun's inbox on this build (needs a seeded voice memory addressed to him); reply sheet not shown")
+        print("  TODO: no 'Reply by voice' in Arjun's inbox; recording the inbox only", flush=True)
     c.hold_until(c.spec["dur"])
 
 
 def shot10(c: Clip) -> None:
-    c.page.goto("/rituals")
-    c.need("[data-ui=room-tabs] a[href='/rituals'][aria-current=page]", "the active Occasions tab")
-    c.ready()
-    c.pause(1000)
-    c.scroll(300, ms=1400)
+    c.page.goto("/")
+    window_ready(c)
+    c.scroll_to("[data-ui=window-actions]", top=420, ms=800)
+    c.tap(c.page.get_by_role("button", name="Send something"), "Send something", before=200, after=300)
+    ideas = c.need("section[aria-label=\"Muse's ideas for Maa\"] button", "Muse's ideas from the stores")
+    c.pause(300)
+    c.scroll_to("section[aria-label=\"Muse's ideas for Maa\"]", top=250, ms=900)
+    c.tap(ideas, "the first idea", before=200, after=700)
+    c.need("section[aria-label=\"Muse's ideas for Maa\"] >> text=You’ll add", "the order preview")
+    # Stop at the preview: never press 'Continue at <store>'.
+    c.hold_until(c.spec["dur"])
+
+
+def shot11(c: Clip) -> None:
+    c.page.goto("/")
+    window_ready(c)
+    c.glide(300, 420, ms=900)
     c.hold_until(c.spec["dur"])
 
 
 PLAN = {
-    1: dict(who="arjun", entered=True, door_open=False, fn=shot1),
+    1: dict(who=None, entered=False, door_open=False, fn=shot1),
     2: dict(who="arjun", entered=True, door_open=False, fn=shot2),
+    3: dict(who="arjun", entered=True, door_open=False, fn=shot3),
     4: dict(who="arjun", entered=True, door_open=False, fn=shot4),
+    5: dict(who="dadi", entered=True, door_open=False, fn=shot5),
+    6: dict(who="arjun", entered=True, door_open=False, fn=shot6),
     7: dict(who="arjun", entered=True, door_open=False, fn=shot7),
     8: dict(who="arjun", entered=True, door_open=True, fn=shot8),
-    9: dict(who="leo", entered=True, door_open=True, fn=shot9),
-    10: dict(who="arjun", entered=True, door_open=True, fn=shot10),
+    9: dict(who="arjun", entered=True, door_open=False, fn=shot9),
+    10: dict(who="arjun", entered=True, door_open=False, fn=shot10),
+    11: dict(who="rohan", entered=True, door_open=False, fn=shot11),
 }
 
 
