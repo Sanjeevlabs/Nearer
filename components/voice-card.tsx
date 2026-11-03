@@ -159,7 +159,7 @@ export function VoiceCard({
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />
       </div>
-      <div className={cn("flex justify-between text-caption tabular-nums", dark ? "text-white/75" : "text-ink-faint")} aria-hidden="true">
+      <div className={cn("flex justify-between text-caption tabular-nums", dark ? "text-white/75" : "text-ink-soft")} aria-hidden="true">
         <span>{formatDuration(now)}</span>
         <span>{total ? formatDuration(total) : "–:––"}</span>
       </div>
@@ -202,7 +202,7 @@ export function VoiceCard({
   ) : null;
 
   const titleEl = onOpen ? (
-    <button type="button" onClick={onOpen} className="press block w-full min-h-11 text-left" aria-label={`Open ${heading}`}>
+    <button type="button" onClick={onOpen} className="press block w-full min-h-11 text-left">
       <span className={cn("line-clamp-2 block font-semibold leading-snug", variant === "shelf" ? "text-callout" : "text-headline", dark ? "text-white" : "text-ink")}>{heading}</span>
       <span className={cn("mt-0.5 block truncate text-footnote", dark ? "text-white/75" : "text-ink-soft")}>{sub}</span>
     </button>
