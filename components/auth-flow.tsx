@@ -11,13 +11,13 @@ import { useDocumentLang, useT, type T } from "@/lib/use-t";
 import { en, htmlLang, type UiKey } from "@/lib/ui-strings/lazy";
 import { cn } from "@/lib/utils";
 import { AUTH_INTENT_KEY, browserAuth, signInOptions } from "@/lib/supabase-browser";
-import { currentSession, verifyAccessToken } from "@/lib/auth-session";
+import { afterAuth, afterSignin, currentSession, gateDecision, nextHref, parseNext, signinHref, verifyAccessToken, type Next } from "@/lib/auth-session";
 import { authRedirectUrl, isNative, openExternal } from "@/lib/native";
 import { useShell } from "./shell";
 import { Button, Icon } from "./ui/kit";
 
 type Mode = "create" | "join" | "signin";
-type Step = "details" | "email" | "code" | "other-side" | "invite";
+type Step = "details" | "email" | "code" | "nofamily" | "other-side" | "invite";
 
 /** Month names in the viewer's language (Intl), never a hard-coded list. */
 function monthNames(lang: string): string[] {
@@ -80,6 +80,13 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   const [invite, setInvite] = useState<string | null>(null);
   // Already proved who they are (Google, then "no family yet"): reuse that instead of asking again.
   const [signedInAs, setSignedInAs] = useState<string | null>(null);
+  // Live sign-in is the one door: /create and /join wait for a Supabase session (or send you to /signin).
+  const live = Boolean(browserAuth());
+  const gated = live && mode !== "signin";
+  const [ready, setReady] = useState(!gated);
+  // /signin?next=create|join: where to go once we know who they are.
+  const [target, setTarget] = useState<Next>({ next: null });
+  const [alreadyIn, setAlreadyIn] = useState(false);
   const [farNames, setFarNames] = useState<string[]>([]);
   const codeRef = useRef<HTMLInputElement>(null);
 
@@ -94,15 +101,25 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     if (step === "code") codeRef.current?.focus();
   }, [step]);
   useEffect(() => {
-    if (mode === "signin") return;
+    const q = new URLSearchParams(window.location.search);
+    if (mode === "signin") {
+      setTarget(parseNext(window.location.search));
+      if (q.get("expired")) setError(errorText(t, "session-expired"));
+      return;
+    }
     const sb = browserAuth();
     if (!sb) return;
-    let live = true;
-    void currentSession(sb).then((s) => {
-      if (live && s) setSignedInAs(s.email || t("auth.signedInAsYou"));
+    const resume = q.get("resume") === "other-side";
+    let alive = true;
+    void currentSession(sb).then((sess) => {
+      if (!alive) return;
+      const g = gateDecision({ live: true, hasSession: Boolean(sess), kind: mode, code: q.get("code")?.trim() || undefined, resume });
+      if (!g.stay) return router.replace(g.to);
+      if (sess) setSignedInAs(sess.email || t("auth.signedInAsYou"));
+      setReady(true);
     });
     return () => {
-      live = false;
+      alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
@@ -144,8 +161,10 @@ export function AuthFlow({ mode }: { mode: Mode }) {
           : t("auth.titleInviteThem")
         : step === "email"
           ? mode === "signin"
-            ? t("auth.titleWelcomeBack")
+            ? t("auth.titleSignInUp")
             : t("auth.titleEmail")
+          : step === "nofamily"
+            ? t("auth.noFamilyTitle")
           : step === "code"
             ? t("auth.titleCheck")
             : mode === "create"
@@ -200,8 +219,9 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   };
   const saveIntent = () => {
     try {
-      sessionStorage.setItem(AUTH_INTENT_KEY, JSON.stringify(intentBody()));
-      localStorage.setItem(AUTH_INTENT_KEY, JSON.stringify(intentBody()));
+      const saved = JSON.stringify({ ...intentBody(), ...(target.next ? { next: target.next, nextCode: target.code } : {}) });
+      sessionStorage.setItem(AUTH_INTENT_KEY, saved);
+      localStorage.setItem(AUTH_INTENT_KEY, saved);
     } catch {
       /* private mode: the callback falls back to sign-in */
     }
@@ -258,6 +278,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     const sb = browserAuth();
     if (!sb) return setStep("email");
     setBusy(true);
+    setAlreadyIn(false);
     setError(null);
     const { mode: _m, ...base } = intentBody();
     void _m;
@@ -268,17 +289,17 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     setBusy(false);
     if (out.error === "wrong-code") {
       setSignedInAs(null);
-      setError(errorText(t, "wrong-code"));
-      setStep("email");
-      return;
+      return router.replace(signinHref(mode === "join" ? "join" : "create", inviteCode.trim() || undefined, true));
     }
     setError(errorText(t, out.error));
+    setAlreadyIn(out.error === "already-member");
   };
 
   const notYou = () => {
     const sb = browserAuth();
     if (sb) void sb.auth.signOut({ scope: "local" });
     setSignedInAs(null);
+    if (gated) router.replace(signinHref(mode === "join" ? "join" : "create", inviteCode.trim() || undefined));
   };
 
   const verify = async (value = code) => {
@@ -290,6 +311,24 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     try {
       let identity: Record<string, string> = { email, code: value };
       const sb = browserAuth();
+      if (sb && mode === "signin") {
+        const out = byPhone ? await sb.auth.verifyOtp({ phone: phoneE164(), token: value, type: "sms" }) : await sb.auth.verifyOtp({ email, token: value, type: "email" });
+        const token = out.data.session?.access_token;
+        if (out.error || !token) throw new Error("wrong-code");
+        // Signing up for a family: the session stays, the family form is next.
+        const go = afterAuth(target);
+        if (!go.verify) return router.replace(go.to);
+        // Otherwise a plain sign-in. No family yet keeps the session for the chooser.
+        const res = await verifyAccessToken(sb, { accessToken: token, ...base }, (e) => e === "no-family");
+        const after = afterSignin(res);
+        if (after.kind === "chooser") {
+          setBusy(false);
+          setStep("nofamily");
+          return;
+        }
+        if (after.kind === "failed") throw new Error(after.error);
+        return afterVerify(res as { welcome?: string; status?: string });
+      }
       if (sb) {
         const out = byPhone ? await sb.auth.verifyOtp({ phone: phoneE164(), token: value, type: "sms" }) : await sb.auth.verifyOtp({ email, token: value, type: "email" });
         const token = out.data.session?.access_token;
@@ -332,7 +371,8 @@ export function AuthFlow({ mode }: { mode: Mode }) {
         </div>
         <h1 data-display className="m-0 mt-4 text-display leading-[1.08]">{title}</h1>
 
-        {step === "details" && (
+        {step === "details" && !ready && <div className="flex-1" aria-busy="true" />}
+        {step === "details" && ready && (
           <form
             className="flex flex-1 flex-col"
             onSubmit={(e) => {
@@ -415,6 +455,11 @@ export function AuthFlow({ mode }: { mode: Mode }) {
                 {error}
               </p>
             )}
+            {alreadyIn && (
+              <Link href="/" className="mt-2 inline-block text-callout font-semibold text-ink">
+                {t("auth.openMyFamily")}
+              </Link>
+            )}
             <div className="flex-1" />
             <Button type="submit" className="mt-8 w-full" disabled={!detailsValid || busy}>
               {t("auth.continue")}
@@ -431,7 +476,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             }}
           >
             <p className="m-0 mt-2 text-body text-ink-soft">
-              {t("auth.emailSub")}
+              {mode === "signin" ? t("auth.emailSubSignin") : t("auth.emailSub")}
               {mode === "join" ? ` ${t("auth.emailSubJoin")}` : ""}
             </p>
             {ways.google && (
@@ -472,18 +517,6 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             <Button type="submit" className="mt-8 w-full" disabled={busy || (byPhone ? phone.replace(/\D/g, "").length < 8 : !/^\S+@\S+\.\S+$/.test(email))}>
               {busy ? t("auth.sending") : t("auth.sendCode")}
             </Button>
-            {mode === "signin" && (
-              <p className="m-0 mt-4 text-center text-body text-ink-soft">
-                {t("auth.newHere")}{" "}
-                <Link href="/create" className="font-semibold text-ink">
-                  {t("landing.create")}
-                </Link>
-                {" · "}
-                <Link href="/join" className="font-semibold text-ink">
-                  {t("landing.join")}
-                </Link>
-              </p>
-            )}
           </form>
         )}
 
@@ -523,6 +556,17 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             <Button className="mt-8 w-full" disabled={busy || code.length !== 6} onClick={() => void verify()}>
               {busy ? t("auth.checking") : mode === "create" ? t("auth.openOurs") : mode === "join" ? t("auth.joinCta") : t("landing.signin")}
             </Button>
+          </div>
+        )}
+
+        {step === "nofamily" && (
+          <div className="flex flex-1 flex-col gap-3">
+            <Link href="/create" className="press mt-6 flex h-12 items-center justify-center rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
+              {t("auth.startFamily")}
+            </Link>
+            <Link href="/join" className="press flex h-12 items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
+              {t("landing.join")}
+            </Link>
           </div>
         )}
 

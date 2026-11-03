@@ -1,5 +1,7 @@
 "use client";
 
+import { entryHref } from "@/lib/auth-session";
+import { liveAuth } from "@/lib/supabase-browser";
 import { Lockup, Mark, Wordmark } from "./brand";
 import Link from "next/link";
 import QRCode from "qrcode";
@@ -50,7 +52,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
               <Link href="/signin" className="flex min-h-11 items-center text-ink-soft no-underline hover:text-ink">
                 Sign in
               </Link>
-              <Link href="/create" className="press flex min-h-11 items-center rounded-full bg-accent px-4 py-2 font-semibold text-accent-ink no-underline">
+              <Link href={entryHref(liveAuth(), "create")} className="press flex min-h-11 items-center rounded-full bg-accent px-4 py-2 font-semibold text-accent-ink no-underline">
                 Start your family
               </Link>
             </>
@@ -90,7 +92,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
                   {busy ? "Opening…" : "Try the demo family"}
                 </button>
                 <p className="m-0 -mt-1 text-center text-footnote text-ink-soft">No sign-up. Opens a demo family.</p>
-                <Link href="/create" className="press flex h-[50px] items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
+                <Link href={entryHref(liveAuth(), "create")} className="press flex h-[50px] items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
                   Start your family
                 </Link>
                 <Link href="/signin" className="flex h-11 items-center justify-center text-body font-medium text-ink-soft no-underline">
@@ -193,7 +195,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             <Link href="/privacy" className="text-ink-soft no-underline hover:text-ink">
               Privacy
             </Link>
-            <Link href="/join" className="text-ink-soft no-underline hover:text-ink">
+            <Link href={entryHref(liveAuth(), "join")} className="text-ink-soft no-underline hover:text-ink">
               Join with a code
             </Link>
           </span>

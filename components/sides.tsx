@@ -1,5 +1,7 @@
 "use client";
 
+import { entryHref } from "@/lib/auth-session";
+import { liveAuth } from "@/lib/supabase-browser";
 import { useState, useSyncExternalStore } from "react";
 import { isGrownUp } from "@/lib/permissions";
 import { whatsappInvite } from "@/lib/invite-link";
@@ -130,7 +132,7 @@ export function BothSides() {
         <h2 className="m-0 text-title">{n > 1 ? `You're in ${n} families` : "Your family"}</h2>
         {grownUp && !demo && n < 4 && (
           <div className="flex gap-1">
-            <a href="/join" aria-label="Join another family with a code" className="press grid h-10 w-10 place-items-center rounded-full bg-surface text-ink no-underline">
+            <a href={entryHref(liveAuth(), "join")} aria-label="Join another family with a code" className="press grid h-10 w-10 place-items-center rounded-full bg-surface text-ink no-underline">
               <Icon name="key" size={18} />
             </a>
             <button type="button" aria-label="Start a family for your side" onClick={() => setAdding(true)} className="press grid h-10 w-10 place-items-center rounded-full bg-surface">

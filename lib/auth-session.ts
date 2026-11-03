@@ -43,3 +43,61 @@ export async function verifyAccessToken(
   if (ok || !keepSession(error)) void sb.auth.signOut({ scope: "local" });
   return ok ? { ok: true, welcome: data.welcome, status: data.status } : { ok: false, error };
 }
+
+// ---- Identity first, then family: where each screen sends people. Pure, so tests can drive them.
+
+export type NextKind = "create" | "join";
+export interface Next {
+  next: NextKind | null;
+  code?: string;
+}
+
+/** ?next=create | ?next=join&code=XYZ from a query string. Anything else is no next. */
+export function parseNext(search: string): Next {
+  const q = new URLSearchParams(search);
+  const next = q.get("next");
+  if (next !== "create" && next !== "join") return { next: null };
+  const code = q.get("code")?.trim().slice(0, 64);
+  return next === "join" && code ? { next, code } : { next };
+}
+
+/** The family screen a next points at (the details step; the session is kept). */
+export function nextHref({ next, code }: Next): string {
+  if (next === "create") return "/create";
+  if (next === "join") return code ? `/join?code=${encodeURIComponent(code)}` : "/join";
+  return "/";
+}
+
+/** The one door: /signin, remembering what they came to do. */
+export function signinHref(next: NextKind, code?: string, expired = false): string {
+  const q = new URLSearchParams({ next });
+  if (next === "join" && code) q.set("code", code);
+  if (expired) q.set("expired", "1");
+  return `/signin?${q.toString()}`;
+}
+
+/** Links into the app: via /signin when Supabase sign-in is live, straight to the form in mock mode. */
+export function entryHref(live: boolean, next: NextKind, code?: string): string {
+  return live ? signinHref(next, code) : nextHref({ next, code });
+}
+
+export type AfterAuth = { to: string; verify: false } | { verify: true };
+
+/** After Supabase says who they are: go to the family form they came for, or check for a family. */
+export function afterAuth(n: Next): AfterAuth {
+  return n.next ? { to: nextHref(n), verify: false } : { verify: true };
+}
+
+export type AfterSignin = { kind: "enter" } | { kind: "chooser" } | { kind: "failed"; error: string };
+
+/** A signin verify result: a family means in; no-family means the chooser (session kept). */
+export function afterSignin(out: VerifyOutcome): AfterSignin {
+  if (out.ok) return { kind: "enter" };
+  return out.error === "no-family" ? { kind: "chooser" } : { kind: "failed", error: out.error };
+}
+
+/** /create and /join in live mode need a Supabase session; without one they go to /signin. */
+export function gateDecision(o: { live: boolean; hasSession: boolean; kind: NextKind; code?: string; resume?: boolean }): { stay: true } | { stay: false; to: string } {
+  if (!o.live || o.hasSession || o.resume) return { stay: true };
+  return { stay: false, to: signinHref(o.kind, o.code) };
+}

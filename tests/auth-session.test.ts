@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { currentSession, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
+import { afterAuth, afterSignin, currentSession, entryHref, gateDecision, nextHref, parseNext, signinHref, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
 
 function fakeClient(session: { access_token: string; user?: { email?: string } } | null) {
   const signOut = vi.fn(async () => ({}));
@@ -63,5 +63,52 @@ describe("signed in, no family yet (Google)", () => {
   it("no session: nothing to reuse, so the details step goes on to the email step as before", async () => {
     expect(await currentSession(fakeClient(null).sb)).toBeNull();
     expect(await currentSession({ auth: { getSession: async () => { throw new Error("x"); }, signOut: async () => ({}) } })).toBeNull();
+  });
+});
+
+describe("identity first, then family", () => {
+  it("reads ?next=create and ?next=join&code=, ignores anything else", () => {
+    expect(parseNext("?next=create")).toEqual({ next: "create" });
+    expect(parseNext("?next=join&code=AB12CD")).toEqual({ next: "join", code: "AB12CD" });
+    expect(parseNext("?next=create&code=AB12CD")).toEqual({ next: "create" });
+    expect(parseNext("?next=//evil.test")).toEqual({ next: null });
+    expect(parseNext("")).toEqual({ next: null });
+  });
+
+  it("after auth with a next, go to the form and do not verify; without one, verify as sign-in", () => {
+    expect(afterAuth({ next: "create" })).toEqual({ to: "/create", verify: false });
+    expect(afterAuth({ next: "join", code: "A B" })).toEqual({ to: "/join?code=A%20B", verify: false });
+    expect(afterAuth({ next: null })).toEqual({ verify: true });
+    expect(nextHref({ next: null })).toBe("/");
+  });
+
+  it("sign-in result: family enters, no-family shows the chooser, the rest fail", () => {
+    expect(afterSignin({ ok: true })).toEqual({ kind: "enter" });
+    expect(afterSignin({ ok: false, error: "no-family" })).toEqual({ kind: "chooser" });
+    expect(afterSignin({ ok: false, error: "too-many-attempts" })).toEqual({ kind: "failed", error: "too-many-attempts" });
+  });
+
+  it("the OTP path keeps the session on no-family, like the callback", async () => {
+    mockVerify(404, { error: "no-family" });
+    const { sb, signOut } = fakeClient({ access_token: "tok" });
+    const out = await verifyAccessToken(sb, { accessToken: "tok", intent: { type: "signin" } }, (e) => e === "no-family");
+    expect(afterSignin(out).kind).toBe("chooser");
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("/create and /join need a session when sign-in is live, and do not in mock mode", () => {
+    expect(gateDecision({ live: true, hasSession: false, kind: "create" })).toEqual({ stay: false, to: "/signin?next=create" });
+    expect(gateDecision({ live: true, hasSession: false, kind: "join", code: "ab12cd" })).toEqual({ stay: false, to: "/signin?next=join&code=ab12cd" });
+    expect(gateDecision({ live: true, hasSession: true, kind: "create" })).toEqual({ stay: true });
+    expect(gateDecision({ live: false, hasSession: false, kind: "create" })).toEqual({ stay: true });
+    expect(gateDecision({ live: true, hasSession: false, kind: "create", resume: true })).toEqual({ stay: true });
+  });
+
+  it("entry links go through /signin when live and straight to the form in mock mode", () => {
+    expect(entryHref(true, "create")).toBe("/signin?next=create");
+    expect(entryHref(true, "join", "XY12")).toBe("/signin?next=join&code=XY12");
+    expect(entryHref(false, "create")).toBe("/create");
+    expect(entryHref(false, "join")).toBe("/join");
+    expect(signinHref("create", undefined, true)).toBe("/signin?next=create&expired=1");
   });
 });
