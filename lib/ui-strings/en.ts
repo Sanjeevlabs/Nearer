@@ -57,6 +57,9 @@ export const en = {
   "auth.birthdayMonth": "Birthday month",
   "auth.birthdayDay": "Birthday day",
   "auth.continue": "Continue",
+  "auth.signedInAs": "Signed in as {email}",
+  "auth.signedInAsYou": "your account",
+  "auth.notYou": "Not you?",
 
   // Auth: email + code
   "auth.emailSub": "We'll email you a 6-digit code. No password.",

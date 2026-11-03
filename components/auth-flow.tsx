@@ -11,6 +11,7 @@ import { useDocumentLang, useT, type T } from "@/lib/use-t";
 import { en, htmlLang, type UiKey } from "@/lib/ui-strings/lazy";
 import { cn } from "@/lib/utils";
 import { AUTH_INTENT_KEY, browserAuth, signInOptions } from "@/lib/supabase-browser";
+import { currentSession, verifyAccessToken } from "@/lib/auth-session";
 import { authRedirectUrl, isNative, openExternal } from "@/lib/native";
 import { useShell } from "./shell";
 import { Button, Icon } from "./ui/kit";
@@ -77,6 +78,8 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<string | null>(null);
+  // Already proved who they are (Google, then "no family yet"): reuse that instead of asking again.
+  const [signedInAs, setSignedInAs] = useState<string | null>(null);
   const [farNames, setFarNames] = useState<string[]>([]);
   const codeRef = useRef<HTMLInputElement>(null);
 
@@ -90,6 +93,19 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   useEffect(() => {
     if (step === "code") codeRef.current?.focus();
   }, [step]);
+  useEffect(() => {
+    if (mode === "signin") return;
+    const sb = browserAuth();
+    if (!sb) return;
+    let live = true;
+    void currentSession(sb).then((s) => {
+      if (live && s) setSignedInAs(s.email || t("auth.signedInAsYou"));
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
   // A join link carries the code: /join?code=ABC123.
   useEffect(() => {
     if (mode !== "join") return;
@@ -217,6 +233,54 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     router.replace("/");
   };
 
+  /** Nearer's session is set: remember the welcome, then wait for an admin, open the other side, or go in. */
+  const afterVerify = (data: { welcome?: string; status?: string }) => {
+    if (data.welcome) {
+      try {
+        sessionStorage.setItem("aangan:welcome", data.welcome);
+      } catch {
+        /* private mode */
+      }
+    }
+    // A joiner waiting for an admin: the waiting screen takes over.
+    if (data.status === "pending") return enter();
+    if (mode === "create") {
+      // Signed in: now the other side of the window.
+      setBusy(false);
+      setStep("other-side");
+      return;
+    }
+    enter();
+  };
+
+  /** Details submitted while already signed in: no second sign-in, straight to Nearer's session. */
+  const finishWithSession = async () => {
+    const sb = browserAuth();
+    if (!sb) return setStep("email");
+    setBusy(true);
+    setError(null);
+    const { mode: _m, ...base } = intentBody();
+    void _m;
+    const session = await currentSession(sb);
+    // Only a rejected token sends them back to sign in; anything else (bad code, name) is fixed on the details step.
+    const out = session ? await verifyAccessToken(sb, { accessToken: session.token, ...base }, (e) => e !== "wrong-code") : ({ ok: false, error: "wrong-code" } as const);
+    if (out.ok) return afterVerify(out);
+    setBusy(false);
+    if (out.error === "wrong-code") {
+      setSignedInAs(null);
+      setError(errorText(t, "wrong-code"));
+      setStep("email");
+      return;
+    }
+    setError(errorText(t, out.error));
+  };
+
+  const notYou = () => {
+    const sb = browserAuth();
+    if (sb) void sb.auth.signOut({ scope: "local" });
+    setSignedInAs(null);
+  };
+
   const verify = async (value = code) => {
     if (value.length !== 6) return;
     setBusy(true);
@@ -240,22 +304,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
       if (sb) void sb.auth.signOut({ scope: "local" });
       const data = (await res.json()) as { error?: string; welcome?: string; status?: string };
       if (!res.ok) throw new Error(data.error ?? "failed");
-      if (data.welcome) {
-        try {
-          sessionStorage.setItem("aangan:welcome", data.welcome);
-        } catch {
-          /* private mode */
-        }
-      }
-      // A joiner waiting for an admin: the waiting screen takes over.
-      if (data.status === "pending") return enter();
-      if (mode === "create") {
-        // Signed in: now the other side of the window.
-        setBusy(false);
-        setStep("other-side");
-        return;
-      }
-      enter();
+      afterVerify(data);
     } catch (e) {
       const key = (e as Error).message;
       setError(errorText(t, key));
@@ -288,10 +337,20 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             className="flex flex-1 flex-col"
             onSubmit={(e) => {
               e.preventDefault();
-              if (detailsValid) setStep("email");
+              if (!detailsValid) return;
+              if (signedInAs) void finishWithSession();
+              else setStep("email");
             }}
           >
             <p className="m-0 mt-2 text-body text-ink-soft">{mode === "create" ? t("landing.sub") : t("auth.joinSub")}</p>
+            {signedInAs && (
+              <p className="m-0 mt-2 text-footnote text-ink-faint">
+                {t("auth.signedInAs", { email: signedInAs })} · {" "}
+                <button type="button" onClick={notYou} className="press inline p-0 text-footnote font-medium text-ink-soft underline">
+                  {t("auth.notYou")}
+                </button>
+              </p>
+            )}
             {mode === "create" ? (
               <Field label={t("auth.familyName")}>
                 <input className={input} value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t("auth.familyNamePh")} maxLength={40} autoFocus />
@@ -351,8 +410,13 @@ export function AuthFlow({ mode }: { mode: Mode }) {
                 </div>
               </Field>
             )}
+            {error && (
+              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
+                {error}
+              </p>
+            )}
             <div className="flex-1" />
-            <Button type="submit" className="mt-8 w-full" disabled={!detailsValid}>
+            <Button type="submit" className="mt-8 w-full" disabled={!detailsValid || busy}>
               {t("auth.continue")}
             </Button>
           </form>

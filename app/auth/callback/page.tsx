@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AUTH_INTENT_KEY, browserAuth } from "@/lib/supabase-browser";
+import { verifyAccessToken } from "@/lib/auth-session";
 import { resetFamilyCards } from "@/lib/use-family";
 
 // Back from Google or a magic link: turn the Supabase sign-in into Nearer's
@@ -50,14 +51,9 @@ export default function AuthCallback() {
       const token = data.session?.access_token;
       if (error || !token) return setState("failed");
       const saved = readIntent() ?? { mode: "signin" as const, intent: { type: "signin" } };
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ accessToken: token, intent: saved.intent, tz: saved.tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone, birthday: saved.birthday, city: saved.city }),
-      });
-      const out = (await res.json().catch(() => ({}))) as { error?: string; welcome?: string };
-      void sb.auth.signOut({ scope: "local" });
-      if (!res.ok) return setState(out.error === "no-family" ? "no-family" : "failed");
+      // "No family yet" keeps the Supabase session: /create and /join reuse it, so Google isn't asked twice.
+      const out = await verifyAccessToken(sb, { accessToken: token, intent: saved.intent, tz: saved.tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone, birthday: saved.birthday, city: saved.city }, (e) => e === "no-family");
+      if (!out.ok) return setState(out.error === "no-family" ? "no-family" : "failed");
       clearIntent();
       try {
         if (out.welcome) sessionStorage.setItem("aangan:welcome", out.welcome);
