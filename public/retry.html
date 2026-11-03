@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f3ee">
+<title>Nearer</title>
+<style>
+  :root { --ink: #1c1b1a; --paper: #f6f3ee; --soft: rgba(28, 27, 26, 0.6); }
+  @media (prefers-color-scheme: dark) { :root { --ink: #f6f3ee; --paper: #1c1b1a; --soft: rgba(246, 243, 238, 0.6); } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: grid; place-items: center; text-align: center;
+    padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  }
+  main { max-width: 320px; }
+  img { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14); }
+  h1 { font-size: 24px; font-weight: 400; letter-spacing: -0.01em; margin: 24px 0 8px; }
+  p { color: var(--soft); margin: 0 0 28px; font-family: Georgia, "Times New Roman", serif; font-style: italic; }
+  button { min-height: 48px; padding: 0 28px; border: 0; border-radius: 999px; background: var(--ink); color: var(--paper); font: inherit; cursor: pointer; }
+  #calm { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/icons/icon-192.png" alt="Nearer">
+  <div id="wait"><h1>One moment…</h1><p>Opening Nearer.</p></div>
+  <div id="calm"><h1>Still opening.</h1><p>Nearer is taking a little longer than usual.</p><button type="button" id="again">Try again</button></div>
+</main>
+<script>
+  // The service worker serves this page, at the address that failed, when a page could not be loaded
+  // (the host cut the request off) and no copy is kept. Reload up to 3 times, then stay calm.
+  var key = "nearer:retry:" + location.pathname + location.search;
+  var n = 0;
+  try {
+    var s = JSON.parse(sessionStorage.getItem(key) || "null");
+    if (s && Date.now() - s.at < 30000) n = s.n;
+  } catch (e) {}
+  function go() {
+    try { sessionStorage.setItem(key, JSON.stringify({ n: n + 1, at: Date.now() })); } catch (e) {}
+    location.reload();
+  }
+  if (n < 3) {
+    setTimeout(go, 1500);
+  } else {
+    document.getElementById("wait").style.display = "none";
+    document.getElementById("calm").style.display = "block";
+    document.getElementById("again").addEventListener("click", function () {
+      try { sessionStorage.removeItem(key); } catch (e) {}
+      location.reload();
+    });
+  }
+</script>
+</body>
+</html>

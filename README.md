@@ -105,3 +105,5 @@ This entry was built with AI coding assistants (Claude Code and Muse Code), as t
 ## Build notes
 
 Nearer (codename Aangan during development). Internal storage keys, the session cookie, Modal app names and the Cloudflare Worker name keep the codename on purpose, so existing sessions and secrets survive the rename.
+
+**Before a live demo, run `node scripts/warm.mjs`** (optionally `node scripts/warm.mjs https://nearer.site 6`). It hits the judge-path pages and APIs in parallel a few times to warm the Worker's isolates and prints status counts. The free plan cuts off a few percent of requests that pass 10 ms of CPU (a 503); the app retries reads (up to 3 times, `lib/retry.ts`) and the service worker retries, then falls back to a kept copy or a self-retrying page (`public/sw.js`), so a cut-off should never show.
