@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { usePlayer } from "@/components/player";
 import { RecipeCover, COURSE_LOOK, minutes, totalTime } from "@/components/recipe-art";
 import { RecipeEditor } from "@/components/recipe-editor";
+import { IngredientIcon } from "@/components/ingredient-icon";
 import { ShareRecipe } from "@/components/share-recipe";
 import { useShell } from "@/components/shell";
 import { ActionMenu, Avatar, Button, EmptyLine, Icon, MuseMark, Photo, PlayButton, RoomHeader, SectionTitle } from "@/components/ui/kit";
@@ -100,6 +101,7 @@ export default function RecipePage() {
     ["Prep", minutes(r.prepMins)],
     ["Cook", minutes(r.cookMins)],
     ["Serves", r.serves],
+    ["Per serving", r.caloriesPerServing ? `about ${r.caloriesPerServing} kcal` : ""],
   ].filter(([, v]) => v);
 
   return (
@@ -121,10 +123,11 @@ export default function RecipePage() {
         {totalTime(r) ? ` · ${totalTime(r)}` : ""}
       </p>
       <h1 data-display className="m-0 mt-1 text-display leading-[1.08]">{r.title}</h1>
+      {r.museIdea && <p className="text-callout text-ink-soft">Idea from Muse</p>}
       <Link href={cook ? `/people/${cook.id}` : "#"} className="mt-3 flex items-center gap-2.5 text-ink no-underline">
         <Avatar src={memberPhoto(cook)} name={callName(cook)} size={36} />
         <span className="text-body">
-          <span className="font-semibold">{cook?.id === viewer.id ? "Your" : `${callName(cook)}'s`}</span> recipe
+          <span className="font-semibold">Taught by {cook?.id === viewer.id ? "you" : callName(cook)}</span>
           {writer && writer.id !== cook?.id ? <span className="text-ink-soft"> · written down by {writer.id === viewer.id ? "you" : callName(writer)}</span> : null}
         </span>
       </Link>
@@ -194,6 +197,7 @@ export default function RecipePage() {
                   <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full border-2", got ? "border-black bg-accent text-accent-ink" : "border-black/20")} aria-hidden="true">
                     {got && <Icon name="check" size={14} strokeWidth={3} />}
                   </span>
+                  <IngredientIcon item={i.item} />
                   <span className={cn("min-w-0 flex-1 text-body font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
                   <span className="shrink-0 text-right">
                     {i.said && <span className="voice block text-body">{i.said}</span>}

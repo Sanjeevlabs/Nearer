@@ -39,6 +39,7 @@ export function ScanRecipeButton({ onScanned }: { onScanned: (r: ScanResult) => 
               serves: draft.serves ?? "",
               prepMins: draft.prepMins ?? null,
               cookMins: draft.cookMins ?? null,
+              caloriesPerServing: draft.caloriesPerServing ?? null,
               prepWork: draft.prepWork ?? [],
               outcome: draft.outcome ?? "",
               ingredients: draft.ingredients?.length ? draft.ingredients : [{ item: "", said: "", approx: "" }],
@@ -60,7 +61,6 @@ export function ScanRecipeButton({ onScanned }: { onScanned: (r: ScanResult) => 
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         aria-label="Photo of a recipe card"
         onChange={(e) => {
@@ -79,7 +79,7 @@ export function ScanRecipeButton({ onScanned }: { onScanned: (r: ScanResult) => 
           </span>
         )}
         <span className="min-w-0 flex-1">
-          <span className="block text-body font-semibold">{busy ? "Reading the card…" : "Scan a recipe card"}</span>
+          <span className="block text-body font-semibold">{busy ? "Reading the card…" : "Add a photo"}</span>
           <span className="block text-caption text-ink-soft">Handwritten or printed, any language. You check it before it&rsquo;s saved.</span>
         </span>
       </button>
