@@ -116,7 +116,7 @@ export function VoiceCard({
     face ? (
       <Photo src={face} alt="" sizes={variant === "row" ? "192px" : "400px"} position="center 30%" />
     ) : (
-      <span className="voice grid h-full w-full place-items-center text-white" style={{ background: `linear-gradient(140deg, ${petalFor(name)}, #c96f4a 70%, #e8a87c)`, fontSize: variant === "row" ? 34 : 64 }} aria-hidden="true">
+      <span data-display className="voice grid h-full w-full place-items-center text-white" style={{ background: `linear-gradient(140deg, ${petalFor(name)}, #c96f4a 70%, #e8a87c)`, fontSize: variant === "row" ? 34 : 64 }} aria-hidden="true">
         {name.trim().slice(0, 1).toUpperCase() || "?"}
       </span>
     )
