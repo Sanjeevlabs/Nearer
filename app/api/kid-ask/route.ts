@@ -7,6 +7,7 @@ import { guardianMap, guardiansOf, isKid, openAsksFor } from "@/lib/kids";
 import { callName } from "@/lib/people";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAsk } from "@/lib/push/events";
+import { seenBy } from "@/lib/card-privacy";
 
 // "Ask Dadi": a child's question or "another story" (voice or a few words) waits for a
 // grandparent (or parent) to answer by voice. The answer is a voice card AND a Story, titled
@@ -48,7 +49,7 @@ async function postHandler(req: Request): Promise<Response> {
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid-ask" }, { status: 400 });
   const body = parsed.data;
-  const [members, rels, cards] = await Promise.all([membersFor(req, auth.familyId), relationshipsFor(req, auth.familyId), dbListCards(auth.familyId)]);
+  const [members, rels, cards] = await Promise.all([membersFor(req, auth.familyId), relationshipsFor(req, auth.familyId), dbListCards(auth.familyId).then((cs) => seenBy(cs, auth.memberId))]);
   const me = members.find((m) => m.id === auth.memberId);
   const now = new Date().toISOString();
 

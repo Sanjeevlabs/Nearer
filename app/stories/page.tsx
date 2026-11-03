@@ -4,6 +4,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { usePlayer } from "@/components/player";
+import { VoiceCard } from "@/components/voice-card";
 import { useShell } from "@/components/shell";
 import { StoryCover, THEME_LOOK } from "@/components/story-art";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -182,6 +183,18 @@ function Stories() {
                 const on = current?.id === card.id;
                 return (
                   <li key={s.id} className={cn("relative w-[164px] shrink-0 snap-start", fresh === s.id && "rounded-[24px] ring-4 ring-marigold")}>
+                    {card.type === "audio" ? (
+                      <div data-card={card.id}>
+                        <VoiceCard
+                          card={card}
+                          queue={list.map((x) => cardOf(x) as Card)}
+                          title={s.title}
+                          subtitle={`${THEME_LOOK[s.theme].label}${minutesOf(card) ? ` · ${minutesOf(card)}` : ""}${s.ages !== "all" ? ` · ${AGE_LABEL[s.ages]}` : ""}`}
+                          cover={<StoryCover theme={s.theme} className="h-full w-full" />}
+                          className="w-full"
+                        />
+                      </div>
+                    ) : (
                     <button type="button" data-card={card.id} onClick={() => (on ? toggle() : play(card))} className="press block w-full text-left" aria-label={`${on && isPlaying ? "Pause" : "Play"} ${s.title}, told by ${callName(teller)}`}>
                       <span className="relative block">
                         <StoryCover theme={s.theme} className="h-[136px] rounded-[22px]" />
@@ -196,6 +209,7 @@ function Stories() {
                         {s.ages !== "all" ? ` · ${AGE_LABEL[s.ages]}` : ""}
                       </span>
                     </button>
+                    )}
                     <div className="absolute left-1.5 top-1.5">
                       <ShareQuote words={card.transcript || s.summary} speaker={teller} at={card.takenAt} context={`A story \u00b7 ${s.title}`} className="h-10 w-10 bg-white/90 text-ink shadow-frost" />
                     </div>

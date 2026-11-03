@@ -13,6 +13,8 @@ import { PrintFrame } from "./print-frame";
 import { ActionMenu, Button, Icon, LiveDot, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
 import { museLabel } from "@/lib/muse-portrait";
+import { privateLabel } from "@/lib/card-privacy";
+import { printWhen } from "@/lib/print";
 
 /**
  * Edit the caption or delete a voice note / photo. The author can do both;
@@ -111,7 +113,7 @@ export function VoiceRow({ card, showAuthor = true }: { card: Card; showAuthor?:
  * hand). A video keeps the full-bleed card with a glass caption.
  */
 export function PhotoCard({ card, tall = false }: { card: Card; tall?: boolean }) {
-  const { members, displayLang } = useViewer();
+  const { members, viewer, displayLang } = useViewer();
   const { text, translated } = useDisplayText(card.caption, card.lang, displayLang);
   const author = members.find((m) => m.id === card.authorId);
   const [editing, setEditing] = useState(false);
@@ -125,6 +127,9 @@ export function PhotoCard({ card, tall = false }: { card: Card; tall?: boolean }
             <CardActions card={card} tone="light" onEditing={setEditing} />
           </div>
         </PrintFrame>
+        <p data-ui="photo-details" className="tnum m-0 mt-2 px-1 text-footnote text-ink-soft">
+          {[author ? `Shared by ${callName(author)}` : "", printWhen(card.takenAt, author?.tz) && `taken ${printWhen(card.takenAt, author?.tz)}`, privateLabel(card, viewer.id, members)].filter(Boolean).join(" · ")}
+        </p>
         {editing && <CaptionEditor card={card} onDone={() => setEditing(false)} />}
       </div>
     );

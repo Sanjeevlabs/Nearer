@@ -10,6 +10,7 @@ import { isDialable, MAX_NEARBY, normalizePhone, rankNearby } from "@/lib/nearby
 import { can } from "@/lib/permissions";
 import type { Member } from "@/lib/schemas";
 import { guardWrites } from "@/lib/api-guard";
+import { seenBy } from "@/lib/card-privacy";
 
 // Care board: tasks for each home (open → assigned → in progress → done,
 // or cancelled) and the home's local helpers. A helper marked `emergency` is
@@ -161,7 +162,7 @@ async function postHandler(req: Request): Promise<Response> {
     }
     case "need-from-voice": {
       const parent = person(body.forMemberId);
-      const card = (await dbListCards(auth.familyId)).find((c) => c.id === body.cardId);
+      const card = seenBy(await dbListCards(auth.familyId), auth.memberId).find((c) => c.id === body.cardId);
       if (!parent || !card) return Response.json({ error: "unknown" }, { status: 404 });
       const draft = await needFromVoice(auth.familyId, parent.displayName, card.transcript || card.caption, card.transcriptLang || card.lang);
       const need = await putDoc(auth.familyId, "need", { id: newId("need"), forMemberId: parent.id, askedBy: auth.memberId, ...draft, status: "open", history: [{ at: now, by: auth.memberId, what: "Asked by voice (written down by Muse)" }], createdAt: now });

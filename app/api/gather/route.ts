@@ -4,6 +4,7 @@ import { serverLedger, serverStore } from "@/lib/llm-server";
 import { dbAddGatherSession, dbListCards, dbListGatherSessions, dbListMembers } from "@/lib/db";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
+import { FAMILY_WIDE, seenBy } from "@/lib/card-privacy";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
@@ -34,7 +35,8 @@ async function postHandler(req: Request): Promise<Response> {
   if (!parsed.success) {
     return Response.json({ error: "invalid-gather" }, { status: 400 });
   }
-  const cards = await dbListCards(auth.familyId);
+  // A gathering plays for everyone: only family-wide voices.
+  const cards = seenBy(await dbListCards(auth.familyId), FAMILY_WIDE);
   const audio = cards.filter((c) => c.type === "audio").slice(0, 20);
   const { tracks } = await curatePlaylist(
     audio.map((c) => ({ id: c.id, caption: c.caption })),

@@ -6,6 +6,7 @@
 // "no one has said that yet" and an offer to ask by voice. Server only.
 import { z } from "zod";
 import { dbListCards, dbListMembers } from "./db";
+import { hiddenCardIds, seenBy } from "./card-privacy";
 import { withDemoShelf } from "./demo";
 import { listDocsMany } from "./family-docs";
 import { cacheKey } from "./llm";
@@ -102,7 +103,9 @@ export async function loadArchive(familyId: string, viewerId: string): Promise<{
   const hidden = new Set<string>();
   const now = Date.now();
   for (const l of docs.chitthi) if (l.authorId !== viewerId && Date.parse(l.deliverAt) > now) hidden.add(l.id);
-  const snippets = buildSnippets({ cards: withDemoShelf(stored, familyId), recipes: docs.recipe, stories: docs.story, questions: docs.question, hidden, familyId });
+  // Search reaches only what this viewer may see: a note for someone else is never quoted to them.
+  const unseen = hiddenCardIds(stored, viewerId);
+  const snippets = buildSnippets({ cards: seenBy(withDemoShelf(stored, familyId), viewerId), recipes: docs.recipe, stories: unseen.size ? docs.story.filter((s) => !unseen.has(s.cardId)) : docs.story, questions: docs.question, hidden, familyId });
   return { snippets, members };
 }
 

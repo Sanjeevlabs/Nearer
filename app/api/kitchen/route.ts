@@ -8,6 +8,7 @@ import { recipeFromVoice } from "@/lib/kitchen";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAsk } from "@/lib/push/events";
 import { nudgeShared } from "@/lib/nudge-producers";
+import { seenBy } from "@/lib/card-privacy";
 
 // The family Kitchen.
 // GET  → every recipe and every attempt (who cooked what, and who blessed it).
@@ -69,7 +70,7 @@ async function postHandler(req: Request): Promise<Response> {
   const now = new Date().toISOString();
 
   if (body.action === "teach") {
-    const card = (await dbListCards(auth.familyId)).find((c) => c.id === body.cardId);
+    const card = seenBy(await dbListCards(auth.familyId), auth.memberId).find((c) => c.id === body.cardId);
     if (!card || card.type !== "audio") return Response.json({ error: "unknown-voice-note" }, { status: 404 });
     const cookId = card.authorId ?? auth.memberId;
     const cook = (await dbListMembers(auth.familyId)).find((m) => m.id === cookId);
@@ -98,7 +99,7 @@ async function postHandler(req: Request): Promise<Response> {
     const family = await dbListMembers(auth.familyId);
     const cookId = body.cookId ?? auth.memberId;
     if (!family.some((m) => m.id === cookId)) return Response.json({ error: "unknown-member" }, { status: 404 });
-    const cards = body.voiceCardId || body.videoCardId ? await dbListCards(auth.familyId) : [];
+    const cards = body.voiceCardId || body.videoCardId ? seenBy(await dbListCards(auth.familyId), auth.memberId) : [];
     const own = (cardId: string | null | undefined, type: "audio" | "video") => !cardId || cards.some((c) => c.id === cardId && c.type === type);
     if (!own(body.voiceCardId, "audio") || !own(body.videoCardId, "video")) return Response.json({ error: "unknown-card" }, { status: 404 });
     const { action: _a, cookId: _c, scanRef: _s, ...fields } = body;

@@ -13,6 +13,7 @@ import { guardWrites } from "@/lib/api-guard";
 import { pushAddressed } from "@/lib/push/events";
 import { addressees } from "@/lib/households";
 import { withListen } from "@/lib/listen";
+import { seenBy } from "@/lib/card-privacy";
 
 /** The shelf and the two document kinds it is filtered by (one query for both kinds). */
 function readShelf(familyId: string) {
@@ -30,7 +31,8 @@ async function getHandler(req: Request): Promise<Response> {
   const letters = docs.chitthi;
   const listen = docs.card_listen;
   // "How to listen" is added only for the people a note was sent to (lib/listen.ts).
-  const cards = withListen(withDemoShelf(stored, auth.familyId), listen, auth.memberId);
+  // A note for particular people reaches only them and its author (lib/card-privacy.ts).
+  const cards = withListen(seenBy(withDemoShelf(stored, auth.familyId), auth.memberId), listen, auth.memberId);
   // Today's answers are open to everyone at once. Only morning letters wait:
   const sealed = new Set<string>();
   // Morning letters stay in the envelope until their morning (the author can always see theirs).
@@ -269,7 +271,7 @@ async function fileIntoAlbum(familyId: string, card: Awaited<ReturnType<typeof d
     const album = await fileCard(familyId, card, event);
     if (!album || album.fixedBy || album.cardIds.length < 2) return album;
     const [cards, members] = await Promise.all([dbListCards(familyId), dbListMembers(familyId)]);
-    const captions = cards.filter((c) => album.cardIds.includes(c.id)).map((c) => c.caption).filter(Boolean);
+    const captions = seenBy(cards, null).filter((c) => album.cardIds.includes(c.id)).map((c) => c.caption).filter(Boolean);
     const title = await titleAlbum(familyId, album, captions, members.map((m) => m.displayName).concat(members.map((m) => m.firstName)));
     return title === album.title ? album : await putDoc(familyId, "album", { ...album, title });
   } catch (e) {

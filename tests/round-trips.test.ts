@@ -47,7 +47,7 @@ const h = vi.hoisted(() => {
       if (t !== "members" || !cols.includes("families(")) return { ...r };
       const fam = rows("families").find((f) => f.id === r.family_id);
       const out: Row = { ...r, families: fam ? { name: fam.name } : null };
-      if (fam && cols.includes("members(")) Object.assign(out.families as Row, { members: rows("members").filter((m) => m.family_id === r.family_id).map((m) => ({ ...m })), cards: rows("cards").filter((c) => c.family_id === r.family_id && (!embedSince || String(c.taken_at) >= embedSince)).map((c) => ({ author_id: c.author_id, taken_at: c.taken_at })) });
+      if (fam && cols.includes("members(")) Object.assign(out.families as Row, { members: rows("members").filter((m) => m.family_id === r.family_id).map((m) => ({ ...m })), cards: rows("cards").filter((c) => c.family_id === r.family_id && (!embedSince || String(c.taken_at) >= embedSince)).map((c) => ({ author_id: c.author_id, taken_at: c.taken_at, addressed_to: c.addressed_to ?? null })) });
       return out;
     };
     const run = () => {
