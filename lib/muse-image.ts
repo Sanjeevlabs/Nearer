@@ -24,7 +24,7 @@ import { serverLedger, serverStore } from "./llm-server";
 import { newId, putDoc } from "./family-docs";
 import { MUSE_IMAGE_ESTIMATE_USD } from "./muse-portrait";
 import { createDownloadUrl, mockGetBlob, usesMockStorage } from "./storage";
-import { MEDIA_MODEL_TIMEOUT_MS, SERVICE_TIMEOUT_MS, deadline } from "./timeouts";
+import { MEDIA_MODEL_TIMEOUT_MS, MEDIA_READ_TIMEOUT_MS, SERVICE_TIMEOUT_MS, deadline, isTimeout } from "./timeouts";
 
 export type ImageSize = "1024x1024" | "1024x1536" | "1536x1024";
 
@@ -127,7 +127,8 @@ export async function museImage(opts: {
       store.set(ck, image);
       await log(true, false, MUSE_IMAGE_ESTIMATE_USD);
       return { status: "ok", image, cached: false, cost: MUSE_IMAGE_ESTIMATE_USD };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }
@@ -150,7 +151,7 @@ async function fetchOwnAsset(url: URL): Promise<Response> {
   } catch {
     /* not running on Cloudflare */
   }
-  return fetch(url);
+  return fetch(url, { signal: deadline(SERVICE_TIMEOUT_MS) });
 }
 
 /**
@@ -172,7 +173,7 @@ export async function loadFamilyImage(ref: string, familyId: string, origin: str
       } else {
         const signed = await createDownloadUrl(path);
         if (!signed || signed.mock) return null;
-        const res = await fetch(signed.url, { signal: deadline(SERVICE_TIMEOUT_MS) });
+        const res = await fetch(signed.url, { signal: deadline(MEDIA_READ_TIMEOUT_MS) });
         if (!res.ok) return null;
         bytes = new Uint8Array(await res.arrayBuffer());
         mime = res.headers.get("content-type") ?? mime;

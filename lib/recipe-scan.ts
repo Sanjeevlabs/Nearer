@@ -9,7 +9,7 @@ import { newId, putDoc } from "./family-docs";
 import { RecipeSchema } from "./kinds";
 import { buildVisionMessages, cacheKey, sha256Hex, type LlmStore, type SpendLedger, type VisionImage } from "./llm";
 import { serverLedger, serverStore } from "./llm-server";
-import { MODEL_TIMEOUT_MS, deadline } from "./timeouts";
+import { MODEL_TIMEOUT_MS, deadline, isTimeout } from "./timeouts";
 
 /** What Muse may fill in: the editor's fields, never who cooks it or why it matters. */
 export const ScannedRecipeSchema = RecipeSchema.pick({
@@ -129,6 +129,7 @@ export async function scanRecipe(opts: {
     opts.call ??
     ((p, s, i) =>
       liveVision(p, s, i).catch((err) => {
+        if (isTimeout(err)) throw err;
         const next = failoverProvider(p);
         if (next) return liveVision(next, s, i);
         throw err;
@@ -142,7 +143,8 @@ export async function scanRecipe(opts: {
       store.set(key, JSON.stringify(draft));
       await log(true, false, out.cost);
       return { draft, source: "muse" };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }

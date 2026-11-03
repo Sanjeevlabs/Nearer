@@ -10,6 +10,7 @@ import { activeProvider, isMockMode, PROVIDERS } from "./config";
 import { newId, putDoc } from "./family-docs";
 import { cacheKey, liveJson } from "./llm";
 import { serverLedger, serverStore } from "./llm-server";
+import { isTimeout } from "./timeouts";
 
 export interface MuseResult<T> {
   data: T;
@@ -85,6 +86,7 @@ export async function museJson<T>(opts: {
       return { data: parsed.data, source: "muse", cached: false, cost: out.cost, model };
     } catch (err) {
       reasons.push(err instanceof Error ? err.message.slice(0, 40) : "error");
+      if (isTimeout(err)) break;
       continue;
     }
   }
