@@ -109,6 +109,8 @@ async function postHandler(req: Request): Promise<Response> {
     const here = pool.find((m) => m.id === lastId) ?? pool[0];
     familyId = here.familyId;
     memberId = here.id;
+    // Say why the family name they just typed didn't make a new one.
+    if (opensExisting) welcome = "You already have a family on Nearer, so we opened it.";
   } else if (intent.type === "join" && existing) {
     // Already in one Nearer, joining another (my wife's family, say): the same
     // person gets a place on both sides, linked by personId.

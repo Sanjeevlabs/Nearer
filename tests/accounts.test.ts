@@ -53,6 +53,7 @@ describe("accounts: email code sign-up and sign-in", () => {
     expect(again.status).toBe(200);
     const body = (await again.json()) as { familyId: string; memberId: string; existing?: boolean };
     expect(body).toMatchObject({ familyId: first.body.familyId, memberId: first.body.memberId, existing: true });
+    expect((body as { welcome?: string }).welcome).toMatch(/already have a family/);
   });
 
   it("a wrong code never creates anything", async () => {
