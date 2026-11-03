@@ -9,7 +9,7 @@ export interface SessionClient {
   };
 }
 
-export type VerifyOutcome = { ok: true; welcome?: string; status?: string } | { ok: false; error: string };
+export type VerifyOutcome = { ok: true; welcome?: string; status?: string; existing?: boolean } | { ok: false; error: string };
 
 /** The signed-in Supabase session, if there is one (supabase-js refreshes an expired token here). */
 export async function currentSession(sb: SessionClient): Promise<{ token: string; email: string } | null> {
@@ -31,7 +31,7 @@ export async function verifyAccessToken(
   keepSession: (error: string) => boolean = () => false,
 ): Promise<VerifyOutcome> {
   let ok = false;
-  let data: { error?: string; welcome?: string; status?: string } = {};
+  let data: { error?: string; welcome?: string; status?: string; existing?: boolean } = {};
   try {
     const res = await fetch("/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     ok = res.ok;
@@ -41,7 +41,7 @@ export async function verifyAccessToken(
   }
   const error = data.error ?? "failed";
   if (ok || !keepSession(error)) void sb.auth.signOut({ scope: "local" });
-  return ok ? { ok: true, welcome: data.welcome, status: data.status } : { ok: false, error };
+  return ok ? { ok: true, welcome: data.welcome, status: data.status, ...(data.existing ? { existing: true } : {}) } : { ok: false, error };
 }
 
 // ---- Identity first, then family: where each screen sends people. Pure, so tests can drive them.
@@ -81,11 +81,17 @@ export function entryHref(live: boolean, next: NextKind, code?: string): string 
   return live ? signinHref(next, code) : nextHref({ next, code });
 }
 
-export type AfterAuth = { to: string; verify: false } | { verify: true };
+export type AfterAuth = { to: string; verify: false } | { verify: true; noFamilyTo?: string };
 
-/** After Supabase says who they are: go to the family form they came for, or check for a family. */
+/**
+ * After Supabase says who they are. Joining with a code goes straight to that family's form (someone
+ * already in one family may join another). Everything else checks for a family first: someone who has
+ * one goes in, even from "Start your family", so signing in again never makes a second family. Only
+ * someone with no family yet goes on to the create form.
+ */
 export function afterAuth(n: Next): AfterAuth {
-  return n.next ? { to: nextHref(n), verify: false } : { verify: true };
+  if (n.next === "join") return { to: nextHref(n), verify: false };
+  return n.next === "create" ? { verify: true, noFamilyTo: nextHref(n) } : { verify: true };
 }
 
 export type AfterSignin = { kind: "enter" } | { kind: "chooser" } | { kind: "failed"; error: string };
@@ -118,7 +124,7 @@ export interface SignOutSteps {
   /** In-memory caches: family cards, early requests, JSON cache. */
   clearCaches(): void;
   /** Cached pages and API copies in the service worker. */
-  clearServiceWorker(): void;
+  clearServiceWorker(): void | Promise<void>;
   /** A full page load, so no in-memory state survives. */
   goTo(path: string): void;
 }
@@ -135,13 +141,17 @@ export async function signOutEverywhere(steps: SignOutSteps, to = "/"): Promise<
   await quiet(steps.forgetPush);
   await quiet(steps.deleteSession);
   await quiet(steps.supabaseSignOut);
-  for (const f of [steps.clearStorage, steps.clearCaches, steps.clearServiceWorker]) {
+  for (const f of [steps.clearStorage, steps.clearCaches]) {
     try {
       f();
     } catch {
       /* ignore */
     }
   }
+  // Awaited: the next page load must not find the last person's kept pages or API copies.
+  await quiet(async () => {
+    await steps.clearServiceWorker();
+  });
   steps.goTo(to);
 }
 

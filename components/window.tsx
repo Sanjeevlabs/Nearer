@@ -194,7 +194,7 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
   const { play, current, isPlaying, toggle } = usePlayer();
   const win = useJson<WindowData>("/api/window", { every: 60_000 });
   const safety = useJson<{ checkins: SafetyCheckin[] }>("/api/safety");
-  const waitingFor = useJson<{ items: unknown[] }>("/api/waiting", { every: 60_000 });
+  const waitingFor = useJson<{ items: unknown[] }>("/api/waiting", { every: 120_000 });
   const hasWaiting = (waitingFor.data?.items.length ?? 0) > 0;
   const [, setTick] = useState(0);
   // undefined: never opened (the sheet's code is not even loaded); null: closed.

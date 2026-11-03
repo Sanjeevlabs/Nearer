@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The home page's four phone screenshots, from the real app.
+"""The home page's five phone screenshots, from the real app.
 
 Starts a mock build (MOCK=true) with the server clock frozen at --now
 (AANGAN_FIXED_NOW, lib/fixed-clock.ts; the browser gets the same instant, as
@@ -8,6 +8,8 @@ scripts/walk.py does, and captures 390x844 at DPR 2:
 
   public/home/window.webp    the first screen: their sky, the lamp, what they shared,
                              and Maa's door open for chai (she opens it first)
+  public/home/voice.webp     the voice sheet after a short recording: who it is for, the player, and the
+                             words Nearer wrote down (a fake microphone; the mock transcript)
   public/home/together.webp  Living Room: Time together
   public/home/chorus.webp    Living Room: Occasions and the chorus
   public/home/memories.webp  Memories: Memory Lane
@@ -35,6 +37,7 @@ MAX_BYTES = 120 * 1024
 # (file, path, door open?, a selector that says the screen is ready)
 SHOTS = [
     ("window", "/", False, "[data-ui=together]"),
+    ("voice", "/", False, "[data-ui=together]"),
     ("together", "/gather/play", True, "main"),
     ("chorus", "/rituals", True, "main"),
     ("memories", "/lane", True, "main"),
@@ -79,6 +82,24 @@ def save_webp(png: bytes, out: str) -> int:
     return buf.tell()
 
 
+def voice_sheet(page) -> None:
+    """Open Voice, choose Maa, record four seconds, stop: the sheet shows the words written down."""
+    for attempt in range(4):  # a click before hydration does nothing
+        page.get_by_role("button", name="Voice memory").first.click(timeout=10_000)
+        try:
+            page.locator("[role=dialog]").first.wait_for(timeout=3_000)
+            break
+        except Exception:
+            if attempt == 3:
+                raise
+    page.locator("[data-ui=people-picker]").get_by_text("Maa", exact=True).first.click()
+    page.get_by_role("button", name="Start recording").click(timeout=10_000)
+    page.wait_for_timeout(4500)
+    page.get_by_role("button", name="Stop recording").click()
+    page.get_by_role("button", name="Record again").wait_for(timeout=20_000)
+    page.wait_for_timeout(800)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=4610)
@@ -97,7 +118,8 @@ def main() -> int:
         ms = int(datetime.fromisoformat(args.now.replace("Z", "+00:00")).timestamp() * 1000)
         os.makedirs(args.out, exist_ok=True)
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            # A fake microphone (a steady tone) for the voice sheet; no real audio or person is recorded.
+            browser = p.chromium.launch(args=["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"])
             # Maa opens her door for Arjun (chai, an hour), so the window shows a real invitation.
             maa = browser.new_context(base_url=base)
             res = maa.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": "dadi"}), headers={"content-type": "application/json"})
@@ -110,8 +132,9 @@ def main() -> int:
                 raise SystemExit(f"home-shots: opening Maa's door failed {opened}")
             maa.close()
             for name, path, door_open, ready in SHOTS:
-                ctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, base_url=base, timezone_id=TZ, locale="en-US", color_scheme="light", reduced_motion="reduce")
+                ctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, base_url=base, timezone_id=TZ, locale="en-US", color_scheme="light", reduced_motion="reduce", permissions=["microphone"])
                 ctx.add_init_script(CLOCK_JS % ms)
+                ctx.add_init_script("try { localStorage.setItem('aangan:voice-consent', '1') } catch (e) {}")
                 door = "open" if door_open else "closed"
                 ctx.add_init_script(f"try {{ sessionStorage.setItem('aangan:door', '{door}'); sessionStorage.setItem('aangan:entered', '1') }} catch (e) {{}}")
                 res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": "arjun"}), headers={"content-type": "application/json"})
@@ -121,6 +144,8 @@ def main() -> int:
                 page.goto(path, wait_until="load")
                 page.locator(ready).first.wait_for(timeout=20_000)
                 page.wait_for_timeout(2500)  # late content and fonts
+                if name == "voice":
+                    voice_sheet(page)
                 size = save_webp(page.screenshot(), os.path.join(args.out, f"{name}.webp"))
                 print(f"{name:7} {path:10} {size // 1024} KB")
                 ctx.close()

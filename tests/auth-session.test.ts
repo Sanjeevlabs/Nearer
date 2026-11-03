@@ -1,4 +1,5 @@
-import { clearSessionCookieHeader, sessionCookieHeader } from "@/lib/auth";
+import { clearSessionCookieHeader, sessionCookieHeader, sessionFromRequest } from "@/lib/auth";
+import { sessionCookie } from "./auth-helper";
 import { createFetchGate } from "@/lib/net-gate";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { afterAuth, afterSignin, callbackFailure, currentSession, signinShortcut, entryHref, gateDecision, nextHref, parseNext, signinHref, signOutEverywhere, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
@@ -78,7 +79,7 @@ describe("identity first, then family", () => {
   });
 
   it("after auth with a next, go to the form and do not verify; without one, verify as sign-in", () => {
-    expect(afterAuth({ next: "create" })).toEqual({ to: "/create", verify: false });
+    expect(afterAuth({ next: "create" })).toEqual({ verify: true, noFamilyTo: "/create" });
     expect(afterAuth({ next: "join", code: "A B" })).toEqual({ to: "/join?code=A%20B", verify: false });
     expect(afterAuth({ next: null })).toEqual({ verify: true });
     expect(nextHref({ next: null })).toBe("/");
@@ -138,6 +139,25 @@ describe("sign out", () => {
     expect(log).toEqual(["stop", "push", "delete", "supabase", "storage", "caches", "sw", "go:/signin?next=create"]);
   });
 
+  it("sign-out waits for the service worker caches to clear before the next page loads", async () => {
+    const log: string[] = [];
+    const noop = async () => undefined;
+    await signOutEverywhere({
+      stopPollers: () => undefined,
+      forgetPush: noop,
+      deleteSession: noop,
+      supabaseSignOut: noop,
+      clearStorage: () => undefined,
+      clearCaches: () => undefined,
+      clearServiceWorker: async () => {
+        await new Promise((r) => setTimeout(r, 5));
+        log.push("sw-cleared");
+      },
+      goTo: () => void log.push("go"),
+    });
+    expect(log).toEqual(["sw-cleared", "go"]);
+  });
+
   it("the clearing cookie has the attributes of the session cookie, so it replaces it (production adds Secure)", async () => {
     const prev = process.env.NODE_ENV;
     for (const env of ["production", "development"]) {
@@ -192,4 +212,14 @@ describe("callback failures and the signed-in shortcut", () => {
     expect(signinShortcut({ next: "join", sessionOk: true, status: "active" })).toBe("stay");
     expect(signinShortcut({ next: null, sessionOk: false })).toBe("stay");
   });
+});
+
+it("rechecks a memoized request when its session cookie changes", () => {
+  const req = new Request("http://nearer.test/api/session", { headers: { cookie: sessionCookie("arjun") } });
+  expect(sessionFromRequest(req)?.memberId).toBe("arjun");
+  expect(sessionFromRequest(req)?.memberId).toBe("arjun");
+  req.headers.set("cookie", sessionCookie("dadi"));
+  expect(sessionFromRequest(req)?.memberId).toBe("dadi");
+  req.headers.delete("cookie");
+  expect(sessionFromRequest(req)).toBeNull();
 });

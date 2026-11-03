@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -127,12 +128,7 @@ export function CareView({ tab }: { tab: "tasks" | "helpers" }) {
       )}
 
       {care.failed && !data ? (
-        <div className="rounded-card bg-card px-4 py-8 text-center shadow-card">
-          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load care right now.</p>
-          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-well" onClick={() => void care.reload()}>
-            Try again
-          </Button>
-        </div>
+        <LoadFailed what="Care" ui="care-retry" onRetry={() => void care.reload()} />
       ) : !data ? (
         <div key="loading" className="skeleton h-[320px] rounded-card" aria-busy="true" aria-label="Loading care" />
       ) : tab === "tasks" ? (

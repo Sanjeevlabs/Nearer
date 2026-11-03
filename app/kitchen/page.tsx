@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -127,7 +128,7 @@ export default function KitchenPage() {
       <ScanRecipeButton onScanned={setScanned} />
       {asking && <AskForRecipe onDone={() => { setAsking(false); void asks.reload(); }} />}
 
-      {failed && <EmptyLine>The Kitchen couldn&rsquo;t load. Try again in a moment.</EmptyLine>}
+      {failed && !data && <LoadFailed what="The Kitchen" ui="kitchen-retry" onRetry={() => { void reload(); void asks.reload(); }} />}
 
       {recipes.length > 3 && (
         <label className="mt-5 flex h-11 items-center gap-2 rounded-full bg-surface px-4">

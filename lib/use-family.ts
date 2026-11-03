@@ -11,6 +11,8 @@ import type { Card } from "./schemas";
 let cache: Card[] | null = null;
 /** The last read did not come back (an error, or no answer in time): the shelf shows as empty, with a way to try again. */
 let failedLast = false;
+/** A read has come back at least once (for this person/family): a later failed refresh is not "could not load". */
+let loadedOk = false;
 let inflight: Promise<Card[]> | null = null;
 let loadedAt = 0;
 let loadedKey = -1;
@@ -45,7 +47,8 @@ async function load(): Promise<Card[]> {
       if (asked !== gen) return cards;
       // A read that failed never wipes a shelf already shown.
       cache = ok ? cards : (cache ?? cards);
-      failedLast = !ok;
+      if (ok) loadedOk = true;
+      failedLast = !ok && !loadedOk;
       inflight = null;
       loadedAt = Date.now();
       listeners.forEach((l) => l());
@@ -82,6 +85,11 @@ export function useFamilyCards(refreshKey = 0, enabled = true): { cards: Card[] 
   return { cards, failed, retry: retryFamilyCards };
 }
 
+/** Whether the shelf is in the "could not load" state right now (for tests and non-React callers). */
+export function familyCardsFailed(): boolean {
+  return failedLast;
+}
+
 /** Read the shelf again now (the "Try again" after a read that failed). */
 export function retryFamilyCards(): void {
   loadedAt = 0;
@@ -93,6 +101,7 @@ export function resetFamilyCards(): void {
   gen++;
   cache = null;
   failedLast = false;
+  loadedOk = false;
   inflight = null;
   loadedAt = 0;
   loadedKey = -1;

@@ -1,6 +1,7 @@
 "use client";
 // The real sign-out: lib/auth-session.ts runs the steps in order; these are the browser's.
 import { signOutEverywhere, type SignOutSteps } from "./auth-session";
+import { clearSwCachesQuietly } from "./sw-clear";
 import { dropEarly } from "./early";
 import { closeFetchGate } from "./net-gate";
 import { AUTH_INTENT_KEY, browserAuth } from "./supabase-browser";
@@ -37,13 +38,7 @@ const steps: SignOutSteps = {
     dropEarly();
     clearJsonCache();
   },
-  clearServiceWorker: () => {
-    try {
-      navigator.serviceWorker?.controller?.postMessage("clear");
-    } catch {
-      /* no service worker */
-    }
-  },
+  clearServiceWorker: () => clearSwCachesQuietly(),
   goTo: (path) => window.location.replace(path),
 };
 

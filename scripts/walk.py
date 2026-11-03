@@ -16,6 +16,8 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
+from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 
@@ -164,11 +166,18 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
     ctx.close()
 
 
-def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[str]:
+def walk(base: str, person: str, kind: str, browser, size=(390, 844), counts=None) -> list[str]:
     problems: list[str] = []
     ctx = browser.new_context(viewport={"width": size[0], "height": size[1]}, base_url=base)
     # Behind the door: open straight into the house (app/page.tsx DOOR_KEY).
     ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
+    if counts is not None:
+        def count_api(request):
+            path = urlsplit(request.url).path
+            if path.startswith("/api/"):
+                counts[path] += 1
+
+        ctx.on("request", count_api)
     page = ctx.new_page()
     where = {"url": "/"}
     page.on("pageerror", lambda e: problems.append(f"{person} {where['url']}: page error: {e}"))
@@ -540,13 +549,17 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:3100")
     ap.add_argument("--engine", default="chromium", choices=["chromium", "webkit"], help="webkit is Safari's engine (iPhone)")
+    ap.add_argument("--count-requests", action="store_true", help="report API requests made by each room walk")
     args = ap.parse_args()
     problems: list[str] = []
     with sync_playwright() as p:
         browser = getattr(p, args.engine).launch()
         for person, kind in PEOPLE:
             for size in FIT_SIZES:
-                found = walk(args.base, person, kind, browser, size)
+                counts = Counter() if args.count_requests else None
+                found = walk(args.base, person, kind, browser, size, counts)
+                if counts is not None:
+                    print(f"{person} {size[0]}x{size[1]} API requests: {json.dumps(dict(sorted(counts.items())))}")
                 if person == "arjun":
                     first_screen(args.base, person, browser, found, size)
                 print(f"{person:6} {size[0]}x{size[1]} {'ok' if not found else f'{len(found)} problem(s)'}")

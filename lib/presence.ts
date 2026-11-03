@@ -4,6 +4,7 @@
 // ("chai on the verandah"), or simply opening Nearer if they allow it. The
 // quiet-day note is opt-in, owned by the parent, goes to one person they
 // chose, and is judged against *their own* usual rhythm, never a fixed rule.
+import { dateInZone, clockInZone } from "./time-format";
 import type { CareSettings, Presence, PresenceMoment } from "./kinds";
 import { hourIn } from "./zones";
 
@@ -40,7 +41,7 @@ export function shareableFor(role: "elder" | "adult" | "child"): PresenceMoment[
 
 function localDay(iso: string, tz: string): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+    return dateInZone(tz).format(new Date(iso));
   } catch {
     return iso.slice(0, 10);
   }
@@ -87,7 +88,7 @@ export function quietDay(settings: CareSettings | undefined, viewerId: string, p
 /** "6:40 AM" in the parent's zone. */
 export function at(iso: string, tz: string): string {
   try {
-    return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz }).format(new Date(iso));
+    return clockInZone(tz).format(new Date(iso));
   } catch {
     return "";
   }
