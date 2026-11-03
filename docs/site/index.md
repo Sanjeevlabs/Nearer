@@ -2,11 +2,11 @@
 
 ## What Nearer is
 
-Nearer is **the window between two homes**.
+Nearer is **the voice-first window between two homes**. You talk instead of typing; Nearer writes it down, translates it, and keeps her voice.
 
 Arjun lives in Bengaluru. His parents, Maa and Papa, live in Amritsar, 1,600 km away. At 8 PM he opens Nearer and sees their window: their sky right now, the time there, and what they chose to share today. He taps the **lamp**, and Maa's phone says *Arjun is thinking of you*. Maa has opened her door for chai; he joins with his voice, and nothing starts until he taps.
 
-That is the whole product: a window that keeps parents **needed, not monitored**. The app shows only what someone chose to share. Nothing is inferred from app use, the clock, or silence.
+That is the whole product: a voice-first window that keeps parents **needed, not monitored**. The app shows only what someone chose to share. Nothing is inferred from app use, the clock, or silence.
 
 Calm by design: no feed, no counts, no status.
 
@@ -32,12 +32,12 @@ Every family keeps its own space. A married couple and their children belong to 
 
 ## The five rooms
 
-Slide the key and you are inside. The house opens five rooms:
+Slide the key and you step straight into the family page. The bottom bar has two buttons: Voice and House. The house opens five rooms:
 
 | Room | Tabs |
 |---|---|
 | **Living Room** | Time together · Coming up · Occasions (wishes and the Chorus) |
-| **Memories** | Memory Lane (photos and voice memories, starred, searchable) · Stories · The Book · Advice · Ask the family |
+| **Memories** | Memory Lane (voice memories and photos, starred, searchable) · Stories · The Book · Advice · Ask the family |
 | **Kitchen** | Recipes (taught by voice, scanned from a card) |
 | **Our People** | Family tree · Homes · Kids · Visits |
 | **Care** | Care tasks · Helpers · Nearby (who to call first) |

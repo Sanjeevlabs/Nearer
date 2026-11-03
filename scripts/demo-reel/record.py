@@ -314,7 +314,7 @@ def shot7(c: Clip) -> None:
     c.glide(track["x"] + track["width"] - 30, c.y, ms=800)
     c.pause(150)
     c.page.mouse.up()
-    c.need("[data-ui=dock]", "the courtyard dock behind the door")
+    c.need("[data-ui=dock]", "the family page dock after the key")
     c.pause(500)
     c.scroll(480, ms=1300, at=(195, 500))
     c.hold_until(c.spec["dur"])

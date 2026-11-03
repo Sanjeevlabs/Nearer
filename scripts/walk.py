@@ -34,7 +34,7 @@ KID_ROOMS = {
     "Memories": ["/lane", "/stories"],
     "Our People": ["/bond"],
 }
-# Pages that are in no room: For you (the bell on the dock); Portrait (from the Family tree) and
+# Pages that are in no room: For you (the bell on the window, and behind your own photo); Portrait (from the Family tree) and
 # Holidays (from Visits) left the tabs but still resolve.
 EXTRA = ["/inbox", "/portrait", "/together/holidays"]
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "child")]
@@ -106,7 +106,7 @@ def dock_overlaps(page, where: str, problems: list[str], person: str) -> None:
 
 
 def first_screen(base: str, person: str, browser, problems: list[str], size=(390, 844)) -> None:
-    """The first screen at 390pt: the home page first, then exactly one bottom bar on the window, the dock only behind the open door."""
+    """The first screen at 390pt: the home page first, then exactly one bottom bar on the window, the dock only after the key is slid."""
     ctx = browser.new_context(viewport={"width": size[0], "height": size[1]}, base_url=base)
     res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
     if not res.ok:
@@ -129,7 +129,7 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
     page.wait_for_timeout(1200)
     fit_check(page, "/ (window)", problems, person)
     if page.locator("[data-ui=dock]").count():
-        problems.append(f"{person} /: the dock shows on the closed-door window")
+        problems.append(f"{person} /: the dock shows on the window (key not yet slid)")
     bars = page.evaluate(
         """() => [...document.querySelectorAll('*')].filter((e) => {
           const r = e.getBoundingClientRect(); const cs = getComputedStyle(e);
@@ -140,15 +140,27 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
     if bars != 1:
         problems.append(f"{person} /: {bars} bottom bars on the window, expected 1")
     dock_overlaps(page, "/ (window)", problems, person)
-    page.evaluate("sessionStorage.setItem('aangan:door','open')")
+    # Slide the key (Enter on it): straight to the family page, no door in between.
+    page.get_by_role("button", name="Slide to open the house").focus()
+    page.keyboard.press("Enter")
+    try:
+        page.locator("[data-ui=courtyard-header]").wait_for(timeout=5_000)
+    except Exception:
+        problems.append(f"{person} /: sliding the key did not reach the family page within 5 s")
+    if page.locator("[data-door], img[src*='door-']").count():
+        problems.append(f"{person} /: a door is still on screen after the key")
     page.reload(wait_until="load")
     try:
         page.locator("[data-ui=dock]").wait_for(timeout=15_000)
         page.wait_for_timeout(800)
         fit_check(page, "/ (courtyard)", problems, person)
         dock_overlaps(page, "/ (courtyard)", problems, person)
+        # Voice first: the bottom bar is Voice and House, nothing else.
+        names = page.evaluate("[...document.querySelectorAll('[data-ui=dock] a, [data-ui=dock] button')].map((e) => e.getAttribute('aria-label') || e.textContent.trim())")
+        if len(names) != 2 or not names[0].startswith(("Voice memory", "Invite family")) or names[1] != "Open the house":
+            problems.append(f"{person} /: the dock should be Voice and House only, found {names}")
     except Exception:
-        problems.append(f"{person} /: no dock behind the open door")
+        problems.append(f"{person} /: no dock on the family page")
     ctx.close()
 
 
@@ -318,6 +330,68 @@ def check_sheet(page, name: str, opener, problems: list[str], person: str) -> bo
     return True
 
 
+def voice_sheet_photo(page, person: str, problems: list[str]) -> None:
+    """Photos are one tap inside the voice sheet: 'Add a photo instead' swaps it for the photo composer."""
+    page.goto("/", wait_until="load")
+    page.wait_for_timeout(1200)
+    voice = page.locator("[data-ui=dock] button[aria-label^='Voice memory']")
+    if voice.count() == 0:
+        return  # nobody to talk to yet: the dock shows Invite family
+    voice.first.click()
+    page.wait_for_timeout(1200)
+    if page.locator("[data-ui=voice-add-photo]").count() == 0:
+        # A who-is-it-for sheet came first: take its first row.
+        page.locator("[role=dialog] button:not([aria-label=Close])").first.click()
+    understand = page.get_by_role("button", name="I understand")
+    try:
+        understand.wait_for(timeout=2_000)
+        understand.click()  # the first-recording note
+    except Exception:
+        pass
+    link = page.locator("[data-ui=voice-add-photo]")
+    try:
+        link.wait_for(timeout=8_000)
+    except Exception:
+        problems.append(f"{person} voice sheet: no 'Add a photo instead' link")
+        return
+    link.click()
+    try:
+        page.get_by_text("Choose photos or a video").wait_for(timeout=8_000)
+    except Exception:
+        problems.append(f"{person} voice sheet: 'Add a photo instead' did not open the photo composer")
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(500)
+
+
+def profile_menu(page, person: str, problems: list[str]) -> None:
+    """Your own photo opens a small sheet with Sign out first, then For you, Settings."""
+    page.goto("/", wait_until="load")
+    page.wait_for_timeout(1200)
+    btn = page.locator("[data-ui=profile-menu-button]").first
+    if btn.count() == 0:
+        problems.append(f"{person} /: no profile photo button")
+        return
+    btn.click()
+    try:
+        page.locator("[data-ui=profile-menu]").wait_for(timeout=8_000)
+    except Exception:
+        problems.append(f"{person} profile menu: did not open")
+        return
+    rows = page.evaluate("[...document.querySelectorAll('[data-ui=profile-menu] [data-profile]')].map((e) => e.getAttribute('data-profile'))")
+    want = ["sign-out", "inbox", "settings"]
+    if rows[:3] != want:
+        problems.append(f"{person} profile menu: expected {want} first, found {rows}")
+    small = page.evaluate("[...document.querySelectorAll('[data-ui=profile-menu] [data-profile]')].filter((e) => e.getBoundingClientRect().height < 43.5).length")
+    if small:
+        problems.append(f"{person} profile menu: {small} row(s) under 44 px")
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(600)
+    if page.locator("[data-ui=profile-menu]").count():
+        problems.append(f"{person} profile menu: Escape did not close it")
+    elif not btn.evaluate("(el) => el === document.activeElement"):
+        problems.append(f"{person} profile menu: focus did not go back to the photo")
+
+
 def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
     """Open every sheet that is reachable without typing, as a grown-up, at 360x640. Returns the sheets whose opener wasn't there."""
     skipped: list[str] = []
@@ -331,7 +405,7 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
     page = ctx.new_page()
     plan = [
         ("/", "the house", lambda: page.get_by_role("button", name="Open the house")),
-        ("/", "photo / moment", lambda: page.get_by_role("button", name="Photo", exact=True)),
+        ("/", "your photo menu", lambda: page.get_by_role("button", name=re.compile(r"account and settings|profile and settings"))),
         ("/", "who is it for", lambda: page.get_by_role("button", name=re.compile(r"^Voice memory"))),
         ("/", "invite family", lambda: page.get_by_role("button", name="Invite family")),
         ("/bond", "invite (family page)", lambda: page.get_by_role("button", name=re.compile(r"^Invite$"))),
@@ -348,6 +422,8 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
             here = url
         if not check_sheet(page, name, opener(), problems, person):
             skipped.append(f"{url} {name}")
+    voice_sheet_photo(page, person, problems)
+    profile_menu(page, person, problems)
     ctx.close()
     return skipped
 

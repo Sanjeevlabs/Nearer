@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { whatsappInvite } from "@/lib/invite-link";
 import { haptic } from "@/lib/native";
+import { playKeyClick } from "@/lib/key-sound";
+import { unlockBeat } from "@/lib/house-entry";
 import type { SafetyCheckin } from "@/lib/kinds";
 import type { Activity, Door } from "@/lib/doors";
 import { rememberHero, type SceneSpace } from "@/lib/hero";
@@ -33,6 +35,7 @@ import { usePlayer } from "./player";
 import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
 import { Avatar, Icon, type IconName } from "./ui/kit";
+import { ProfileMenu } from "./profile-menu";
 import { useViewer } from "./viewer";
 import { WindowScene } from "./window-scene";
 
@@ -120,7 +123,14 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
     setDone(true);
     setX(max());
     void haptic("selection");
-    window.setTimeout(onOpen, 160);
+    playKeyClick();
+    let calm = false;
+    try {
+      calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      /* motion is fine */
+    }
+    window.setTimeout(onOpen, unlockBeat(calm));
     window.setTimeout(() => {
       setDone(false);
       setX(0);
@@ -177,7 +187,7 @@ export function SlideHome({ onOpen }: { onOpen: () => void }) {
 type LampData = LampView;
 
 /* ---------------------------------------------------------------- the screen */
-export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
+export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
   const router = useRouter();
   const { viewer, members } = useViewer();
   const { openAdd } = useShell();
@@ -397,14 +407,10 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
           pulseKey={pulse}
           lampLabel={`${lampNow.lit ? "The lamp is lit" : "The lamp is not lit"}. Tap to light it for ${first || "them"}; hold to send a heartbeat`}
         >
-          <button type="button" onClick={() => router.push("/settings")} aria-label="Your profile and settings" className="press absolute left-3 grid h-[44px] w-[44px] place-items-center rounded-full" style={{ top: "calc(6px + env(safe-area-inset-top))" }}>
-            <span className="rounded-full ring-2 ring-white/70">
-              <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={36} />
-            </span>
-          </button>
+          <ProfileMenu size={36} ring className="absolute left-3 grid h-[44px] w-[44px] place-items-center rounded-full" style={{ top: "calc(6px + env(safe-area-inset-top))" }} label="Your profile and settings" />
           <Link href="/inbox" data-ui="window-bell" aria-label={hasWaiting ? "For you: something is waiting" : "For you"} className="press absolute left-[60px] grid h-[44px] w-[44px] place-items-center rounded-full bg-black/30 text-white no-underline backdrop-blur-md" style={{ top: "calc(6px + env(safe-area-inset-top))" }}>
             <Icon name="bell" size={19} strokeWidth={1.9} />
-            {hasWaiting && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#e8735a] ring-2 ring-white" aria-hidden="true" />}
+            {hasWaiting && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[var(--waiting)] ring-2 ring-white" aria-hidden="true" />}
           </Link>
           {data?.far && <Badge time={clock} weather={data.weather} glyph={data.sky.glyph} />}
         </WindowScene>
@@ -518,7 +524,7 @@ export function LiteWindow({ onOpenDoor }: { onOpenDoor: () => void }) {
 
         {/* The key home stays within reach at the bottom of the screen */}
         <div className="sticky bottom-0 z-10 mt-auto bg-gradient-to-t from-paper from-70% to-transparent px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
-          <SlideHome onOpen={onOpenDoor} />
+          <SlideHome onOpen={onUnlock} />
         </div>
       </div>
 

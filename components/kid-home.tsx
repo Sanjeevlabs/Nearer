@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { timeIn } from "@/lib/zones";
 import { grandparentsOf, guardiansOf } from "@/lib/kids";
@@ -10,6 +9,7 @@ import { postJson, useJson } from "@/lib/use-json";
 import { usePlayer } from "./player";
 import { useShell } from "./shell";
 import { Avatar, Icon, type IconName } from "./ui/kit";
+import { ProfileMenu } from "./profile-menu";
 import { useViewer } from "./viewer";
 
 // What a child sees first. Big, warm, three things to do: Show, Tell, Ask. The
@@ -94,9 +94,7 @@ export function KidHome() {
     <div data-ui="kid-home" className="pb-32 pt-5">
       <header className="flex items-center gap-3">
         <h1 data-display className="m-0 min-w-0 flex-1 truncate text-display font-light leading-tight">Hello, {callName(viewer)}</h1>
-        <Link href="/settings" aria-label="You: settings" className="press rounded-full no-underline">
-          <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={44} ring />
-        </Link>
+        <ProfileMenu ring label="You: account and settings" />
       </header>
 
       {grand.length > 0 && (
@@ -117,9 +115,9 @@ export function KidHome() {
       )}
 
       <div className="mt-6 space-y-3">
-        <BigButton label="Show" hint="A photo or a drawing" icon="camera" tone="#f4d7b5" onClick={() => openAdd("photos")} />
         <BigButton label="Tell" hint="Say something with your voice" icon="mic" tone="#dfe3c8" onClick={() => openAdd("voice", null, grandIds.length ? grandIds : null)} />
         <BigButton label="Ask" hint="A question, or a story" icon="sparkle" tone="#d7e2e4" onClick={() => openAdd("voice", { kind: "kid_ask", toMemberId: askers.length === 1 ? askers[0] : undefined }, grandIds.length ? grandIds : askers)} />
+        <BigButton label="Show" hint="A photo or a drawing" icon="camera" tone="#f4d7b5" onClick={() => openAdd("photos")} />
       </div>
 
       <Tonight />

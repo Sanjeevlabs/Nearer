@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { POST as postCard } from "@/app/api/cards/route";
 import { GET as inboxGET } from "@/app/api/inbox/route";
-import { ForYouGlyph, HouseGlyph, ReactionGlyph } from "@/components/ui/glyphs";
+import { HouseGlyph, ReactionGlyph } from "@/components/ui/glyphs";
 import { ADDRESSED_TO_MAX } from "@/lib/card-limits";
 import { DEMO_MEMBERS } from "@/lib/family";
 import { addressTo, addressees, households } from "@/lib/households";
@@ -195,6 +195,5 @@ describe("reaction glyphs", () => {
       expect(renderToStaticMarkup(createElement(ReactionGlyph, { kind }))).toContain("aria-hidden");
     }
     expect(renderToStaticMarkup(createElement(HouseGlyph))).toContain("<svg");
-    expect(renderToStaticMarkup(createElement(ForYouGlyph))).toContain("<svg");
   });
 });

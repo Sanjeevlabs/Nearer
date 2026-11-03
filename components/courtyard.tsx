@@ -23,6 +23,7 @@ import { useShell } from "./shell";
 import { SafetyWatch } from "./safety";
 import { PersonDay, lampFor } from "./person-day";
 import { PersonSheet, type WindowPersonData } from "./person-sheet";
+import { ProfileMenu } from "./profile-menu";
 import { SideSwitch, doneOpening, useOpeningSide, useSides } from "./sides";
 import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
@@ -33,7 +34,6 @@ import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Button, Icon, Monogram, Photo } from "./ui/kit";
-import { Mark } from "./brand";
 import { familyHomePhoto } from "@/lib/family";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { useViewer } from "./viewer";
@@ -149,12 +149,12 @@ function PersonChip({ member, lamp, onOpen }: { member: Member; lamp: { glow: bo
   );
 }
 
-/** You, first in the row: open your own day to add a photo, a voice note or a line about today. */
+/** You, first in the row: open your own day to add a voice note, a photo or a line about today. */
 function MyDayChip({ member, onOpen }: { member: Member; onOpen: () => void }) {
   const photo = memberPhoto(member);
   return (
     <li className="w-[92px] shrink-0 text-center" style={{ scrollSnapAlign: "start" }}>
-      <button type="button" onClick={onOpen} aria-label="Your day: add a photo, a voice memory or a line about today" className="press block w-full text-ink">
+      <button type="button" onClick={onOpen} aria-label="Your day: add a voice memory, a photo or a line about today" className="press block w-full text-ink">
         <span className="relative mx-auto block h-[68px] w-[68px] rounded-full ring-1 ring-black/15">
           <span className="absolute inset-[3px] overflow-hidden rounded-full bg-surface">{photo ? <Photo src={photo} alt="" sizes="140px" position="center 30%" /> : <Monogram name={callName(member)} size={62} />}</span>
           <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full bg-deep text-white ring-2 ring-white" aria-hidden="true">
@@ -239,7 +239,7 @@ function CourtyardRetry({ onRetry }: { onRetry: () => void }) {
 }
 
 /* ----------------------------------------------------------------- page */
-export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
+export function Courtyard({ onBack }: { onBack: () => void }) {
   const { viewer, members } = useViewer();
   const { refreshKey, openAdd } = useShell();
   const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
@@ -302,16 +302,11 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
           {/* The family's home: your own home photo, else a Muse-made one. The drawn band stays under it while it loads. */}
           <Photo src={homePhoto} alt="" sizes="(max-width: 480px) 100vw, 448px" priority position="center 55%" />
           <span className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/60" aria-hidden="true" />
-          <span className="absolute left-4 top-4 opacity-90" aria-hidden="true">
-            <Mark size={36} />
-          </span>
+          <button type="button" onClick={onBack} aria-label="Back to the window" className="press glass absolute left-3 top-3 grid h-11 w-11 place-items-center rounded-full text-white">
+            <Icon name="chevron" size={20} strokeWidth={1.8} className="rotate-180" />
+          </button>
           <div className="absolute right-3 top-3 flex items-center gap-2">
-            <button type="button" onClick={onCloseDoor} aria-label="Close the door, back to the window" className="press glass grid h-11 w-11 place-items-center rounded-full text-white">
-              <Icon name="doorClosed" size={20} strokeWidth={1.8} />
-            </button>
-            <Link href="/settings" aria-label="You: settings and account" className="press rounded-full no-underline">
-              <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={44} ring />
-            </Link>
+            <ProfileMenu ring />
           </div>
           <div className="absolute inset-x-4 bottom-3.5 text-white">
             <h1 data-display className="m-0 mt-0.5 truncate [text-shadow:0_1px_12px_rgba(0,0,0,.45)] text-display font-light leading-[1.1] tracking-[-0.01em]">{familyName ? `The ${familyName} family` : "Your family"}</h1>

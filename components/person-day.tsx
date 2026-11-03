@@ -23,7 +23,7 @@ import { useViewer } from "./viewer";
 // Photos come as prints (when, where and a note in the border); voices have
 // full controls; who reacted shows by name. No likes, no counts, no "seen",
 // nothing expires: it is all kept in Memory Lane. On your own day you can add
-// a photo, a voice, or one line about today that lasts until your midnight.
+// a voice, a photo, or one line about today that lasts until your midnight.
 
 /* ------------------------------------------------------------ pure helpers */
 

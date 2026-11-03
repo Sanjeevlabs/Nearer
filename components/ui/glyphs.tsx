@@ -1,7 +1,6 @@
 // Nearer's own small glyphs (24px grid, 1.75 rounded stroke in ink at 70%, a light
 // petal tint inside). Reactions are ours, not the phone's emoji: Love, Blessing,
-// Smile. The same strokes draw the dock's house (a door with a keyhole) and the
-// bell for "For you". Stroke follows currentColor, so dark mode and glass work.
+// Smile. The same strokes draw the dock's house. Stroke follows currentColor, so dark mode and glass work.
 import type { Reaction } from "@/lib/schemas";
 
 type Kind = Reaction["kind"];
@@ -55,25 +54,12 @@ export function ReactionGlyph({ kind, selected = false, size = 24, className, la
   );
 }
 
-/** The dock's house: a door with a small keyhole. */
+/** The dock's house: a roof over a small home, with a lit window. */
 export function HouseGlyph({ size = 24, className }: { size?: number; className?: string }) {
   return (
     <Frame size={size} className={className}>
-      <path d="M6 20.5V10.2a6 6 0 0 1 12 0v10.3" fill="var(--petal-3)" fillOpacity={0.14} {...BASE} strokeOpacity={0.85} />
-      <path d="M3.5 20.5h17" {...STROKE} strokeOpacity={0.85} />
-      <circle cx="12" cy="12" r="1.6" {...STROKE} strokeOpacity={0.85} />
-      <path d="M12 13.7v3" {...STROKE} strokeOpacity={0.85} />
-    </Frame>
-  );
-}
-
-/** "For you": a soft bell with a petal-tinted body. */
-export function ForYouGlyph({ size = 24, className }: { size?: number; className?: string }) {
-  return (
-    <Frame size={size} className={className}>
-      <path d="M6 16.4v-5.2a6 6 0 0 1 12 0v5.2l1.6 2H4.4z" fill="var(--petal-5)" fillOpacity={0.2} {...BASE} strokeOpacity={0.85} />
-      <path d="M10 20.6a2.2 2.2 0 0 0 4 0" {...STROKE} strokeOpacity={0.85} />
-      <path d="M12 3.4v1.8" {...STROKE} strokeOpacity={0.85} />
+      <path d="M4.5 11 12 4.2 19.5 11v8.3a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1z" fill="var(--petal-3)" fillOpacity={0.14} {...BASE} strokeOpacity={0.85} />
+      <rect x="9.6" y="11.4" width="4.8" height="4.4" rx="1" {...STROKE} strokeOpacity={0.85} />
     </Frame>
   );
 }

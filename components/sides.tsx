@@ -28,8 +28,8 @@ export interface Side {
   fresh?: number;
 }
 
-export function useSides() {
-  const { data, failed, reload } = useJson<{ current: string; sides: Side[] }>("/api/sides");
+export function useSides(enabled = true) {
+  const { data, failed, reload } = useJson<{ current: string; sides: Side[] }>(enabled ? "/api/sides" : null);
   return { sides: data?.sides ?? [], current: data?.current ?? null, loading: data === null && !failed, failed, reload };
 }
 
@@ -59,7 +59,7 @@ export function doneOpening(familyId: string): void {
   if (opening?.familyId === familyId) setOpening(null);
 }
 
-async function openSide(side: Pick<Side, "familyId" | "name">): Promise<void> {
+export async function openSide(side: Pick<Side, "familyId" | "name">): Promise<void> {
   const home = window.location.pathname === "/";
   if (home) setOpening({ familyId: side.familyId, name: side.name });
   const out = await postJson("/api/sides", { action: "switch", familyId: side.familyId });

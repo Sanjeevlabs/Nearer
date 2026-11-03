@@ -73,7 +73,7 @@ The numbers are in one place: `TTL` in `lib/purge.ts`.
 | Cards snapshot (`useFamilyCards`) | Browser memory | | Same events as above; also cleared on `aangan:auth` | Same |
 | Courtyard payload (`/api/courtyard`) | Browser memory | | Refetched on any write and on `aangan:auth` | Same |
 | `aangan:hero` (last first-screen photo) | Browser (`localStorage`) | The window loading | Removed on `aangan:auth`, so the next family never paints the last family's photo | |
-| `aangan:entered`, `aangan:door` | Browser (`sessionStorage`) | Stepping into the app / opening the door | End of the tab session; `entered` also removed on sign-in. They hold no family data | |
+| `aangan:entered`, `aangan:door` | Browser (`sessionStorage`) | Stepping into the app / sliding the key to the family page | End of the tab session; `entered` also removed on sign-in. They hold no family data | |
 | `aangan:auth-intent`, welcome note | Browser | Starting sign-in | Used once, then removed | |
 | Muse card "not now" (`SLOT_DISMISS_KEY`) | Browser (`localStorage`) | The person | After two weeks. **Not keyed by family**: it is per phone | A second family on the same phone shares it. Left as is: it only hides a suggestion |
 

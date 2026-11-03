@@ -4,6 +4,9 @@ What changed in Nearer, newest first. Each entry is grouped by its PR number.
 
 ## Recent changes
 
+### #71 - Voice first
+The bottom bar is Voice and House. Your photo opens a small menu with Sign out. The entrance door is gone: the key goes straight to the family page.
+
 ### #62 - Demo close-out and story
 Demo lets a room of judges in. README tells Arjun and Maa's story. Build log through 3 Nov, with 55 languages everywhere.
 

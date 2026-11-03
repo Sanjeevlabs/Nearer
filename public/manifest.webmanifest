@@ -1,7 +1,7 @@
 {
   "name": "Nearer",
   "short_name": "Nearer",
-  "description": "The window between two homes.",
+  "description": "The voice-first window between two homes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

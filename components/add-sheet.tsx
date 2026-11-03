@@ -225,6 +225,7 @@ interface VoiceReady {
 
 function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[] | null; contribution: ReplyContribution | null; onDone: () => void }) {
   const router = useRouter();
+  const { openAdd } = useShell();
   const { viewer, members, relationships, displayLang } = useViewer();
   const purpose = contribution && contribution.kind !== "wish" && contribution.kind !== "blessing" ? PURPOSE[contribution.kind] : null;
   const [to, setTo] = useState<string[]>(addressee ?? []);
@@ -545,6 +546,13 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
           </p>
         )}
       </div>
+
+      {phase === "idle" && !contribution && (
+        <button type="button" data-ui="voice-add-photo" onClick={() => openAdd("photos")} className="press mx-auto mb-1 flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-callout font-semibold text-ink-soft">
+          <Icon name="camera" size={16} />
+          Add a photo instead
+        </button>
+      )}
 
       {phase === "ready" && nightThere && (
         <button type="button" role="switch" aria-checked={letter} onClick={() => setLetter((v) => !v)} className="press mb-2 flex w-full items-center gap-3 rounded-[18px] border border-[var(--line)] px-3.5 py-3 text-left">

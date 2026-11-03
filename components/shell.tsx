@@ -19,7 +19,7 @@ import type { AddTab, ReplyContribution } from "./add-sheet";
 import { PlayerProvider, usePlayer } from "./player";
 import { BottomSheet } from "./ui/bottom-sheet";
 import { Icon, type IconName } from "./ui/kit";
-import { ForYouGlyph, HouseGlyph } from "./ui/glyphs";
+import { HouseGlyph } from "./ui/glyphs";
 import { ViewerProvider, useViewer } from "./viewer";
 import { DocumentLangOnly } from "@/lib/use-t";
 import { onAppUrlOpen, setStatusBar, watchPush } from "@/lib/native";
@@ -99,8 +99,9 @@ function RoomsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-// The dock: a voice note (to anyone; it says who is waiting for your reply),
-// a photo, and the house for the rooms (Living Room, Memories, Kitchen, Our People, Care).
+// The dock: two buttons. Voice is the one big action (a voice note to anyone; a dot says someone
+// is waiting for your reply) and the house opens the rooms (Living Room, Memories, Kitchen, Our People, Care).
+// Photos are one tap inside the voice sheet ("Add a photo instead"); For you is behind your own photo.
 function Dock() {
   const { openAdd, openRooms, refreshKey, chromeHidden, dockOn } = useShell();
   const { viewer, members } = useViewer();
@@ -144,23 +145,18 @@ function Dock() {
             exit={{ y: 24, opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
           >
-            <div data-ui="dock" className="frost glass-pill flex items-center gap-1 p-1.5">
+            <div data-ui="dock" className="frost glass-pill flex items-center gap-2 p-1.5">
               {others.length ? (
-                <button type="button" onClick={voice} aria-label={pagePerson && pagePerson.id !== viewer.id ? `Voice memory to ${callName(pagePerson)}` : "Voice memory"} className="press relative grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink">
-                  <Icon name="mic" size={23} strokeWidth={1.9} />
+                <button type="button" onClick={voice} aria-label={`Voice memory${pagePerson && pagePerson.id !== viewer.id ? ` to ${callName(pagePerson)}` : ""}${waitingList.length ? `, ${waitingList.length} waiting for your reply` : ""}`} className="press relative flex h-14 items-center justify-center gap-2 rounded-full bg-accent px-7 text-accent-ink">
+                  <Icon name="mic" size={25} strokeWidth={1.9} />
+                  <span className="text-headline font-semibold">Voice</span>
+                  {waitingList.length > 0 && <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-[var(--waiting)] ring-2 ring-white" aria-hidden="true" />}
                 </button>
               ) : (
                 <button type="button" onClick={() => setInviting(true)} aria-label="Invite family" className="press grid h-12 w-12 place-items-center rounded-full bg-accent text-accent-ink">
                   <Icon name="plus" size={23} />
                 </button>
               )}
-              <Link href="/inbox" aria-label={waitingList.length ? `For you, ${waitingList.length} waiting: ${waitingList[0].text}` : "For you"} className="press relative grid h-12 w-12 place-items-center rounded-full text-ink">
-                <ForYouGlyph size={26} />
-                {waitingList.length > 0 && <span className="absolute right-1.5 top-1.5 h-3 w-3 rounded-full bg-marigold ring-2 ring-white" aria-hidden="true" />}
-              </Link>
-              <button type="button" onClick={() => openAdd("photos")} aria-label="Photo" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
-                <Icon name="camera" size={23} strokeWidth={1.9} />
-              </button>
               <button type="button" onClick={openRooms} aria-label="Open the house" className="press grid h-12 w-12 place-items-center rounded-full text-ink">
                 <HouseGlyph size={26} />
               </button>

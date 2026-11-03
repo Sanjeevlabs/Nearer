@@ -521,23 +521,6 @@ html[data-entered="1"] .pre-mark, html[data-door="open"] .pre-mark { display: no
   background: rgba(255, 248, 235, 0.22);
   box-shadow: 0 3px 4px rgba(0, 0, 0, 0.35);
 }
-.yard-door {
-  background: url("/window/wood.svg") 0 0 / 240px 480px;
-  filter: saturate(0.8) brightness(0.8);
-  box-shadow: inset 2px 2px 0 rgba(255, 226, 180, 0.3), 3px 0 6px rgba(10, 4, 0, 0.45);
-}
-.yard-door-leaf {
-  filter: brightness(0.82);
-  box-shadow: inset 0 0 0 1px rgba(10, 4, 0, 0.5), inset 3px 4px 8px rgba(0, 0, 0, 0.5);
-  background-image: linear-gradient(180deg, rgba(10, 4, 0, 0) 22%, rgba(10, 4, 0, 0.35) 22%, rgba(10, 4, 0, 0.35) 23%, rgba(10, 4, 0, 0) 23%, rgba(10, 4, 0, 0) 62%, rgba(10, 4, 0, 0.35) 62%, rgba(10, 4, 0, 0.35) 63%, rgba(10, 4, 0, 0) 63%), url("/window/wood.svg");
-  background-size: 100% 100%, 240px 480px;
-}
-.yard-door-split {
-  position: absolute;
-  inset: 0 auto 0 50%;
-  width: 1.5px;
-  background: rgba(8, 3, 0, 0.75);
-}
 .yard-ring {
   position: absolute;
   top: 48%;
@@ -610,4 +593,21 @@ html[data-entered="1"] .pre-mark, html[data-door="open"] .pre-mark { display: no
 @keyframes lamp-arrive {
   0%, 100% { box-shadow: 0 0 0 3px var(--marigold-glow), 0 0 10px 2px var(--marigold-glow); }
   50% { box-shadow: 0 0 0 6px var(--marigold-glow), 0 0 22px 6px var(--marigold-glow); }
+}
+
+/* Stepping inside (app/page.tsx): the new screen fades in and rises a few pixels; instant when motion is reduced. */
+@media (prefers-reduced-motion: no-preference) {
+  .enter-fade {
+    animation: enter-fade var(--enter-ms, 200ms) cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  }
+}
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

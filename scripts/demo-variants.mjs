@@ -24,8 +24,6 @@ const dir = join(process.cwd(), "public", "demo");
 const plan = {};
 // The first screen's home photos (scripts/gen-courtyard.mjs), once they exist.
 for (const n of ["home-courtyard", "home-balcony", "home-window"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [390, 780];
-// The door pair (components/door.tsx): closed, and the same door edited open.
-for (const n of ["door-closed", "door-open"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [390, 780];
 for (const n of ["lamp-unlit", "lamp-lit"]) if (existsSync(join(dir, `${n}.jpg`))) plan[`${n}.jpg`] = [160, 390];
 // The sitting venues (scripts/gen-courtyard.mjs venue-*): full-bleed on the call page.
 for (const n of ["courtyard", "terrace", "pergola", "deck", "lounge", "patio"]) if (existsSync(join(dir, "venues", `${n}.jpg`))) plan[`venues/${n}.jpg`] = [390, 780, 1600];

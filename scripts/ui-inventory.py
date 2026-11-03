@@ -3,8 +3,8 @@
 
 Generated, not hand-kept. Signs in to the demo (NEARER-DEMO) as arjun (adult),
 dadi (parent/elder) and aria (child), visits every route and state (all room
-tabs from lib/menu.ts, the window with the door closed, the courtyard with it
-open, the laptop home page at 1280px, each settings tab, the house sheet and the
+tabs from lib/menu.ts, the window before the key is slid, the family page after
+it, the laptop home page at 1280px, each settings tab, the house sheet and the
 add sheet, the public pages), and records each visible element by its role and
 accessible name: headings, links, buttons, toggles, tabs, inputs, selects,
 labelled sections, images with alt, labelled badges/dots, status text.
@@ -257,7 +257,7 @@ def capture(page, scr: dict, persona: str, other: str, log: list[str]):
         page.get_by_role("button", name=label, exact=True).click(timeout=8_000)
         page.wait_for_timeout(500)
     elif a in ("house", "add"):
-        name = "Open the house" if a == "house" else "Photo"
+        name = "Open the house" if a == "house" else "Voice memory"
         # A click before hydration does nothing: click again until the sheet is there.
         for attempt in range(4):
             page.get_by_role("button", name=name).first.click(timeout=10_000)

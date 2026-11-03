@@ -4,7 +4,7 @@
 
 export const en = {
   // Landing (signed out)
-  "landing.tagline": "The window between two homes.",
+  "landing.tagline": "The voice-first window between two homes.",
   "landing.sub": "A window into your parents' day, and theirs into yours.",
   "landing.create": "Create",
   "landing.join": "Join with code",
