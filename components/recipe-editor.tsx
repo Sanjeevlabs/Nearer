@@ -12,7 +12,7 @@ import { Avatar, Button, Icon, RoomHeader, SectionTitle } from "./ui/kit";
 import { memberPhoto } from "@/lib/people";
 import { useViewer } from "./viewer";
 
-export type Draft = Pick<Recipe, "title" | "memory" | "serves" | "course" | "prepMins" | "cookMins" | "prepWork" | "outcome" | "ingredients" | "steps" | "voiceCardId" | "videoCardId"> & { cookId: string };
+export type Draft = Pick<Recipe, "title" | "memory" | "serves" | "course" | "prepMins" | "cookMins" | "caloriesPerServing" | "prepWork" | "outcome" | "ingredients" | "steps" | "voiceCardId" | "videoCardId"> & { cookId: string };
 
 const blank = (cookId: string): Draft => ({
   title: "",
@@ -69,6 +69,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
       course: d.course,
       prepMins: d.prepMins,
       cookMins: d.cookMins,
+      caloriesPerServing: d.caloriesPerServing,
       prepWork: d.prepWork.map((p) => p.trim()).filter(Boolean),
       outcome: d.outcome.trim(),
       ingredients,
@@ -114,7 +115,11 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
       )}
 
       <div className="space-y-2.5 rounded-card bg-surface p-4">
-        <input className={cn(field, "text-headline font-semibold")} value={d.title} onChange={(e) => set("title", e.target.value)} maxLength={80} placeholder="Palak paneer" aria-label="Recipe name" />
+        <input className={cn(field, "text-headline font-semibold")} value={d.title} onChange={(e) => set("title", e.target.value)} maxLength={80} placeholder="Recipe name" aria-label="Recipe name" />
+        <label className="block text-callout">
+          Estimated calories per serving
+          <input className={field} type="number" min={1} max={10000} value={d.caloriesPerServing ?? ""} onChange={(e) => set("caloriesPerServing", e.target.value === "" ? null : Math.max(1, Math.min(10000, Math.round(Number(e.target.value)))))} />
+        </label>
         <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1" role="radiogroup" aria-label="Course">
           {COURSES.map((c) => (
             <button key={c} type="button" role="radio" aria-checked={d.course === c} onClick={() => set("course", c)} className={cn("press h-9 shrink-0 rounded-full px-3.5 text-callout font-medium", d.course === c ? "bg-accent text-accent-ink" : "bg-surface")}>
@@ -208,7 +213,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
       {error && <p className="m-0 mt-4 text-callout text-[#b42318]" role="alert">{error}</p>}
       <div className="mt-6 flex gap-2">
         <Button className="flex-[1.4]" disabled={busy} onClick={() => void save()}>
-          {busy ? "Saving…" : recipe ? "Save recipe" : "Add to the Kitchen"}
+          {busy ? "Saving…" : "Save recipe"}
         </Button>
         <Button variant="secondary" className="flex-1" onClick={() => onDone()}>
           Cancel

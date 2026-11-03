@@ -472,6 +472,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
           {(contribution?.kind === "answer" || contribution?.kind === "today" || (contribution?.kind === "story" && contribution.prompt)) && contribution.prompt && <Teleprompter text={contribution.prompt} />}
           {contribution?.kind === "recipe" && contribution.title && <p className="m-0 mb-1 text-headline font-semibold">{contribution.title}</p>}
           <p className="m-0 text-callout text-ink-soft">{purpose.hint}</p>
+          {contribution?.kind === "need" && <p className="m-0 mt-2 text-footnote text-ink-soft">Everyone in the family will see this.</p>}
         </div>
       ) : (
         <>

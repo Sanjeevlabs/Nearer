@@ -425,7 +425,7 @@ create table if not exists family_docs (
 -- Kinds are validated by lib/kinds.ts; the check keeps junk out of the table.
 -- height_mark: retired 1 Nov, kept in the list below so old rows parse (the app no longer reads or writes it).
 alter table family_docs drop constraint if exists family_docs_kind_check;
-alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','push_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark','feedback','sweep_mark','card_listen'));
+alter table family_docs add constraint family_docs_kind_check check (kind in ('recipe','kitchen-prefs','attempt','presence','care_settings','need','helper','rota','duty','pet','sitting','knock','question','muse_call','safety_checkin','safety_settings','post','order','story','project','album','place','game','ritual_settings','window_view','today_task','lamp','chitthi','partner_token','event','event_dismiss','day_line','muse_image_run','weekly_call','nudge','nudge_settings','push_settings','preview_used','habit','habit_tick','bedtime_story','kid_ask','height_mark','feedback','sweep_mark','card_listen'));
 create index if not exists family_docs_family_kind_idx on family_docs (family_id, kind, created_at desc);
 alter table family_docs enable row level security;
 
@@ -574,3 +574,7 @@ alter table sessions enable row level security;
 -- One place per person per family, whatever the case of their email. The sign-in route
 -- re-reads and uses the existing member when two requests race (lib/db.ts dbAddMember).
 create unique index if not exists members_family_email_uq on members (family_id, lower(email)) where email is not null;
+
+-- Speed up the media privacy gate for both card media and voice covers.
+create index if not exists cards_family_media_idx on cards (family_id, media_ref);
+create index if not exists cards_family_cover_idx on cards (family_id, cover_ref);

@@ -2,9 +2,9 @@ import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { dbGetMember, dbListCards, dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
-import { COURSES, IngredientSchema, StepSchema } from "@/lib/kinds";
+import { COURSES, IngredientSchema, KitchenPreferencesSchema, StepSchema } from "@/lib/kinds";
 import { canChange } from "@/lib/permissions";
-import { recipeFromVoice } from "@/lib/kitchen";
+import { recipeFromVoice, surpriseRecipe } from "@/lib/kitchen";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAsk } from "@/lib/push/events";
 import { nudgeShared } from "@/lib/nudge-producers";
@@ -24,6 +24,7 @@ const Fields = {
   course: z.enum(COURSES).default("main"),
   prepMins: z.number().int().min(0).max(1440).nullable().default(null),
   cookMins: z.number().int().min(0).max(1440).nullable().default(null),
+  caloriesPerServing: z.number().int().min(1).max(10000).nullable().optional(),
   prepWork: z.array(z.string().trim().min(1).max(160)).max(12).default([]),
   outcome: z.string().trim().max(240).default(""),
   ingredients: z.array(IngredientSchema).min(1).max(40),
@@ -33,9 +34,11 @@ const Fields = {
 };
 
 const Body = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("draft"), text: z.string().trim().min(1).max(4000) }),
+  z.object({ action: z.literal("surprise"), prefs: KitchenPreferencesSchema, previous: z.string().max(80).optional() }),
   // Typed by hand: "my palak paneer", or writing down Maa's for her (cookId).
   // scanRef: the photo of the recipe card Muse read it from (kept on the recipe).
-  z.object({ action: z.literal("create"), cookId: z.string().min(1).optional(), scanRef: z.string().min(1).max(512).nullable().optional(), ...Fields }),
+  z.object({ action: z.literal("create"), cookId: z.string().min(1).optional(), scanRef: z.string().min(1).max(512).nullable().optional(), museIdea: z.boolean().optional(), ...Fields }),
   z.object({ action: z.literal("teach"), cardId: z.string().min(1), title: z.string().trim().max(80).optional(), questionId: z.string().optional() }),
   z.object({ action: z.literal("attempt"), recipeId: z.string().min(1), photoRef: z.string().max(512).nullable().optional(), note: z.string().trim().max(240).default("") }),
   z.object({ action: z.literal("bless"), attemptId: z.string().min(1) }),
@@ -50,6 +53,10 @@ const Body = z.discriminatedUnion("action", [
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
+  if (new URL(req.url).searchParams.has("prefs")) {
+    const doc = await getDoc(auth.familyId, "kitchen-prefs", `kitchen-prefs:${auth.memberId}`);
+    return Response.json({ prefs: doc?.prefs ?? KitchenPreferencesSchema.parse({}) });
+  }
   const [recipes, attempts] = await Promise.all([listDocs(auth.familyId, "recipe"), listDocs(auth.familyId, "attempt")]);
   return Response.json({ recipes, attempts });
 }
@@ -68,6 +75,18 @@ async function postHandler(req: Request): Promise<Response> {
   if (!parsed.success) return Response.json({ error: "invalid-kitchen" }, { status: 400 });
   const body = parsed.data;
   const now = new Date().toISOString();
+
+  if (body.action === "draft") {
+    const member = await dbGetMember(auth.memberId);
+    return Response.json(await recipeFromVoice({
+      familyId: auth.familyId, transcript: body.text, lang: member?.lang ?? "en", cookName: "the cook",
+    }));
+  }
+  if (body.action === "surprise") {
+    await putDoc(auth.familyId, "kitchen-prefs", { id: `kitchen-prefs:${auth.memberId}`, memberId: auth.memberId, prefs: body.prefs });
+    const draft = await surpriseRecipe(auth.familyId, body.prefs, body.previous);
+    return draft ? Response.json({ draft }) : Response.json({ error: "no-recipe-idea" }, { status: 503 });
+  }
 
   if (body.action === "teach") {
     const card = seenBy(await dbListCards(auth.familyId), auth.memberId).find((c) => c.id === body.cardId);

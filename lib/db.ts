@@ -194,13 +194,19 @@ export async function dbListCards(familyId: string, opts: ListCardsOptions = {})
  * Who the cards made of this stored file are for (only the columns the media gate needs):
  * GET /api/media refuses a file when every card made of it is a note for other people.
  */
-export async function dbCardsWithMedia(familyId: string, ref: string): Promise<Pick<Card, "id" | "authorId" | "addressedTo">[]> {
+export async function dbCardsWithMedia(familyId: string, ref: string): Promise<{ media: Pick<Card, "id" | "authorId" | "addressedTo">[]; covers: Pick<Card, "id" | "authorId" | "addressedTo">[] }> {
   const sb = dbFor(familyId);
   const pick = (c: Card) => ({ id: c.id, authorId: c.authorId, addressedTo: c.addressedTo });
-  if (!sb) return scoped(memListCards(), familyId).filter((c) => c.mediaRef === ref).map(pick);
-  const { data, error } = await sb.from("cards").select("id, author_id, addressed_to").eq("family_id", familyId).eq("media_ref", ref).limit(20);
-  if (error) throw new DbReadError("cards", error.message);
-  return (data ?? []).map((r: Record<string, unknown>) => ({ id: String(r.id), authorId: (r.author_id as string | null) ?? null, addressedTo: (r.addressed_to as string | null) ?? null }));
+  if (!sb) {
+    const cards = scoped(memListCards(), familyId);
+    return { media: cards.filter((c) => c.mediaRef === ref).map(pick), covers: cards.filter((c) => c.coverRef === ref).map(pick) };
+  }
+  const results = await Promise.all(["media_ref", "cover_ref"].map((column) =>
+    sb.from("cards").select("id, author_id, addressed_to").eq("family_id", familyId).eq(column, ref),
+  ));
+  for (const { error } of results) if (error) throw new DbReadError("cards", error.message);
+  const mapRows = (data: Record<string, unknown>[] | null) => (data ?? []).map((r) => ({ id: String(r.id), authorId: (r.author_id as string | null) ?? null, addressedTo: (r.addressed_to as string | null) ?? null }));
+  return { media: mapRows(results[0].data), covers: mapRows(results[1].data) };
 }
 
 /** The cards row for a card (dbAddCard and the demo copy write the same columns). */
@@ -231,11 +237,17 @@ export function cardRow(card: Card): Record<string, unknown> {
   };
 }
 
+export class CardIdConflict extends Error {}
+
 export async function dbAddCard(input: Omit<import("zod").input<typeof CardSchema>, "id"> & { id?: string }): Promise<Card> {
   const card = CardSchema.parse({ id: input.id ?? crypto.randomUUID(), ...input });
   const sb = dbFor(card.familyId);
-  if (!sb) return memAddCard(card);
-  const { error } = await sb.from("cards").upsert(cardRow(card));
+  if (!sb) {
+    if (memListCards().some((existing) => existing.id === card.id)) throw new CardIdConflict();
+    return memAddCard(card);
+  }
+  const { error } = await sb.from("cards").insert(cardRow(card));
+  if (error?.code === "23505") throw new CardIdConflict();
   if (error) throw new DbWriteError("cards", error.message);
   return card;
 }
