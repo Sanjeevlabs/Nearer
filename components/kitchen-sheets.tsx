@@ -108,7 +108,11 @@ export function AddRecipeSheet({ onClose, onSaved }: { onClose: () => void; onSa
     <BottomSheet open title={preview ? "Check your recipe" : "Add a recipe"} onClose={onClose}>
       {preview ? <RecipeEditor prefill={preview} scan={photo?.scan} onDone={(id) => id ? onSaved(id) : onClose()} /> : <>
         <RecipeMic onText={(value) => setText(value.slice(0, 4000))} />
-        <ScanRecipeButton onScanned={(result) => { setPhoto(result); setPreview(result.prefill); }} />
+        <ScanRecipeButton onScanned={(result) => {
+          setPhoto(result);
+          if (!result.scan.fromMuse && text.trim()) void prepare();
+          else setPreview(result.prefill);
+        }} />
         <label className="mt-4 block text-body">Or type it
           <textarea className={field} rows={4} maxLength={4000} value={text} onChange={(event) => setText(event.target.value)} />
         </label>
@@ -132,6 +136,12 @@ function SurpriseForm({ initial, onSaved }: { initial: KitchenPreferences; onSav
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const update = <K extends keyof KitchenPreferences>(key: K, value: KitchenPreferences[K]) => setPrefs((previous) => ({ ...previous, [key]: value }));
+  const tastes = prefs.taste.split(", ").filter(Boolean);
+  function toggleTaste(taste: string, opposite: string) {
+    const next = tastes.filter((value) => value !== taste && value !== opposite);
+    if (!tastes.includes(taste)) next.push(taste);
+    update("taste", next.join(", "));
+  }
   async function suggest() {
     setBusy(true);
     setError("");
@@ -166,8 +176,8 @@ function SurpriseForm({ initial, onSaved }: { initial: KitchenPreferences; onSav
       <label className="block">What’s in your fridge? <textarea className={field} maxLength={600} value={prefs.fridge} onChange={(event) => update("fridge", event.target.value)} /></label>
       <RecipeMic label="Tell us what you have" onText={(value) => update("fridge", value.slice(0, 600))} />
       <div role="group" aria-label="Taste" className="flex flex-wrap gap-2">
-        {["Mild", "Spicy", "Sweet", "Savoury"].map((taste) => (
-          <Button key={taste} variant={prefs.taste === taste ? "primary" : "secondary"} aria-pressed={prefs.taste === taste} onClick={() => update("taste", prefs.taste === taste ? "" : taste)}>{taste}</Button>
+        {[["Mild", "Spicy"], ["Spicy", "Mild"], ["Sweet", "Savoury"], ["Savoury", "Sweet"]].map(([taste, opposite]) => (
+          <Button key={taste} variant={tastes.includes(taste) ? "primary" : "secondary"} aria-pressed={tastes.includes(taste)} onClick={() => toggleTaste(taste, opposite)}>{taste}</Button>
         ))}
       </div>
       <label className="block">Diet <input className={field} maxLength={120} placeholder="Vegetarian, gluten-free…" value={prefs.diet} onChange={(event) => update("diet", event.target.value)} /></label>

@@ -672,53 +672,52 @@ Rooms,/gather/play,11,button,Song game Open door,,,arjun dadi aria,,keep,
 Rooms,/gather/play,12,button,Family quiz Open door,,,arjun dadi aria,,keep,
 Rooms,/kitchen,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/kitchen,1,h1,Kitchen,,room-header,arjun dadi aria,,keep,
-Rooms,/kitchen,2,link,Write one,/kitchen/new,,arjun dadi aria,,keep,
+Rooms,/kitchen,2,button,Add a recipe,,,arjun dadi aria,,keep,
 Rooms,/kitchen,2,section,Asked of you,,,dadi,,keep,
-Rooms,/kitchen,3,button,Teach by voice,,,arjun dadi aria,,keep,
+Rooms,/kitchen,3,button,Surprise me,,,arjun dadi aria,,keep,
 Rooms,/kitchen,3,button,Teach it in your voice,,~Asked of you,dadi,,keep,
 Rooms,/kitchen,4,button,Ask someone,,,arjun dadi aria,,keep,
 Rooms,/kitchen,4,button,Not this one,,~Asked of you,dadi,,keep,
-Rooms,/kitchen,5,button,"Scan a recipe card Handwritten or printed, any language. You check it before it…",,,arjun dadi aria,,keep,
-Rooms,/kitchen,6,input:text,Search recipes,,,arjun dadi aria,,keep,
-Rooms,/kitchen,7,toggle,All,,,arjun dadi aria,,keep,
-Rooms,/kitchen,8,toggle,Breakfast,,,arjun dadi aria,,keep,
-Rooms,/kitchen,9,toggle,Main,,,arjun dadi aria,,keep,
-Rooms,/kitchen,10,toggle,Snack,,,arjun dadi aria,,keep,
-Rooms,/kitchen,11,toggle,Sweet,,,arjun dadi aria,,keep,
-Rooms,/kitchen,12,toggle,Drink,,,arjun dadi aria,,keep,
-Rooms,/kitchen,13,section,Maa's recipes,,,arjun dadi aria,,keep,
-Rooms,/kitchen,14,image,Maa,,~Maa's recipes,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,15,heading,Maa's recipes,,~Maa's recipes,arjun aria,,keep,
-Rooms,/kitchen,16,link,Dal tadka Main · N min cooked N ×,/kitchen/recipe-dadi-dal,~Maa's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,17,button,Dal tadka options,,~Maa's recipes,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,18,link,Aloo paratha Breakfast · N min,/kitchen/recipe-dadi-paratha,~Maa's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,19,button,Aloo paratha options,,~Maa's recipes,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,20,heading,Your recipes,,~Maa's recipes,dadi,,keep,
-Rooms,/kitchen,20,link,Gobi ke pakode Snack · N min,/kitchen/recipe-dadi-gobi,~Maa's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,21,button,Gobi ke pakode options,,~Maa's recipes,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,21,link,+ Add,/kitchen/new,~Maa's recipes,dadi,,keep,
-Rooms,/kitchen,22,section,Arjun's recipes,,,arjun dadi aria,,keep,
-Rooms,/kitchen,23,image,Arjun,,~Arjun's recipes,arjun dadi aria,,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,24,heading,Your recipes,,~Arjun's recipes,arjun,,keep,
-Rooms,/kitchen,25,link,+ Add,/kitchen/new,~Arjun's recipes,arjun,,keep,
-Rooms,/kitchen,26,link,Office-day masala chai Drink · N min,/kitchen/recipe-arjun-chai,~Arjun's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,27,button,Office-day masala chai options,,~Arjun's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,28,link,Palak paneer Main · N min,/kitchen/recipe-arjun-palak,~Arjun's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,29,button,Palak paneer options,,~Arjun's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,30,heading,Arjun's recipes,,~Arjun's recipes,dadi aria,,keep,
-Rooms,/kitchen,30,link,Anika Your shelf is empty Share the one dish people ask you to make.,/kitchen/new,,aria,,keep,
-Rooms,/kitchen,30,section,Kavya's recipes,,,arjun dadi aria,,keep,
-Rooms,/kitchen,31,heading,Kavya's recipes,,~Kavya's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,31,image,Anika,,,aria,,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,32,link,Rava upma Breakfast · N min,/kitchen/recipe-kavya-upma,~Kavya's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,33,button,Rava upma options,,~Kavya's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,34,section,Priya's recipes,,,arjun dadi aria,,keep,
-Rooms,/kitchen,35,heading,Priya's recipes,,~Priya's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,36,link,Banana walnut bread Sweet · N h N min,/kitchen/recipe-priya-bread,~Priya's recipes,arjun dadi aria,,keep,
-Rooms,/kitchen,37,button,Banana walnut bread options,,~Priya's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
-Rooms,/kitchen,38,section,Waiting on a recipe,,,arjun aria,,keep,
-Rooms,/kitchen,39,heading,Waiting to be taught,,~Waiting on a recipe,arjun aria,,keep,
-Rooms,/kitchen,40,image,Maa,,~Waiting on a recipe,arjun aria,,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,5,input:text,Search recipes,,,arjun dadi aria,,keep,
+Rooms,/kitchen,6,toggle,All,,,arjun dadi aria,,keep,
+Rooms,/kitchen,7,toggle,Breakfast,,,arjun dadi aria,,keep,
+Rooms,/kitchen,8,toggle,Main,,,arjun dadi aria,,keep,
+Rooms,/kitchen,9,toggle,Snack,,,arjun dadi aria,,keep,
+Rooms,/kitchen,10,toggle,Sweet,,,arjun dadi aria,,keep,
+Rooms,/kitchen,11,toggle,Drink,,,arjun dadi aria,,keep,
+Rooms,/kitchen,12,section,Maa's recipes,,,arjun dadi aria,,keep,
+Rooms,/kitchen,13,image,Maa,,~Maa's recipes,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,14,heading,Maa's recipes,,~Maa's recipes,arjun aria,,keep,
+Rooms,/kitchen,15,link,Dal tadka Main · N min cooked N ×,/kitchen/recipe-dadi-dal,~Maa's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,16,button,Dal tadka options,,~Maa's recipes,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,17,link,Aloo paratha Breakfast · N min,/kitchen/recipe-dadi-paratha,~Maa's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,18,button,Aloo paratha options,,~Maa's recipes,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,19,heading,Your recipes,,~Maa's recipes,dadi,,keep,
+Rooms,/kitchen,19,link,Gobi ke pakode Snack · N min,/kitchen/recipe-dadi-gobi,~Maa's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,20,button,Gobi ke pakode options,,~Maa's recipes,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,20,link,+ Add,/kitchen/new,~Maa's recipes,dadi,,keep,
+Rooms,/kitchen,21,section,Arjun's recipes,,,arjun dadi aria,,keep,
+Rooms,/kitchen,22,image,Arjun,,~Arjun's recipes,arjun dadi aria,,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,23,heading,Your recipes,,~Arjun's recipes,arjun,,keep,
+Rooms,/kitchen,24,link,+ Add,/kitchen/new,~Arjun's recipes,arjun,,keep,
+Rooms,/kitchen,25,link,Office-day masala chai Drink · N min,/kitchen/recipe-arjun-chai,~Arjun's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,26,button,Office-day masala chai options,,~Arjun's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,27,link,Palak paneer Main · N min,/kitchen/recipe-arjun-palak,~Arjun's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,28,button,Palak paneer options,,~Arjun's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,29,heading,Arjun's recipes,,~Arjun's recipes,dadi aria,,keep,
+Rooms,/kitchen,29,link,Anika Your shelf is empty Share the one dish people ask you to make.,/kitchen/new,,aria,,keep,
+Rooms,/kitchen,29,section,Kavya's recipes,,,arjun dadi aria,,keep,
+Rooms,/kitchen,30,heading,Kavya's recipes,,~Kavya's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,30,image,Anika,,,aria,,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,31,link,Rava upma Breakfast · N min,/kitchen/recipe-kavya-upma,~Kavya's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,32,button,Rava upma options,,~Kavya's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,33,section,Priya's recipes,,,arjun dadi aria,,keep,
+Rooms,/kitchen,34,heading,Priya's recipes,,~Priya's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,35,link,Banana walnut bread Sweet · N h N min,/kitchen/recipe-priya-bread,~Priya's recipes,arjun dadi aria,,keep,
+Rooms,/kitchen,36,button,Banana walnut bread options,,~Priya's recipes,arjun,icon-only,review,icon-only control: its name is only an aria-label
+Rooms,/kitchen,37,section,Waiting on a recipe,,,arjun aria,,keep,
+Rooms,/kitchen,38,heading,Waiting to be taught,,~Waiting on a recipe,arjun aria,,keep,
+Rooms,/kitchen,39,image,Maa,,~Waiting on a recipe,arjun aria,,review,icon-only control: its name is only an aria-label
 Rooms,/lane,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/lane,1,h1,Memories,,room-header,arjun dadi aria,,keep,
 Rooms,/lane,2,nav,Memories,,room-tabs,arjun dadi aria,,keep,
