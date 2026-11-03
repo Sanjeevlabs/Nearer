@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -8,7 +9,7 @@ import { RecipeCover, COURSE_LOOK, minutes, totalTime } from "@/components/recip
 import { RecipeEditor } from "@/components/recipe-editor";
 import { ShareRecipe } from "@/components/share-recipe";
 import { useShell } from "@/components/shell";
-import { ActionMenu, Avatar, Button, EmptyLine, Icon, MuseMark, Photo, PlayButton, RoomHeader, SectionTitle } from "@/components/ui/kit";
+import { ActionMenu, Avatar, Button, Icon, MuseMark, Photo, PlayButton, RoomHeader, SectionTitle } from "@/components/ui/kit";
 import { cn } from "@/lib/utils";
 import { canChange } from "@/lib/permissions";
 import { useViewer } from "@/components/viewer";
@@ -39,11 +40,11 @@ export default function RecipePage() {
   const [have, setHave] = useState<Set<number>>(new Set());
   const router = useRouter();
 
-  if (failed) {
+  if (failed && !data) {
     return (
       <div>
         <RoomHeader title="Recipe" />
-        <EmptyLine>This recipe isn&rsquo;t in your family&rsquo;s Kitchen.</EmptyLine>
+        <LoadFailed what="This recipe" ui="recipe-retry" onRetry={() => void reload()} />
       </div>
     );
   }

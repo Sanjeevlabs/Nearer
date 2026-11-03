@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { useState } from "react";
 import { can } from "@/lib/permissions";
 import { ActionMenu, Avatar, Button, EmptyLine, Icon, RoomHeader } from "@/components/ui/kit";
@@ -37,12 +38,7 @@ export default function NearbyPage() {
     <div>
       <RoomHeader title="Trusted nearby" subtitle={`For every home, your top ${MAX_NEARBY} people close by, in the order to call them.`} />
       {failed && !data ? (
-        <div className="rounded-card bg-surface px-4 py-8 text-center">
-          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load the list right now.</p>
-          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-surface" onClick={() => void reload()}>
-            Try again
-          </Button>
-        </div>
+        <LoadFailed what="The list" ui="nearby-retry" onRetry={() => void reload()} />
       ) : !data ? (
         <div className="skeleton h-[300px] rounded-card" aria-busy="true" aria-label="Loading" />
       ) : (
