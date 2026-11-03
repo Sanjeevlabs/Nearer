@@ -1,3 +1,4 @@
+import { CardIdConflict } from "@/lib/db";
 import { z } from "zod";
 import { CreateCardRequestSchema } from "@/lib/schemas";
 import { resolveTakenAt } from "@/lib/dating";
@@ -282,4 +283,11 @@ async function fileIntoAlbum(familyId: string, card: Awaited<ReturnType<typeof d
 }
 
 export const GET = guardWrites(getHandler);
-export const POST = guardWrites(postHandler);
+export const POST = guardWrites(async (req: Request) => {
+  try {
+    return await postHandler(req);
+  } catch (error) {
+    if (error instanceof CardIdConflict) return Response.json({ error: "card-id-conflict" }, { status: 409 });
+    throw error;
+  }
+});

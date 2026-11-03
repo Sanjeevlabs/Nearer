@@ -7,5 +7,6 @@ import { canSeeCard } from "./card-privacy";
 
 export async function mediaAllowed(familyId: string, memberId: string, path: string): Promise<boolean> {
   const owners = await dbCardsWithMedia(familyId, `storage:${path}`);
-  return owners.length === 0 || owners.some((c) => canSeeCard(c, memberId));
+  if (owners.media.some((card) => canSeeCard(card, memberId))) return true;
+  return owners.media.length === 0 && owners.covers.every((card) => canSeeCard(card, memberId));
 }
