@@ -12,6 +12,7 @@ import {
   type VoiceTranscript,
 } from "./schemas";
 import { normalizeDisplayLang } from "./i18n";
+import { MEDIA_MODEL_TIMEOUT_MS, MODEL_TIMEOUT_MS, deadline, isTimeout } from "./timeouts";
 
 export interface LlmStore {
   get(key: string): string | undefined;
@@ -126,6 +127,7 @@ async function liveCaption(
   if (!key) throw new Error("missing-key");
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: "POST",
+    signal: deadline(MODEL_TIMEOUT_MS),
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: cfg.captionModel,
@@ -190,7 +192,8 @@ export async function captionCard(
       const out = isMockMode()
         ? await mockCaption(prompt)
         : await liveCaption(provider, CAPTION_SYSTEM, prompt, images).catch(async (err) => {
-            // The other Muse host takes over when it has a key; otherwise rethrow.
+            // The other Muse host takes over when it has a key; otherwise rethrow. A timeout is final (the wait would stack).
+            if (isTimeout(err)) throw err;
             const next = failoverProvider(provider);
             if (next) return liveCaption(next, CAPTION_SYSTEM, prompt, images);
             throw err;
@@ -201,7 +204,8 @@ export async function captionCard(
       await ledger.commit(out.cost);
       store.set(key, JSON.stringify(parsed.data));
       return { caption: parsed.data, cached: false, cost: out.cost };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }
@@ -402,7 +406,8 @@ export async function liveJson(
   try {
     return await liveJsonOnce(provider, system, user, model, maxTokens);
   } catch (err) {
-    // The same Muse call on the other host (Meta API ↔ Baseten), with its own model id.
+    // The same Muse call on the other host (Meta API ↔ Baseten), with its own model id. Not after a timeout: the wait would stack.
+    if (isTimeout(err)) throw err;
     const next = failoverProvider(provider);
     if (!next) throw err;
     return liveJsonOnce(next, system, user, PROVIDERS[next].captionModel, maxTokens);
@@ -421,6 +426,7 @@ async function liveJsonOnce(
   if (!key) throw new Error("missing-key");
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: "POST",
+    signal: deadline(MODEL_TIMEOUT_MS),
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model,
@@ -546,6 +552,7 @@ async function liveTranscribe(
   const { form } = buildTranscribeForm(audioBytes, opts);
   const res = await fetch("https://api.meta.ai/v1/asr/transcribe", {
     method: "POST",
+    signal: deadline(MEDIA_MODEL_TIMEOUT_MS),
     headers: { authorization: `Bearer ${key}` },
     body: form,
   });
@@ -601,7 +608,8 @@ export async function transcribeVoice(
       await ledger.commit(cost);
       if (key) store.set(key, JSON.stringify(parsed));
       return { transcript: parsed, cached: false, cost, unavailable: false };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }
@@ -685,7 +693,8 @@ export async function suggestQuestions(
       await ledger.commit(out.cost);
       store.set(key, JSON.stringify(parsed.data));
       return { questions: parsed.data.questions, cached: false, cost: out.cost };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }
@@ -737,7 +746,8 @@ export async function curatePlaylist(
       await ledger.commit(out.cost);
       store.set(key, JSON.stringify({ tracks }));
       return { tracks, cached: false, cost: out.cost };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }
@@ -778,7 +788,8 @@ export async function translateText(
       await ledger.commit(out.cost);
       store.set(key, JSON.stringify(parsed.data));
       return { translation: parsed.data, cached: false, cost: out.cost };
-    } catch {
+    } catch (err) {
+      if (isTimeout(err)) break;
       continue;
     }
   }

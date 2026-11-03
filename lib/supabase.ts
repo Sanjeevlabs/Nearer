@@ -3,6 +3,7 @@
 // server-side. All data access goes through Next.js route handlers, which
 // enforce family scoping + Zod validation in code.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { DB_TIMEOUT_MS, fetchWithTimeout } from "./timeouts";
 
 let cached: SupabaseClient | null = null;
 
@@ -11,7 +12,7 @@ export function supabaseServer(): SupabaseClient | null {
   const key = process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) return null;
   if (!cached) {
-    cached = createClient(url, key, { auth: { persistSession: false } });
+    cached = createClient(url, key, { auth: { persistSession: false }, global: { fetch: fetchWithTimeout(DB_TIMEOUT_MS) } });
   }
   return cached;
 }

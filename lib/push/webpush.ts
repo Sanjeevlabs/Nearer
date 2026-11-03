@@ -5,6 +5,7 @@
 //  - Message encryption (RFC 8291) in the aes128gcm content coding (RFC 8188).
 // tests/push-webpush.test.ts checks the encryption against the RFC 8291 Appendix A vector.
 // Server only.
+import { SERVICE_TIMEOUT_MS, fetchWithTimeout } from "../timeouts";
 import type { PushMessage, PushSub, SendOutcome } from "./types";
 
 // ---------------------------------------------------------------- base64url
@@ -186,7 +187,7 @@ export async function sendWebPush(sub: Pick<PushSub, "token" | "p256dh" | "auth"
   const vapid = vapidFromEnv(deps.env ?? process.env);
   if (!vapid) return "skipped";
   if (!sub.p256dh || !sub.auth || !isPushEndpoint(sub.token)) return "gone";
-  const doFetch = deps.fetch ?? fetch;
+  const doFetch = fetchWithTimeout(SERVICE_TIMEOUT_MS, deps.fetch ?? fetch);
   try {
     const nowSec = Math.floor((deps.now ?? Date.now)() / 1000);
     const body = await encryptPayload(utf8(webPayload(msg)), sub.p256dh, sub.auth);

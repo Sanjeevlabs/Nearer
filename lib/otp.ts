@@ -2,6 +2,7 @@
 // 6-digit code (the email template must include {{ .Token }}). Mock mode
 // accepts 000000 and sends nothing, so demos and tests never need email.
 import { createClient } from "@supabase/supabase-js";
+import { DB_TIMEOUT_MS, fetchWithTimeout } from "./timeouts";
 
 export const MOCK_OTP = "000000";
 
@@ -9,7 +10,7 @@ function authClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: fetchWithTimeout(DB_TIMEOUT_MS) } });
 }
 
 /**

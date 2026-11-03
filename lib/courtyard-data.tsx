@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { fetchFirst } from "./early";
+import { fetchWithTimeout } from "./first-screen";
 
 // The courtyard reads a dozen small payloads on first paint. Inside
 // <CourtyardProvider> they arrive in one GET /api/courtyard instead, and
@@ -56,7 +57,7 @@ function firstLoad(): Promise<Record<string, unknown>> {
 }
 
 async function refresh(): Promise<Record<string, unknown>> {
-  const res = await fetch("/api/courtyard", { cache: "no-store" });
+  const res = await fetchWithTimeout((...a) => fetch(...a), "/api/courtyard", { cache: "no-store" });
   if (!res.ok) throw new Error(String(res.status));
   return (await res.json()) as Record<string, unknown>;
 }

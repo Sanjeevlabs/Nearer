@@ -123,9 +123,13 @@ import { GET as whoami } from "@/app/api/session/route";
 import { GET as sidesGet, POST as sidesPost } from "@/app/api/sides/route";
 import { sandboxIdle } from "@/lib/demo-sandbox";
 import { GET as cardsRoute } from "@/app/api/cards/route";
+import { GET as laneRoute } from "@/app/api/lane/route";
+import { GET as albumsRoute } from "@/app/api/albums/route";
 import { GET as waitingRoute } from "@/app/api/waiting/route";
 import { requireCan, requireSession } from "@/lib/auth";
 import { readDbStats, resetDbStats } from "@/lib/db-stats";
+import { SESSION_COOKIE, SESSION_TTL_MS, signSession } from "@/lib/auth";
+import { newSid, resetSessionStore } from "@/lib/sessions";
 import { listDocs, listDocsMany, putDoc } from "@/lib/family-docs";
 import { windowState } from "@/lib/window-server";
 
@@ -395,4 +399,61 @@ describe("the sky never holds the window", () => {
     expect(ms).toBeLessThan(1400);
     await new Promise((r) => setTimeout(r, 2600)); // let the hung lookups end before the next test
   }, 10_000);
+});
+
+describe("a brand-new family: one person, no cards, no far home, a cold session check", () => {
+  // Every first-screen request of a family with nothing in it yet. The session's server-side row is
+  // read in the same wave as the member (the trust cache is emptied, as after 20 s or on another isolate).
+  const ONE = { id: "fam-new-1", memberId: "m-new-1" };
+  let fresh = "";
+  beforeEach(() => {
+    h.tables.set("families", [...(h.tables.get("families") ?? []), { id: ONE.id, name: "Rao", created_at: new Date().toISOString() }]);
+    h.tables.set("members", [...(h.tables.get("members") ?? []), { id: ONE.memberId, family_id: ONE.id, first_name: "Asha", display_name: "Asha", role: "adult", access: "owner", status: "active", lang: "en", display_lang: "en", tz: "Asia/Kolkata", city: "Bengaluru", birthday: "", email: "asha@example.com", person_id: null }]);
+    const sid = newSid();
+    h.tables.set("sessions", [...(h.tables.get("sessions") ?? []), { id: sid, member_id: ONE.memberId, family_id: ONE.id, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + SESSION_TTL_MS).toISOString(), revoked_at: null, kind: "real" }]);
+    fresh = `${SESSION_COOKIE}=${encodeURIComponent(signSession({ familyId: ONE.id, memberId: ONE.memberId, sid }, SESSION_TTL_MS, process.env.SESSION_SECRET ?? "test-session-secret") ?? "")}`;
+  });
+  const getNew = (path: string) => new Request(`http://test${path}`, { headers: { cookie: fresh } });
+  const ROUTES: [string, () => Promise<Response>, number][] = [
+    ["/api/session?family=1", () => whoami(getNew("/api/session?family=1")), 1],
+    ["/api/cards", () => cardsRoute(getNew("/api/cards")), 1],
+    ["/api/waiting", () => waitingRoute(getNew("/api/waiting")), 1],
+    ["/api/window", () => windowRoute(getNew("/api/window")), 1],
+    // Memory Lane's three reads (the cards are above): one wave each, none wider than a Worker's open connections.
+    ["/api/lane", () => laneRoute(getNew("/api/lane")), 1],
+    ["/api/albums", () => albumsRoute(getNew("/api/albums")), 1],
+    ["/api/courtyard", () => courtyard(getNew("/api/courtyard")), 2],
+  ];
+  for (const [name, run, depth] of ROUTES) {
+    it(`${name} answers 200 with the session row in the same wave as the member`, async () => {
+      resetSessionStore(); // the trust cache is empty, so the row is really read
+      const m = await measure(async () => (await run()).status);
+      report(`new family ${name}`, m);
+      expect(m.out).toBe(200);
+      expect(m.log.some((q) => q.includes("sessions("))).toBe(true);
+      expect(m.depth).toBeLessThanOrEqual(depth);
+      // Revocation is not weakened by riding the same wave: a revoked row is a 401, not a 200 with the reads thrown away.
+    });
+  }
+
+  it("a revoked session is refused on the first-screen routes even when the reads went out with the check", async () => {
+    for (const row of h.tables.get("sessions")!) if (row.member_id === ONE.memberId) row.revoked_at = new Date().toISOString();
+    resetSessionStore();
+    for (const [, run] of ROUTES) expect((await run()).status).toBe(401);
+  });
+});
+
+describe("Memory Lane's reads (the demo family)", () => {
+  it("GET /api/lane is one wave of at most 6 queries; GET /api/albums one wave", async () => {
+    resetSessionStore();
+    const lane = await measure(async () => (await laneRoute(get("/api/lane"))).status);
+    resetSessionStore();
+    const albums = await measure(async () => (await albumsRoute(get("/api/albums"))).status);
+    report("GET /api/lane", lane);
+    report("GET /api/albums", albums);
+    expect([lane.out, albums.out]).toEqual([200, 200]);
+    expect(lane.depth).toBeLessThanOrEqual(1);
+    expect(lane.calls).toBeLessThanOrEqual(6); // the five reads and the session row: no wider than a Worker's open connections
+    expect(albums.depth).toBeLessThanOrEqual(1);
+  });
 });

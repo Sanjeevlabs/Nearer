@@ -14,6 +14,8 @@ import { useDocumentLang, useT } from "@/lib/use-t";
 import { ensureCatalogue, hasUiCatalogue, translate } from "@/lib/ui-strings/lazy";
 import { ZONES, placeFromTz } from "@/lib/zones";
 import { cn } from "@/lib/utils";
+import { CityAssist } from "@/components/city-assist";
+import { useCityAutofill } from "@/lib/use-city-autofill";
 import { Group, SettingsSection } from "./section";
 import { useDraft } from "./use-draft";
 import { BirthYearField } from "@/components/birth-year";
@@ -304,6 +306,8 @@ export function NudgeSettingsSection({ onMessage }: { onMessage: (m: string) => 
 export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) {
   const { viewer, refreshMembers } = useViewer();
   const form = useDraft<WhereDraft>({ tz: viewer.tz, city: viewer.city ?? "", home: null }, { id: "where" });
+  const t = useT();
+  const cityAuto = useCityAutofill(form.draft.city, (c) => form.set({ city: c }), t.lang);
   const [busy, setBusy] = useState(false);
   const [pickError, setPickError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -351,12 +355,16 @@ export function WhereSection({ onMessage }: { onMessage: (m: string) => void }) 
         <span className="mb-1.5 block text-footnote font-medium text-ink-soft">Your city, so the other home sees your sky and weather</span>
         <input
           value={form.draft.city}
-          onChange={(e) => form.set({ city: e.target.value })}
+          onChange={(e) => {
+            cityAuto.typed();
+            form.set({ city: e.target.value });
+          }}
           placeholder="Bengaluru"
           maxLength={60}
           className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none focus:ring-2 focus:ring-marigold"
         />
       </label>
+      <CityAssist source={cityAuto.source} locating={cityAuto.locating} failed={cityAuto.failed} onUseLocation={cityAuto.useMyLocation} />
       <div className="relative mt-4 h-[160px] overflow-hidden rounded-card bg-surface">
         {home ? (
           <Photo src={home} alt="Your home photo" sizes="440px" />

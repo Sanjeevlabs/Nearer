@@ -8,6 +8,8 @@ import { callName, cardCover, memberPhoto, peopleByRecency, relativeDay } from "
 import type { Card, Member } from "@/lib/schemas";
 import { useDisplayText } from "@/lib/use-display-text";
 import { useCourtyard } from "@/lib/courtyard-data";
+import { COURTYARD_PATIENCE_MS, courtyardFailed, courtyardReady, everyoneView } from "@/lib/first-screen";
+import { can } from "@/lib/permissions";
 import { useFamilyCards } from "@/lib/use-family";
 import { ago, postJson, useJson } from "@/lib/use-json";
 import { placeFromTz, timeIn } from "@/lib/zones";
@@ -31,7 +33,7 @@ import { TogetherHabit } from "./together-habit";
 import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
 import { FestivalHeader } from "./festival-header";
-import { Avatar, Icon, Monogram, Photo } from "./ui/kit";
+import { Avatar, Button, Icon, Monogram, Photo } from "./ui/kit";
 import { Mark } from "./brand";
 import { familyHomePhoto } from "@/lib/family";
 import { resolveMediaUrl } from "@/lib/media-session";
@@ -43,6 +45,7 @@ import { useViewer } from "./viewer";
 // together, a visit, a birthday, a memory).
 // The five rooms open from the house in the dock, beside the mic and the camera.
 
+const InviteSheet = dynamic(() => import("./invite-sheet").then((m) => m.InviteSheet), { ssr: false });
 const OpenDoorSheet = dynamic(() => import("./open-door-sheet").then((m) => m.OpenDoorSheet), { ssr: false });
 
 const SLIDE_H = "h-[236px]";
@@ -195,11 +198,52 @@ function CourtyardSkeleton() {
   );
 }
 
+/* ------------------------------------------------------------ nobody here yet */
+/** The "Everyone" row for someone whose family has not joined (or been added) yet: one clear way to add them. */
+function AddFamilyCard({ canInvite }: { canInvite: boolean }) {
+  const [inviting, setInviting] = useState(false);
+  const [everInvited, setEverInvited] = useState(false);
+  return (
+    <section data-ui="courtyard-add-family" aria-label="Everyone" className="mt-5">
+      <h2 className="m-0 mb-2 text-headline font-semibold">Everyone</h2>
+      <div className="rounded-[22px] bg-card p-4 shadow-card">
+        <p className="m-0 text-body font-semibold">It&rsquo;s just you here so far</p>
+        <p className="m-0 mt-1 text-callout text-ink-soft">{canInvite ? "Add your family and each person\u2019s day shows up here." : "Ask a grown-up in the family to add people."}</p>
+        {canInvite && (
+          <Button
+            className="mt-3"
+            onClick={() => {
+              setEverInvited(true);
+              setInviting(true);
+            }}
+          >
+            Add your family
+          </Button>
+        )}
+      </div>
+      {everInvited && <InviteSheet open={inviting} onClose={() => setInviting(false)} />}
+    </section>
+  );
+}
+
+/** The family could not be reached: say so, with a way to try again (never a skeleton that does not end). */
+function CourtyardRetry({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div data-ui="courtyard-retry" role="alert" className="mt-5 rounded-[22px] bg-card p-4 text-center shadow-card">
+      <p className="m-0 text-body font-semibold">Couldn&rsquo;t reach your family just now</p>
+      <p className="m-0 mt-1 text-callout text-ink-soft">Check your connection and try again.</p>
+      <Button variant="secondary" className="mx-auto mt-3 !bg-well" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
+  );
+}
+
 /* ----------------------------------------------------------------- page */
 export function Courtyard({ onBack }: { onBack: () => void }) {
   const { viewer, members } = useViewer();
   const { refreshKey, openAdd } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
   const { sides, current } = useSides();
   const pres = useJson<{ presence: Presence[]; settings: CareSettings[] }>("/api/presence", { every: 60_000 });
   const elder = viewer.role === "elder";
@@ -237,7 +281,18 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
   // Everything under the header appears in one step, once the cards and the one
   // courtyard payload are in, so nothing slides down as the pieces arrive.
   const shared = useCourtyard();
-  const ready = cards !== null && (!shared || shared.status !== "loading");
+  // After a short wait it shows what it has and the rest fills in; it never holds a skeleton for a piece that is late.
+  const [patient, setPatient] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setPatient(true), COURTYARD_PATIENCE_MS);
+    return () => clearTimeout(t);
+  }, []);
+  const ready = courtyardReady({ cardsLoaded: cards !== null, status: shared?.status ?? null, waitedMs: patient ? COURTYARD_PATIENCE_MS : 0 });
+  const unreachable = ready && courtyardFailed(shared?.status ?? null, cardsFailed);
+  const retry = () => {
+    retryCards();
+    void shared?.reload();
+  };
 
   return (
     <div>
@@ -268,6 +323,7 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
       {ready && <SafetyWatch />}
       {ready && <FestivalHeader />}
 
+      {unreachable && <CourtyardRetry onRetry={retry} />}
       {ready && people.length > 0 && (
         <section data-ui="courtyard-everyone" aria-label="Everyone" className="mt-5">
           <div className="mb-2 flex items-center justify-between">
@@ -276,7 +332,7 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
               <Icon name="tree" size={18} />
             </Link>
           </div>
-          {pres.data === null ? (
+          {everyoneView(people.length, pres.data !== null, pres.failed) === "chips-loading" ? (
             <ChipsSkeleton />
           ) : (
             <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2 overflow-x-auto px-4 pb-1 pt-2" style={{ scrollSnapType: "x mandatory", scrollPaddingInline: 16 }}>
@@ -288,6 +344,8 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
           )}
         </section>
       )}
+
+      {ready && people.length === 0 && <AddFamilyCard canInvite={can(viewer, "invite.create")} />}
 
       {ready && (
         <>
