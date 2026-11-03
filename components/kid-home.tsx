@@ -46,7 +46,7 @@ function Tonight() {
   const by = members.find((m) => m.id === t?.byMemberId);
   const card = cards?.find((c) => c.id === t?.cardId);
   // The read failed, or it came but the cards did not: say so rather than a skeleton that never ends or "no story yet".
-  const view = loadView({ loading: tonight.data === null || (Boolean(t) && !card), failed: (tonight.failed && tonight.data === null) || (Boolean(t) && !card && cardsFailed), hasData: Boolean(card) });
+  const view = loadView({ loading: tonight.data === null || (Boolean(t) && !card && cards === null), failed: (tonight.failed && tonight.data === null) || (Boolean(t) && !card && cardsFailed), hasData: Boolean(card) });
   const playing = Boolean(card && current?.id === card.id && isPlaying);
 
   const another = async () => {
@@ -64,9 +64,9 @@ function Tonight() {
         </div>
       ) : view === "loading" ? (
         <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
-      ) : !t ? (
+      ) : !t || !card ? (
         <p className="m-0 mt-2 text-headline leading-snug text-ink-soft">No story yet. Ask for one with the big Ask button!</p>
-      ) : !card ? null : (
+      ) : (
         <div className="mt-3 rounded-[26px] bg-surface p-4" style={{ boxShadow: "var(--surface-edge)" }}>
           <div className="flex items-center gap-4">
             <button type="button" onClick={() => (current?.id === card.id ? toggle() : play(card))} aria-label={playing ? "Pause the story" : "Play the story"} className="press grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
