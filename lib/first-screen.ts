@@ -2,10 +2,15 @@
 // tested on their own: a request that never answers is cut off (timeouts), and the courtyard
 // shows its content after a short wait even when a piece is still on its way.
 
-/** A first-screen request that has not answered by now is given up on (the person sees an error with Retry, never a skeleton). */
-export const REQUEST_TIMEOUT_MS = 12_000;
-/** An early request (started by the page's inline script) gets this long before a fresh one is made. */
-export const EARLY_WAIT_MS = 8_000;
+/**
+ * A request that has not answered by now is given up on (the person sees an error with Retry, never a skeleton).
+ * Longer than the server's longest upstream limit (lib/timeouts.ts: 35 s for a Muse text call), so a slow
+ * first Muse pick on /api/window or /api/today is not cut off and asked again. The screen itself never
+ * waits this long: COURTYARD_PATIENCE_MS shows what has arrived.
+ */
+export const REQUEST_TIMEOUT_MS = 40_000;
+/** An early request (started by the page's inline script) is waited for this long before a fresh one is made; the same limit, so a slow Muse answer is never asked for twice. */
+export const EARLY_WAIT_MS = REQUEST_TIMEOUT_MS;
 /** The courtyard stops holding its content back for the last piece after this long. */
 export const COURTYARD_PATIENCE_MS = 4_000;
 
