@@ -8,6 +8,7 @@ import { can } from "@/lib/permissions";
 import { askWeeklyQuestions } from "@/lib/keeper";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAsk } from "@/lib/push/events";
+import { seenBy } from "@/lib/card-privacy";
 
 // Questions for elders: the weekly one Muse asks, and the ones family ask.
 const Body = z.discriminatedUnion("action", [
@@ -64,7 +65,7 @@ async function postHandler(req: Request): Promise<Response> {
     const q = await getDoc(auth.familyId, "question", body.questionId);
     if (!q) return Response.json({ error: "unknown-question" }, { status: 404 });
     if (q.toMemberId !== auth.memberId) return Response.json({ error: "not-yours" }, { status: 403 });
-    const card = (await dbListCards(auth.familyId)).find((c) => c.id === body.cardId);
+    const card = seenBy(await dbListCards(auth.familyId), auth.memberId).find((c) => c.id === body.cardId);
     if (!card) return Response.json({ error: "unknown-card" }, { status: 404 });
     return Response.json({ question: await putDoc(auth.familyId, "question", { ...q, answeredCardId: card.id }) });
   }

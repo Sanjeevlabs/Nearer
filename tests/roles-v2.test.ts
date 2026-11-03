@@ -17,7 +17,7 @@ import { POST as addRelative } from "@/app/api/relationships/route";
 import { GET as safetyGet, POST as safetyPost } from "@/app/api/safety/route";
 import { GET as sessionGet } from "@/app/api/session/route";
 import { POST as windowPost } from "@/app/api/window/route";
-import { dbAddCard, dbAddMember, dbGetMember, dbListConsents, dbListMembers } from "@/lib/db";
+import { dbAddCard, dbAddMember, dbGetMember, dbListConsents, dbListMembers, dbRemoveMember } from "@/lib/db";
 import { clearAuthAttempts, MOCK_OTP } from "@/lib/otp";
 import { resetOrders } from "@/lib/partners/orders";
 import { memoryTokenStore, resetTokens, saveToken, setTokenStore } from "@/lib/partners/tokens";
@@ -41,6 +41,11 @@ const join = async (code: string, addr = email(), extra: Record<string, unknown>
   return { res, cookie: cookieOf(res), ...(await json<{ memberId: string; familyId: string; status: string; welcome?: string }>(res.clone())) };
 };
 const inviteBy = async (member: string) => (await json<{ invite: { code: string } }>(invitePost(req("/api/invites", member, {})))).invite.code;
+/** Someone still waiting from before links let people straight in (an older pending row). */
+const waiter = async () => {
+  const m = await dbAddMember({ familyId: F, firstName: "Ravi", displayName: "Ravi", role: "adult", email: email(), access: "member", status: "pending" });
+  return { memberId: m.id, cookie: sessionCookie(m.id, F) };
+};
 
 beforeEach(() => {
   resetDemo();
@@ -109,9 +114,8 @@ describe("caps", () => {
   });
 
   it("up to 50 people per family: joining and letting in stop at the cap", async () => {
-    const code = await inviteBy("priya"); // a member's code: joiners wait
-    const waiting = await join(code);
-    expect(waiting.status).toBe("pending");
+    const code = await inviteBy("priya");
+    const waiting = await waiter();
     // The family fills up while they wait (50 in, 1 at the door).
     const have = (await dbListMembers(F)).length;
     for (let i = have; i < MAX_PEOPLE; i++) await dbAddMember({ familyId: F, firstName: `P${i}`, displayName: `P${i}`, role: "adult" });
@@ -121,18 +125,33 @@ describe("caps", () => {
   });
 });
 
-describe("joining and waiting", () => {
-  it("a member's code makes the joiner wait; their session opens only GET /api/session", async () => {
-    const j = await join(await inviteBy("priya"));
-    expect(j.status).toBe("pending");
-    expect(j.welcome).toBeUndefined();
+describe("joining with a link, and older joiners who wait", () => {
+  it("anyone's valid link lets you straight in, with a welcome line", async () => {
+    for (const by of ["priya", "arjun"]) {
+      const j = await join(await inviteBy(by));
+      expect(j.status).toBe("active");
+      expect(j.welcome).toMatch(/^Welcome, Ravi\./);
+      expect((await cardsGet(new Request("http://test/api/cards", { headers: { cookie: j.cookie } }))).status).toBe(200);
+    }
+    const code = await inviteBy("priya");
+    const place = await dbAddMember({ familyId: F, firstName: "Nani", displayName: "Nani", role: "elder" });
+    expect(await join(code, email(), { claimMemberId: place.id })).toMatchObject({ memberId: place.id, status: "active" });
+  });
+
+  it("a link stops working once revoked, or once whoever made it has left", async () => {
+    const code = await inviteBy("priya");
+    await dbRemoveMember("priya");
+    expect(await json((await join(code)).res)).toMatchObject({ error: "invalid-invite" });
+  });
+
+  it("an older waiting joiner's session opens only GET /api/session", async () => {
+    const j = await waiter();
     const s = await json<{ status: string; waitingFor: string }>(sessionGet(new Request("http://test/api/session", { headers: { cookie: j.cookie } })));
     expect(s).toMatchObject({ status: "pending", waitingFor: "Arjun" });
     for (const r of [await cardsGet(new Request("http://test/api/cards", { headers: { cookie: j.cookie } })), await membersGet(new Request("http://test/api/members", { headers: { cookie: j.cookie } })), await invitePost(new Request("http://test/api/invites", { method: "POST", headers: { cookie: j.cookie }, body: "{}" }))]) {
       expect(r.status).toBe(403);
       expect(await r.json()).toEqual({ error: "pending" });
     }
-    // Nobody else sees them in the family yet; only owners/admins see them waiting.
     const forPriya = await json<{ members: Member[]; pending: Member[] }>(membersGet(req("/api/members", "priya")));
     expect(forPriya.members.some((m) => m.id === j.memberId)).toBe(false);
     expect(forPriya.pending).toEqual([]);
@@ -140,29 +159,22 @@ describe("joining and waiting", () => {
     expect(forArjun.pending.map((m) => m.id)).toEqual([j.memberId]);
   });
 
-  it("an owner/admin's code, or claiming a place the family made, lets you straight in", async () => {
-    expect((await join(await inviteBy("arjun"))).status).toBe("active");
-    const code = await inviteBy("priya");
-    const place = await dbAddMember({ familyId: F, firstName: "Nani", displayName: "Nani", role: "elder" });
-    const claimed = await join(code, email(), { claimMemberId: place.id });
-    expect(claimed).toMatchObject({ memberId: place.id, status: "active" });
-  });
-
-  it("active in your own family, you still wait in a second one unless an admin invited you", async () => {
+  it("active in your own family, a second family's link lets you in there too", async () => {
     const addr = email();
     const mine = await verify({ email: addr, code: MOCK_OTP, intent: { type: "create", familyName: "Rao", firstName: "Asha" } });
-    expect((await json<{ status: string }>(mine)).status).toBe("active");
+    const own = await json<{ familyId: string; status: string }>(mine);
+    expect(own.status).toBe("active");
     const second = await join(await inviteBy("priya"), addr);
-    expect(second).toMatchObject({ familyId: F, status: "pending" });
-    // Signing in opens the family they're already in, not the waiting one.
+    expect(second).toMatchObject({ familyId: F, status: "active" });
+    // Signing in again opens the one used last; both stay theirs.
     const back = await json<{ familyId: string; status: string }>(verify({ email: addr, code: MOCK_OTP, intent: { type: "signin" } }));
-    expect(back.familyId).not.toBe(F);
     expect(back.status).toBe("active");
+    expect([own.familyId, F]).toContain(back.familyId);
   });
 
-  it("an admin approves or declines; a member can't", async () => {
-    const a = await join(await inviteBy("priya"));
-    const b = await join(await inviteBy("priya"));
+  it("an admin approves or declines an older waiting joiner; a member can't", async () => {
+    const a = await waiter();
+    const b = await waiter();
     expect((await approvePost(req(`/api/members/${a.memberId}/approve`, "priya", { decision: "approve" }), id(a.memberId))).status).toBe(403);
     expect((await approvePost(req(`/api/members/${a.memberId}/approve`, "arjun", { decision: "approve" }), id(a.memberId))).status).toBe(200);
     expect((await dbGetMember(a.memberId))?.status).toBe("active");
@@ -170,6 +182,13 @@ describe("joining and waiting", () => {
     expect((await approvePost(req(`/api/members/${a.memberId}/approve`, "arjun", { decision: "approve" }), id(a.memberId))).status).toBe(409);
     expect((await approvePost(req(`/api/members/${b.memberId}/approve`, "arjun", { decision: "decline" }), id(b.memberId))).status).toBe(200);
     expect(await dbGetMember(b.memberId)).toBeUndefined();
+  });
+
+  it("an owner/admin can still remove someone who came in by link", async () => {
+    const j = await join(await inviteBy("priya"));
+    expect((await memberDelete(req(`/api/members/${j.memberId}`, "priya", undefined, "DELETE"), id(j.memberId))).status).toBe(403);
+    expect((await memberDelete(req(`/api/members/${j.memberId}`, "arjun", undefined, "DELETE"), id(j.memberId))).status).toBe(200);
+    expect((await cardsGet(new Request("http://test/api/cards", { headers: { cookie: j.cookie } }))).status).toBe(401);
   });
 });
 
@@ -211,8 +230,8 @@ describe("teens", () => {
     expect((await dbListConsents(F))[0]).toMatchObject({ memberId: "rahul", parentMemberId: "kavya" });
   });
 
-  it("a joiner can be let in as a teen, with consent", async () => {
-    const j = await join(await inviteBy("priya"));
+  it("a waiting joiner can be let in as a teen, with consent", async () => {
+    const j = await waiter();
     const out = await json<{ member: Member; consent: { memberId: string } }>(approvePost(req(`/api/members/${j.memberId}/approve`, "arjun", { decision: "approve", access: "teen" }), id(j.memberId)));
     expect(out.member).toMatchObject({ access: "teen", status: "active" });
     expect(out.consent.memberId).toBe(j.memberId);

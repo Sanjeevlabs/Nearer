@@ -14,6 +14,11 @@ import { PrintFrame } from "./print-frame";
 import { Icon, Photo } from "./ui/kit";
 import { useViewer } from "./viewer";
 import { museLabel } from "@/lib/muse-portrait";
+import { privateLabel } from "@/lib/card-privacy";
+import { printWhen } from "@/lib/print";
+import { memberPhoto } from "@/lib/people";
+import type { Member } from "@/lib/schemas";
+import { Avatar } from "./ui/kit";
 
 // Full-screen viewer for ONE kind of memory (photos, videos or voices):
 // swipe left/right (native scroll-snap), arrows on desktop, Esc to close.
@@ -22,10 +27,44 @@ import { museLabel } from "@/lib/muse-portrait";
 // Edit / delete stay one tap away in the top bar.
 
 /** A print as large as the screen allows, below the top bar. */
-const LANE_PRINT_W = "min(calc(100vw - 48px), 420px, calc((100dvh - 290px) * 0.8 + 24px))";
+const LANE_PRINT_W = "min(calc(100vw - 48px), 420px, calc((100dvh - 380px) * 0.8 + 24px))";
+
+/**
+ * What the family wrote and the app knows about a photo, under the print: who
+ * shared it, when it was taken (the photo's own date, else when it was added),
+ * the caption when the print shows a note instead, the place, whose fridge it
+ * is on, and who it is just for.
+ */
+export function PhotoDetails({ card, author, className }: { card: Card; author?: Member; className?: string }) {
+  const { members, viewer, displayLang } = useViewer();
+  const note = card.note.trim();
+  const caption = card.caption.trim();
+  const { text: captionText } = useDisplayText(note && caption && caption !== note ? caption : "", card.lang, displayLang);
+  const just = privateLabel(card, viewer.id, members);
+  const kid = card.forMemberId ? members.find((m) => m.id === card.forMemberId) : undefined;
+  const when = printWhen(card.takenAt, author?.tz);
+  const facts = [when && `Taken ${when}`, card.place.trim(), kid && `On ${callName(kid)}'s fridge`].filter(Boolean);
+  return (
+    <div data-ui="photo-details" className={cn("w-full text-white", className)}>
+      {captionText && <p className="m-0 mb-2 line-clamp-2 text-callout leading-snug">{captionText}</p>}
+      <div className="flex items-center gap-2.5">
+        <Avatar src={memberPhoto(author)} name={callName(author)} size={32} />
+        <div className="min-w-0 flex-1">
+          <p className="m-0 truncate text-footnote font-semibold">{author ? `Shared by ${callName(author)}` : "Shared by the family"}</p>
+          {facts.length > 0 && <p className="tnum m-0 truncate text-footnote text-white/75">{facts.join(" · ")}</p>}
+        </div>
+        {just && (
+          <span data-ui="private-label" className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-caption font-semibold">
+            {just}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: boolean; queue: Card[]; onPrev: (() => void) | null; onNext: (() => void) | null }) {
-  const { members, displayLang } = useViewer();
+  const { members, viewer, displayLang } = useViewer();
   const words = card.type === "audio" ? card.transcript || card.caption : card.caption;
   const { text } = useDisplayText(words, card.type === "audio" && card.transcript ? card.transcriptLang : card.lang, displayLang);
   const author = members.find((m) => m.id === card.authorId);
@@ -42,8 +81,11 @@ function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: bo
         <div className="pointer-events-none absolute inset-[-40px]" aria-hidden="true" style={{ filter: "blur(44px) saturate(1.15) brightness(.45)" }}>
           <Photo src={cover} alt="" sizes="200px" />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center px-6" style={{ paddingTop: "calc(64px + env(safe-area-inset-top))", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6" style={{ paddingTop: "calc(64px + env(safe-area-inset-top))", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
           <PrintFrame card={card} author={author} src={cover} alt={text || "Family photo"} width={LANE_PRINT_W} signed share sizes="(max-width: 480px) 92vw, 440px" />
+          <div style={{ width: LANE_PRINT_W }} className="mt-4">
+            <PhotoDetails card={card} author={author} />
+          </div>
         </div>
         {museLabel(card.source) && (
           <span className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/90 px-3 py-1.5 text-caption font-semibold text-[#1c1b1a]" style={{ marginTop: "calc(64px + env(safe-area-inset-top))" }}>
@@ -74,7 +116,7 @@ function Slide({ card, active, queue, onPrev, onNext }: { card: Card; active: bo
       )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,.72))] px-4 pt-16" style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}>
         <p className="m-0 text-footnote text-white/70">
-          {callName(author)} · {monthChip(card.takenAt)}
+          {[callName(author), card.type === "video" ? printWhen(card.takenAt, author?.tz) : monthChip(card.takenAt), card.place.trim(), privateLabel(card, viewer.id, members)].filter(Boolean).join(" · ")}
         </p>
         {text && <p className={cn("m-0 mt-1 line-clamp-3 text-headline leading-snug text-white", card.type === "audio" && "voice")}>{text}</p>}
       </div>

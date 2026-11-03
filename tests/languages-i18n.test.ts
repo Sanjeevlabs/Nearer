@@ -53,7 +53,7 @@ describe("UI catalogues", () => {
   });
 
   it("translates the welcome and onboarding path fully in every catalogue", () => {
-    const core: UiKey[] = ["landing.tagline", "landing.sub", "landing.create", "landing.join", "landing.signin", "welcome.title", "welcome.enter", "auth.titleOtherSide", "auth.continue", "other.parents", "picker.everyone"];
+    const core: UiKey[] = ["landing.tagline", "landing.sub", "landing.signin", "welcome.title", "welcome.enter", "auth.titleOtherSide", "auth.continue", "other.parents", "picker.everyone"];
     for (const [code, cat] of Object.entries(CATALOGUES)) for (const k of core) expect(cat[k], `${code}: ${k}`).toBeTruthy();
   });
 
@@ -61,7 +61,7 @@ describe("UI catalogues", () => {
     expect(translate("fr", "landing.tagline")).toBe("The voice-first window between two homes.");
     expect(translate("hi-deva", "welcome.title", { name: "Asha" })).toBe("घर में स्वागत है, Asha");
     expect(translate("es", "window.callGood")).toBe("Buen momento para llamar");
-    expect(translate("hi-latn", "landing.create")).toBe("Create");
+    expect(translate("hi-latn", "landing.signin")).toBe("Sign in");
   });
 
   it("exports the shared window and family keys", () => {

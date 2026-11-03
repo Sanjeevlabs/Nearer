@@ -53,7 +53,7 @@ async function postHandler(req: Request): Promise<Response> {
 
   const choose = Choose.safeParse(body);
   if (choose.success) {
-    const imageRef = choose.data.cardId ? await photoRefFor(auth.familyId, choose.data.cardId) : null;
+    const imageRef = choose.data.cardId ? await photoRefFor(auth.familyId, choose.data.cardId, auth.memberId) : null;
     if (choose.data.cardId && !imageRef) return Response.json({ error: "unknown-photo" }, { status: 404 });
     const view = await putDoc(auth.familyId, "window_view", {
       ...(mine ?? defaultView(auth.familyId, auth.memberId)),
@@ -80,7 +80,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (home.success) {
     const { ref, mix } = home.data;
     // Only this family's own photo: its uploads, or one of its photo cards.
-    if (ref && !(await homePhotoOk(auth.familyId, ref))) return Response.json({ error: "unknown-photo" }, { status: 404 });
+    if (ref && !(await homePhotoOk(auth.familyId, ref, auth.memberId))) return Response.json({ error: "unknown-photo" }, { status: 404 });
     const next = { ...base, ...(ref !== undefined ? { homePhoto: ref } : {}), ...(mix !== undefined ? { mixAlbum: mix } : {}), updatedAt: keep };
     return Response.json({ view: await putDoc(auth.familyId, "window_view", next) });
   }

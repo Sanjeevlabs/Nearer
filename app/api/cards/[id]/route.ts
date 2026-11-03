@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth";
 import { dbDeleteCard, dbGetMember, dbListCards, dbUpdateCard } from "@/lib/db";
 import { canChange } from "@/lib/permissions";
 import { guardWrites } from "@/lib/api-guard";
+import { canSeeCard } from "@/lib/card-privacy";
 
 // One voice note, photo or video: the author can fix the caption or delete
 // it; an admin can delete anything (moderation). Deleting removes its plays,
@@ -13,7 +14,8 @@ async function load(req: Request, id: string) {
   if (auth instanceof Response) return auth;
   const [cards, me] = await Promise.all([dbListCards(auth.familyId), dbGetMember(auth.memberId)]);
   const card = cards.find((c) => c.id === id);
-  if (!card || !me) return Response.json({ error: "unknown-card" }, { status: 404 });
+  // A note for someone else is not there at all for this viewer.
+  if (!card || !me || !canSeeCard(card, auth.memberId)) return Response.json({ error: "unknown-card" }, { status: 404 });
   return { auth, card, me };
 }
 

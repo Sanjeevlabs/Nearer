@@ -5,12 +5,16 @@ import { dbGetMember, dbListCards, dbListReactions, dbRemoveReaction, dbSetReact
 import { requireMember, requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
 import { nudgeReacted } from "@/lib/nudge-producers";
+import { canSeeCard, hiddenCardIds } from "@/lib/card-privacy";
 
 async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const { searchParams } = new URL(req.url);
-  return Response.json({ reactions: await dbListReactions(searchParams.get("cardId") ?? undefined, auth.familyId) });
+  const [reactions, cards] = await Promise.all([dbListReactions(searchParams.get("cardId") ?? undefined, auth.familyId), dbListCards(auth.familyId)]);
+  // Reactions on a note for someone else are theirs too.
+  const hidden = hiddenCardIds(cards, auth.memberId);
+  return Response.json({ reactions: hidden.size ? reactions.filter((r) => !hidden.has(r.cardId)) : reactions });
 }
 
 async function postHandler(req: Request): Promise<Response> {
@@ -30,7 +34,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (ownership) return ownership;
   const cards = withDemoShelf(await dbListCards(auth.familyId), auth.familyId);
   const card = cards.find((c) => c.id === parsed.data.cardId);
-  if (!card) {
+  if (!card || !canSeeCard(card, auth.memberId)) {
     return Response.json({ error: "unknown-card" }, { status: 404 });
   }
   if (!(await dbGetMember(parsed.data.memberId))) {

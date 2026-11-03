@@ -583,6 +583,13 @@ if (cards.length === 0) seedDemo();
 if (members.length === 0) members = [...DEMO_MEMBERS, ...DEMO_IYER_MEMBERS].map((m) => MemberSchema.parse(m));
 
 // ---- Edit / delete operations (stage 5 CRUD) ----
+/** Every link a member made stops working when they leave or are removed. */
+export function revokeInvitesBy(memberId: string): number {
+  const before = invites.length;
+  invites = invites.filter((i) => i.createdBy !== memberId);
+  return before - invites.length;
+}
+
 export function revokeInvite(code: string, familyId: string): boolean {
   const before = invites.length;
   invites = invites.filter((i) => !(i.code.toUpperCase() === code.toUpperCase() && i.familyId === familyId));

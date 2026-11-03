@@ -2,6 +2,7 @@
 // a day by each person who joined. The family sees words, never a score, a
 // streak or a count of days, and never one person set against another. Pure
 // helpers (client + server); the route is app/api/habits/route.ts.
+import { dateInZone } from "./time-format";
 import type { Habit, HabitTick } from "./kinds";
 import { isAdmin } from "./permissions";
 import type { Member } from "./schemas";
@@ -14,7 +15,7 @@ export const HABIT_TICK_KEEP_DAYS = 60;
 /** The wall-clock day (YYYY-MM-DD) in a zone; UTC when the zone is unknown. */
 export function dayIn(tz: string, at: Date = new Date()): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: tz || "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+    return dateInZone(tz || "UTC").format(at);
   } catch {
     return at.toISOString().slice(0, 10);
   }

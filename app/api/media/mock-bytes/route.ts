@@ -2,6 +2,7 @@ import { mockGetBlob, usesMockStorage } from "@/lib/storage";
 import { requireSession } from "@/lib/auth";
 import { isMediaMime } from "@/lib/media-types";
 import { guardApi } from "@/lib/api-guard";
+import { mediaAllowed } from "@/lib/media-gate";
 
 
 
@@ -16,6 +17,8 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (path && !path.startsWith(`${auth.familyId}/`)) return Response.json({ error: "forbidden-family" }, { status: 403 });
+  // A note for particular people: its bytes are theirs and its author's only.
+  if (path && !(await mediaAllowed(auth.familyId, auth.memberId, path))) return Response.json({ error: "unknown-media" }, { status: 404 });
   const blob = path ? mockGetBlob(path) : undefined;
   if (!path || !blob || !isMediaMime(blob.mime)) return Response.json({ error: "unknown-media" }, { status: 404 });
   return new Response(blob.bytes as unknown as BodyInit, {
