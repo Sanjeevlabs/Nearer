@@ -10,26 +10,24 @@ import { WindowLoading } from "@/components/window-hero";
 import { WINDOW_PHOTO_HEIGHT } from "@/lib/hero";
 import { resetFamilyCards } from "@/lib/use-family";
 
+import { ENTER_MS, HOUSE_KEY, entryMotion, houseValue, isInside } from "@/lib/house-entry";
 import { hasEntered, isInstalledApp, markEntered } from "@/lib/entered";
 import { isKid } from "@/lib/kids";
 import { Mark } from "@/components/brand";
 
-const DOOR_KEY = "aangan:door";
-
-// Each person needs one of these four: the window (signed in, door closed), the courtyard
-// (above, door open), the landing (signed out) or the door itself (only when it swings).
-// The others stay out of the first download; the likely next one is fetched while idle.
+// Each person needs one of these: the window (signed in, key not yet slid), the family page
+// (after the key), the landing (signed out) or the home page. The others stay out of the first
+// download; the likely next one is fetched while idle.
 const LiteWindow = dynamic(() => import("@/components/window").then((x) => x.LiteWindow), { ssr: false, loading: () => <WindowLoading /> });
 const KidHome = dynamic(() => import("@/components/kid-home").then((x) => x.KidHome), { ssr: false, loading: () => <WindowLoading /> });
 const Landing = dynamic(() => import("@/components/welcome").then((x) => x.Landing), { ssr: false });
 const HomeSite = dynamic(() => import("@/components/home-site").then((x) => x.HomeSite), { ssr: false });
-const DoorTransition = dynamic(() => import("@/components/door").then((x) => x.DoorTransition), { ssr: false });
 
 /**
  * What the server sends and the phone paints before any script has run. Never a photo.
  * Plain paper and the mark, unless the inline hint in app/layout.tsx says this person already
  * stepped inside: then the drawn window frame (no sky drawn yet, nothing claimed about it) in
- * the box the window uses, or, behind the open door, the courtyard's drawn header band.
+ * the box the window uses, or, once the key has been slid, the family page's drawn header band.
  * Both are small static SVGs, so the first large paint does not wait for the bundle.
  */
 function CheckingShell() {
@@ -51,30 +49,24 @@ function CheckingShell() {
 }
 
 // Signed out -> Landing. Signed in -> LITE: the window into the other home.
-// The door opens the family courtyard; it stays open for the session.
+// Sliding the key goes straight to the family page (a quick fade); it stays that way for the session.
 export default function Page() {
   const { setDockOn } = useShell();
   const { ready, signedIn, viewer } = useViewer();
   const [open, setOpen] = useState<boolean | null>(null);
-  const [moving, setMoving] = useState<"opening" | "closing" | null>(null);
-  // Once the door has swung it stays mounted, so it can fade out.
-  const [doorUsed, setDoorUsed] = useState(false);
-  useEffect(() => {
-    if (moving) setDoorUsed(true);
-  }, [moving]);
+  // Set when the screen was changed by the person (key or back), so only that change fades in.
+  const [fade, setFade] = useState(0);
 
   useEffect(() => {
     let isOpen = false;
     try {
-      isOpen = sessionStorage.getItem(DOOR_KEY) === "open";
+      isOpen = isInside(sessionStorage.getItem(HOUSE_KEY));
     } catch {
       /* private mode */
     }
     setOpen(isOpen);
     // Start the next screen's code now, in step with the session check.
     if (!isOpen) void import("@/components/window");
-    const idle = (window as { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-    idle(() => void import("@/components/door"));
   }, []);
 
   const startDemo = useCallback(async () => {
@@ -119,17 +111,24 @@ export default function Page() {
     return () => setDockOn(false);
   }, [dock, setDockOn]);
 
-  const settle = useCallback(() => {
-    const next = moving === "opening";
+  // The key was slid (inside = true) or "back to the window" was tapped: change screens at once.
+  // The new screen fades in over ENTER_MS (instant under reduced motion); no door, nothing swings.
+  const go = useCallback((inside: boolean) => {
     try {
-      sessionStorage.setItem(DOOR_KEY, next ? "open" : "closed");
+      sessionStorage.setItem(HOUSE_KEY, houseValue(inside));
     } catch {
       /* private mode */
     }
-    setOpen(next);
-    setMoving(null);
+    let calm = false;
+    try {
+      calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      /* motion is fine */
+    }
+    setFade(entryMotion(calm).ms);
+    setOpen(inside);
     window.scrollTo(0, 0);
-  }, [moving]);
+  }, []);
 
   if (view === "checking") return <CheckingShell />;
   if (view === "landing") return <Landing onDemo={startDemo} />;
@@ -146,22 +145,21 @@ export default function Page() {
     );
   if (view === "kid") return <KidHome />;
   return (
-    <>
+    <div key={view} className={fade ? "enter-fade" : undefined} style={fade ? ({ "--enter-ms": `${Math.min(fade, ENTER_MS)}ms` } as React.CSSProperties) : undefined}>
       {view === "lite" ? (
         <LiteWindow
-          onOpenDoor={() => {
-            // The courtyard's payload is read while the door swings, not after it.
+          onUnlock={() => {
+            // The family page's payload is read as the page changes, not after it.
             prefetchCourtyard();
-            setMoving("opening");
+            go(true);
           }}
         />
       ) : (
-        // Keyed by family: switching sides starts the courtyard afresh, so nothing of the last side stays.
+        // Keyed by family: switching sides starts the family page afresh, so nothing of the last side stays.
         <CourtyardProvider key={viewer.familyId}>
-          <Courtyard onCloseDoor={() => setMoving("closing")} />
+          <Courtyard onBack={() => go(false)} />
         </CourtyardProvider>
       )}
-      {(moving || doorUsed) && <DoorTransition state={moving} onDone={settle} />}
-    </>
+    </div>
   );
 }

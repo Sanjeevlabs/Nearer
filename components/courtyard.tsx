@@ -21,6 +21,7 @@ import { useShell } from "./shell";
 import { SafetyWatch } from "./safety";
 import { PersonDay, lampFor } from "./person-day";
 import { PersonSheet, type WindowPersonData } from "./person-sheet";
+import { ProfileMenu } from "./profile-menu";
 import { SideSwitch, doneOpening, useOpeningSide, useSides } from "./sides";
 import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
@@ -195,7 +196,7 @@ function CourtyardSkeleton() {
 }
 
 /* ----------------------------------------------------------------- page */
-export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
+export function Courtyard({ onBack }: { onBack: () => void }) {
   const { viewer, members } = useViewer();
   const { refreshKey, openAdd } = useShell();
   const { cards } = useFamilyCards(refreshKey);
@@ -251,12 +252,10 @@ export function Courtyard({ onCloseDoor }: { onCloseDoor: () => void }) {
             <Mark size={36} />
           </span>
           <div className="absolute right-3 top-3 flex items-center gap-2">
-            <button type="button" onClick={onCloseDoor} aria-label="Close the door, back to the window" className="press glass grid h-11 w-11 place-items-center rounded-full text-white">
-              <Icon name="doorClosed" size={20} strokeWidth={1.8} />
+            <button type="button" onClick={onBack} aria-label="Back to the window" className="press glass grid h-11 w-11 place-items-center rounded-full text-white">
+              <Icon name="chevron" size={20} strokeWidth={1.8} className="rotate-180" />
             </button>
-            <Link href="/settings" aria-label="You: settings and account" className="press rounded-full no-underline">
-              <Avatar src={memberPhoto(viewer)} name={viewer.firstName} size={44} ring />
-            </Link>
+            <ProfileMenu ring />
           </div>
           <div className="absolute inset-x-4 bottom-3.5 text-white">
             <h1 data-display className="m-0 mt-0.5 truncate [text-shadow:0_1px_12px_rgba(0,0,0,.45)] text-display font-light leading-[1.1] tracking-[-0.01em]">{familyName ? `The ${familyName} family` : "Your family"}</h1>

@@ -10,7 +10,7 @@ const literata = Literata({ subsets: ["latin"], style: ["italic"], weight: ["400
 // Handwriting on printed photos (when, where, a note). Kalam covers Latin and Devanagari, so Hindi notes are handwritten too.
 const kalam = Kalam({ subsets: ["latin", "devanagari"], weight: ["400"], variable: "--font-hand", display: "swap", preload: false });
 
-// Before any script: which view is likely (stepped inside? door open?), so the server-sent shell
+// Before any script: which view is likely (stepped inside? key slid?), so the server-sent shell
 // (app/page.tsx CheckingShell) paints that view's drawn frame at once. Never a photo.
 // Then, for someone already inside, the first screen's data is asked for at once (lib/early.ts), not after the bundle.
 const VIEW_HINT = `try{var s=sessionStorage,d=document.documentElement,o=s.getItem("aangan:door")==="open",e=s.getItem("aangan:entered")==="1";if(o)d.dataset.door="open";if(e)d.dataset.entered="1";${EARLY_FETCH}}catch(x){}`;

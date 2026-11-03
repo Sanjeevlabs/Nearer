@@ -35,6 +35,8 @@ const ICONS = {
   gather: L.Users,
   tree: L.Network,
   settings: L.Settings,
+  logout: L.LogOut,
+  people: L.Users,
   plus: L.Plus,
   check: L.Check,
   send: L.Send,
