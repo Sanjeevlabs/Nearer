@@ -23,6 +23,8 @@ import { BottomSheet } from "./ui/bottom-sheet";
 import { useViewer } from "./viewer";
 import { Teleprompter } from "./prompt-text";
 import { useJson } from "@/lib/use-json";
+import { useFamilyCards } from "@/lib/use-family";
+import { notJoined } from "@/lib/sent";
 
 export type AddTab = "photos" | "voice" | "video" | "ask";
 
@@ -225,8 +227,9 @@ interface VoiceReady {
 
 function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[] | null; contribution: ReplyContribution | null; onDone: () => void }) {
   const router = useRouter();
-  const { openAdd } = useShell();
+  const { openAdd, refreshKey } = useShell();
   const { viewer, members, relationships, displayLang } = useViewer();
+  const { cards: familyCards } = useFamilyCards(refreshKey);
   const purpose = contribution && contribution.kind !== "wish" && contribution.kind !== "blessing" ? PURPOSE[contribution.kind] : null;
   const [to, setTo] = useState<string[]>(addressee ?? []);
   const [listen, setListen] = useState<ListenWay | null>(null);
@@ -258,6 +261,16 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
     const names = to.map((id) => callName(members.find((m) => m.id === id)));
     return names.length <= 2 ? names.join(" & ") : `${names.slice(0, 2).join(", ")} +${names.length - 2}`;
   })();
+
+  // Chosen people who have not joined yet: the note is kept for them, and the sender is told so.
+  const notYet = useMemo(() => {
+    const active = new Set((familyCards ?? []).flatMap((c) => (c.authorId ? [c.authorId] : [])));
+    return to.flatMap((id) => {
+      const m = members.find((x) => x.id === id);
+      return m && notJoined(m, active) ? [callName(m)] : [];
+    });
+  }, [to, members, familyCards]);
+  const notYetLine = notYet.length ? `${notYet.join(" and ")} ${notYet.length > 1 ? "haven't" : "hasn't"} joined yet. They'll get it when they do. You can find it under Sent.` : null;
 
   useEffect(() => {
     try {
@@ -415,6 +428,12 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         return;
       }
     }
+    if (notYetLine) {
+      // Kept, not lost: say where it went before the sheet closes.
+      setNotice(`Saved for ${notYet.join(" and ")}. It waits under Sent until they join.`);
+      window.setTimeout(onDone, 2200);
+      return;
+    }
     onDone();
   };
 
@@ -548,10 +567,16 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       </div>
 
       {phase === "idle" && !contribution && (
-        <button type="button" data-ui="voice-add-photo" onClick={() => openAdd("photos")} className="press mx-auto mb-1 flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-callout font-semibold text-ink-soft">
-          <Icon name="camera" size={16} />
+        <button type="button" data-ui="voice-add-photo" onClick={() => openAdd("photos")} className="press mx-auto mb-2 flex min-h-[48px] items-center gap-2 rounded-full border border-[var(--line)] bg-surface px-5 text-callout font-semibold text-ink">
+          <Icon name="camera" size={18} />
           Add a photo instead
         </button>
+      )}
+
+      {notYetLine && !purpose && (phase === "idle" || phase === "ready") && (
+        <p data-ui="not-joined-note" className="m-0 mb-3 rounded-[16px] bg-surface px-4 py-3 text-callout text-ink-soft" role="status">
+          {notYetLine}
+        </p>
       )}
 
       {phase === "ready" && nightThere && (
