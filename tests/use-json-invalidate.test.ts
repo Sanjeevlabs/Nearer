@@ -131,11 +131,11 @@ describe("revalidate status", () => {
     const r = await revalidate("/api/kitchen/none", status(404));
     expect(r).toMatchObject({ data: null, failed: true, status: 404 });
   });
-  it("a 503 reports failed with status 503", async () => {
+  it("a 503 (after the three quiet retries) reports failed with status 503", async () => {
     clearJsonCache();
     vi.useFakeTimers();
     const p = revalidate("/api/kitchen/x", status(503));
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(4000);
     const r = await p;
     vi.useRealTimers();
     expect(r).toMatchObject({ data: null, failed: true, status: 503 });

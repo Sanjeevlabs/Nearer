@@ -1,14 +1,18 @@
 // Nearer offline shell. Hand-written, no dependencies.
 //  - static files (/_next/static, /demo, /icons, /home, /window): stale-while-revalidate
-//  - pages: network first (one retry on 502/503/504, the host's CPU cut-off), then the last copy, then /offline.html
+//  - pages: network first; on a 5xx or network error (the host's CPU cut-off) up to 2 retries (300, 900 ms), then the last
+//    copy of that page (kept per URL, 30 at most), then /retry.html (reloads itself, then a calm "Try again"). Offline: /offline.html.
+//    The raw host error page never reaches the person. Decisions live in sw-core.js (tested).
 //  - /api GETs: network first, then the last copy (never media, session, auth or push)
 //  - push: shows the notification the server sent; a tap focuses Nearer (or opens it) at data.url
 // Pages and API copies are family data: the app posts "clear" on sign-in / sign-out.
-const VERSION = "v3"; // v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
+const VERSION = "v5"; // v5: /api retries left to the app when it marks them; v4: page retries, kept page copies, /retry.html; v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
+importScripts("/sw-core.js");
+const PAGES = `aangan-pages-${VERSION}`;
 const STATIC = `aangan-static-${VERSION}`;
 const DATA = `aangan-data-${VERSION}`;
-const SHELL = ["/offline.html", "/manifest.webmanifest", "/icons/icon-192.png"];
-const STATIC_PREFIXES = ["/_next/static/", "/demo/", "/icons/", "/home/", "/window/"];
+const SHELL = ["/offline.html", "/retry.html", "/sw-core.js", "/manifest.webmanifest", "/icons/icon-192.png"];
+const STATIC_PREFIXES = ["/_next/static/", "/demo/", "/icons/", "/home/", "/window/", "/brand/"];
 const RETRY = [502, 503, 504];
 const NEVER = ["/api/media", "/api/session", "/api/auth", "/api/transcribe", "/api/push"];
 
@@ -20,32 +24,80 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== STATIC && k !== DATA).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== STATIC && k !== DATA && k !== PAGES).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data === "clear") event.waitUntil(caches.delete(DATA));
+  if (event.data === "clear") event.waitUntil(Promise.all([caches.delete(DATA), caches.delete(PAGES)]));
 });
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// A static file: the kept copy at once, refreshed in the background. No copy yet: fetch, and once more if the host cut it off.
 async function staleWhileRevalidate(req) {
   const cache = await caches.open(STATIC);
   const hit = await cache.match(req);
-  const fresh = fetch(req)
-    .then((res) => {
-      if (res.ok) cache.put(req, res.clone());
-      return res;
-    })
-    .catch(() => null);
-  return hit || (await fresh) || Response.error();
+  const get = async () => {
+    let res = await fetch(req.clone()).catch(() => null);
+    if (!res || res.status >= 500) {
+      await sleep(300);
+      res = (await fetch(req.clone()).catch(() => null)) || res;
+    }
+    if (res && res.ok) cache.put(req, res.clone());
+    return res;
+  };
+  if (hit) {
+    get().catch(() => null);
+    return hit;
+  }
+  return (await get()) || Response.error();
+}
+
+// A page: retry, then this page's kept copy, then the self-retrying page. Never the host's error page.
+async function page(event) {
+  const req = event.request;
+  const cache = await caches.open(PAGES);
+  const url = new URL(req.url);
+  const keep = NearerSW.cacheablePage(url.pathname);
+  const out = await NearerSW.navigate(
+    () => fetch(req),
+    async () => (keep ? await cache.match(url.href) : null),
+    sleep,
+  );
+  if (out.kind === "network") {
+    if (keep && out.res.ok && out.res.type !== "opaqueredirect" && !out.res.redirected) {
+      const html = (out.res.headers.get("content-type") || "").includes("text/html");
+      if (html) {
+        const copy = out.res.clone();
+        event.waitUntil(
+          (async () => {
+            await cache.delete(url.href);
+            await cache.put(url.href, copy);
+            for (const k of NearerSW.overflow((await cache.keys()).map((r) => r.url))) await cache.delete(k);
+          })(),
+        );
+      }
+    }
+    return out.res;
+  }
+  if (out.kind === "copy") return out.res;
+  if (out.kind === "offline") return (await caches.match("/offline.html")) || Response.error();
+  const wait = await caches.match("/retry.html");
+  if (wait) return new Response(wait.body, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+  return (await caches.match("/offline.html")) || Response.error();
 }
 
 async function networkFirst(req, fallback) {
   const cache = await caches.open(DATA);
+  // The app's own retry layer (lib/retry.ts) marks a request it will try again: pass a 5xx straight through,
+  // so retries never multiply and an old copy is never served as if it were fresh. Unmarked (the last try,
+  // or a caller without retries): one quick retry here, then the last copy.
+  const clientRetries = req.headers.get("x-nearer-retry") === "1";
   try {
     let res = await fetch(req);
-    if (RETRY.includes(res.status)) {
+    if (RETRY.includes(res.status) && !clientRetries) {
       await new Promise((r) => setTimeout(r, 250));
       res = await fetch(req);
       if (RETRY.includes(res.status)) {
@@ -55,7 +107,8 @@ async function networkFirst(req, fallback) {
     }
     if (res.ok) cache.put(req, res.clone());
     return res;
-  } catch {
+  } catch (err) {
+    if (clientRetries) throw err;
     return (await cache.match(req)) || (fallback ? await fallback() : Response.error());
   }
 }
@@ -72,7 +125,7 @@ self.addEventListener("fetch", (event) => {
   } else if (STATIC_PREFIXES.some((p) => path.startsWith(p))) {
     event.respondWith(staleWhileRevalidate(req));
   } else if (req.mode === "navigate") {
-    event.respondWith(networkFirst(req, () => caches.match("/offline.html")));
+    event.respondWith(page(event));
   }
 });
 

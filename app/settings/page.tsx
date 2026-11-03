@@ -29,6 +29,7 @@ interface Invite {
 }
 
 import { ROLE_ERROR } from "@/lib/settings-save";
+import { fetchGet } from "@/lib/retry";
 
 /** Joiners waiting for an owner/admin, at the top of the Family tab. */
 function WaitingToJoin({ onMessage }: { onMessage: (m: string) => void }) {
@@ -107,7 +108,7 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/invites", { cache: "no-store" })
+    fetchGet("/api/invites")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { invites?: Invite[] } | null) => {
         const live = (d?.invites ?? []).filter((i) => new Date(i.expiresAt).getTime() > Date.now());
