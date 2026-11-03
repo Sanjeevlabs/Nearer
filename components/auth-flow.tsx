@@ -2,6 +2,8 @@
 
 import { Lockup } from "./brand";
 import Link from "next/link";
+import { CityAssist } from "@/components/city-assist";
+import { useCityAutofill } from "@/lib/use-city-autofill";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { joinLink, whatsappInvite } from "@/lib/invite-link";
@@ -68,6 +70,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   const [firstName, setFirstName] = useState("");
   const [callName, setCallName] = useState("");
   const [city, setCity] = useState("");
+  const cityAuto = useCityAutofill(city, setCity, t.lang, mode !== "signin");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
   const [email, setEmail] = useState("");
@@ -436,8 +439,10 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               </>
             )}
             <Field label={t("auth.city")} hint={t("auth.cityHint")}>
-              <input className={input} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("auth.cityPh")} maxLength={60} autoComplete="address-level2" />
+              <input className={input} value={city} onChange={(e) => { cityAuto.typed(); setCity(e.target.value); }} placeholder={t("auth.cityPh")} maxLength={60} autoComplete="address-level2" />
             </Field>
+            <CityAssist source={cityAuto.source} locating={cityAuto.locating} failed={cityAuto.failed} onUseLocation={cityAuto.useMyLocation} />
+
             {mode === "create" && (
               <Field label={t("auth.birthday")} hint={t("auth.birthdayHint")}>
                 <div className="flex gap-2">
