@@ -91,7 +91,9 @@ export async function listDocsManyWith<const Ks extends readonly DocKind[]>(fami
   if (!sb) return separately();
   const limit = 500 * (unique.length + extras.length);
   const { data, error } = await sb.from("family_docs").select("id, kind, data").eq("family_id", familyId).in("kind", [...unique, ...extras]).order("created_at", { ascending: false }).limit(limit);
-  if (error) throw new DbReadError("family_docs", error.message);
+  // One combined query is cheapest; if it fails (e.g. it hit the time limit), the smaller per-kind
+  // reads get one chance before the read is reported as failed (each of those throws on its own error).
+  if (error) return separately();
   if (!data || data.length >= limit) return separately();
   const by = new Map<string, unknown[]>(unique.map((k) => [k, []]));
   const extra: RawDocRows = new Map(extras.map((k) => [k, []]));
