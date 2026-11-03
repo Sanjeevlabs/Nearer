@@ -32,6 +32,7 @@ export async function museJson<T>(opts: {
   mock: () => unknown;
   fallback: T;
   maxTokens?: number;
+  attempts?: 1 | 2;
   /** Extra post-validation guard (grounding): return false to reject. */
   accept?: (data: T) => boolean;
 }): Promise<MuseResult<T>> {
@@ -68,7 +69,7 @@ export async function museJson<T>(opts: {
     return { data: opts.fallback, source: "fallback", cached: false, cost: 0, model };
   }
   const reasons: string[] = [];
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < (opts.attempts ?? 2); attempt++) {
     try {
       const out = isMockMode() ? { json: opts.mock(), cost: 0 } : await liveJson(provider, opts.system, opts.user, model, opts.maxTokens ?? 1200);
       const parsed = opts.schema.safeParse(out.json);

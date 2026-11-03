@@ -10,7 +10,7 @@ describe("family_docs kind check matches lib/kinds.ts", () => {
     const sql = readFileSync("supabase/schema.sql", "utf8");
     const line = sql.split("\n").find((l) => l.includes("family_docs_kind_check check"));
     expect(line).toBeDefined();
-    const allowed = new Set(Array.from(line!.matchAll(/'([a-z_]+)'/g), (m) => m[1]));
+    const allowed = new Set(Array.from(line!.matchAll(/'([a-z_-]+)'/g), (m) => m[1]));
     const missing = Object.keys(DOC_SCHEMAS).filter((k) => !allowed.has(k));
     expect(missing).toEqual([]);
   });
