@@ -141,7 +141,7 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
         problems.append(f"{person} /: {bars} bottom bars on the window, expected 1")
     dock_overlaps(page, "/ (window)", problems, person)
     # Slide the key (Enter on it): straight to the family page, no door in between.
-    page.get_by_role("button", name="Slide to open the house").focus()
+    page.get_by_role("button", name="Slide or tap to go inside").focus()
     page.keyboard.press("Enter")
     try:
         page.locator("[data-ui=courtyard-header]").wait_for(timeout=5_000)
