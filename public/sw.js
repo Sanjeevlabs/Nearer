@@ -6,7 +6,7 @@
 //  - /api GETs: network first, then the last copy (never media, session, auth or push)
 //  - push: shows the notification the server sent; a tap focuses Nearer (or opens it) at data.url
 // Pages and API copies are family data: the app posts "clear" on sign-in / sign-out.
-const VERSION = "v5"; // v5: /api retries left to the app when it marks them; v4: page retries, kept page copies, /retry.html; v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
+const VERSION = "v6"; // v6: offline and retry pages served as fresh responses (the host redirects .html); v5: /api retries left to the app when it marks them; v4: page retries, kept page copies, /retry.html; v3: one retry on 502/503/504; v2 dropped the retired courtyard photos
 importScripts("/sw-core.js");
 const PAGES = `aangan-pages-${VERSION}`;
 const STATIC = `aangan-static-${VERSION}`;
@@ -83,10 +83,16 @@ async function page(event) {
     return out.res;
   }
   if (out.kind === "copy") return out.res;
-  if (out.kind === "offline") return (await caches.match("/offline.html")) || Response.error();
-  const wait = await caches.match("/retry.html");
-  if (wait) return new Response(wait.body, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
-  return (await caches.match("/offline.html")) || Response.error();
+  if (out.kind === "offline") return (await shellPage("/offline.html")) || Response.error();
+  return (await shellPage("/retry.html")) || (await shellPage("/offline.html")) || Response.error();
+}
+
+// The host answers /retry.html and /offline.html with a redirect to /retry and /offline, so the kept copy is a
+// redirected response, which a browser refuses as the answer to a page load. Hand back a fresh copy of its body.
+async function shellPage(path) {
+  const kept = await caches.match(path);
+  if (!kept) return null;
+  return new Response(await kept.blob(), { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }
 
 async function networkFirst(req, fallback) {
