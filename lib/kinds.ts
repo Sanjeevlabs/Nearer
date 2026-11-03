@@ -26,6 +26,16 @@ export const StepSchema = z.object({
   tip: z.string().max(200).default(""),
 });
 
+export const KitchenPreferencesSchema = z.object({
+  fridge: z.string().trim().max(600).default(""),
+  taste: z.string().trim().max(80).default(""),
+  diet: z.string().trim().max(120).default(""),
+  calories: z.number().int().min(1).max(10000).nullable().default(null),
+  minutes: z.number().int().min(1).max(1440).default(30),
+  servings: z.number().int().min(1).max(60).default(2),
+});
+export type KitchenPreferences = z.infer<typeof KitchenPreferencesSchema>;
+
 export const RecipeSchema = z.object({
   id,
   title: z.string().min(1).max(80),
@@ -37,6 +47,8 @@ export const RecipeSchema = z.object({
   /** Minutes, when known. Never invented by Muse. */
   prepMins: z.number().int().min(0).max(1440).nullable().default(null),
   cookMins: z.number().int().min(0).max(1440).nullable().default(null),
+  caloriesPerServing: z.number().int().min(1).max(10000).nullable().optional(),
+  museIdea: z.boolean().optional(),
   /** Before you start: soak, chop, grind ("soak the dal 30 min"). */
   prepWork: z.array(z.string().min(1).max(160)).max(12).default([]),
   /** How you know it's right: "Thick enough to coat a spoon; smells of ghee." */
@@ -678,6 +690,7 @@ export type KidAsk = z.infer<typeof KidAskSchema>;
 
 export const DOC_SCHEMAS = {
   recipe: RecipeSchema,
+  "kitchen-prefs": z.object({ id, memberId: id, prefs: KitchenPreferencesSchema }),
   attempt: AttemptSchema,
   presence: PresenceSchema,
   care_settings: CareSettingsSchema,

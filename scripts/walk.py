@@ -428,6 +428,23 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
             skipped.append(f"{url} {name}")
     voice_sheet_photo(page, person, problems)
     profile_menu(page, person, problems)
+    if person == "arjun":
+        page.goto("/kitchen", wait_until="load")
+        try:
+            page.get_by_role("button", name="Add a recipe", exact=True).click()
+            page.get_by_label("Or type it").fill("Simmer one cup of rice in water until tender.")
+            page.get_by_role("button", name="Preview recipe").click()
+            page.get_by_role("button", name="Save recipe", exact=True).click()
+            page.wait_for_url(re.compile(r"/kitchen/[^/]+$"))
+            page.get_by_role("heading", name="Ingredients").wait_for()
+            page.goto("/kitchen", wait_until="load")
+            page.get_by_role("button", name="Surprise me", exact=True).click()
+            page.get_by_role("button", name="Find a recipe").click()
+            page.get_by_role("button", name="Keep it").click()
+            page.wait_for_url(re.compile(r"/kitchen/[^/]+$"))
+            page.get_by_text("Idea from Muse", exact=True).wait_for()
+        except Exception as exc:
+            problems.append(f"{person} kitchen sheets: {exc}")
     ctx.close()
     return skipped
 
