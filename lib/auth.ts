@@ -186,6 +186,7 @@ const MODEL_ROUTES = new Set([
   "/api/translate",
   "/api/suggest",
   "/api/cards",
+  "/api/cards/caption",
   "/api/gather",
   "/api/suggestions",
   "/api/kitchen",
