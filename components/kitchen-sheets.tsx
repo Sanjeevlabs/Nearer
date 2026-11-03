@@ -9,18 +9,24 @@ import { RecipeEditor, type Draft } from "./recipe-editor";
 import { ScanRecipeButton, type ScanResult } from "./recipe-scan";
 import { BottomSheet } from "./ui/bottom-sheet";
 import { Button, Icon } from "./ui/kit";
+import { useViewer } from "./viewer";
 
 const field = "min-h-11 w-full rounded-xl bg-surface px-3 text-body";
+const VOICE_CONSENT_KEY = "aangan:voice-consent";
 
 function RecipeMic({ onText, label = "Tell us the recipe" }: { onText: (text: string) => void; label?: string }) {
+  const { viewer } = useViewer();
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const alive = useRef(true);
+  const consented = useRef(false);
+  const limit = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [state, setState] = useState("idle");
   useEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      clearTimeout(limit.current);
       stream.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
@@ -35,6 +41,7 @@ function RecipeMic({ onText, label = "Tell us the recipe" }: { onText: (text: st
       const chunks: Blob[] = [];
       capture.ondataavailable = (event) => chunks.push(event.data);
       capture.onstop = async () => {
+        clearTimeout(limit.current);
         source.getTracks().forEach((track) => track.stop());
         if (!alive.current) return;
         setState("reading");
@@ -42,6 +49,7 @@ function RecipeMic({ onText, label = "Tell us the recipe" }: { onText: (text: st
           const wav = await blobToWav16k(new Blob(chunks, { type: capture.mimeType }));
           const body = new FormData();
           body.append("audio", new Blob([wav.bytes as unknown as BlobPart], { type: "audio/wav" }), "voice.wav");
+          body.append("langHint", viewer.displayLang ?? "en");
           const response = await fetch("/api/transcribe", { method: "POST", body });
           const data = response.ok ? await response.json() : null;
           const text = data?.transcript?.transcript;
@@ -52,14 +60,30 @@ function RecipeMic({ onText, label = "Tell us the recipe" }: { onText: (text: st
         }
       };
       capture.start();
+      limit.current = setTimeout(() => { if (capture.state === "recording") capture.stop(); }, 120_000);
       setState("recording");
     } catch {
       stream.current?.getTracks().forEach((track) => track.stop());
       setState("error");
     }
   }
+  function press() {
+    if (state === "recording") { recorder.current?.stop(); return; }
+    try { consented.current ||= localStorage.getItem(VOICE_CONSENT_KEY) === "1"; } catch { /* session only */ }
+    if (consented.current) void start();
+    else setState("consent");
+  }
+  if (state === "consent") return <div className="space-y-2">
+    <p className="text-callout">Meta’s AI transcribes the recording. Nearer uses the words to draft your recipe.</p>
+    <Button onClick={() => {
+      consented.current = true;
+      try { localStorage.setItem(VOICE_CONSENT_KEY, "1"); } catch { /* session only */ }
+      void start();
+    }}>I understand, start recording</Button>
+    <Button variant="quiet" onClick={() => setState("idle")}>Cancel</Button>
+  </div>;
   return <>
-    <Button variant="secondary" disabled={state === "reading" || state === "starting"} onClick={() => state === "recording" ? recorder.current?.stop() : void start()}>
+    <Button variant="secondary" disabled={state === "reading" || state === "starting"} onClick={press}>
       <Icon name="mic" size={20} /> {state === "recording" ? "Stop recording" : state === "reading" ? "Listening…" : label}
     </Button>
     {state === "error" && <p role="alert">Couldn’t transcribe that. Try again or type it below.</p>}
