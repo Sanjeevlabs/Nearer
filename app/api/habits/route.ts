@@ -4,7 +4,7 @@ import { guardWrites } from "@/lib/api-guard";
 import { DEFAULT_HABIT, HABIT_NAME_MAX, activeHabit, appendHabitEvent, dayIn, habitCan, habitData, habitDays, tickId, timeLabel, todaysTicks, everyoneDone } from "@/lib/habits";
 import type { Habit, HabitEvent } from "@/lib/kinds";
 import { habitCompleted } from "@/lib/habits-server";
-import { getDoc, listAllDocs, listDocs, newId, putDoc, saveHabitAction } from "@/lib/family-docs";
+import { getDoc, listDocs, newId, putDoc, saveHabitAction } from "@/lib/family-docs";
 import { docsFor, membersFor } from "@/lib/request-data";
 import { memberFor } from "@/lib/request-memo";
 
@@ -44,7 +44,7 @@ async function getHandler(req: Request): Promise<Response> {
       return Response.json({ error: "not-allowed" }, { status: 403 });
     }
     if (!habit) return Response.json({ error: "unknown-habit" }, { status: 404 });
-    const ticks = await listAllDocs(auth.familyId, "habit_tick");
+    const ticks = await listDocs(auth.familyId, "habit_tick", { sinceMs: 50 * 86_400_000 }); // one bounded query: the calendar shows 49 days
     const habitTicks = ticks.filter((tick) => tick.habitId === habit.id);
     const people = new Set([...habit.members, ...habitTicks.map((tick) => tick.memberId), ...(habit.history ?? []).map((event) => event.memberId)]);
     return Response.json({

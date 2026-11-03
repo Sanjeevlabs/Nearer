@@ -19,6 +19,10 @@ checking off different dates at the same instant. If the zone is unknown,
 the server uses UTC. The daily cleanup removes check marks older than
 60 days, including check marks for archived habits.
 
+The history sheet (`GET /api/habits?history=<id>`) is family-scoped and
+session-checked. It reads one bounded query of the last 50 days of check
+marks for the 7-week calendars, plus the habit's capped activity list.
+
 See `app/api/habits/route.ts` for actions, `lib/habits.ts` for local dates
 and check-mark keys, `lib/family-docs.ts` for storage, and `lib/purge.ts`
 for cleanup.
