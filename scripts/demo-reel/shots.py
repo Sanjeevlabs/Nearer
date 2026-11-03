@@ -9,17 +9,13 @@ CAPTION_IN = 0.35  # a caption appears this long after its clip starts ...
 CAPTION_OUT = 0.35  # ... and goes this long before it ends
 
 SHOTS = [
-    {"id": 1, "key": "landing", "dur": 8, "caption": "No sign-up. A family opens.", "vo": "This is Arjun. His parents live more than two thousand kilometres away. He opens one screen."},
+    {"id": 1, "key": "voice", "dur": 10, "caption": "Maa’s voice, with the words on screen.", "vo": "Arjun lives far from Maa. He can still hear her voice, and read her words."},
     {"id": 2, "key": "window", "dur": 8, "caption": "Their sky. Their time. Right now.", "vo": "Their sky, their weather, their time, right now."},
-    {"id": 3, "key": "safe", "dur": 10, "caption": "He knows they’re okay — without tracking them.", "vo": "He knows they’re okay. Nobody is tracked; it’s only their time in Nearer."},
-    {"id": 4, "key": "lamp", "dur": 10, "caption": "One tap: I’m thinking of you.", "vo": "One tap says “I’m thinking of you.”"},
-    {"id": 5, "key": "maa", "dur": 6, "caption": "It glows in her home for three days.", "vo": "It glows in their home for three days."},
-    {"id": 6, "key": "voice", "dur": 10, "caption": "She speaks her way. Muse writes and translates it.", "vo": "Maa talks the way she talks. Muse writes it down and translates it."},
-    {"id": 7, "key": "door", "dur": 8, "caption": "Inside: everything the family keeps.", "vo": "Inside is everything the family keeps."},
-    {"id": 8, "key": "kitchen", "dur": 10, "caption": "Parents don’t just receive care. They give.", "vo": "Parents don’t just receive care. They give, and see it land."},
-    {"id": 9, "key": "inbox", "dur": 8, "caption": "Everything sent to you, in one place.", "vo": "Everything sent to you, in one place."},
-    {"id": 10, "key": "send", "dur": 8, "caption": "Can’t be there? Send something real.", "vo": "And when you can’t be there, send something real."},
-    {"id": 11, "key": "rohan", "dur": 4, "caption": "Any family. Any country.", "vo": "Any family. Any country."},
+    {"id": 4, "key": "lamp", "dur": 8, "caption": "One tap: I’m thinking of you.", "vo": "One tap says I'm thinking of you."},
+    {"id": 7, "key": "together", "dur": 9, "caption": "Open your door for chai. Family can join when they’re free.", "vo": "Open your door for chai, and let family join when they can."},
+    {"id": 9, "key": "stories", "dur": 8, "caption": "Dadi’s stories in her voice, with translated words.", "vo": "The grandchildren can listen to Dadi tell a story."},
+    {"id": 8, "key": "kitchen", "dur": 8, "caption": "Hear Maa teach a family recipe.", "vo": "In the kitchen, Maa teaches Arjun how she makes dal."},
+    {"id": 10, "key": "occasions", "dur": 7, "caption": "The photos and voices from family occasions.", "vo": "Birthdays and other family occasions stay together."},
 ]
 END_CARD = {"id": 12, "key": "end", "dur": 3, "caption": "Nearer — far from home, never far from them.", "vo": "Nearer. Far from home, never far from them."}
 

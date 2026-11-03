@@ -71,13 +71,13 @@ if [ "$SIZE" -gt 20000000 ]; then
   encode 28 1500k
 fi
 
-# 3. contact sheet: five frames from the middle of shots 2, 4, 6, 8, 10
+# 3. contact sheet: five frames from the middle of the voice, lamp, Together, stories and kitchen shots
 python3 - "$DIR" <<'PY' > "$DIR/contact.tsv"
 import json, sys
 tl = json.load(open(f"{sys.argv[1]}/assets/timeline.json"))["clips"]
 for c in tl:
-    if c["id"] in (2, 4, 6, 8, 10):
-        print(c["id"], round(c["start"] + c["dur"] * (0.88 if c["id"] in (8, 10) else 0.55), 2), sep="\t")
+    if c["id"] in (1, 4, 7, 8, 9):
+        print(c["id"], round(c["start"] + c["dur"] * (0.88 if c["id"] in (7, 8, 9) else 0.55), 2), sep="\t")
 PY
 FR=()
 while IFS=$'\t' read -r id t; do
