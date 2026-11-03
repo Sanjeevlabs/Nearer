@@ -12,6 +12,7 @@ import {
   type VoiceTranscript,
 } from "./schemas";
 import { normalizeDisplayLang } from "./i18n";
+import { MEDIA_MODEL_TIMEOUT_MS, MODEL_TIMEOUT_MS, deadline } from "./timeouts";
 
 export interface LlmStore {
   get(key: string): string | undefined;
@@ -126,6 +127,7 @@ async function liveCaption(
   if (!key) throw new Error("missing-key");
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: "POST",
+    signal: deadline(MODEL_TIMEOUT_MS),
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: cfg.captionModel,
@@ -421,6 +423,7 @@ async function liveJsonOnce(
   if (!key) throw new Error("missing-key");
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: "POST",
+    signal: deadline(MODEL_TIMEOUT_MS),
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model,
@@ -546,6 +549,7 @@ async function liveTranscribe(
   const { form } = buildTranscribeForm(audioBytes, opts);
   const res = await fetch("https://api.meta.ai/v1/asr/transcribe", {
     method: "POST",
+    signal: deadline(MEDIA_MODEL_TIMEOUT_MS),
     headers: { authorization: `Bearer ${key}` },
     body: form,
   });

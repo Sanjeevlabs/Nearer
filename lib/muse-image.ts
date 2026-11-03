@@ -24,6 +24,7 @@ import { serverLedger, serverStore } from "./llm-server";
 import { newId, putDoc } from "./family-docs";
 import { MUSE_IMAGE_ESTIMATE_USD } from "./muse-portrait";
 import { createDownloadUrl, mockGetBlob, usesMockStorage } from "./storage";
+import { MEDIA_MODEL_TIMEOUT_MS, SERVICE_TIMEOUT_MS, deadline } from "./timeouts";
 
 export type ImageSize = "1024x1024" | "1024x1536" | "1536x1024";
 
@@ -114,6 +115,7 @@ export async function museImage(opts: {
     try {
       const res = await doFetch(`${PROVIDERS.meta.baseUrl}/responses`, {
         method: "POST",
+        signal: deadline(MEDIA_MODEL_TIMEOUT_MS),
         headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
         body: JSON.stringify(buildMuseImageRequest(opts.prompt, opts.images, opts.size ?? "1024x1024", model)),
       });
@@ -170,7 +172,7 @@ export async function loadFamilyImage(ref: string, familyId: string, origin: str
       } else {
         const signed = await createDownloadUrl(path);
         if (!signed || signed.mock) return null;
-        const res = await fetch(signed.url);
+        const res = await fetch(signed.url, { signal: deadline(SERVICE_TIMEOUT_MS) });
         if (!res.ok) return null;
         bytes = new Uint8Array(await res.arrayBuffer());
         mime = res.headers.get("content-type") ?? mime;

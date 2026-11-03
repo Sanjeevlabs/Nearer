@@ -9,6 +9,7 @@ import { newId, putDoc } from "./family-docs";
 import { RecipeSchema } from "./kinds";
 import { buildVisionMessages, cacheKey, sha256Hex, type LlmStore, type SpendLedger, type VisionImage } from "./llm";
 import { serverLedger, serverStore } from "./llm-server";
+import { MODEL_TIMEOUT_MS, deadline } from "./timeouts";
 
 /** What Muse may fill in: the editor's fields, never who cooks it or why it matters. */
 export const ScannedRecipeSchema = RecipeSchema.pick({
@@ -68,6 +69,7 @@ async function liveVision(provider: ProviderName, system: string, image: VisionI
   if (!key) throw new Error("missing-key");
   const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: "POST",
+    signal: deadline(MODEL_TIMEOUT_MS),
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: cfg.captionModel,
