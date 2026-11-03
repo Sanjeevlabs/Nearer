@@ -206,6 +206,7 @@ function HabitHistory({ habit, onClose }: { habit: { id: string; name: string };
         <section className="mb-5" key={memberId}>
           <h3 className="text-headline">{name(memberId)}</h3>
           <p className="text-callout text-ink-soft">{name(memberId)} {doneVerb(habit.name)} {days.slice(-7).filter((day) => day.done).length} of the last 7 days</p>
+          {days.length > 0 && <p className="text-footnote text-ink-soft">{dateLabel(days[0].day)} – {dateLabel(days[days.length - 1].day)}</p>}
           <ul className="grid list-none grid-cols-7 gap-2 p-0" aria-label={`${name(memberId)}, last seven weeks`}>
             {days.map(({ day, done }) => (
               <li key={day} className="flex justify-center" title={dateLabel(day)}>

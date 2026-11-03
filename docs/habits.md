@@ -1,7 +1,7 @@
 # Where the family walk lives
 
 “Morning walk · 7 AM” lives in the family's `family_docs` table as a
-`habit` document. It stores the name, local reminder time, creator, and
+`habit` document. It stores the name, local time, creator, and
 the IDs of people who joined. Starting creates a new document. Renaming
 or changing the time updates that same document. Joining or leaving changes
 its member list. Archiving hides it from the active card and keeps the record.
