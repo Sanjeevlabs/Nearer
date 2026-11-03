@@ -110,6 +110,15 @@ async function enterDemo(req: Request, seedMemberId: string): Promise<Response> 
 // relationships (as GET /api/relationships): the first screen asks once, and the three reads go
 // out together with the session check (one round trip; the member's row comes out of the family list).
 async function getHandler(req: Request): Promise<Response> {
+  // The reads start with the session row check, not after it (the signed cookie names the family; a refused
+  // request throws them away): a cold trust cache would otherwise put the row check in a wave of its own.
+  const withFamily = new URL(req.url).searchParams.get("family") === "1";
+  const claimed = sessionFromRequest(req);
+  if (withFamily && claimed) {
+    preloadSessionMember(req, claimed);
+    void familyNameFor(req, claimed.familyId).catch(() => undefined);
+    void relationshipsFor(req, claimed.familyId).catch(() => undefined);
+  }
   let session: Awaited<ReturnType<typeof liveSession>>;
   try {
     session = await liveSession(req);
@@ -117,12 +126,6 @@ async function getHandler(req: Request): Promise<Response> {
     return Response.json({ error: "session-check-failed" }, { status: 503 });
   }
   if (!session) return Response.json({ error: "unauthorized" }, { status: 401 });
-  const withFamily = new URL(req.url).searchParams.get("family") === "1";
-  if (withFamily) {
-    preloadSessionMember(req, session);
-    void familyNameFor(req, session.familyId).catch(() => undefined);
-    void relationshipsFor(req, session.familyId).catch(() => undefined);
-  }
   const me = await memberFor(req, session.memberId);
   if (!me || me.familyId !== session.familyId) return Response.json({ error: "unauthorized" }, { status: 401 });
   if (me.status !== "pending") {

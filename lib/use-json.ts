@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCourtyardSlice } from "./courtyard-data";
 import { dropEarly, takeEarly } from "./early";
+import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
 
 // Last good payload per URL: a route paints from it at once and refreshes in
 // the background. Kept in memory and (small payloads) in sessionStorage.
@@ -87,6 +88,12 @@ function dropCached(prefixes: string[]): void {
  * readers refetch: lighting the lamp touches the lamp and the window, nothing else.
  */
 export function invalidateJson(keys?: string[]): void {
+  // An answer read before this write is not shared with whoever mounts next.
+  if (keys && keys.length) {
+    for (const k of Array.from(flights.keys())) if (keys.some((p) => k.startsWith(p))) flights.delete(k);
+  } else {
+    flights.clear();
+  }
   if (keys && keys.length) {
     dropCached(keys);
     if (pendingKeys) keys.forEach((k) => pendingKeys?.add(k));
@@ -193,11 +200,13 @@ export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fet
   try {
     // The first screen's request may already be on its way (lib/early.ts).
     const early = takeEarly(url);
-    let res = early ? await early.catch(() => f(url, { cache: "no-store" })) : await f(url, { cache: "no-store" });
+    // Nothing waits forever: a request that does not answer in time ends as a failure (a retry card, never a skeleton).
+    const ask = () => fetchWithTimeout(f, url, { cache: "no-store" });
+    let res = early ? await raceTimeout(early, EARLY_WAIT_MS).catch(ask) : await ask();
     // The host sometimes cuts one request off (a 503 under its CPU limit): one quiet retry.
     if (RETRYABLE.has(res.status)) {
       await new Promise((r) => setTimeout(r, 250));
-      res = await f(url, { cache: "no-store" });
+      res = await ask();
     }
     if (!res.ok) throw new Error(String(res.status));
     const json = (await res.json()) as T;
@@ -229,11 +238,13 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
   const [stale, setStale] = useState(false);
   const [failed, setFailed] = useState(false);
   const live = useRef(true);
-  const load = useCallback(async (quiet: boolean) => {
+  const load = useCallback(async (quiet: boolean, mount = false) => {
     if (!url) return;
     if (!quiet) setFailed(false);
     const gen = authGen;
     // A first load shares a request already in flight (prefetchJson); a refresh always asks again.
+    // Two readers of one url mounting together (the shell's and a room's) make one request, not two.
+    if (mount && !quiet && !flights.has(url)) prefetchJson(url);
     const early = quiet ? undefined : (flights.get(url) as Promise<{ data: T | null; stale: boolean; failed: boolean }> | undefined);
     const r = early ? await early : await revalidate<T>(url);
     if (!live.current || gen !== authGen) return;
@@ -245,7 +256,7 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
     live.current = true;
     const cached = url ? readCache<T>(url) : null;
     if (cached) setData(cached);
-    void load(false);
+    void load(false, true);
     return () => {
       live.current = false;
     };
