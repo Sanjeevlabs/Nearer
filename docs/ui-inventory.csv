@@ -373,9 +373,10 @@ Public,/privacy,8,heading,Delete anytime,,,arjun dadi aria anon,,keep,
 Public,/privacy,9,link,Your privacy settings,/settings#privacy,,arjun dadi aria,,keep,
 Public,/signin,0,button,Back,,,anon,icon-only dup,review,icon-only control: its name is only an aria-label
 Public,/signin,1,badge,Nearer,,,anon,,keep,
-Public,/signin,2,h1,Sign in or sign up,,,anon,,keep,
+Public,/signin,2,h1,Sign in,,,anon,,review,on more than 2 screens: one path per job?
 Public,/signin,3,input:email,Email,,,anon,,keep,
-Public,/signin,4,button,Send code,,,anon,,keep,
+Public,/signin,4,link,Start your family,/signin?next=create,,anon,dup,review,
+Public,/signin,5,button,Send code,,,anon,,keep,
 Rooms,/advice,0,button,Back,,room-header,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
 Rooms,/advice,1,h1,Memories,,room-header,arjun dadi aria,,keep,
 Rooms,/advice,2,nav,Memories,,room-tabs,arjun dadi,,keep,
