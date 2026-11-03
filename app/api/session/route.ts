@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { DEMO_INVITE_CODE, clearSessionCookieHeader, isDemoFamily, requireSession, sessionCookieHeader, sessionFromRequest, signSession } from "@/lib/auth";
+import { DEMO_INVITE_CODE, clearSessionCookieHeader, endSession, isDemoFamily, issueSessionCookie, liveSession, requireSession, sessionFromRequest } from "@/lib/auth";
+import { revokeMembers } from "@/lib/sessions";
 import { guardWrites } from "@/lib/api-guard";
 import { membersPayload } from "@/lib/members-payload";
 import { memberFor } from "@/lib/request-memo";
 import { familyNameFor, preloadSessionMember, relationshipsFor } from "@/lib/request-data";
-import { dbFindInvite, dbGetMember, dbListMembers } from "@/lib/db";
-import { isAdmin, isClaimable } from "@/lib/permissions";
+import { dbFindInvite, dbGetMember, dbListMembers, dbListSides } from "@/lib/db";
+import { isAdmin, isClaimable, isGrownUp } from "@/lib/permissions";
 import { hostOf } from "@/lib/roles";
 import { allowAuthAttempt, callerKey } from "@/lib/otp";
 import { dbFor, dbLive } from "@/lib/family-db";
@@ -69,12 +70,9 @@ export async function POST(req: Request): Promise<Response> {
   }
   if (!ok) return Response.json({ error: "invalid-invite" }, { status: 403 });
 
-  const signed = signSession({ familyId: member.familyId, memberId: member.id });
-  if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
-  return Response.json(
-    { familyId: member.familyId, memberId: member.id },
-    { headers: { "set-cookie": sessionCookieHeader(signed) } },
-  );
+  const cookie = await issueSessionCookie(req, { familyId: member.familyId, memberId: member.id }).catch(() => null);
+  if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
+  return Response.json({ familyId: member.familyId, memberId: member.id }, { headers: { "set-cookie": cookie } });
 }
 
 // The public demo with the database live: each visitor gets their own copy of
@@ -85,7 +83,7 @@ async function enterDemo(req: Request, seedMemberId: string): Promise<Response> 
   const seedMember = seedMemberOf(seedMemberId);
   if (!seedMember) return Response.json({ error: "unknown-member" }, { status: 404 });
   let member: Member | undefined;
-  const current = sessionFromRequest(req);
+  const current = await liveSession(req).catch(() => null);
   const vid = current ? visitorOf(current.familyId) : null;
   if (vid) {
     const again = await dbGetMember(sandboxId(seedMemberId, vid));
@@ -101,9 +99,9 @@ async function enterDemo(req: Request, seedMemberId: string): Promise<Response> 
     member = made.members.find((m) => m.id === id);
   }
   if (!member) return Response.json({ error: "demo-unavailable" }, { status: 503 });
-  const signed = signSession({ familyId: member.familyId, memberId: member.id });
-  if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
-  return Response.json({ familyId: member.familyId, memberId: member.id }, { headers: { "set-cookie": sessionCookieHeader(signed) } });
+  const cookie = await issueSessionCookie(req, { familyId: member.familyId, memberId: member.id }).catch(() => null);
+  if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
+  return Response.json({ familyId: member.familyId, memberId: member.id }, { headers: { "set-cookie": cookie } });
 }
 
 // Current session (who am I). The one route a joiner who is still waiting
@@ -112,7 +110,12 @@ async function enterDemo(req: Request, seedMemberId: string): Promise<Response> 
 // relationships (as GET /api/relationships): the first screen asks once, and the three reads go
 // out together with the session check (one round trip; the member's row comes out of the family list).
 async function getHandler(req: Request): Promise<Response> {
-  const session = sessionFromRequest(req);
+  let session: Awaited<ReturnType<typeof liveSession>>;
+  try {
+    session = await liveSession(req);
+  } catch {
+    return Response.json({ error: "session-check-failed" }, { status: 503 });
+  }
   if (!session) return Response.json({ error: "unauthorized" }, { status: 401 });
   const withFamily = new URL(req.url).searchParams.get("family") === "1";
   if (withFamily) {
@@ -137,7 +140,24 @@ async function getHandler(req: Request): Promise<Response> {
 
 export const GET = guardWrites(getHandler);
 
-// Log out: clear the cookie.
-export async function DELETE(): Promise<Response> {
+// Log out: revoke this session on the server (a copied cookie dies too), then clear the cookie.
+// ?all=1 also revokes every other device of this person, across their families; grown-ups with their
+// own account only (a child's profile can't sign anyone out).
+export async function DELETE(req: Request): Promise<Response> {
+  if (new URL(req.url).searchParams.get("all") === "1") {
+    const auth = await requireSession(req);
+    if (auth instanceof Response) return auth;
+    const me = await memberFor(req, auth.memberId);
+    if (!me || !me.email || !isGrownUp(me) || me.role === "child") return Response.json({ error: "forbidden" }, { status: 403 });
+    const sides = await dbListSides(me).catch(() => [me]);
+    await revokeMembers(Array.from(new Set([me.id, ...sides.map((s) => s.id)])));
+    return Response.json({ ok: true, all: true }, { headers: { "set-cookie": clearSessionCookieHeader() } });
+  }
+  try {
+    await endSession(req);
+  } catch {
+    // Could not reach the database: say so rather than pretending to be signed out.
+    return Response.json({ error: "sign-out-failed" }, { status: 503, headers: { "set-cookie": clearSessionCookieHeader() } });
+  }
   return Response.json({ ok: true }, { headers: { "set-cookie": clearSessionCookieHeader() } });
 }

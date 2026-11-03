@@ -1,5 +1,7 @@
 "use client";
 
+import { entryHref } from "@/lib/auth-session";
+import { liveAuth } from "@/lib/supabase-browser";
 import Link from "next/link";
 import { useState } from "react";
 import { greetingForHour } from "@/lib/i18n";
@@ -40,10 +42,10 @@ export function Landing({ onDemo }: { onDemo: () => Promise<void> }) {
       <h1 data-display className="m-0 text-display leading-[1.1] text-white">{t("landing.tagline")}</h1>
       <p className="voice m-0 mt-2 text-headline leading-snug text-white/85">{t("landing.sub")}</p>
       <div className="mt-6 grid grid-cols-2 gap-2.5">
-        <Link href="/create" className="press flex h-12 items-center justify-center rounded-full bg-white text-body font-semibold text-black no-underline">
+        <Link href={entryHref(liveAuth(), "create")} className="press flex h-12 items-center justify-center rounded-full bg-white text-body font-semibold text-black no-underline">
           {t("landing.create")}
         </Link>
-        <Link href="/join" className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 text-body font-semibold text-white no-underline">
+        <Link href={entryHref(liveAuth(), "join")} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 text-body font-semibold text-white no-underline">
           <Icon name="key" size={18} />
           {t("landing.join")}
         </Link>

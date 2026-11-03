@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { signOutNow } from "@/lib/sign-out";
 import { Mark } from "./brand";
 import { Icon } from "./ui/kit";
 
@@ -29,9 +30,7 @@ export function Waiting({ hostName, onCheck }: { hostName: string | null; onChec
 
   const signOut = async () => {
     setBusy(true);
-    await fetch("/api/session", { method: "DELETE" }).catch(() => null);
-    window.dispatchEvent(new Event("aangan:auth"));
-    setBusy(false);
+    await signOutNow();
   };
 
   return (

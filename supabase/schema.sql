@@ -551,3 +551,26 @@ values
   ('rel-priya-leo', 'demo-family', 'priya', 'leo', 'son'),
   ('rel-priya-aria', 'demo-family', 'priya', 'aria', 'daughter')
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------- sessions
+-- Server-side sessions. The signed cookie carries a random id (sid); a request is only
+-- signed in while that row exists, is not revoked and has not expired. Sign-out revokes
+-- the row (so a copied cookie dies too); renewal moves expires_at but never un-revokes.
+-- No member/family foreign keys: demo copies live in memory/own schema, and a removed
+-- person's rows are revoked, not cascaded. Service role only (RLS on, no policies).
+create table if not exists sessions (
+  id text primary key,
+  member_id text not null,
+  family_id text not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  revoked_at timestamptz,
+  kind text not null default 'real' check (kind in ('real', 'demo'))
+);
+create index if not exists sessions_member_active_idx on sessions (member_id) where revoked_at is null;
+create index if not exists sessions_member_created_idx on sessions (member_id, created_at desc);
+alter table sessions enable row level security;
+
+-- One place per person per family, whatever the case of their email. The sign-in route
+-- re-reads and uses the existing member when two requests race (lib/db.ts dbAddMember).
+create unique index if not exists members_family_email_uq on members (family_id, lower(email)) where email is not null;

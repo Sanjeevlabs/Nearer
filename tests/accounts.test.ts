@@ -68,11 +68,17 @@ describe("accounts: email code sign-up and sign-in", () => {
     expect(nobody.status).toBe(404);
   });
 
-  it("an email can't create a second family", async () => {
+  it("an email that creates again gets another side (same person), up to four", async () => {
     const addr = email();
-    await createFamily(addr);
-    const dup = await createFamily(addr);
-    expect(dup.res.status).toBe(409);
+    const first = await createFamily(addr);
+    const sides = [first.body.familyId];
+    for (let i = 0; i < 3; i++) {
+      const again = await createFamily(addr);
+      expect(again.res.status).toBe(200);
+      sides.push(again.body.familyId);
+    }
+    expect(new Set(sides).size).toBe(4);
+    expect((await createFamily(addr)).res.status).toBe(409);
   });
 
   it("join with a live invite adds the person to that family only", async () => {

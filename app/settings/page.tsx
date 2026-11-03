@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { Avatar, Button, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import { memberPhoto } from "@/lib/people";
-import { resetFamilyCards } from "@/lib/use-family";
 import { can, isAdmin, isGrownUp } from "@/lib/permissions";
 import type { Member } from "@/lib/schemas";
 import { callName } from "@/lib/people";
@@ -20,7 +19,7 @@ import { LampSection, LanguageSection, NudgeSettingsSection, ProfileSection, Rea
 import { PeopleAndRoles } from "@/components/settings/roles-section";
 import { NotificationsSection } from "@/components/settings/push-section";
 import { HowWereDoing, ProblemsSeen, TellUsByVoice } from "@/components/settings/team-sections";
-import { forgetPushDevice } from "@/lib/web-push";
+import { signOutNow } from "@/lib/sign-out";
 import { getPendingTabs } from "@/lib/settings-pending";
 
 interface Invite {
@@ -158,11 +157,7 @@ export default function SettingsPage() {
     const res = await fetch("/api/privacy/membership", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ memberId: viewer.id }) });
     if (res.ok) {
       // The server already dropped this person's devices; this ends the browser's side of it.
-      await forgetPushDevice().catch(() => undefined);
-      await fetch("/api/session", { method: "DELETE" }).catch(() => undefined);
-      resetFamilyCards();
-      window.dispatchEvent(new Event("aangan:auth"));
-      router.replace("/");
+      await signOutNow();
     } else {
       setBusy(null);
       setConfirmLeave(false);
@@ -170,18 +165,15 @@ export default function SettingsPage() {
     }
   };
 
+  const signOutAll = async () => {
+    const res = await fetch("/api/session?all=1", { method: "DELETE" }).catch(() => null);
+    if (!res?.ok) return flash("Couldn't sign out your other devices. Try again.");
+    await signOutNow();
+  };
+
+  // signOutNow clears every cache and the service worker (the "aangan:auth" listeners), then reloads.
   const signOut = async () => {
-    // This phone stops getting this person's notes (needs the session, so before it is cleared).
-    await forgetPushDevice().catch(() => undefined);
-    await fetch("/api/session", { method: "DELETE" }).catch(() => undefined);
-    try {
-      sessionStorage.clear();
-    } catch {
-      /* ignore */
-    }
-    resetFamilyCards();
-    window.dispatchEvent(new Event("aangan:auth"));
-    router.replace("/");
+    await signOutNow();
   };
 
   return (
@@ -326,6 +318,11 @@ export default function SettingsPage() {
       <Button variant="secondary" className="mt-9 w-full" onClick={() => void signOut()}>
         Sign out
       </Button>
+      {isGrownUp(viewer) && viewer.role !== "child" && viewer.email && (
+        <Button variant="quiet" className="mt-1 w-full" onClick={() => void signOutAll()}>
+          Sign out of all devices
+        </Button>
+      )}
 
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 z-50 flex justify-center" style={{ bottom: "calc(24px + env(safe-area-inset-bottom))" }}>
         {saved && <p className="frost glass-pill m-0 px-4 py-3 text-body font-medium">{saved}</p>}

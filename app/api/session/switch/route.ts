@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isDemoFamily, sessionCookieHeader, sessionFromRequest, signSession } from "@/lib/auth";
+import { isDemoFamily, issueSessionCookie, liveSession } from "@/lib/auth";
 import { dbGetMember } from "@/lib/db";
 
 const SwitchSchema = z.object({ memberId: z.string().min(1).max(64) });
@@ -7,7 +7,7 @@ const SwitchSchema = z.object({ memberId: z.string().min(1).max(64) });
 // Demo persona switcher: mint a cookie for another member of the SAME demo
 // family. Real families can't use it: it would let anyone act as anyone.
 export async function POST(req: Request): Promise<Response> {
-  const session = sessionFromRequest(req);
+  const session = await liveSession(req).catch(() => null);
   if (!session) return Response.json({ error: "unauthorized" }, { status: 401 });
   if (!isDemoFamily(session.familyId)) return Response.json({ error: "demo-only" }, { status: 403 });
   let body: unknown;
@@ -24,10 +24,7 @@ export async function POST(req: Request): Promise<Response> {
   if (!member || member.familyId !== session.familyId) {
     return Response.json({ error: "unknown-member" }, { status: 404 });
   }
-  const signed = signSession({ familyId: member.familyId, memberId: member.id });
-  if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
-  return Response.json(
-    { familyId: member.familyId, memberId: member.id },
-    { headers: { "set-cookie": sessionCookieHeader(signed) } },
-  );
+  const cookie = await issueSessionCookie(req, { familyId: member.familyId, memberId: member.id }).catch(() => null);
+  if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
+  return Response.json({ familyId: member.familyId, memberId: member.id }, { headers: { "set-cookie": cookie } });
 }

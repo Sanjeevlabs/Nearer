@@ -4,9 +4,10 @@
 // family/member ownership; model routes are rate-limited per session;
 // the cron route requires Bearer CRON_SECRET instead.
 import { createHmac, timingSafeEqual } from "crypto";
-import { memberFor } from "./request-memo";
+import { memberFor, once } from "./request-memo";
 import { DEMO_FAMILY_IDS as DEMO_IDS, isDemoFamily, isSeedFamily } from "./family";
 import { dbLive } from "./family-db";
+import { createSessionRow, newSid, renewSessionRow, revokeSid, sessionActive } from "./sessions";
 
 // Internal keys (this cookie, the aangan:* storage and event keys, IndexedDB and bucket names) keep the old
 // codename so existing sessions survive the rename.
@@ -30,6 +31,8 @@ export function renewalDue(session: Pick<Session, "exp">, ttlMs: number, now = D
 }
 
 export interface Session {
+  /** Server-side session id (lib/sessions.ts): the row must exist, be unrevoked and unexpired. */
+  sid: string;
   familyId: string;
   memberId: string;
   exp: number;
@@ -86,6 +89,8 @@ export function verifySession(cookieValue: string | null | undefined, key?: stri
     if (
       typeof parsed.familyId !== "string" ||
       typeof parsed.memberId !== "string" ||
+      typeof parsed.sid !== "string" ||
+      parsed.sid.length < 16 ||
       typeof parsed.exp !== "number" ||
       parsed.exp < Date.now()
     ) {
@@ -126,7 +131,9 @@ export function takeRenewal(req: Request): string | null {
 }
 
 export function clearSessionCookieHeader(): string {
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  // Same attributes as sessionCookieHeader, so the browser treats it as the same cookie and replaces it.
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=0`;
 }
 
 /** Route guard: 401 response when the session is missing/invalid/family-mismatched. */
@@ -137,7 +144,15 @@ export async function requireSession(req: Request, familyId?: string): Promise<S
   if (familyId && session.familyId !== familyId) return Response.json({ error: "forbidden-family" }, { status: 403 });
   // A signed cookie isn't enough: the person must still be in that family.
   // Removing someone, or their leaving, ends their session on the next request.
-  const member = await memberFor(req, session.memberId);
+  // The session row is read alongside the member row (two parallel reads, no added wait).
+  let member: Awaited<ReturnType<typeof memberFor>>;
+  let active: boolean;
+  try {
+    [member, active] = await Promise.all([memberFor(req, session.memberId), sidActive(req, session.sid)]);
+  } catch {
+    return Response.json({ error: "session-check-failed" }, { status: 503 });
+  }
+  if (!active) return Response.json({ error: "unauthorized" }, { status: 401 });
   if (!member || member.familyId !== session.familyId) return Response.json({ error: "unauthorized" }, { status: 401 });
   // A joiner waiting for an admin has a session, but it only opens
   // GET /api/session (the "waiting" screen). Everything else stays shut.
@@ -147,8 +162,11 @@ export async function requireSession(req: Request, familyId?: string): Promise<S
   // never reaches this line and is never renewed.
   const ttl = sessionTtlFor(member);
   if (renewalDue(session, ttl)) {
-    const signed = signSession({ familyId: session.familyId, memberId: session.memberId }, ttl);
-    if (signed) renewals.set(req, sessionCookieHeader(signed, ttl));
+    const signed = signSession({ familyId: session.familyId, memberId: session.memberId, sid: session.sid }, ttl);
+    if (signed) {
+      renewals.set(req, sessionCookieHeader(signed, ttl));
+      await renewSessionRow(session.sid, Date.now() + ttl).catch(() => undefined);
+    }
   }
   return session;
 }
@@ -233,4 +251,41 @@ export async function requireCan(
   if (!me || me.familyId !== session.familyId) return Response.json({ error: "unknown-member" }, { status: 404 });
   if (!can(me, action)) return Response.json({ error: "not-allowed", action }, { status: 403 });
   return me;
+}
+
+/** The session row check, once per request. */
+function sidActive(req: Request, sid: string): Promise<boolean> {
+  return once(req, `sid:${sid}`, () => sessionActive(sid));
+}
+
+/** Like sessionFromRequest, but the session must still be live server-side. Null when signed out; throws if the database can't say. */
+export async function liveSession(req: Request): Promise<Session | null> {
+  const session = sessionFromRequest(req);
+  if (!session) return null;
+  return (await sidActive(req, session.sid)) ? session : null;
+}
+
+/**
+ * Start a session and return its Set-Cookie header (null when SESSION_SECRET is missing). If the request
+ * already carries a session (another person's, a demo, an older one) that one is revoked first, so a
+ * device never holds two live sessions.
+ */
+export async function issueSessionCookie(req: Request | null, who: { familyId: string; memberId: string }, ttlMs: number = SESSION_TTL_MS): Promise<string | null> {
+  if (!secret()) return null;
+  const old = req ? sessionFromRequest(req) : null;
+  const sid = newSid();
+  const now = Date.now();
+  // Revoking the old one and writing the new one go out together (one wave).
+  await Promise.all([
+    old ? revokeSid(old.sid).catch(() => undefined) : undefined,
+    createSessionRow({ id: sid, ...who, createdAt: now, expiresAt: now + ttlMs, revokedAt: null, kind: isDemoFamily(who.familyId) ? "demo" : "real" }),
+  ]);
+  const signed = signSession({ ...who, sid }, ttlMs);
+  return signed ? sessionCookieHeader(signed, ttlMs) : null;
+}
+
+/** Sign-out: end this request's session server-side. */
+export async function endSession(req: Request): Promise<void> {
+  const old = sessionFromRequest(req);
+  if (old) await revokeSid(old.sid);
 }

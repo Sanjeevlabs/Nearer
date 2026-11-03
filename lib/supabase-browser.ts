@@ -15,6 +15,11 @@ export function browserAuth(): SupabaseClient | null {
   return client;
 }
 
+/** Is Supabase sign-in configured? Same answer as browserAuth() !== null, without creating the client (safe to call while rendering). */
+export function liveAuth(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && process.env.NEXT_PUBLIC_MOCK !== "true");
+}
+
 /** Which ways in are switched on. Google needs the provider enabled in Supabase; phone needs an SMS provider there. */
 export function signInOptions(): { google: boolean; phone: boolean; live: boolean } {
   const live = Boolean(browserAuth());

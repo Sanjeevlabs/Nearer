@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as lampGet } from "@/app/api/lamp/route";
 import { ELDER_SESSION_TTL_MS, SESSION_COOKIE, SESSION_TTL_MS, renewalDue, sessionTtlFor, verifySession } from "@/lib/auth";
-import { signSession } from "@/lib/auth";
+import { signedSession } from "./auth-helper";
 import { dbRemoveMember } from "@/lib/db";
 import { resetDemo } from "@/lib/store";
 
@@ -14,8 +14,7 @@ const NOW = new Date("2026-11-02T09:00:00.000Z");
 
 /** A request whose cookie has `leftMs` of life left. */
 function reqWith(memberId: string, leftMs: number): Request {
-  const signed = signSession({ familyId: "demo-family", memberId }, leftMs, KEY);
-  if (!signed) throw new Error("no session");
+  const { signed } = signedSession(memberId, "demo-family", leftMs);
   return new Request("http://t/api/lamp", { headers: { cookie: `${SESSION_COOKIE}=${encodeURIComponent(signed)}` } });
 }
 

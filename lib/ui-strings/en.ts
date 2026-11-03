@@ -28,6 +28,7 @@ export const en = {
   "auth.namesJoin": " & ",
   "auth.titleWelcomeBack": "Welcome back",
   "auth.titleEmail": "Your email",
+  "auth.titleSignInUp": "Sign in or sign up",
   "auth.titleCheck": "Check your email",
   "auth.titleCreate": "Open your window",
   "auth.titleJoinHost": "Join {host}'s window",
@@ -57,9 +58,21 @@ export const en = {
   "auth.birthdayMonth": "Birthday month",
   "auth.birthdayDay": "Birthday day",
   "auth.continue": "Continue",
+  "auth.signedInAs": "Signed in as {email}",
+  "auth.signedInAsYou": "your account",
+  "auth.notYou": "Not you?",
 
   // Auth: email + code
   "auth.emailSub": "We'll email you a 6-digit code. No password.",
+  "auth.emailSubSignin": "New or returning, it's the same: Google, or a 6-digit code by email. No password.",
+  "auth.noFamilyTitle": "You're in. No family yet.",
+  "auth.startFamily": "Start a family",
+  "auth.openMyFamily": "Open my family",
+  "callback.working": "Opening your window…",
+  "callback.noFamily": "You're signed in, but not in a family yet.",
+  "callback.failed": "That sign-in link didn't work.",
+  "callback.otherDevice": "Open the link on the phone or computer where you asked for it, or type the 6-digit code from the same email there.",
+  "callback.tryAgain": "Try again",
   "auth.emailSubJoin": "Already in another family? Use the same email: you'll be in both.",
   "auth.email": "Email",
   "auth.google": "Continue with Google",
@@ -90,6 +103,8 @@ export const en = {
   "error.already-member": "This email already belongs to a family. Sign in instead.",
   "error.invalid-invite": "That invite code isn't valid or has expired. Ask for a new one.",
   "error.too-many-sides": "You're already in four families, the most Nearer allows.",
+  "error.family-full": "That family is full for now. Ask them to make room.",
+  "error.session-expired": "Please sign in again to carry on.",
   "error.generic": "Something went wrong. Try again.",
 
   // Onboarding: the other side of the window

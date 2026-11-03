@@ -11,6 +11,7 @@ import { letterLang } from "@/lib/weekly-letter";
 import { draftWeeklyLetter } from "@/lib/weekly-letter-run";
 import { runScanNudges } from "@/lib/nudge-run";
 import { purgeExpired } from "@/lib/purge";
+import { purgeSessions } from "@/lib/sessions";
 
 // Daily ritual/role scan. Vercel Cron (GET, see vercel.json) hits this with
 // Authorization: Bearer CRON_SECRET; manual callers use POST with a session.
@@ -20,6 +21,8 @@ async function getHandler(req: Request): Promise<Response> {
   // Demo visitors' copies expire after 48 hours (rows and media).
   const sb = dbFor(null);
   const purged = sb ? await purgeSandboxes(sb).catch((e: unknown) => ({ error: String(e) })) : null;
+  // Sessions a week past expiry or revocation go too (demo visitors make one each).
+  const sessionsPurged = await purgeSessions().catch(() => -1);
   // Cron covers one page of families per invocation (a cursor in cron_state
   // moves on each day); one family's failure never blocks the others.
   const cursor = String((await getCronState("ritual-scan")).lastFamilyId ?? "");
@@ -33,7 +36,7 @@ async function getHandler(req: Request): Promise<Response> {
       results.push({ familyId, error: "scan-failed" });
     }
   }
-  return Response.json({ families: results, purged });
+  return Response.json({ families: results, purged, sessionsPurged });
 }
 
 async function postHandler(req: Request): Promise<Response> {

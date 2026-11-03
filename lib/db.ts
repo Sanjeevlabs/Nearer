@@ -1,4 +1,5 @@
 import { parseBirthday } from "./birthday";
+import { revokeMembers } from "./sessions";
 import { ritualRunId } from "./rituals";
 // Data-access seam: mock memory store vs Supabase.
 // Every route handler goes through these async functions; the shapes match
@@ -305,7 +306,16 @@ export async function dbAddMember(input: Omit<import("zod").input<typeof MemberS
   const sb = dbFor(member.familyId);
   if (!sb) return memAddMember(member);
   const { error } = await sb.from("members").insert(memberRow(member));
-  if (error) throw new Error("member-create-failed");
+  if (error) {
+    // Two requests for the same person in the same family (a double tap, two tabs): the unique index
+    // (family_id, lower(email)) lets one win. The other uses the member that won; it makes no second one.
+    if ((error as { code?: string }).code === "23505" && member.email) {
+      const { data } = await sb.from("members").select("*").eq("family_id", member.familyId).eq("email", member.email.toLowerCase()).limit(1);
+      const row = (data as Record<string, unknown>[] | null)?.[0];
+      if (row) return memberFromRow(row);
+    }
+    throw new Error("member-create-failed");
+  }
   return member;
 }
 
@@ -1035,6 +1045,8 @@ export async function dbDeleteMemberTraces(memberId: string): Promise<Record<str
 
 export async function dbRemoveMember(memberId: string): Promise<boolean> {
   const fam = memberFamily(memberId);
+  // Their sessions end at once, on every device.
+  await revokeMembers([memberId]).catch(() => undefined);
   // Their phones stop receiving at once (the database cascades too, memory does not).
   if (fam) await removeAllForMember(fam, memberId).catch(() => undefined);
   const sb = dbFor(fam);
