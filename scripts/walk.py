@@ -331,34 +331,28 @@ def check_sheet(page, name: str, opener, problems: list[str], person: str) -> bo
 
 
 def voice_sheet_photo(page, person: str, problems: list[str]) -> None:
-    """Photos are one tap inside the voice sheet: 'Add a photo instead' swaps it for the photo composer."""
+    """Photos start from your own picture on the family page: 'Add to your day' offers Photo, Voice note, Status."""
     page.goto("/", wait_until="load")
     page.wait_for_timeout(1200)
-    voice = page.locator("[data-ui=dock] button[aria-label^='Record a voice note']")
-    if voice.count() == 0:
-        return  # nobody to talk to yet: the dock shows Invite family
-    voice.first.click()
-    page.wait_for_timeout(1200)
-    if page.locator("[data-ui=voice-add-photo]").count() == 0:
-        # A who-is-it-for sheet came first: take its first row.
-        page.locator("[role=dialog] button:not([aria-label=Close])").first.click()
-    understand = page.get_by_role("button", name="I understand")
+    chip = page.locator("[aria-label^='Your day']")
     try:
-        understand.wait_for(timeout=2_000)
-        understand.click()  # the first-recording note
+        chip.first.wait_for(timeout=8_000)
     except Exception:
-        pass
-    link = page.locator("[data-ui=voice-add-photo]")
+        return  # the first screen has no family row (a child's home, or nobody to show yet)
+    chip.first.click()
     try:
-        link.wait_for(timeout=8_000)
+        page.get_by_role("button", name="Photo", exact=True).wait_for(timeout=8_000)
     except Exception:
-        problems.append(f"{person} voice sheet: no 'Add a photo instead' link")
+        problems.append(f"{person} own picture: no 'Photo' in Add to your day")
         return
-    link.click()
+    for label in ("Voice note", "Status"):
+        if page.get_by_role("button", name=label, exact=True).count() == 0:
+            problems.append(f"{person} own picture: no '{label}' in Add to your day")
+    page.get_by_role("button", name="Photo", exact=True).click()
     try:
         page.get_by_text("Choose photos or a video").wait_for(timeout=8_000)
     except Exception:
-        problems.append(f"{person} voice sheet: 'Add a photo instead' did not open the photo composer")
+        problems.append(f"{person} own picture: 'Photo' did not open the photo composer")
     page.keyboard.press("Escape")
     page.wait_for_timeout(500)
 
