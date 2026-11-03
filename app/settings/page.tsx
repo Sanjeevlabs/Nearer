@@ -19,6 +19,7 @@ import { LampSection, LanguageSection, NudgeSettingsSection, ProfileSection, Rea
 import { PeopleAndRoles } from "@/components/settings/roles-section";
 import { NotificationsSection } from "@/components/settings/push-section";
 import { HowWereDoing, ProblemsSeen, TellUsByVoice } from "@/components/settings/team-sections";
+import { SoundSection } from "@/components/settings/sound-section";
 import { signOutNow } from "@/lib/sign-out";
 import { getPendingTabs } from "@/lib/settings-pending";
 
@@ -205,6 +206,7 @@ export default function SettingsPage() {
         <NudgeSettingsSection onMessage={flash} />
         <RemindersSection />
         <NotificationsSection onMessage={flash} />
+        <SoundSection />
         <WhereSection onMessage={flash} />
       </div>
 

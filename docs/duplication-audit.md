@@ -2,7 +2,7 @@
 
 Source: `docs/ui-inventory.csv` (every visible item per screen), checked against the code. Rule: each block of content has ONE primary home, plus at most one compact pointer elsewhere. A pointer is a single line or a single button that leads to the home. It never repeats the content.
 
-Screens: "window" is the closed-door first screen, "courtyard" is the family page behind the door (the dock shows only there and in the rooms).
+Screens: "window" is the first screen (before the key is slid), "courtyard" is the family page after it (the dock shows only there and in the rooms).
 
 ## Decisions
 
@@ -22,7 +22,7 @@ Screens: "window" is the closed-door first screen, "courtyard" is the family pag
 ### 1. Voice-note entry points
 Today, a voice note can start from: the dock mic, the window's "Reach them > Voice note", the person's page (dock mic addressed to them), a person's day sheet, kid-home "Tell", and many "answer by voice" / "reply by voice" buttons.
 
-Keep: dock mic, person page, reply buttons. A reply button earns its place because it carries context (what is being answered). The window's "Voice note" stays because the closed-door window has no dock (exactly one bottom bar there, the key). The person's day sheet "Voice note" is the same door as the person's page, opened from a tap on their face, so it is a pointer, not a copy.
+Keep: dock mic, person page, reply buttons. A reply button earns its place because it carries context (what is being answered). The window's "Voice note" stays because the window has no dock (exactly one bottom bar there, the key). The person's day sheet "Voice note" is the same door as the person's page, opened from a tap on their face, so it is a pointer, not a copy.
 
 Removed: nothing. The courtyard no longer has a second "latest voice" card (see 4), which was the only entry that duplicated the window.
 

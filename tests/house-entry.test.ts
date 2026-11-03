@@ -63,5 +63,13 @@ describe("the key click", () => {
     const src = read("lib/key-sound.ts");
     expect(src).not.toMatch(/new Audio|\.mp3|\.ogg|fetch\(/);
     expect(src).toContain("navigator.vibrate?.(12)");
+    // The app already taps natively (haptic()), so the browser buzz is for browsers only.
+    expect(src).toContain("!isNative()");
+  });
+
+  it("the Sounds switch in Settings (You) writes the key the click reads", () => {
+    expect(read("lib/key-sound.ts")).toContain("soundOn()");
+    expect(read("components/settings/sound-section.tsx")).toContain("setSoundOn");
+    expect(read("app/settings/page.tsx")).toContain("<SoundSection />");
   });
 });

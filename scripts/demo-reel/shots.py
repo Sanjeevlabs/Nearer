@@ -15,7 +15,7 @@ SHOTS = [
     {"id": 4, "key": "lamp", "dur": 10, "caption": "One tap: I’m thinking of you.", "vo": "One tap says “I’m thinking of you.”"},
     {"id": 5, "key": "maa", "dur": 6, "caption": "It glows in her home for three days.", "vo": "It glows in their home for three days."},
     {"id": 6, "key": "voice", "dur": 10, "caption": "She speaks her way. Muse writes and translates it.", "vo": "Maa talks the way she talks. Muse writes it down and translates it."},
-    {"id": 7, "key": "door", "dur": 8, "caption": "Behind the door: everything the family keeps.", "vo": "Behind the door is everything the family keeps."},
+    {"id": 7, "key": "door", "dur": 8, "caption": "Inside: everything the family keeps.", "vo": "Inside is everything the family keeps."},
     {"id": 8, "key": "kitchen", "dur": 10, "caption": "Parents don’t just receive care. They give.", "vo": "Parents don’t just receive care. They give, and see it land."},
     {"id": 9, "key": "inbox", "dur": 8, "caption": "Everything sent to you, in one place.", "vo": "Everything sent to you, in one place."},
     {"id": 10, "key": "send", "dur": 8, "caption": "Can’t be there? Send something real.", "vo": "And when you can’t be there, send something real."},

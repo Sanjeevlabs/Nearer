@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { timeIn } from "@/lib/zones";
 import { grandparentsOf, guardiansOf } from "@/lib/kids";
@@ -95,7 +94,7 @@ export function KidHome() {
     <div data-ui="kid-home" className="pb-32 pt-5">
       <header className="flex items-center gap-3">
         <h1 data-display className="m-0 min-w-0 flex-1 truncate text-display font-light leading-tight">Hello, {callName(viewer)}</h1>
-        <ProfileMenu ring inbox={false} label="You: account and settings" />
+        <ProfileMenu ring label="You: account and settings" />
       </header>
 
       {grand.length > 0 && (

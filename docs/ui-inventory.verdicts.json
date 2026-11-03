@@ -139,7 +139,7 @@
     "verdict": "review",
     "note": "icon-only control: its name is only an aria-label"
   },
-  "Close the door, back to the window": {
+  "Back to the window": {
     "verdict": "review",
     "note": "icon-only control: its name is only an aria-label"
   },

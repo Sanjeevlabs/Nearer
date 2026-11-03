@@ -34,7 +34,6 @@ import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
 import { FestivalHeader } from "./festival-header";
 import { Avatar, Button, Icon, Monogram, Photo } from "./ui/kit";
-import { Mark } from "./brand";
 import { familyHomePhoto } from "@/lib/family";
 import { resolveMediaUrl } from "@/lib/media-session";
 import { useViewer } from "./viewer";
@@ -303,13 +302,10 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
           {/* The family's home: your own home photo, else a Muse-made one. The drawn band stays under it while it loads. */}
           <Photo src={homePhoto} alt="" sizes="(max-width: 480px) 100vw, 448px" priority position="center 55%" />
           <span className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/5 to-black/60" aria-hidden="true" />
-          <span className="absolute left-4 top-4 opacity-90" aria-hidden="true">
-            <Mark size={36} />
-          </span>
+          <button type="button" onClick={onBack} aria-label="Back to the window" className="press glass absolute left-3 top-3 grid h-11 w-11 place-items-center rounded-full text-white">
+            <Icon name="chevron" size={20} strokeWidth={1.8} className="rotate-180" />
+          </button>
           <div className="absolute right-3 top-3 flex items-center gap-2">
-            <button type="button" onClick={onBack} aria-label="Back to the window" className="press glass grid h-11 w-11 place-items-center rounded-full text-white">
-              <Icon name="chevron" size={20} strokeWidth={1.8} className="rotate-180" />
-            </button>
             <ProfileMenu ring />
           </div>
           <div className="absolute inset-x-4 bottom-3.5 text-white">

@@ -20,7 +20,7 @@ const NOT_CHAT: { chat: string; nearer: string }[] = [
 ];
 
 const FEATURES: { img: string; title: string; line: string }[] = [
-  { img: "/home/memories.webp", title: "Talk, don't type", line: "Press Voice and say it, in any language. Nearer writes it down, translates it for each of them and keeps her voice, with her recipes and stories. Photos are there too, when words aren't enough." },
+  { img: "/home/memories.webp", title: "Say it once, in any language", line: "Press Voice and say it, in any language. Nearer writes it down, translates it for each of them and keeps her voice, with her recipes and stories. Photos are there too, when words aren't enough." },
   { img: "/home/chorus.webp", title: "Everyone wishes, together", line: "A week before a birthday or a festival, everyone records a wish by voice. On the day, the Chorus plays them one after another." },
   { img: "/home/window.webp", title: "A window into their day", line: "Their sky and the time there, the lamp you keep lit for each other, and what they chose to share today." },
   { img: "/home/together.webp", title: "A little time together", line: "Open your door for chai, dinner or a story. They join when they can, by voice or video, and only when they tap." },

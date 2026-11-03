@@ -63,14 +63,3 @@ export function HouseGlyph({ size = 24, className }: { size?: number; className?
     </Frame>
   );
 }
-
-/** "For you": a soft bell with a petal-tinted body. */
-export function ForYouGlyph({ size = 24, className }: { size?: number; className?: string }) {
-  return (
-    <Frame size={size} className={className}>
-      <path d="M6 16.4v-5.2a6 6 0 0 1 12 0v5.2l1.6 2H4.4z" fill="var(--petal-5)" fillOpacity={0.2} {...BASE} strokeOpacity={0.85} />
-      <path d="M10 20.6a2.2 2.2 0 0 0 4 0" {...STROKE} strokeOpacity={0.85} />
-      <path d="M12 3.4v1.8" {...STROKE} strokeOpacity={0.85} />
-    </Frame>
-  );
-}

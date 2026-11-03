@@ -46,7 +46,6 @@ const ICONS = {
   rooms: L.House,
   sparkle: L.Sparkles,
   door: L.DoorOpen,
-  doorClosed: L.DoorClosed,
   key: L.KeyRound,
   sun: L.Sun,
   moon: L.Moon,

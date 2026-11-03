@@ -1,7 +1,8 @@
 // The key: a short, soft two-tick click when the key is slid home. Web Audio only, made from
 // noise and a faint ring (no recording, no model, no creak); about 160 ms and quiet. Silent when
-// the person asked for reduced motion or turned sound off (localStorage "nearer:sound" = "off").
-// Also a tiny buzz on phones that have one. Client only.
+// the person asked for reduced motion or turned sound off (Settings, You: "Sounds").
+// Also a tiny buzz on phones that have one (browsers only; the app has its own haptic). Client only.
+import { isNative } from "@/lib/native";
 
 /** One tick: when it starts (s), its length (s), the band it is filtered to (Hz) and how loud (0..1). */
 export interface Tick {
@@ -49,11 +50,24 @@ function reduced(): boolean {
   }
 }
 
-function muted(): boolean {
+/** localStorage key for the Settings "Sounds" switch: "off" or absent (on). */
+export const SOUND_KEY = "nearer:sound";
+
+/** Sounds are on unless the person switched them off. */
+export function soundOn(): boolean {
   try {
-    return localStorage.getItem("nearer:sound") === "off";
+    return localStorage.getItem(SOUND_KEY) !== "off";
   } catch {
-    return false;
+    return true;
+  }
+}
+
+export function setSoundOn(on: boolean): void {
+  try {
+    if (on) localStorage.removeItem(SOUND_KEY);
+    else localStorage.setItem(SOUND_KEY, "off");
+  } catch {
+    /* private mode: the choice lasts until reload */
   }
 }
 
@@ -91,9 +105,10 @@ function tick(ac: AudioContext, out: AudioNode, start: number, t: Tick): void {
 /** The click and the buzz, when welcome. Never throws. */
 export function playKeyClick(): void {
   if (typeof window === "undefined") return;
-  if (!shouldPlayKey({ reducedMotion: reduced(), muted: muted() })) return;
+  if (!shouldPlayKey({ reducedMotion: reduced(), muted: !soundOn() })) return;
   try {
-    navigator.vibrate?.(12);
+    // In the app the window already gives a native tap (haptic()); a second buzz would be a double.
+    if (!isNative()) navigator.vibrate?.(12);
   } catch {
     /* no vibration */
   }

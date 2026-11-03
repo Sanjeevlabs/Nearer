@@ -77,7 +77,7 @@ describe("the five rooms", () => {
     const dock = src.slice(src.indexOf("function Dock("), src.indexOf("function useHeartbeat"));
     expect(dock).toContain("Voice memory");
     expect(dock).toContain('aria-label="Open the house"');
-    expect(dock).not.toMatch(/aria-label="Photo"|name="camera"|openAdd\("photos"\)|href="\/inbox"|ForYouGlyph/);
+    expect(dock).not.toMatch(/aria-label="Photo"|name="camera"|openAdd\("photos"\)|href="\/inbox"/);
     // Photos stay one tap inside the voice sheet; For you and Sign out live behind your own photo.
     expect(readFileSync(join(__dirname, "../components/add-sheet.tsx"), "utf8")).toContain("Add a photo instead");
     const menu = readFileSync(join(__dirname, "../components/profile-menu.tsx"), "utf8");

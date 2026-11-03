@@ -29,6 +29,7 @@
   --accent-soft: #ebebeb; /* a selected-but-quiet fill */
   --accent-soft-ink: #111111;
   --marigold: var(--accent); /* legacy name: focus and "live" states use the accent */
+  --waiting: #e8735a; /* "something is waiting for you": the dot on Voice and on the window's bell */
   --marigold-glow: rgba(17, 17, 17, 0.18);
 
   --espresso: #000000;
