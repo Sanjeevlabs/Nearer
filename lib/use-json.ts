@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useCourtyardSlice } from "./courtyard-data";
 import { dropEarly, takeEarly } from "./early";
 import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
+import { retryGet } from "./retry";
 
 // Last good payload per URL: a route paints from it at once and refreshes in
 // the background. Kept in memory and (small payloads) in sessionStorage.
@@ -193,8 +194,6 @@ export function prefetchJson(url: string): void {
  * whatever was cached: `stale` is true (show a quiet "offline" hint), and
  * `failed` only when there is nothing at all to show.
  */
-const RETRYABLE = new Set([502, 503, 504]);
-
 export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fetch(...a)): Promise<{ data: T | null; stale: boolean; failed: boolean; status?: number }> {
   const gen = authGen;
   let status: number | undefined;
@@ -202,13 +201,9 @@ export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fet
     // The first screen's request may already be on its way (lib/early.ts).
     const early = takeEarly(url);
     // Nothing waits forever: a request that does not answer in time ends as a failure (a retry card, never a skeleton).
-    const ask = () => fetchWithTimeout(f, url, { cache: "no-store" });
-    let res = early ? await raceTimeout(early, EARLY_WAIT_MS).catch(ask) : await ask();
-    // The host sometimes cuts one request off (a 503 under its CPU limit): one quiet retry.
-    if (RETRYABLE.has(res.status)) {
-      await new Promise((r) => setTimeout(r, 250));
-      res = await ask();
-    }
+    // The host sometimes cuts one request off (a 503 under its CPU limit): up to 3 quiet retries (lib/retry.ts).
+    const ask = (left?: number) => fetchWithTimeout(f, url, { cache: "no-store" }, left);
+    const res = await retryGet((n, left) => (n === 0 && early ? raceTimeout(early, EARLY_WAIT_MS).catch(() => ask(left)) : ask(left)));
     if (!res.ok) {
       status = res.status;
       throw new Error(String(res.status));

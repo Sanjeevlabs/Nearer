@@ -4,6 +4,7 @@
 // Client only.
 
 import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
+import { retryGet } from "./retry";
 
 type Early = Record<string, { at: number; p: Promise<Response> }>;
 type W = typeof window & { __nearerEarly?: Early };
@@ -27,21 +28,14 @@ export function dropEarly(): void {
   if (typeof window !== "undefined") (window as W).__nearerEarly = {};
 }
 
-/** GET `url` (no-store), answered by its early request when there is one; a failed early request is retried here. */
-/** The host cuts a request off now and then (a 503 under its CPU limit): worth one more try. */
-const RETRYABLE = new Set([502, 503, 504]);
-
+/** GET `url` (no-store), answered by its early request when there is one; a failed or cut-off one is retried (up to 3 times, lib/retry.ts). */
 export function fetchFirst(url: string): Promise<Response> {
   // Neither an early request nor a fresh one may hang the first screen: they are cut off (see lib/first-screen.ts).
-  const fresh = () => fetchWithTimeout((...a) => fetch(...a), url, { cache: "no-store" });
-  const again = async (res: Response): Promise<Response> => {
-    if (!RETRYABLE.has(res.status)) return res;
-    await new Promise((r) => setTimeout(r, 250));
-    const second = await fresh().catch(() => res);
-    return second;
-  };
   const early = takeEarly(url);
-  return (early ? raceTimeout(early, EARLY_WAIT_MS).catch(fresh) : fresh()).then(again);
+  return retryGet((n, left) => {
+    const fresh = () => fetchWithTimeout((...a) => fetch(...a), url, { cache: "no-store" }, left);
+    return n === 0 && early ? raceTimeout(early, EARLY_WAIT_MS).catch(fresh) : fresh();
+  });
 }
 
 /**
