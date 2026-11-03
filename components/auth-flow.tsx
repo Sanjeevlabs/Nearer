@@ -1,12 +1,9 @@
 "use client";
 
 import { Lockup } from "./brand";
-import Link from "next/link";
-import { CityAssist } from "@/components/city-assist";
-import { useCityAutofill } from "@/lib/use-city-autofill";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { joinLink, whatsappInvite } from "@/lib/invite-link";
+import { codeFromInput, joinLink, whatsappInvite } from "@/lib/invite-link";
 import { resetFamilyCards } from "@/lib/use-family";
 import { postJson } from "@/lib/use-json";
 import { useDocumentLang, useT, type T } from "@/lib/use-t";
@@ -14,13 +11,39 @@ import { en, htmlLang, type UiKey } from "@/lib/ui-strings/lazy";
 import { cn } from "@/lib/utils";
 import { AUTH_INTENT_KEY, browserAuth, signInOptions } from "@/lib/supabase-browser";
 import { signOutNow } from "@/lib/sign-out";
-import { afterAuth, afterSignin, currentSession, gateDecision, nextHref, parseNext, signinHref, signinShortcut, verifyAccessToken, type Next } from "@/lib/auth-session";
+import { afterSignin, currentSession, legacySigninRedirect, signinShortcut, suggestedNames, verifyAccessToken, type VerifyOutcome } from "@/lib/auth-session";
 import { authRedirectUrl, isNative, openExternal } from "@/lib/native";
 import { useShell } from "./shell";
 import { Button, Icon } from "./ui/kit";
 
-type Mode = "create" | "join" | "signin";
-type Step = "details" | "email" | "code" | "nofamily" | "other-side" | "invite";
+// One door for everyone. Sign in with Google or an email code; a family you have opens. No family
+// yet: one short "Set up your family" screen (or paste an invite link there). A family link
+// (/join/<CODE>) does it all on one page: who's inviting you, the same sign-in buttons, "Which one
+// are you?", and in. Already signed in to another family: "Join this one too?".
+
+type Stage = "loading" | "auth" | "code" | "setup" | "pick" | "confirm" | "dead" | "full" | "limit" | "paste" | "other-side" | "invite";
+
+/** Who proved who they are but has no family yet: what the next verify call carries. */
+type Identity = { kind: "supabase"; token: string; email: string; name: string } | { kind: "code"; email: string; code: string };
+
+interface You {
+  name: string;
+  email: string | null;
+  current: string;
+  inFamily: boolean;
+  familyId?: string;
+  sides: number;
+  maxSides: number;
+  canJoin: boolean;
+}
+interface Peek {
+  family: string;
+  host: string | null;
+  places: { id: string; callName: string }[];
+  full: boolean;
+  you?: You;
+}
+type PeekResult = { ok: true; peek: Peek } | { ok: false; host: string | null; family: string | null };
 
 /** Month names in the viewer's language (Intl), never a hard-coded list. */
 function monthNames(lang: string): string[] {
@@ -49,151 +72,225 @@ function Field({ label, children, hint }: { label: string; children: React.React
   );
 }
 
-const input = "h-12 w-full rounded-full bg-surface px-5 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-black/15";
-
-interface Peek {
-  family: string;
-  host: string | null;
-  places: { id: string; callName: string }[];
+function ErrorLine({ text }: { text: string | null }) {
+  if (!text) return null;
+  return (
+    <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
+      {text}
+    </p>
+  );
 }
 
-export function AuthFlow({ mode }: { mode: Mode }) {
+const input = "h-12 w-full rounded-full bg-surface px-5 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-black/15";
+
+async function peekInvite(code: string): Promise<PeekResult> {
+  try {
+    const res = await fetch(`/api/invites/peek?code=${encodeURIComponent(code)}`, { cache: "no-store" });
+    const data = (await res.json().catch(() => ({}))) as Partial<Peek> & { host?: string | null; family?: string };
+    if (res.ok) return { ok: true, peek: data as Peek };
+    return { ok: false, host: data.host ?? null, family: data.family ?? null };
+  } catch {
+    return { ok: false, host: null, family: null };
+  }
+}
+
+export function AuthFlow({ join = false, code: codeProp = null }: { join?: boolean; code?: string | null }) {
   const router = useRouter();
   const t = useT();
   useDocumentLang();
   const { setChromeHidden } = useShell();
-  const [step, setStep] = useState<Step>(mode === "signin" ? "email" : "details");
-  const [familyName, setFamilyName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
+  const [stage, setStage] = useState<Stage>("loading");
+  const [joinCode, setJoinCodeState] = useState<string | null>(codeProp ? codeProp.toUpperCase() : null);
+  // The link being joined, read by handlers that a first-render closure holds (the start-up effect).
+  const linkRef = useRef<string | null>(joinCode);
+  const setJoinCode = (c: string | null) => {
+    linkRef.current = c;
+    setJoinCodeState(c);
+  };
   const [peek, setPeek] = useState<Peek | null>(null);
-  const [claim, setClaim] = useState<string | null>(null);
+  const [dead, setDead] = useState<{ host: string | null; family: string | null }>({ host: null, family: null });
+  const [identity, setIdentity] = useState<Identity | null>(null);
   const [firstName, setFirstName] = useState("");
-  const [callName, setCallName] = useState("");
-  const [city, setCity] = useState("");
-  const cityAuto = useCityAutofill(city, setCity, t.lang, mode !== "signin");
+  const [familyName, setFamilyName] = useState("");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
+  const [someoneElse, setSomeoneElse] = useState(false);
+  const [paste, setPaste] = useState("");
+  const [pasteOpen, setPasteOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [byPhone, setByPhone] = useState(false);
-  const [code, setCode] = useState("");
+  const [otp, setOtp] = useState("");
   const ways = signInOptions();
   const [mock, setMock] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<string | null>(null);
-  // Already proved who they are (Google, then "no family yet"): reuse that instead of asking again.
-  const [signedInAs, setSignedInAs] = useState<string | null>(null);
-  // Live sign-in is the one door: /create and /join wait for a Supabase session (or send you to /signin).
-  const live = Boolean(browserAuth());
-  const gated = live && mode !== "signin";
-  const [ready, setReady] = useState(!gated);
-  // /signin?next=create|join: where to go once we know who they are.
-  const [target, setTarget] = useState<Next>({ next: null });
-  const [alreadyIn, setAlreadyIn] = useState(false);
   const [farNames, setFarNames] = useState<string[]>([]);
   const codeRef = useRef<HTMLInputElement>(null);
+  const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   useEffect(() => {
     setChromeHidden(true);
     return () => setChromeHidden(false);
   }, [setChromeHidden]);
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("resume") === "other-side") setStep("other-side");
-  }, []);
-  useEffect(() => {
-    if (step === "code") codeRef.current?.focus();
-  }, [step]);
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    if (mode === "signin") {
-      const wanted = parseNext(window.location.search);
-      setTarget(wanted);
-      if (q.get("expired")) setError(errorText(t, "session-expired"));
-      // Already signed in to Nearer and nothing else to do: no reason to sign in again.
-      if (browserAuth() && !wanted.next) {
-        void fetch("/api/session", { cache: "no-store" })
-          .then(async (res) => (res.ok ? ((await res.json()) as { status?: string }) : null))
-          .then((me) => {
-            if (signinShortcut({ next: null, sessionOk: Boolean(me), status: me?.status }) === "home") router.replace("/");
-          })
-          .catch(() => undefined);
+    if (stage === "code") codeRef.current?.focus();
+  }, [stage]);
+
+  const enter = () => {
+    resetFamilyCards();
+    try {
+      sessionStorage.removeItem("aangan:entered");
+    } catch {
+      /* ignore */
+    }
+    window.dispatchEvent(new Event("aangan:auth"));
+    router.replace("/");
+  };
+  const keepWelcome = (welcome?: string) => {
+    if (!welcome) return;
+    try {
+      sessionStorage.setItem("aangan:welcome", welcome);
+    } catch {
+      /* private mode */
+    }
+  };
+
+  const prefill = (name: string, mail: string) => {
+    const s = suggestedNames(name, mail);
+    setFirstName((v) => v || s.firstName);
+    setFamilyName((v) => v || s.familyName);
+  };
+
+  /** With a link in hand and what the page now knows about you: open it, ask, or show why not. */
+  const routeJoin = (p: Peek, id: Identity | null) => {
+    setPeek(p);
+    setBusy(false);
+    if (p.you?.canJoin) {
+      if (p.you.inFamily && p.you.familyId) {
+        // Already one of them: just open it.
+        void postJson("/api/sides", { action: "switch", familyId: p.you.familyId }).then(enter);
+        return;
       }
+      if (p.you.sides >= p.you.maxSides) return setStage("limit");
+      if (p.full && !p.places.length) return setStage("full");
+      return setStage("confirm");
+    }
+    if (p.full && !p.places.length) return setStage("full");
+    setStage(id ? "pick" : "auth");
+  };
+
+  const openLink = async (code: string, id: Identity | null) => {
+    setJoinCode(code);
+    const out = await peekInvite(code);
+    if (!out.ok) {
+      setDead({ host: out.host, family: out.family });
+      setBusy(false);
+      return setStage("dead");
+    }
+    routeJoin(out.peek, id);
+  };
+
+  /** Just proved who they are: a family opens (or the link is next); no family yet, setup or "which one are you". */
+  const afterIdentity = async (id: Identity) => {
+    setBusy(true);
+    setError(null);
+    const base = { tz: tz(), intent: { type: "signin" } };
+    let out: VerifyOutcome;
+    const sb = browserAuth();
+    if (id.kind === "supabase" && sb) {
+      out = await verifyAccessToken(sb, { accessToken: id.token, ...base }, (e) => e === "no-family");
+    } else if (id.kind === "code") {
+      try {
+        const res = await fetch("/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: id.email, code: id.code, ...base }) });
+        const data = (await res.json().catch(() => ({}))) as { error?: string; welcome?: string; status?: string };
+        out = res.ok ? { ok: true, welcome: data.welcome, status: data.status } : { ok: false, error: data.error ?? "failed" };
+      } catch {
+        out = { ok: false, error: "failed" };
+      }
+    } else out = { ok: false, error: "failed" };
+    const next = afterSignin(out);
+    if (next.kind === "failed") {
+      setBusy(false);
+      setError(errorText(t, next.error));
+      if (next.error === "wrong-code") {
+        setOtp("");
+        setIdentity(null);
+        setStage(id.kind === "code" ? "code" : "auth");
+      } else setStage("auth");
       return;
     }
-    const sb = browserAuth();
-    if (!sb) return;
-    const resume = q.get("resume") === "other-side";
+    if (next.kind === "enter") {
+      keepWelcome(out.ok ? out.welcome : undefined);
+      // Signed in to your family; a link opens next ("Join this one too?", or it's already yours).
+      if (linkRef.current) return openLink(linkRef.current, null);
+      return enter();
+    }
+    setIdentity(id);
+    prefill(id.kind === "supabase" ? id.name : "", id.email);
+    if (linkRef.current) return openLink(linkRef.current, id);
+    setBusy(false);
+    setStage("setup");
+  };
+
+  // Where the page starts: a link, an old ?next= URL, a session that's already here, or the buttons.
+  useEffect(() => {
     let alive = true;
-    void currentSession(sb).then((sess) => {
+    let fullNoPlaces = false;
+    void (async () => {
+      const q = new URLSearchParams(window.location.search);
+      if (q.get("expired")) setError(errorText(t, "session-expired"));
+      if (!join) {
+        const legacy = legacySigninRedirect(window.location.search);
+        if (legacy) return router.replace(legacy);
+      }
+      const code = linkRef.current ?? (join ? codeFromInput(q.get("code") ?? "") : null);
+      if (join && !code) return setStage("paste");
+      if (code) {
+        setJoinCode(code);
+        const out = await peekInvite(code);
+        if (!alive) return;
+        if (!out.ok) {
+          setDead({ host: out.host, family: out.family });
+          return setStage("dead");
+        }
+        // Signed in to Nearer already: no sign-in at all.
+        if (out.peek.you?.canJoin) return routeJoin(out.peek, null);
+        setPeek(out.peek);
+        fullNoPlaces = out.peek.full && out.peek.places.length === 0;
+      } else if (browserAuth()) {
+        // Signed in to Nearer already and nothing else to do: no reason to sign in again.
+        const me = await fetch("/api/session", { cache: "no-store" })
+          .then(async (res) => (res.ok ? ((await res.json()) as { status?: string }) : null))
+          .catch(() => null);
+        if (!alive) return;
+        if (signinShortcut({ sessionOk: Boolean(me), status: me?.status }) === "home") return router.replace("/");
+      }
+      // Back from Google (or a link with a session kept): carry on with who they are.
+      const sb = browserAuth();
+      const sess = sb ? await currentSession(sb) : null;
       if (!alive) return;
-      const g = gateDecision({ live: true, hasSession: Boolean(sess), kind: mode, code: q.get("code")?.trim() || undefined, resume });
-      if (!g.stay) return router.replace(g.to);
-      if (sess) setSignedInAs(sess.email || t("auth.signedInAsYou"));
-      setReady(true);
-    });
+      if (sess) return afterIdentity({ kind: "supabase", token: sess.token, email: sess.email, name: sess.name });
+      setStage(fullNoPlaces ? "full" : "auth");
+    })();
     return () => {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
-  // A join link carries the code: /join?code=ABC123.
-  useEffect(() => {
-    if (mode !== "join") return;
-    const c = new URLSearchParams(window.location.search).get("code");
-    if (c) setInviteCode(c.slice(0, 64));
-  }, [mode]);
-  // Who sent this code? Offer the place they made for you ("I'm Maa").
-  useEffect(() => {
-    if (mode !== "join" || inviteCode.trim().length < 6) {
-      setPeek(null);
-      return;
-    }
-    const ctl = new AbortController();
-    const t = window.setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/invites/peek?code=${encodeURIComponent(inviteCode.trim())}`, { signal: ctl.signal });
-        setPeek(res.ok ? ((await res.json()) as Peek) : null);
-      } catch {
-        /* typing on */
-      }
-    }, 350);
-    return () => {
-      window.clearTimeout(t);
-      ctl.abort();
-    };
-  }, [mode, inviteCode]);
-
-  const claimed = peek?.places.find((p) => p.id === claim);
-  const months = monthNames(htmlLang(t.lang));
-  const title =
-    step === "other-side"
-      ? t("auth.titleOtherSide")
-      : step === "invite"
-        ? farNames.length
-          ? t("auth.titleInvite", { names: farNames.join(t("auth.namesJoin")) })
-          : t("auth.titleInviteThem")
-        : step === "email"
-          ? mode === "signin"
-            ? target.next === "create"
-              ? t("auth.titleSignUp")
-              : t("auth.titleSignIn")
-            : t("auth.titleEmail")
-          : step === "nofamily"
-            ? t("auth.noFamilyTitle")
-          : step === "code"
-            ? t("auth.titleCheck")
-            : mode === "create"
-              ? t("auth.titleCreate")
-              : peek
-                ? peek.host
-                  ? t("auth.titleJoinHost", { host: peek.host })
-                  : t("auth.titleJoinFamily", { family: peek.family })
-                : t("auth.titleJoin");
-
-  const detailsValid = (claimed || firstName.trim()) && (mode === "create" ? familyName.trim() && month && day : inviteCode.trim().length >= 4);
+  }, []);
 
   const phoneE164 = () => `+${phone.replace(/\D/g, "")}`;
+  /** Kept across a Google redirect: the link being joined, if any. */
+  const saveIntent = () => {
+    try {
+      const saved = JSON.stringify(linkRef.current ? { joinCode: linkRef.current } : {});
+      sessionStorage.setItem(AUTH_INTENT_KEY, saved);
+      localStorage.setItem(AUTH_INTENT_KEY, saved);
+    } catch {
+      /* private mode: the callback falls back to sign-in */
+    }
+  };
   const sendCode = async () => {
     setBusy(true);
     setError(null);
@@ -207,39 +304,18 @@ export function AuthFlow({ mode }: { mode: Mode }) {
           : await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: authRedirectUrl("email"), shouldCreateUser: true } });
         if (err) throw new Error(/rate/i.test(err.message) ? "too-many-attempts" : "code-not-sent");
         setMock(false);
-        setStep("code");
+        setStage("code");
         return;
       }
       const res = await fetch("/api/auth/start", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email }) });
       const data = (await res.json()) as { error?: string; mock?: boolean };
       if (!res.ok) throw new Error(data.error ?? "code-not-sent");
       setMock(Boolean(data.mock));
-      setStep("code");
+      setStage("code");
     } catch (e) {
       setError(errorText(t, (e as Error).message));
     } finally {
       setBusy(false);
-    }
-  };
-
-  /** What we're signing in to do, kept across a redirect (Google, a magic link opened on this phone). */
-  const intentBody = () => {
-    const name = claimed ? claimed.callName : firstName.trim();
-    const intent =
-      mode === "signin"
-        ? { type: "signin" }
-        : mode === "create"
-          ? { type: "create", familyName: familyName.trim(), firstName: name, callName: callName.trim() || undefined }
-          : { type: "join", inviteCode: inviteCode.trim(), firstName: name, callName: claimed ? undefined : callName.trim() || undefined, claimMemberId: claimed?.id };
-    return { tz: Intl.DateTimeFormat().resolvedOptions().timeZone, birthday: month && day ? `${month}-${day}` : undefined, city: city.trim() || undefined, intent, mode };
-  };
-  const saveIntent = () => {
-    try {
-      const saved = JSON.stringify({ ...intentBody(), ...(target.next ? { next: target.next, nextCode: target.code } : {}) });
-      sessionStorage.setItem(AUTH_INTENT_KEY, saved);
-      localStorage.setItem(AUTH_INTENT_KEY, saved);
-    } catch {
-      /* private mode: the callback falls back to sign-in */
     }
   };
   const google = async () => {
@@ -257,248 +333,219 @@ export function AuthFlow({ mode }: { mode: Mode }) {
       setBusy(false);
     }
   };
-
-  const enter = () => {
-    resetFamilyCards();
-    try {
-      sessionStorage.removeItem("aangan:entered");
-    } catch {
-      /* ignore */
-    }
-    window.dispatchEvent(new Event("aangan:auth"));
-    router.replace("/");
-  };
-
-  /** Nearer's session is set: remember the welcome, then wait for an admin, open the other side, or go in. */
-  const afterVerify = (data: { welcome?: string; status?: string; existing?: boolean }) => {
-    if (data.welcome) {
-      try {
-        sessionStorage.setItem("aangan:welcome", data.welcome);
-      } catch {
-        /* private mode */
-      }
-    }
-    // A joiner waiting for an admin: the waiting screen takes over.
-    if (data.status === "pending") return enter();
-    // Already had a family: the server opened it instead of making a second one.
-    if (mode === "create" && !data.existing) {
-      // Signed in: now the other side of the window.
-      setBusy(false);
-      setStep("other-side");
-      return;
-    }
-    enter();
-  };
-
-  /** Details submitted while already signed in: no second sign-in, straight to Nearer's session. */
-  const finishWithSession = async () => {
-    const sb = browserAuth();
-    if (!sb) return setStep("email");
-    setBusy(true);
-    setAlreadyIn(false);
-    setError(null);
-    const { mode: _m, ...base } = intentBody();
-    void _m;
-    const session = await currentSession(sb);
-    // Only a rejected token sends them back to sign in; anything else (bad code, name) is fixed on the details step.
-    const out = session ? await verifyAccessToken(sb, { accessToken: session.token, ...base }, (e) => e !== "wrong-code") : ({ ok: false, error: "wrong-code" } as const);
-    if (out.ok) return afterVerify(out);
-    setBusy(false);
-    if (out.error === "wrong-code") {
-      setSignedInAs(null);
-      return router.replace(signinHref(mode === "join" ? "join" : "create", inviteCode.trim() || undefined, true));
-    }
-    setError(errorText(t, out.error));
-    setAlreadyIn(out.error === "already-member");
-  };
-
-  const notYou = () => {
-    setSignedInAs(null);
-    // Everything about the last person goes, then back to the one door.
-    void signOutNow(gated ? signinHref(mode === "join" ? "join" : "create", inviteCode.trim() || undefined) : "/");
-  };
-
-  const verify = async (value = code) => {
+  const checkCode = async (value = otp) => {
     if (value.length !== 6) return;
     setBusy(true);
     setError(null);
-    const { mode: _m, ...base } = intentBody();
-    void _m;
-    try {
-      let identity: Record<string, string> = { email, code: value };
-      const sb = browserAuth();
-      if (sb && mode === "signin") {
-        const out = byPhone ? await sb.auth.verifyOtp({ phone: phoneE164(), token: value, type: "sms" }) : await sb.auth.verifyOtp({ email, token: value, type: "email" });
-        const token = out.data.session?.access_token;
-        if (out.error || !token) throw new Error("wrong-code");
-        // Signing up for a family: the session stays, the family form is next.
-        const go = afterAuth(target);
-        if (!go.verify) return router.replace(go.to);
-        // Otherwise a plain sign-in. No family yet keeps the session for the chooser.
-        const res = await verifyAccessToken(sb, { accessToken: token, ...base }, (e) => e === "no-family");
-        const after = afterSignin(res);
-        if (after.kind === "chooser") {
-          // Came to start a family and has none: on to the form.
-          if (go.noFamilyTo) return router.replace(go.noFamilyTo);
-          setBusy(false);
-          setStep("nofamily");
-          return;
-        }
-        if (after.kind === "failed") throw new Error(after.error);
-        return afterVerify(res as { welcome?: string; status?: string; existing?: boolean });
-      }
-      if (sb) {
-        const out = byPhone ? await sb.auth.verifyOtp({ phone: phoneE164(), token: value, type: "sms" }) : await sb.auth.verifyOtp({ email, token: value, type: "email" });
-        const token = out.data.session?.access_token;
-        if (out.error || !token) throw new Error("wrong-code");
-        identity = { accessToken: token };
-      }
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...identity, ...base }),
-      });
-      if (sb) void sb.auth.signOut({ scope: "local" });
-      const data = (await res.json()) as { error?: string; welcome?: string; status?: string };
-      if (!res.ok) throw new Error(data.error ?? "failed");
-      afterVerify(data);
-    } catch (e) {
-      const key = (e as Error).message;
-      setError(errorText(t, key));
-      if (key === "wrong-code") setCode("");
+    const sb = browserAuth();
+    if (!sb) return afterIdentity({ kind: "code", email, code: value });
+    const out = byPhone ? await sb.auth.verifyOtp({ phone: phoneE164(), token: value, type: "sms" }) : await sb.auth.verifyOtp({ email, token: value, type: "email" });
+    const token = out.data.session?.access_token;
+    if (out.error || !token) {
       setBusy(false);
+      setOtp("");
+      return setError(errorText(t, "wrong-code"));
     }
+    const meta = out.data.session?.user?.user_metadata ?? {};
+    await afterIdentity({ kind: "supabase", token, email: out.data.session?.user?.email ?? email, name: typeof meta.full_name === "string" ? meta.full_name : "" });
+  };
+
+  /** The second (and last) verify for someone new: make the family, or join the linked one. */
+  const finish = async (intent: Record<string, unknown>, birthday?: string): Promise<VerifyOutcome> => {
+    const id = identity;
+    const base = { tz: tz(), intent, ...(birthday ? { birthday } : {}) };
+    const sb = browserAuth();
+    // A fixable error (a name, a full family) keeps the Supabase session for another try; a rejected token drops it.
+    if (id?.kind === "supabase" && sb) return verifyAccessToken(sb, { accessToken: id.token, ...base }, (e) => e !== "wrong-code");
+    if (id?.kind === "code") {
+      try {
+        const res = await fetch("/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: id.email, code: id.code, ...base }) });
+        const data = (await res.json().catch(() => ({}))) as { error?: string; welcome?: string; status?: string; existing?: boolean };
+        return res.ok ? { ok: true, welcome: data.welcome, status: data.status, ...(data.existing ? { existing: true } : {}) } : { ok: false, error: data.error ?? "failed" };
+      } catch {
+        return { ok: false, error: "failed" };
+      }
+    }
+    return { ok: false, error: "wrong-code" };
+  };
+  /** The proof didn't hold (a Supabase session that ran out): back to the buttons. */
+  const lostIdentity = () => {
+    setIdentity(null);
+    setStage("auth");
+    setError(errorText(t, "session-expired"));
+  };
+
+  const createFamily = async () => {
+    setBusy(true);
+    setError(null);
+    const out = await finish({ type: "create", familyName: familyName.trim(), firstName: firstName.trim() }, month && day ? `${month}-${day}` : undefined);
+    setBusy(false);
+    if (!out.ok) return out.error === "wrong-code" ? lostIdentity() : setError(errorText(t, out.error));
+    keepWelcome(out.welcome);
+    // Already had a family: the server opened it instead of making a second one.
+    if (out.existing) return enter();
+    setStage("other-side");
+  };
+
+  const joinFamily = async (claimMemberId?: string) => {
+    if (!joinCode) return;
+    setBusy(true);
+    setError(null);
+    const out = await finish({ type: "join", inviteCode: joinCode, ...(claimMemberId ? { claimMemberId } : { firstName: firstName.trim() }) });
+    if (!out.ok) {
+      setBusy(false);
+      if (out.error === "wrong-code") return lostIdentity();
+      if (out.error === "invalid-invite") return setStage("dead");
+      return setError(out.error === "family-full" && peek ? t("auth.fullTitle", { family: peek.family }) : errorText(t, out.error));
+    }
+    keepWelcome(out.welcome);
+    enter();
+  };
+
+  /** Signed in to another family: join this one too, with the session already here. */
+  const joinToo = async (claimMemberId?: string) => {
+    if (!joinCode) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/invites/accept", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: joinCode, ...(claimMemberId ? { claimMemberId } : {}) }) });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; welcome?: string };
+      if (!res.ok) {
+        setBusy(false);
+        if (data.error === "invalid-invite") return setStage("dead");
+        return setError(data.error === "family-full" && peek ? t("auth.fullTitle", { family: peek.family }) : errorText(t, data.error ?? "failed"));
+      }
+      keepWelcome(data.welcome);
+      enter();
+    } catch {
+      setBusy(false);
+      setError(errorText(t, "failed"));
+    }
+  };
+
+  const here = () => (joinCode ? `/join/${encodeURIComponent(joinCode)}` : "/signin");
+  /** "Not you?": everything about the last person goes, then back to this same page. */
+  const notYou = () => {
+    setIdentity(null);
+    if (identity?.kind === "code") {
+      setStage("auth");
+      return;
+    }
+    void signOutNow(here());
   };
 
   const back = () => {
     setError(null);
-    if (step === "other-side" || step === "invite") enter();
-    else if (step === "code") setStep("email");
-    else if (step === "email" && mode !== "signin") setStep("details");
+    if (stage === "other-side" || stage === "invite") enter();
+    else if (stage === "code") setStage("auth");
+    else if (stage === "auth" && pasteOpen) setPasteOpen(false);
     else router.push("/");
   };
+
+  const pasteSubmit = async () => {
+    const code = codeFromInput(paste);
+    if (!code) return setError(t("auth.badLink"));
+    setError(null);
+    setBusy(true);
+    if (join && !identity) {
+      // The /join page with nothing signed in yet: the link's own page.
+      router.replace(`/join/${encodeURIComponent(code)}`);
+      await openLink(code, null);
+      return;
+    }
+    await openLink(code, identity);
+  };
+
+  const months = monthNames(htmlLang(t.lang));
+  const joining = Boolean(joinCode && peek);
+  const signedInAs = stage === "confirm" || stage === "limit" ? peek?.you?.email || peek?.you?.name || null : identity ? identity.email || t("auth.signedInAsYou") : null;
+  const title =
+    stage === "other-side"
+      ? t("auth.titleOtherSide")
+      : stage === "invite"
+        ? farNames.length
+          ? t("auth.titleInvite", { names: farNames.join(t("auth.namesJoin")) })
+          : t("auth.titleInviteThem")
+        : stage === "code"
+          ? t("auth.titleCheck")
+          : stage === "setup"
+            ? t("auth.setupTitle")
+            : stage === "dead"
+              ? t("auth.deadTitle")
+              : stage === "full" && peek
+                ? t("auth.fullTitle", { family: peek.family })
+                : stage === "confirm" && peek
+                    ? t("auth.joinToo", { family: peek.family })
+                    : stage === "paste"
+                      ? t("auth.titleJoin")
+                      : joining && peek
+                        ? t("auth.joinTitle", { family: peek.family })
+                        : stage === "loading"
+                          ? ""
+                          : t("auth.welcome");
+
+  const notYouLine = signedInAs && (
+    <p className="m-0 mt-2 text-footnote text-ink-faint">
+      {t("auth.signedInAs", { email: signedInAs })} ·{" "}
+      <button type="button" onClick={notYou} className="press inline-flex min-h-11 items-center p-0 text-footnote font-medium text-ink-soft underline">
+        {t("auth.notYou")}
+      </button>
+    </p>
+  );
+  const signInButton = (
+    <a href="/signin" className="press mt-8 flex h-12 w-full items-center justify-center rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
+      {t("landing.signin")}
+    </a>
+  );
+  const nameField = (
+    <Field label={t("auth.firstName")}>
+      <input className={input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t("auth.firstNamePh")} maxLength={40} autoComplete="given-name" />
+    </Field>
+  );
+  /** "Which one are you?": one tap on a place the family made, or "Someone else" and your name. */
+  const picker = (onPick: (claim?: string) => void, nameNeeded: boolean) =>
+    peek && peek.places.length > 0 ? (
+      <div className="mt-4">
+        <span className="mb-1.5 block text-footnote font-medium text-ink-soft">{t("auth.whichYou")}</span>
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t("auth.whichYou")}>
+          {peek.places.map((p) => (
+            <button key={p.id} type="button" disabled={busy} onClick={() => onPick(p.id)} className="press h-11 rounded-full bg-surface px-5 text-body font-semibold" data-ui="join-place">
+              {t("auth.imName", { name: p.callName })}
+            </button>
+          ))}
+          <button type="button" aria-pressed={someoneElse} onClick={() => setSomeoneElse((v) => !v)} className={cn("press h-11 rounded-full px-5 text-body font-medium", someoneElse ? "bg-accent text-accent-ink" : "bg-surface")} data-ui="join-someone-else">
+            {t("auth.someoneElse")}
+          </button>
+        </div>
+        {someoneElse && nameNeeded && nameField}
+      </div>
+    ) : nameNeeded ? (
+      nameField
+    ) : null;
 
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-white">
       <div className="mx-auto flex min-h-full max-w-[480px] flex-col px-4" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(24px + env(safe-area-inset-bottom))" }}>
         <div className="flex items-center justify-between">
-          <button type="button" onClick={back} aria-label={step === "other-side" || step === "invite" ? t("auth.skip") : t("auth.back")} className="press -ms-2 grid h-11 w-11 place-items-center rounded-full">
-            <Icon name={step === "other-side" || step === "invite" ? "close" : "back"} className="rtl:-scale-x-100" />
+          <button type="button" onClick={back} aria-label={stage === "other-side" || stage === "invite" ? t("auth.skip") : t("auth.back")} className="press -ms-2 grid h-11 w-11 place-items-center rounded-full">
+            <Icon name={stage === "other-side" || stage === "invite" ? "close" : "back"} className="rtl:-scale-x-100" />
           </button>
           <Lockup mark={24} word={72} className="text-ink" />
         </div>
         <h1 data-display className="m-0 mt-4 text-display leading-[1.08]">{title}</h1>
 
-        {step === "details" && !ready && <div className="flex-1" aria-busy="true" />}
-        {step === "details" && ready && (
+        {stage === "loading" && <div className="mt-6 flex-1 space-y-3" aria-busy="true"><div className="skeleton h-12 rounded-full" /><div className="skeleton h-12 rounded-full" /></div>}
+
+        {stage === "auth" && (
           <form
             className="flex flex-1 flex-col"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!detailsValid) return;
-              if (signedInAs) void finishWithSession();
-              else setStep("email");
-            }}
-          >
-            <p className="m-0 mt-2 text-body text-ink-soft">{mode === "create" ? t("landing.sub") : t("auth.joinSub")}</p>
-            {signedInAs && (
-              <p className="m-0 mt-2 text-footnote text-ink-faint">
-                {t("auth.signedInAs", { email: signedInAs })} · {" "}
-                <button type="button" onClick={notYou} className="press inline p-0 text-footnote font-medium text-ink-soft underline">
-                  {t("auth.notYou")}
-                </button>
-              </p>
-            )}
-            {mode === "create" ? (
-              <Field label={t("auth.familyName")}>
-                <input className={input} value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t("auth.familyNamePh")} maxLength={40} autoFocus />
-              </Field>
-            ) : (
-              <Field label={t("auth.inviteCode")}>
-                <input className={`${input} tnum uppercase tracking-[0.12em]`} value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="ABC123" maxLength={64} autoCapitalize="characters" autoFocus={!inviteCode} />
-              </Field>
-            )}
-            {mode === "join" && peek && peek.places.length > 0 && (
-              <div className="mt-4">
-                <span className="mb-1.5 block text-footnote font-medium text-ink-soft">{t("auth.whichYou")}</span>
-                <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4" role="radiogroup" aria-label={t("auth.whichYou")}>
-                  {peek.places.map((p) => (
-                    <button key={p.id} type="button" role="radio" aria-checked={claim === p.id} onClick={() => setClaim(claim === p.id ? null : p.id)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-semibold", claim === p.id ? "bg-accent text-accent-ink" : "bg-surface")}>
-                      {t("auth.imName", { name: p.callName })}
-                    </button>
-                  ))}
-                  <button type="button" role="radio" aria-checked={claim === null} onClick={() => setClaim(null)} className={cn("press h-11 shrink-0 rounded-full px-5 text-body font-medium", claim === null ? "bg-accent text-accent-ink" : "bg-surface")}>
-                    {t("auth.someoneElse")}
-                  </button>
-                </div>
-              </div>
-            )}
-            {!claimed && (
-              <>
-                <Field label={t("auth.firstName")}>
-                  <input className={input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t("auth.firstNamePh")} maxLength={40} autoComplete="given-name" />
-                </Field>
-                <Field label={t("auth.callName")} hint={t("auth.callNameHint")}>
-                  <input className={input} value={callName} onChange={(e) => setCallName(e.target.value)} placeholder={t("auth.callNamePh")} maxLength={40} />
-                </Field>
-              </>
-            )}
-            <Field label={t("auth.city")} hint={t("auth.cityHint")}>
-              <input className={input} value={city} onChange={(e) => { cityAuto.typed(); setCity(e.target.value); }} placeholder={t("auth.cityPh")} maxLength={60} autoComplete="address-level2" />
-            </Field>
-            <CityAssist source={cityAuto.source} locating={cityAuto.locating} failed={cityAuto.failed} onUseLocation={cityAuto.useMyLocation} />
-
-            {mode === "create" && (
-              <Field label={t("auth.birthday")} hint={t("auth.birthdayHint")}>
-                <div className="flex gap-2">
-                  <select className={`${input} appearance-none`} value={month} onChange={(e) => setMonth(e.target.value)} aria-label={t("auth.birthdayMonth")}>
-                    <option value="">{t("auth.month")}</option>
-                    {months.map((m, i) => (
-                      <option key={m} value={String(i + 1).padStart(2, "0")}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                  <select className={`${input} w-[120px] appearance-none`} value={day} onChange={(e) => setDay(e.target.value)} aria-label={t("auth.birthdayDay")}>
-                    <option value="">{t("auth.day")}</option>
-                    {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
-                      <option key={d} value={d}>
-                        {Number(d)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </Field>
-            )}
-            {error && (
-              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
-                {error}
-              </p>
-            )}
-            {alreadyIn && (
-              <Link href="/" className="mt-2 inline-block text-callout font-semibold text-ink">
-                {t("auth.openMyFamily")}
-              </Link>
-            )}
-            <div className="flex-1" />
-            <Button type="submit" className="mt-8 w-full" disabled={!detailsValid || busy}>
-              {t("auth.continue")}
-            </Button>
-          </form>
-        )}
-
-        {step === "email" && (
-          <form
-            className="flex flex-1 flex-col"
+            data-ui="signin-form"
             onSubmit={(e) => {
               e.preventDefault();
               void sendCode();
             }}
           >
-            <p className="m-0 mt-2 text-body text-ink-soft">
-              {mode === "signin" ? (target.next === "create" ? t("auth.emailSubSignup") : t("auth.emailSubSignin")) : t("auth.emailSub")}
-              {mode === "join" ? ` ${t("auth.emailSubJoin")}` : ""}
-            </p>
+            <p className="m-0 mt-2 text-body text-ink-soft">{joining && peek ? `${peek.host ? `${t("auth.invitedBy", { host: peek.host })} ` : ""}${t("auth.continueWith")}` : t("auth.welcomeSub")}</p>
             {ways.google && (
               <>
                 <button type="button" onClick={() => void google()} disabled={busy} className="press mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-full border border-[var(--line)] bg-white text-body font-semibold text-ink">
@@ -523,26 +570,12 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               </Field>
             )}
             {ways.phone && (
-              <button type="button" onClick={() => setByPhone((v) => !v)} className="mt-3 self-start text-callout font-medium text-ink-soft underline-offset-2 hover:underline">
+              <button type="button" onClick={() => setByPhone((v) => !v)} className="mt-3 min-h-11 self-start text-callout font-medium text-ink-soft underline-offset-2 hover:underline">
                 {byPhone ? t("auth.useEmail") : t("auth.usePhone")}
               </button>
             )}
             {ways.live && !byPhone && <p className="m-0 mt-2 text-footnote text-ink-faint">{t("auth.magicLink")}</p>}
-            {error && (
-              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
-                {error}
-              </p>
-            )}
-            {mode === "signin" && target.next !== "join" && (
-              // Two doors, one page: returning people sign in, new people start a family. Google or an email code proves who
-              // you are either way; a family you already have always opens, so "Start your family" can never make a second one.
-              <p className="m-0 mt-6 text-callout text-ink-soft">
-                {target.next === "create" ? t("auth.haveFamily") : t("auth.newToNearer")}{" "}
-                <a href={target.next === "create" ? "/signin" : signinHref("create")} className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-2">
-                  {target.next === "create" ? t("auth.signInLink") : t("auth.titleSignUp")}
-                </a>
-              </p>
-            )}
+            <ErrorLine text={error} />
             <div className="flex-1" />
             <Button type="submit" className="mt-8 w-full" disabled={busy || (byPhone ? phone.replace(/\D/g, "").length < 8 : !/^\S+@\S+\.\S+$/.test(email))}>
               {busy ? t("auth.sending") : t("auth.sendCode")}
@@ -550,7 +583,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
           </form>
         )}
 
-        {step === "code" && (
+        {stage === "code" && (
           <div className="flex flex-1 flex-col">
             <p className="m-0 mt-2 text-body text-ink-soft">
               {t.rich("auth.codeSub", { email: <span className="font-semibold text-ink" dir="ltr">{byPhone ? phone : email}</span> })}
@@ -560,59 +593,202 @@ export function AuthFlow({ mode }: { mode: Mode }) {
               <span className="sr-only">{t("auth.codeLabel")}</span>
               <input
                 ref={codeRef}
-                value={code}
+                value={otp}
                 inputMode="numeric"
                 dir="ltr"
                 autoComplete="one-time-code"
                 maxLength={6}
                 onChange={(e) => {
                   const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                  setCode(v);
-                  if (v.length === 6) void verify(v);
+                  setOtp(v);
+                  if (v.length === 6) void checkCode(v);
                 }}
                 className="tnum h-[64px] w-full rounded-[20px] bg-surface text-center text-display font-bold tracking-[0.5em] outline-none focus:ring-2 focus:ring-black/15"
                 placeholder="······"
               />
             </label>
-            {error && (
-              <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
-                {error}
-              </p>
-            )}
+            <ErrorLine text={error} />
             <button type="button" onClick={() => void sendCode()} disabled={busy} className="mt-3 h-11 self-center text-body font-medium text-ink-soft">
               {t("auth.resend")}
             </button>
             <div className="flex-1" />
-            <Button className="mt-8 w-full" disabled={busy || code.length !== 6} onClick={() => void verify()}>
-              {busy ? t("auth.checking") : mode === "create" ? t("auth.openOurs") : mode === "join" ? t("auth.joinCta") : t("landing.signin")}
+            <Button className="mt-8 w-full" disabled={busy || otp.length !== 6} onClick={() => void checkCode()}>
+              {busy ? t("auth.checking") : t("auth.continue")}
             </Button>
           </div>
         )}
 
-        {step === "nofamily" && (
-          <div className="flex flex-1 flex-col gap-3">
-            <Link href="/create" className="press mt-6 flex h-12 items-center justify-center rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">
-              {t("auth.startFamily")}
-            </Link>
-            <Link href="/join" className="press flex h-12 items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
-              {t("landing.join")}
-            </Link>
+        {stage === "setup" && (
+          <form
+            className="flex flex-1 flex-col"
+            data-ui="setup-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (firstName.trim() && familyName.trim()) void createFamily();
+            }}
+          >
+            {notYouLine}
+            <Field label={t("auth.firstName")}>
+              <input className={input} value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t("auth.firstNamePh")} maxLength={40} autoComplete="given-name" autoFocus={!firstName} />
+            </Field>
+            <Field label={t("auth.familyName")}>
+              <input className={input} value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder={t("auth.familyNamePh")} maxLength={40} />
+            </Field>
+            <Field label={t("auth.birthdayOptional")} hint={t("auth.birthdayHint")}>
+              <div className="flex gap-2">
+                <select className={`${input} appearance-none`} value={month} onChange={(e) => setMonth(e.target.value)} aria-label={t("auth.birthdayMonth")}>
+                  <option value="">{t("auth.month")}</option>
+                  {months.map((m, i) => (
+                    <option key={m} value={String(i + 1).padStart(2, "0")}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select className={`${input} w-[120px] appearance-none`} value={day} onChange={(e) => setDay(e.target.value)} aria-label={t("auth.birthdayDay")}>
+                  <option value="">{t("auth.day")}</option>
+                  {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
+                    <option key={d} value={d}>
+                      {Number(d)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </Field>
+            <ErrorLine text={error} />
+            <div className="flex-1" />
+            <Button type="submit" className="mt-8 w-full" disabled={busy || !firstName.trim() || !familyName.trim()}>
+              {busy ? t("auth.creating") : t("auth.createFamily")}
+            </Button>
+            {pasteOpen ? (
+              <div className="mt-4" data-ui="paste-link">
+                <Field label={t("auth.pasteLabel")}>
+                  <input
+                    className={input}
+                    value={paste}
+                    onChange={(e) => setPaste(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      void pasteSubmit();
+                    }}
+                    placeholder={t("auth.pastePh")}
+                    dir="ltr"
+                    autoFocus
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                  />
+                </Field>
+                <Button type="button" variant="secondary" className="mt-3 w-full" disabled={busy || !paste.trim()} onClick={() => void pasteSubmit()}>
+                  {t("auth.openLink")}
+                </Button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setPasteOpen(true)} className="press mt-2 flex min-h-11 items-center justify-center text-callout font-medium text-ink-soft underline underline-offset-2" data-ui="paste-open">
+                {t("auth.havePaste")}
+              </button>
+            )}
+          </form>
+        )}
+
+        {stage === "pick" && peek && (
+          <form
+            className="flex flex-1 flex-col"
+            data-ui="join-pick"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (firstName.trim()) void joinFamily();
+            }}
+          >
+            {peek.host && <p className="m-0 mt-2 text-body text-ink-soft">{t("auth.invitedBy", { host: peek.host })}</p>}
+            {notYouLine}
+            {picker((claim) => void joinFamily(claim), true)}
+            <ErrorLine text={error} />
+            <div className="flex-1" />
+            {(peek.places.length === 0 || someoneElse) && (
+              <Button type="submit" className="mt-8 w-full" disabled={busy || !firstName.trim()}>
+                {busy ? t("auth.checking") : t("auth.joinCta")}
+              </Button>
+            )}
+          </form>
+        )}
+
+        {stage === "confirm" && peek?.you && (
+          <div className="flex flex-1 flex-col" data-ui="join-confirm">
+            <p className="m-0 mt-2 text-body text-ink-soft">{t("auth.keepCurrent", { current: peek.you.current })}</p>
+            {notYouLine}
+            {peek.places.length > 0 && picker((claim) => void joinToo(claim), false)}
+            <ErrorLine text={error} />
+            <div className="flex-1" />
+            <Button className="mt-8 w-full" disabled={busy} onClick={() => void joinToo()}>
+              {busy ? t("auth.checking") : t("auth.joinCta")}
+            </Button>
+            <Button variant="quiet" className="mt-1 w-full" onClick={enter}>
+              {t("auth.notNow")}
+            </Button>
           </div>
         )}
 
-        {step === "other-side" && (
+        {stage === "limit" && peek?.you && (
+          <div className="flex flex-1 flex-col" data-ui="join-limit">
+            <p className="m-0 mt-2 text-body text-ink-soft">{t("families.limit", { n: peek.you.maxSides })}</p>
+            {notYouLine}
+            <div className="flex-1" />
+            <Button className="mt-8 w-full" onClick={enter}>
+              {t("auth.openMyFamily")}
+            </Button>
+          </div>
+        )}
+
+        {stage === "dead" && (
+          <div className="flex flex-1 flex-col" data-ui="join-dead">
+            <p className="m-0 mt-2 text-body text-ink-soft">{dead.host ? t("auth.deadHost", { host: dead.host }) : t("auth.deadNoHost")}</p>
+            <div className="flex-1" />
+            {signInButton}
+          </div>
+        )}
+
+        {stage === "full" && (
+          <div className="flex flex-1 flex-col" data-ui="join-full">
+            <p className="m-0 mt-2 text-body text-ink-soft">{t("auth.fullSub")}</p>
+            <div className="flex-1" />
+            {signInButton}
+          </div>
+        )}
+
+        {stage === "paste" && (
+          <form
+            className="flex flex-1 flex-col"
+            data-ui="paste-link"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void pasteSubmit();
+            }}
+          >
+            <p className="m-0 mt-2 text-body text-ink-soft">{t("auth.pasteSub")}</p>
+            <Field label={t("auth.pasteLabel")}>
+              <input className={input} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder={t("auth.pastePh")} dir="ltr" autoFocus autoCapitalize="off" autoCorrect="off" />
+            </Field>
+            <ErrorLine text={error} />
+            <div className="flex-1" />
+            <Button type="submit" className="mt-8 w-full" disabled={busy || !paste.trim()}>
+              {t("auth.openLink")}
+            </Button>
+          </form>
+        )}
+
+        {stage === "other-side" && (
           <OtherSide
             onDone={async (names) => {
               setFarNames(names);
               const out = await postJson<{ invite: { code: string } }>("/api/invites", {});
               setInvite(out?.invite.code ?? null);
-              setStep("invite");
+              setStage("invite");
             }}
             onSkip={enter}
           />
         )}
 
-        {step === "invite" && <InviteStep code={invite} names={farNames} from={callName.trim() || firstName.trim()} onDone={enter} />}
+        {stage === "invite" && <InviteStep code={invite} names={farNames} from={firstName.trim()} onDone={enter} />}
       </div>
     </div>
   );
@@ -722,7 +898,7 @@ function InviteStep({ code, names, from, onDone }: { code: string | null; names:
   return (
     <div className="flex flex-1 flex-col">
       <p className="m-0 mt-2 text-body text-ink-soft">{t("invite.sub")}</p>
-      <p data-display dir="ltr" className="tnum m-0 mt-6 rounded-[22px] bg-surface py-4 text-center text-display font-bold tracking-[0.12em]">{code}</p>
+      <p dir="ltr" className="m-0 mt-6 break-all rounded-[22px] bg-surface px-4 py-4 text-center text-headline font-semibold" data-ui="invite-link">{origin ? joinLink(origin, code).replace(/^https?:\/\//, "") : code}</p>
       <p className="m-0 mt-2 text-center text-footnote text-ink-faint">{t("invite.valid")}</p>
       <div className="flex-1" />
       <a href={whatsappInvite(origin, code, from || undefined)} target="_blank" rel="noopener noreferrer" className="press mt-8 flex h-12 items-center justify-center gap-2 rounded-full bg-accent text-body font-semibold text-accent-ink no-underline">

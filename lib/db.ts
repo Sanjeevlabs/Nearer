@@ -53,6 +53,7 @@ import {
   setSuggestionStatus as memSetSuggestionStatus,
   mockAddMember as memAddMember,
   revokeInvite as memRevokeInvite,
+  revokeInvitesBy as memRevokeInvitesBy,
   updateCard as memUpdateCard,
   deleteCard as memDeleteCard,
   removeReaction as memRemoveReaction,
@@ -977,16 +978,18 @@ export async function dbListInvites(): Promise<Invite[]> {
  * invites. Demo invites live in memory and are checked first, like
  * dbListInvites merges them.
  */
-export async function dbFindInvite(code: string): Promise<Invite | undefined> {
+/** A live invite by code. `{ expired: true }` also finds one past its 7 days (to say whom to ask for a new one); a revoked code is gone either way. */
+export async function dbFindInvite(code: string, opts: { expired?: boolean } = {}): Promise<Invite | undefined> {
   const want = code.trim().toUpperCase();
   if (!want) return undefined;
   const nowMs = Date.now();
-  const match = (i: Invite) => i.code.toUpperCase() === want && new Date(i.expiresAt).getTime() > nowMs;
+  const match = (i: Invite) => i.code.toUpperCase() === want && (opts.expired || new Date(i.expiresAt).getTime() > nowMs);
   const sb = dbFor(null);
   if (!sb) return memListInvites().find(match);
   const demo = memListInvites().find((i) => isDemoFamily(i.familyId) && match(i));
   if (demo) return demo;
-  const { data, error } = await sb.from("invites").select("*").eq("code", want).gt("expires_at", new Date(nowMs).toISOString()).limit(1);
+  const base = sb.from("invites").select("*").eq("code", want);
+  const { data, error } = await (opts.expired ? base : base.gt("expires_at", new Date(nowMs).toISOString())).limit(1);
   if (error) throw new DbReadError("invites", error.message);
   if (!data) return memListInvites().find(match);
   const r = data[0];
@@ -1067,8 +1070,13 @@ export async function dbRemoveMember(memberId: string): Promise<boolean> {
   await revokeMembers([memberId]).catch(() => undefined);
   // Their phones stop receiving at once (the database cascades too, memory does not).
   if (fam) await removeAllForMember(fam, memberId).catch(() => undefined);
+  // Links they shared die with their place: join needs no approval, so a removed person's link must not
+  // keep letting people in (the database would only null created_by, which reads as a maker-less link).
+  memRevokeInvitesBy(memberId);
   const sb = dbFor(fam);
   if (!sb) return memRemoveMember(memberId);
+  const gone = await sb.from("invites").delete().eq("created_by", memberId);
+  if (gone.error) return false;
   await sb.from("relationships").delete().or(`member_id.eq.${memberId},relation_member_id.eq.${memberId}`);
   const tables = ["wishes", "reactions", "plays", "daily_roles"];
   for (const t of tables) {

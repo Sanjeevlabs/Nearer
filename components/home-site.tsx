@@ -1,14 +1,12 @@
 "use client";
 
-import { entryHref } from "@/lib/auth-session";
-import { liveAuth } from "@/lib/supabase-browser";
 import { Lockup, Mark, Wordmark } from "./brand";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 
 // The home page, phone first: what Nearer is and the way in (Open Nearer when signed in;
-// the demo, create and sign-in when not). On a laptop or a projector it also shows a QR
+// the demo and Sign in when not: one door for new and returning people, invited people come by their link). On a laptop or a projector it also shows a QR
 // code that opens the demo family on a phone. The installed app skips it (components/welcome.tsx).
 
 // What a family chat can't do, in the words people use. Facts about the app, no claims about outcomes.
@@ -48,14 +46,9 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
               Open Nearer
             </button>
           ) : (
-            <>
-              <Link href="/signin" className="flex min-h-11 items-center text-ink-soft no-underline hover:text-ink">
-                Sign in
-              </Link>
-              <Link href={entryHref(liveAuth(), "create")} className="press flex min-h-11 items-center rounded-full bg-accent px-4 py-2 font-semibold text-accent-ink no-underline">
-                Start your family
-              </Link>
-            </>
+            <Link href="/signin" className="press flex min-h-11 items-center rounded-full bg-accent px-4 py-2 font-semibold text-accent-ink no-underline" data-ui="home-signin">
+              Sign in
+            </Link>
           )}
         </nav>
       </header>
@@ -92,10 +85,7 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
                   {busy ? "Opening…" : "Try the demo family"}
                 </button>
                 <p className="m-0 -mt-1 text-center text-footnote text-ink-soft">No sign-up. Opens a demo family.</p>
-                <Link href={entryHref(liveAuth(), "create")} className="press flex h-[50px] items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
-                  Start your family
-                </Link>
-                <Link href="/signin" className="flex h-11 items-center justify-center text-body font-medium text-ink-soft no-underline">
+                <Link href="/signin" className="press flex h-[50px] items-center justify-center rounded-full bg-tint text-body font-semibold text-ink no-underline">
                   Sign in
                 </Link>
               </>
@@ -194,9 +184,6 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
           <span className="flex gap-5">
             <Link href="/privacy" className="text-ink-soft no-underline hover:text-ink">
               Privacy
-            </Link>
-            <Link href={entryHref(liveAuth(), "join")} className="text-ink-soft no-underline hover:text-ink">
-              Join with a code
             </Link>
           </span>
         </div>
