@@ -26,7 +26,7 @@ The first focus is the parent far away. Every screen either lets the family **as
 
 Kids and grandparents get the same window: a child's day reaches a grandparent in words and pictures, and a grandparent can ask the children for the one thing only they can give.
 
-The app itself is in English. What the family shares — voices, recipes, questions, care notes — reaches each person in their own language: 29 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic, and Chinese.
+The app itself is in English. What the family shares — voices, recipes, questions, care notes — reaches each person in their own language: 55 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic, and Chinese.
 
 ## The app and the rooms
 

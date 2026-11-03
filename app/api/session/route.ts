@@ -38,7 +38,10 @@ export async function POST(req: Request): Promise<Response> {
   const demoCode = sent === DEMO_INVITE_CODE || sent === LEGACY_DEMO_CODE;
   // The per-member limit slows invite-code guessing; the public demo code has
   // nothing to guess, and every demo visitor asks for the same seed member.
-  if (!allowAuthAttempt(`session:${ip}`, 20) || (!demoCode && typeof claimed === "string" && !allowAuthAttempt(`session-member:${claimed}`, 10))) return Response.json({ error: "too-many-attempts" }, { status: 429 });
+  // The public demo has its own, roomier allowance: a room of judges on one office network
+  // must all get in. Real invite codes keep the tight per-address limit.
+  const perAddress = demoCode ? allowAuthAttempt(`session-demo:${ip}`, 200) : allowAuthAttempt(`session:${ip}`, 20);
+  if (!perAddress || (!demoCode && typeof claimed === "string" && !allowAuthAttempt(`session-member:${claimed}`, 10))) return Response.json({ error: "too-many-attempts" }, { status: 429 });
   const parsed = ExchangeSchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "invalid-session" }, { status: 400 });
   const trimmed = parsed.data.inviteCode.trim();

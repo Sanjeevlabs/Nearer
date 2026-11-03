@@ -328,3 +328,31 @@
 - Ask the family (Memories, "Ask"): a question is answered only from this family's own voice transcripts, recipes, stories and Book answers. Keyword ranking (BM25 with near-spelling matches) picks 8 passages; Muse Spark writes a short answer from them and cites each by card and moment; every quote is checked against its passage (fuzzy 0.9) or dropped, and no answer without a surviving quote is shown. Nothing found: "No one in the family has said that yet", with a one-tap ask by voice. Cached 24 h, rate-limited, logged in What Muse did.
 - The Book, printable: Download the book opens A5 pages (cover with portrait, a chapter per page, a QR to each voice); Save as PDF from the print dialog.
 - This week in your family: on Saturday the week's most heard or blessed voice note, or a recipe someone cooked, arrives as one nudge with Sunday's letter. Outside the 3-a-week event count; off for anyone at 0 a week.
+
+## 2 Nov 2026 · Black and white, light only, the lamp for two hours
+
+- The look: black and white on a neutral light background (#fafafa), light mode only on every device; room headers name the room beside the back arrow, with its pages as pills below.
+- The lamp glows for 2 hours and tells the other person "{name} is thinking of you" (one push per pair per 2 h, quiet hours respected).
+- Muse reliability: structured calls get room for reasoning tokens (they were truncated and fell back every time), tolerant JSON parsing, and every fallback logs why.
+- The home page plays a short film of the product, loaded only when someone presses play.
+- Pages and data retry once when the host cuts a request off under its CPU limit.
+
+## 2 Nov 2026 · Closer and truthful
+
+- Spend a little time together, under the lamp: open your door for chai, dinner, a catch-up, a story; choose who and for how long. The other home sees "Maa's door is open · until 8:15" with Join and Not now. Nothing fabricated: the seeded "evening chai" door is gone.
+- Consent before every call: Join with audio, Join with video, or Not now; no camera or microphone before the tap; a closed or expired door can't be joined, and a door closed mid-call says so within a minute.
+- "Can I sit with you?": a door for one person, one push, never resent.
+- Two touches meet (experiment): both hold the lamp at the same moment and both lamps glow (Supabase Realtime presence, connected only while holding).
+- Truthful states: "Safe & sound · all good" became "Their day": their time, their sky and what they chose to share. The lamp means only "thinking of you"; the quiet-morning note is opt-in; today's answers are never sealed; no streaks.
+- How to listen (Just listen · Help me think · Keep me company) on a voice memory, seen only by the person it's for; Remind me to ask, private, in For you on the day.
+- Five rooms: Living Room, Memories, Kitchen, Our People, Care.
+- Demo: after opening a door, "see it arrive on their side" gives a second phone a 30-minute pass to be Maa in the same demo family.
+
+## 3 Nov 2026 · The family, polished and fast
+
+- Each home shows its own Muse-made home photo (the Sharma courtyard, the Iyer balcony), or the family's own.
+- The Iyer side is a full home: Amma's rasam taught by voice, her story, Appa's blessing, photos from Chennai and Pune, Diwali.
+- Voice memories (renamed from voice notes): star ⭐ the ones to keep forever; filter by person or Starred; search captions, transcripts, places and dates.
+- Elders see story prompts and today's question in their own language, in large type, kept on screen while they record.
+- Speed: the first screen starts all its reads at once (one request carries the session, the family and how everyone is related); the courtyard reads in two waves; switching sides is instant, with no reload. Measured live: courtyard ready in 2.7 s, side switch instant, demo copy made in about 4 s.
+- A host hiccup never signs anyone out. The demo sign-in has its own allowance, so a room of judges on one network all get in.

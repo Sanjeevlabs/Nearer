@@ -19,7 +19,7 @@ Muse is the family's helper, never a family member, chatbot, or tab. It appears 
 | Add sheet, photo or video | Writes a caption from what is visible and dates it, photo metadata first, never the future | `muse-spark-1.3` vision |
 | Add sheet, single photo | "Old photo? Let Muse restore it": cleans scratches and fading, keeps faces, original and restored side by side | `muse-image-1.0` |
 | Voice notes, everywhere | Transcribes voice notes, wishes, blessings, stories, and requests | `muse-voice-transcribe-1.0` |
-| Anything someone said or wrote | Translates the whole card at once, in the person's own language, 29 languages | `muse-spark-1.3` |
+| Anything someone said or wrote | Translates the whole card at once, in the person's own language, 55 languages | `muse-spark-1.3` |
 | Morning letter | Suggests holding a voice note until 7:30 AM their time when it is night where they are | none, rule only |
 | Family page, Today | Chooses today's shared question for both homes | `muse-spark-1.3` |
 | Family page, Now in the family | "Muse made this for you": at most one card, weekly, a portrait or "this day, N years ago" from a real photo | none, offer only |

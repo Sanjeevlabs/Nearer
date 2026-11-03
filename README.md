@@ -2,29 +2,29 @@
 
 **The window between two homes.**
 
-Nearer opens onto the people you love: their live time, weather and sky, a **Safe & sound** that says they are well (hers to turn on, never a tracker), and a **lamp** you light so they know you are thinking of them. When you want more than a glance you **Sit together** at a venue (a kitchen table, a courtyard, a balcony) and the video room is already there. It is built for families split by distance: two homes, one window, and nothing crosses between them unless someone shares it.
+Arjun lives in Bengaluru. His parents, Maa and Papa, live in Amritsar, 1,600 km away. At 8 PM he opens Nearer and sees their window: their sky right now, the time there, and what they chose to share today ("Maa · visitors, 7:00 PM"). He doesn't call to check. He looks. He taps the **lamp**, and Maa's phone says *Arjun is thinking of you*. Maa has **opened her door** for chai; he joins with his voice, and nothing starts until he taps. Last week she taught him her dal by voice, in Hindi; Muse wrote it down as a recipe in English. On Sunday he cooked it, and Maa saw *Arjun cooked your dal*. Diwali is in five days: Dadi (Maa, to his children) leads, the kids record their wishes, and on the day the **Chorus** plays them one after another. Her voice stays in **Memories**, starred, searchable and in the family's Book.
 
-Kids and grandparents get the same window: a child's day reaches a grandparent in words and pictures, and a grandparent can ask the children for the one thing only they can give. **Muse** (Meta's model) is the family agent behind it: it drafts the morning letter, keeps recipes and stories, suggests what to send, and every output is schema-checked, grounded in the family's own data and spend-capped.
+That is the whole product: **a window between two homes** that keeps parents **needed, not monitored**. Nothing is inferred from app use, the clock or silence: the app shows only what someone chose to share.
 
-Values, in priority order: **Needed** (elders give and have a role) · **Heard** (acknowledgement) · **Present** (together at the same time) · **Remembered** (memories) · **Never watched** (no monitoring, no guilt). Nearer is calm by design: no stories, status, counts, comments, or infinite feed.
+Values, in priority order: **Needed** (elders give and have a role) · **Heard** (acknowledgement) · **Present** (together at the same time, by invitation) · **Remembered** (memories) · **Never watched** (no monitoring, no guilt, no streaks, no sealed answers). Calm by design: no feed, no counts, no status.
 
-The app itself is in English. What the family shares (voices, recipes, questions, care notes) reaches each person in their own language: 29 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic, Chinese and more (`lib/languages.ts`).
+The app itself is in English. What the family shares (voices, recipes, questions, notes) reaches each person in their own language: 55 languages, including Hindi, Hinglish, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Urdu, Spanish, Arabic and Chinese (`lib/languages.ts`). Elders see prompts in their own language, in large type, while they record.
 
-Live: https://nearer.site (tap *Try the demo family*, or use the code `NEARER-DEMO`).
+Live: https://nearer.site (tap *Try the demo family*, or use the code `NEARER-DEMO`). To see both homes, open a door as Arjun, tap *Demo: see it arrive on their side*, and scan the code on a second phone: it becomes Maa in the same demo family.
 
 ### One hero: the parent far away
 
-**Nearer keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or keeps them **able to give**.
+**Nearer keeps your parents needed.** Older adults who rarely feel useful to others have about three times the odds of disability and death over seven years (Gruenewald et al., MacArthur Study, 2007); grandparents who only *receive* help have the most depressive symptoms, those who give have the fewest (Moorman & Stokes, 2013). So every screen either lets the family **ask** a parent for what only they have, lets the parent **give** and see that it landed, or brings them **together** by invitation.
 
-The first screen is the window onto the parents' home (safe & sound, a voice note, a video call, send them something). Slide the key and you're inside; the house in the dock opens the five rooms:
+The first screen is the window onto the parents' home: **Their day** (their time, sky and what they shared), the **lamp** (a 2-hour glow and a "thinking of you" note; never a check-in), and **Spend a little time together** (an open door for chai, dinner, a story; join with audio or video only after a tap). Slide the key and you're inside; the house opens five rooms:
 
 | Room | Tabs |
 |---|---|
-| **Memories** | Memory Lane (everyday photos and voices) · Stories |
-| **Kitchen** | Recipes |
-| **Care** | Send something (their apps by category, plus Muse's ideas) · Care tasks · Helpers · Nearby |
-| **Family** | Family tree · The Book · Advice · Portrait |
-| **Celebrations** | Coming up · Occasions (photos and voices from every birthday, wedding and festival) · Visits · Holidays · Play |
+| **Living Room** | Time together · Coming up · Occasions (wishes and the Chorus) |
+| **Memories** | Memory Lane (photos and voice memories, ⭐ starred, searchable) · Stories · The Book · Advice · Ask the family |
+| **Kitchen** | Recipes (taught by voice, scanned from a card) |
+| **Our People** | Family tree · Homes · Kids · Visits |
+| **Care** | Care tasks · Helpers · Nearby (who to call first) |
 
 ### Two homes, one window
 
@@ -62,7 +62,7 @@ Every model called at runtime is a Meta model. Muse is the family's helper, but 
 | `muse-spark-1.3` · structured output | **Recipe scribe**: a spoken recipe → a card in the cook's own measures, grounding-checked so no ingredient is invented (`lib/kitchen.ts`) |
 | | **Story keeper**: one gentle question a week per elder, in their language, never repeated (`lib/keeper.ts`) |
 | | **Care**: a spoken need → a task; a reassurance note for the parent in their language (`lib/care.ts`) |
-| | **Translation into 29 languages**: voices, recipes (the whole card at once), questions, notes |
+| | **Translation into 55 languages**: voices, recipes (the whole card at once), questions, notes |
 | | Memory-card captions incl. video understanding, kinship terms, Gather playlists, the ritual agent's tool-calling loop, search-grounded movable festival dates |
 | `muse-image-1.0` | **Family portrait**: one painted group portrait from the family's own photos (watercolour, oil, pencil, festive), marked "Painted by Muse" in the pixels, kept only on Keep (`lib/muse-image.ts`, `/portrait`) |
 | | **Restore an old photo** from the add sheet, side by side with the original, marked "Restored by Muse" |
@@ -89,7 +89,7 @@ How it is kept safe and cheap:
 - **Sharing** is opt-in, a frozen copy behind a 144-bit token, `noindex`, revocable. Export strips emails, Muse logs and safety locations.
 - **AI:** every Muse output is schema-validated with a grounding check and a safe fallback; spend-capped; logged.
 
-Privacy: presence is only what a parent chooses to share. The "quiet day" note is opt-in and owned by the parent, goes to the one person they chose, and is judged against their own usual rhythm. Nothing is tracked.
+Privacy: the window shows only what someone chose to share. App opens, the lamp and the clock are never read as "all good", "asleep" or "available". The "quiet morning" note exists only if the parent turns it on, and goes to the one person they chose. Calls start only after a tap on a consent screen (audio-only always offered). Nothing is tracked.
 
 ## AI-assistance disclosure
 
