@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -32,18 +33,26 @@ export default function RecipePage() {
   const { refreshKey } = useShell();
   const { cards } = useFamilyCards(refreshKey);
   const { play, current, isPlaying, toggle } = usePlayer();
-  const { data, failed, reload } = useJson<Payload>(`/api/kitchen/${encodeURIComponent(id)}?lang=${encodeURIComponent(displayLang)}`);
+  const { data, failed, notFound, reload } = useJson<Payload>(`/api/kitchen/${encodeURIComponent(id)}?lang=${encodeURIComponent(displayLang)}`);
   const [showOriginal, setShowOriginal] = useState(false);
   const search = useSearchParams();
   const [editing, setEditing] = useState(search.get("edit") === "1");
   const [have, setHave] = useState<Set<number>>(new Set());
   const router = useRouter();
 
-  if (failed) {
+  if (notFound) {
     return (
       <div>
         <RoomHeader title="Recipe" />
         <EmptyLine>This recipe isn&rsquo;t in your family&rsquo;s Kitchen.</EmptyLine>
+      </div>
+    );
+  }
+  if (failed && !data) {
+    return (
+      <div>
+        <RoomHeader title="Recipe" />
+        <LoadFailed what="This recipe" ui="recipe-retry" onRetry={() => void reload()} />
       </div>
     );
   }

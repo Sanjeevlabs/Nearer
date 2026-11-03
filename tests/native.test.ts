@@ -47,11 +47,6 @@ vi.mock("@capacitor/push-notifications", () => ({
 import * as native from "@/lib/native";
 
 const g = globalThis as unknown as { window?: unknown; navigator?: unknown };
-const tick = () => new Promise((r) => setTimeout(r, 5));
-/** Wait (up to ~1 s) for a condition that follows a dynamic import, whose timing a busy runner stretches. */
-async function until(cond: () => boolean): Promise<void> {
-  for (let i = 0; i < 200 && !cond(); i++) await tick();
-}
 
 function fakeWindow(nativeApp: boolean, platform = "android") {
   g.window = {
@@ -131,15 +126,16 @@ describe("in the native app", () => {
     fakeWindow(true);
     const routes: string[] = [];
     const off = native.onAppUrlOpen((r) => routes.push(r));
-    await tick();
-    appUrlListener?.({ url: "site.nearer.app://auth/callback?code=z" });
-    appUrlListener?.({ url: "https://elsewhere.example/" });
-    await until(() => calls.includes("close"));
+    const listener = await vi.waitFor(() => {
+      if (!appUrlListener) throw new Error("appUrlOpen listener was not registered");
+      return appUrlListener;
+    });
+    listener({ url: "site.nearer.app://auth/callback?code=z" });
+    listener({ url: "https://elsewhere.example/" });
     expect(routes).toEqual(["/auth/callback?code=z"]);
-    expect(calls).toContain("close");
+    await vi.waitFor(() => expect(calls).toContain("close"));
     off();
-    await until(() => calls.includes("removed"));
-    expect(calls).toContain("removed");
+    await vi.waitFor(() => expect(calls).toContain("removed"));
   });
   it("asks permission and returns the push token", async () => {
     fakeWindow(true);

@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Carousel } from "@/components/carousel";
@@ -69,12 +70,7 @@ export default function GatherPage() {
     return (
       <div>
         <RoomHeader title="Coming up" />
-        <div className="rounded-[28px] bg-card p-4 shadow-card" role="alert">
-          <p className="m-0 text-headline font-semibold">Couldn&rsquo;t load your celebrations.</p>
-          <Button variant="secondary" className="mt-3 !bg-well" onClick={() => void reload()}>
-            Try again
-          </Button>
-        </div>
+        <LoadFailed what="Celebrations" ui="gather-retry" onRetry={() => void reload()} />
       </div>
     );
   }

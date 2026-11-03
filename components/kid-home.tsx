@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { timeIn } from "@/lib/zones";
 import { grandparentsOf, guardiansOf } from "@/lib/kids";
 import { callName, memberPhoto } from "@/lib/people";
+import { LoadFailed } from "./load-failed";
+import { loadView } from "@/lib/load-state";
 import { useFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
 import { usePlayer } from "./player";
@@ -36,13 +38,15 @@ function BigButton({ label, hint, icon, tone, onClick }: { label: string; hint: 
 function Tonight() {
   const { members, viewer } = useViewer();
   const { refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
   const { play, current, isPlaying, toggle } = usePlayer();
   const tonight = useJson<{ tonight: { id: string; byMemberId: string; cardId: string | null; at: string } | null; open: boolean }>("/api/bedtime", { every: 120_000 });
   const [asked, setAsked] = useState(false);
   const t = tonight.data?.tonight ?? null;
   const by = members.find((m) => m.id === t?.byMemberId);
   const card = cards?.find((c) => c.id === t?.cardId);
+  // The read failed, or it came but the cards did not: say so rather than a skeleton that never ends or "no story yet".
+  const view = loadView({ loading: tonight.data === null || (Boolean(t) && !card && cards === null), failed: (tonight.failed && tonight.data === null) || (Boolean(t) && !card && cardsFailed), hasData: Boolean(card) });
   const playing = Boolean(card && current?.id === card.id && isPlaying);
 
   const another = async () => {
@@ -54,12 +58,14 @@ function Tonight() {
   return (
     <section data-ui="kid-tonight" aria-label="Tonight's story" className="mt-8">
       <h2 className="m-0 text-title">{by ? `${callName(by)}’s story for tonight` : "Your story for tonight"}</h2>
-      {tonight.data === null ? (
+      {view === "failed" ? (
+        <div className="mt-3">
+          <LoadFailed what="Tonight's story" ui="kid-tonight-retry" onRetry={() => { void tonight.reload(); retryCards(); }} />
+        </div>
+      ) : view === "loading" ? (
         <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
-      ) : !t ? (
+      ) : !t || !card ? (
         <p className="m-0 mt-2 text-headline leading-snug text-ink-soft">No story yet. Ask for one with the big Ask button!</p>
-      ) : !card ? (
-        <div className="skeleton mt-3 h-[96px] rounded-[26px]" />
       ) : (
         <div className="mt-3 rounded-[26px] bg-surface p-4" style={{ boxShadow: "var(--surface-edge)" }}>
           <div className="flex items-center gap-4">

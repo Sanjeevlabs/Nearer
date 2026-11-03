@@ -6,6 +6,7 @@ import type { Suggestion } from "@/lib/schemas";
 import { useRouter } from "next/navigation";
 import { FestivalStepsSheet, useFestivalWeek } from "./festival-header";
 import { useViewer } from "./viewer";
+import { fetchGet } from "@/lib/retry";
 
 // "Nearer suggests · Review / Approve" — flat surface card. Actions execute
 // ONLY after approval (POST to the approve route).
@@ -22,7 +23,7 @@ export function Suggestions({ compact }: { compact?: boolean }) {
   const load = useCallback(async () => {
     setFailed(false);
     try {
-      const res = await fetch("/api/suggestions?status=pending", { cache: "no-store" });
+      const res = await fetchGet("/api/suggestions?status=pending");
       if (!res.ok) throw new Error("suggestions-fetch-failed");
       setItems(((await res.json()) as { suggestions: Suggestion[] }).suggestions);
     } catch {

@@ -10,6 +10,8 @@ import { canvasBlob, keepRender, markResult, paintSamplePortrait } from "@/lib/m
 import { canInclude, canStartPortrait, PORTRAIT_MARK, PORTRAIT_MAX_PEOPLE, PORTRAIT_STYLES, STYLE_LOOK, type PortraitStyle } from "@/lib/muse-portrait";
 import { callName, memberPhoto } from "@/lib/people";
 import type { Card, Member } from "@/lib/schemas";
+import { LoadFailed } from "@/components/load-failed";
+import { loadView } from "@/lib/load-state";
 import { useFamilyCards } from "@/lib/use-family";
 import { useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
@@ -36,7 +38,7 @@ function photoOf(card: Card | undefined): string | null {
 function PortraitInner() {
   const { viewer, members, relationships } = useViewer();
   const params = useSearchParams();
-  const { cards } = useFamilyCards();
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards();
   const quota = useJson<{ left: number; sample: boolean }>("/api/muse/portrait");
   const allowed = canStartPortrait(viewer);
 
@@ -183,6 +185,11 @@ function PortraitInner() {
       <RoomHeader title="Portrait" subtitle="Muse paints all of you, from your own photos" />
 
       <SectionTitle>Who&rsquo;s in it</SectionTitle>
+      {people.length > 0 && loadView({ loading: cards === null, failed: cardsFailed, hasData: photoCards.length > 0 }) === "failed" && (
+        <div className="mb-3">
+          <LoadFailed what="The family's photos" ui="portrait-retry" onRetry={retryCards} />
+        </div>
+      )}
       {people.length === 0 ? (
         <div className="skeleton h-[200px] rounded-card" aria-busy="true" aria-label="Loading your family" />
       ) : (

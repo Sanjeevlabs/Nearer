@@ -7,6 +7,7 @@ import { postJson } from "@/lib/use-json";
 import { BottomSheet } from "./ui/bottom-sheet";
 import { Button, Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
+import { fetchGet } from "@/lib/retry";
 
 // Invite family, in place: one code (a live one if there is, else a new one)
 // and the one-tap WhatsApp invite. Opened from the tree, the dock and the
@@ -15,7 +16,7 @@ import { useViewer } from "./viewer";
 /** A live invite code for this family, making one if none is left. Null when that fails. */
 export async function inviteCode(): Promise<string | null> {
   try {
-    const res = await fetch("/api/invites", { cache: "no-store" });
+    const res = await fetchGet("/api/invites");
     const d = (await res.json()) as { invites?: { code: string; expiresAt: string }[] };
     const live = (d.invites ?? []).find((i) => Date.parse(i.expiresAt) > Date.now())?.code;
     if (live) return live;

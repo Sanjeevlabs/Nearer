@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { clearSwCachesQuietly } from "./sw-clear";
 import { useCourtyardSlice } from "./courtyard-data";
 import { dropEarly, takeEarly } from "./early";
 import { EARLY_WAIT_MS, fetchWithTimeout, raceTimeout } from "./first-screen";
+import { attemptInit, retryGet } from "./retry";
 
 // Last good payload per URL: a route paints from it at once and refreshes in
 // the background. Kept in memory and (small payloads) in sessionStorage.
@@ -163,7 +165,10 @@ export function watchWrites(): () => void {
       const method = init?.method ?? (typeof input === "object" && "method" in input ? input.method : undefined);
       if (res.ok && isChangingWrite(url, method, init?.body)) invalidateJson(scopeOfWrite(url) ?? undefined);
       // The session is gone: nothing cached may paint for the next person.
-      if (res.status === 401 && new URL(url, "http://x").pathname.startsWith("/api/")) clearJsonCache();
+      if (res.status === 401 && new URL(url, "http://x").pathname.startsWith("/api/")) {
+        clearJsonCache();
+        void clearSwCachesQuietly();
+      }
     } catch {
       /* never break a request for bookkeeping */
     }
@@ -176,7 +181,7 @@ export function watchWrites(): () => void {
 }
 
 // A fetch started early (prefetchJson), shared with every hook that mounts a moment later.
-const flights = new Map<string, Promise<{ data: unknown; stale: boolean; failed: boolean }>>();
+const flights = new Map<string, Promise<{ data: unknown; stale: boolean; failed: boolean; status?: number }>>();
 
 /** Start fetching `url` now (before the screen that reads it has mounted); the hook picks up the same request. */
 export function prefetchJson(url: string): void {
@@ -193,22 +198,20 @@ export function prefetchJson(url: string): void {
  * whatever was cached: `stale` is true (show a quiet "offline" hint), and
  * `failed` only when there is nothing at all to show.
  */
-const RETRYABLE = new Set([502, 503, 504]);
-
-export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fetch(...a)): Promise<{ data: T | null; stale: boolean; failed: boolean }> {
+export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fetch(...a)): Promise<{ data: T | null; stale: boolean; failed: boolean; status?: number }> {
   const gen = authGen;
+  let status: number | undefined;
   try {
     // The first screen's request may already be on its way (lib/early.ts).
     const early = takeEarly(url);
     // Nothing waits forever: a request that does not answer in time ends as a failure (a retry card, never a skeleton).
-    const ask = () => fetchWithTimeout(f, url, { cache: "no-store" });
-    let res = early ? await raceTimeout(early, EARLY_WAIT_MS).catch(ask) : await ask();
-    // The host sometimes cuts one request off (a 503 under its CPU limit): one quiet retry.
-    if (RETRYABLE.has(res.status)) {
-      await new Promise((r) => setTimeout(r, 250));
-      res = await ask();
+    // The host sometimes cuts one request off (a 503 under its CPU limit): up to 3 quiet retries (lib/retry.ts).
+    const ask = (n: number, left?: number) => fetchWithTimeout(f, url, attemptInit(n, { cache: "no-store" }), left);
+    const res = await retryGet((n, left) => (n === 0 && early ? raceTimeout(early, EARLY_WAIT_MS).catch(() => ask(n, left)) : ask(n, left)));
+    if (!res.ok) {
+      status = res.status;
+      throw new Error(String(res.status));
     }
-    if (!res.ok) throw new Error(String(res.status));
     const json = (await res.json()) as T;
     // Read for the last person or family: never cached, never shown.
     if (gen !== authGen) return { data: null, stale: false, failed: false };
@@ -216,7 +219,7 @@ export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fet
     return { data: json, stale: false, failed: false };
   } catch {
     const kept = readCache<T>(url);
-    return { data: kept, stale: kept !== null, failed: kept === null };
+    return { data: kept, stale: kept !== null, failed: kept === null, status };
   }
 }
 
@@ -229,7 +232,7 @@ export async function revalidate<T>(url: string, f: typeof fetch = (...a) => fet
  * payload comes from the one shared GET /api/courtyard (lib/courtyard-data.tsx)
  * and this hook does not fetch.
  */
-export function useJson<T>(wanted: string | null, opts?: { every?: number }): { data: T | null; stale: boolean; failed: boolean; reload: () => Promise<void> } {
+export function useJson<T>(wanted: string | null, opts?: { every?: number }): { data: T | null; stale: boolean; failed: boolean; notFound: boolean; reload: () => Promise<void> } {
   const shared = useCourtyardSlice(wanted);
   const url = shared ? null : wanted;
   const every = opts?.every;
@@ -237,20 +240,25 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
   const [data, setData] = useState<T | null>(() => (url && cache.has(url) ? (cache.get(url) as T) : null));
   const [stale, setStale] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const live = useRef(true);
   const load = useCallback(async (quiet: boolean, mount = false) => {
     if (!url) return;
-    if (!quiet) setFailed(false);
+    if (!quiet) {
+      setFailed(false);
+      setNotFound(false);
+    }
     const gen = authGen;
     // A first load shares a request already in flight (prefetchJson); a refresh always asks again.
     // Two readers of one url mounting together (the shell's and a room's) make one request, not two.
     if (mount && !quiet && !flights.has(url)) prefetchJson(url);
-    const early = quiet ? undefined : (flights.get(url) as Promise<{ data: T | null; stale: boolean; failed: boolean }> | undefined);
+    const early = quiet ? undefined : (flights.get(url) as Promise<{ data: T | null; stale: boolean; failed: boolean; status?: number }> | undefined);
     const r = early ? await early : await revalidate<T>(url);
     if (!live.current || gen !== authGen) return;
     if (r.data !== null) setData(r.data);
     setStale(r.stale);
     setFailed(!quiet && r.failed);
+    setNotFound(!quiet && r.failed && r.status === 404);
   }, [url]);
   useEffect(() => {
     live.current = true;
@@ -291,8 +299,8 @@ export function useJson<T>(wanted: string | null, opts?: { every?: number }): { 
       document.removeEventListener("visibilitychange", tick);
     };
   }, [url, every, load]);
-  if (shared) return { data: (shared.data ?? null) as T | null, stale: false, failed: false, reload: shared.reload };
-  return { data, stale, failed, reload };
+  if (shared) return { data: (shared.data ?? null) as T | null, stale: false, failed: false, notFound: false, reload: shared.reload };
+  return { data, stale, failed, notFound: notFound && data === null, reload };
 }
 
 /** POST JSON; returns parsed body or null on failure. */
