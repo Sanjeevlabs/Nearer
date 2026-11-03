@@ -6,7 +6,7 @@ import { Avatar, Icon } from "@/components/ui/kit";
 import { useShell } from "@/components/shell";
 import { VenueScene, type Sitter } from "@/components/venue-scene";
 import { useViewer } from "@/components/viewer";
-import { deniedReason, jitsiConfig, jitsiHash, mediaAllowed, stillOpen, type CallPhase, type JoinMedia } from "@/lib/call-gate";
+import { CALL_TOOLBAR, deniedReason, jitsiConfig, jitsiHash, mediaAllowed, stillOpen, type CallPhase, type JoinMedia } from "@/lib/call-gate";
 import { doorLine } from "@/lib/doors";
 import type { Knock, Sitting } from "@/lib/kinds";
 import type { Member } from "@/lib/schemas";
@@ -39,28 +39,6 @@ type RoomInfo = { provider: "jaas" | "jitsi"; domain: string; appId?: string; ro
 const roomName = (r: RoomInfo) => (r.provider === "jaas" ? `${r.appId}/${r.room}` : r.room);
 const scriptFor = (r: RoomInfo) => (r.provider === "jaas" ? `https://${r.domain}/${r.appId}/external_api.js` : `https://${r.domain}/external_api.js`);
 
-/** The venue photo as a data URL (the call's background must not taint its canvas); the plain URL if that fails. */
-async function backgroundFor(path: string): Promise<string> {
-  const url = new URL(path, window.location.origin).href;
-  try {
-    const blob = await (await fetch(url)).blob();
-    return await new Promise<string>((ok, no) => {
-      const r = new FileReader();
-      r.onload = () => ok(String(r.result));
-      r.onerror = () => no(r.error);
-      r.readAsDataURL(blob);
-    });
-  } catch {
-    return url;
-  }
-}
-
-/** Elders' phones: fewer cores or little memory means no virtual background by default. */
-function lowEndDevice(): boolean {
-  const n = navigator as Navigator & { deviceMemory?: number };
-  return (n.hardwareConcurrency ?? 8) <= 4 || (n.deviceMemory ?? 8) <= 4;
-}
-
 /** Ask the browser once, after the tap, so a block shows our calm message instead of a blank room. */
 async function askBrowser(media: JoinMedia): Promise<"ok" | "blocked" | "missing"> {
   const md = typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
@@ -90,11 +68,9 @@ export default function CallPage() {
   const [info, setInfo] = useState<RoomInfo | null>(null);
   const [now, setNow] = useState<Date | null>(null);
   const [mode, setMode] = useState<"loading" | "api" | "iframe">("loading");
-  const [bg, setBg] = useState(true);
   const [live, setLive] = useState<{ pid: string; mid: string }[]>([]);
   const holder = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiApi | null>(null);
-  const bgRef = useRef(true);
   useEffect(() => {
     setChromeHidden(true);
     setNow(new Date());
@@ -104,11 +80,6 @@ export default function CallPage() {
       setChromeHidden(false);
     };
   }, [setChromeHidden]);
-  useEffect(() => {
-    const on = !lowEndDevice();
-    bgRef.current = on;
-    setBg(on);
-  }, []);
 
   const data = sit.data;
   const knock = data?.knocks.find((k) => k.id === id);
@@ -181,7 +152,7 @@ export default function CallPage() {
     }
   };
 
-  // The video room, only after the tap: Jitsi's IFrame API (the venue as a background for everyone);
+  // The video room, only after the tap: Jitsi's IFrame API (the venue photo is a CSS frame around the call, never inside the video);
   // the plain iframe if the script is slow (6 s) or fails.
   useEffect(() => {
     if (!inRoom || !info || !media) return;
@@ -198,17 +169,11 @@ export default function CallPage() {
           height: "100%",
           userInfo: { displayName: callName(viewer) },
           configOverwrite: jitsiConfig(media),
-          interfaceConfigOverwrite: { TOOLBAR_BUTTONS: ["microphone", "camera", "tileview", "fullscreen", "hangup"], SHOW_JITSI_WATERMARK: false, SHOW_BRAND_WATERMARK: false, MOBILE_APP_PROMO: false },
+          interfaceConfigOverwrite: { TOOLBAR_BUTTONS: [...CALL_TOOLBAR], SHOW_JITSI_WATERMARK: false, SHOW_BRAND_WATERMARK: false, MOBILE_APP_PROMO: false },
         });
         apiRef.current = api;
         window.clearTimeout(fallback);
         setMode("api");
-        api.addListener("videoConferenceJoined", () => {
-          if (!bgRef.current || media !== "video") return;
-          backgroundFor(venue.image)
-            .then((img) => api.executeCommand("setVirtualBackground", true, img))
-            .catch(() => undefined);
-        });
         api.addListener("participantJoined", (e) => {
           const m = members.find((x) => x.id !== viewer.id && callName(x) === e.displayName);
           if (m && e.id) setLive((l) => [...l.filter((p) => p.pid !== e.id), { pid: e.id!, mid: m.id }]);
@@ -246,18 +211,6 @@ export default function CallPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inRoom, info, media]);
 
-  const toggleBg = () => {
-    const next = !bg;
-    bgRef.current = next;
-    setBg(next);
-    try {
-      if (!next) apiRef.current?.executeCommand("setVirtualBackground", false);
-      else void backgroundFor(venue.image).then((img) => apiRef.current?.executeCommand("setVirtualBackground", true, img));
-    } catch {
-      /* the call carries on without it */
-    }
-  };
-
   // The host leaving closes the door; a guest leaving changes nothing for anyone else.
   async function leave() {
     dispose();
@@ -289,11 +242,6 @@ export default function CallPage() {
               </p>
               <h1 className="m-0 truncate text-title text-white">{title}</h1>
             </div>
-            {phase === "in" && mode === "api" && media === "video" && (
-              <button type="button" onClick={toggleBg} aria-pressed={bg} className="press flex h-11 shrink-0 items-center rounded-full bg-black/35 px-3 text-caption font-semibold text-white">
-                Background {bg ? "on" : "off"}
-              </button>
-            )}
           </header>
           <ul className="no-scrollbar m-0 flex list-none gap-2 overflow-x-auto px-4 pb-1 pt-2" aria-label="Family clocks">
             {members.map((m) => (
@@ -312,10 +260,10 @@ export default function CallPage() {
         </div>
         <div
           data-ui="call-room"
-          className="absolute inset-x-3 top-[27%] z-10 mx-auto max-w-[920px] overflow-hidden rounded-[28px] bg-black shadow-[0_24px_60px_rgba(0,0,0,.55)] ring-1 ring-white/15"
-          style={{ bottom: "calc(max(14%, 70px) + env(safe-area-inset-bottom) * 0.4)" }}
+          className="absolute inset-x-3 top-[27%] z-10 mx-auto max-w-[920px] overflow-hidden rounded-[28px] bg-black bg-cover bg-center p-2 shadow-[0_24px_60px_rgba(0,0,0,.55)] ring-1 ring-white/15"
+          style={{ backgroundImage: `url(${venue.image})`, bottom: "calc(max(14%, 70px) + env(safe-area-inset-bottom) * 0.4)" }}
         >
-          <div aria-live="polite" className="h-full w-full">
+          <div aria-live="polite" className="h-full w-full overflow-hidden rounded-[20px] bg-black">
             {phase === "checking" && <div className="grid h-full place-items-center text-white/70">Checking the door…</div>}
 
             {phase === "prejoin" && (
