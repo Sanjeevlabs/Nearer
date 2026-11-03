@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CreateCardRequestSchema } from "@/lib/schemas";
+import { ADDRESSED_TO_MAX } from "@/lib/card-limits";
 import { resolveTakenAt } from "@/lib/dating";
 import { captionCard, sha256Hex } from "@/lib/llm";
 import { serverLedger, serverStore } from "@/lib/llm-server";
@@ -11,10 +12,10 @@ import { checkRateLimit, requireSession, sessionFromRequest } from "@/lib/auth";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
 import { inBackground } from "@/lib/push/background";
-import { pushAddressed, pushCardActivity } from "@/lib/push/events";
+import { pushAddressed, pushAddressedNow, pushCardActivity } from "@/lib/push/events";
 import { addressees } from "@/lib/households";
 import { withListen } from "@/lib/listen";
-import { canSeeCard, seenBy } from "@/lib/card-privacy";
+import { canSeeCard, isPrivateCard, seenBy } from "@/lib/card-privacy";
 
 /** The shelf and the two document kinds it is filtered by (one query for both kinds). */
 function readShelf(familyId: string) {
@@ -61,6 +62,7 @@ const MultipartFieldsSchema = z.object({
   mediaRef: z.string().max(300).default(""),
   takenAtSource: z.enum(["exif", "file", "model", "now"]).default("now"),
   forMemberId: z.string().max(64).optional(),
+  addressedTo: z.string().max(ADDRESSED_TO_MAX).optional(),
   /** The person saw (and may have cleared) a suggested caption: never caption it again here. */
   captionFinal: z.enum(["1"]).optional(),
 });
@@ -143,6 +145,7 @@ async function postMultipart(req: Request, familyId: string, authorId: string): 
     mediaRef: form.get("mediaRef") ?? undefined,
     takenAtSource: form.get("takenAtSource") ?? undefined,
     forMemberId: form.get("forMemberId") || undefined,
+    addressedTo: form.get("addressedTo") || undefined,
     captionFinal: form.get("captionFinal") || undefined,
   });
   if (!fields.success) {
@@ -215,6 +218,7 @@ async function postMultipart(req: Request, familyId: string, authorId: string): 
     place: f.place,
     note: f.note,
     forMemberId: fridge,
+    addressedTo: f.addressedTo ?? null,
   });
   const album = await fileIntoAlbum(familyId, card, event);
   pushAddressed(familyId, card);
@@ -267,17 +271,18 @@ async function postHandler(req: Request): Promise<Response> {
       const original = (await dbListCards(auth.familyId)).find((candidate) => candidate.id === replyToCardId);
       if (original?.authorId && original.authorId !== auth.memberId && canSeeCard(original, auth.memberId) && to.includes(original.authorId)) {
         await pushCardActivity(auth.familyId, original, auth.memberId, "reply", new Date(), card.id);
-        pushAddressed(auth.familyId, card, original.authorId);
+        await pushAddressedNow(auth.familyId, card, original.authorId);
         return;
       }
     }
-    pushAddressed(auth.familyId, card);
+    await pushAddressedNow(auth.familyId, card);
   });
   return Response.json({ card, album }, { status: 201 });
 }
 
 /** Muse files the photo into an event album and (re)titles it once it has a few photos. */
 async function fileIntoAlbum(familyId: string, card: Awaited<ReturnType<typeof dbAddCard>>, event: EventKind) {
+  if (isPrivateCard(card)) return null;
   try {
     const album = await fileCard(familyId, card, event);
     if (!album || album.fixedBy || album.cardIds.length < 2) return album;

@@ -6,18 +6,20 @@ Nearer sends the same short notification to a person's registered devices. The a
 | --- | --- | --- | --- |
 | Lamp lit | Adults in the other homes at the window, at most once per pair every two hours | Lamp | Window |
 | Heartbeat | The selected person in another home | Lamp | Window |
-| Shared habit tick | The other active participants, once per actor, habit and local day. Undo sends nothing | Lamp | Together |
+| Shared habit tick | The other active participants, once per actor, habit and local day. Undo sends nothing | Lamp | Shared habit in the courtyard |
 | Open door, including an invitation for tea | Explicit invitees | Questions and requests | That call |
+| Planned invitation to sit together | Explicit invitees | Questions and requests | That call |
 | Guest joins a call | Host, once per guest and room | Questions and requests | That call |
 | Addressed voice memory, photo or video | Active addressees | Voice memories, photos and videos | That card |
 | Reply or reaction | Original card author, with one alert per card in any rolling hour across both actions | Voice memories, photos and videos | The reply or original card |
 | Join by family link | Active owners and admins | Questions and requests | New member's profile |
 | Question, story or recipe request, child's ask | Selected recipients or designated guardians | Questions and requests | Inbox |
+| Opted-in quiet morning | Elder’s chosen contact or their grown children in other homes, once a day and during daytime | Lamp | Window |
 | Help request or overdue check-in | Chosen Safe & sound watchers | Safe & sound | Safe & sound |
 | Morning summary | Members with delivered nudges or held alerts | Morning summary | Inbox |
 | Settings test | The signed-in person who requested it | Explicit request | Window |
 
-Ordinary alerts honor recipient preferences, local quiet hours from 22:00 until 07:00, and a daily cap of six immediate alerts. The 08:00 local summary counts held alerts when that preference is enabled. The daily scan can deliver after 08:00 if it runs late. Safe & sound alerts honor their own preference and remain eligible at any hour. The Settings test sends only on request. Live delivery and device registration are blocked for the demo seed and its copies. Mock mode records messages in memory without contacting a provider.
+Ordinary alerts honor recipient preferences, local quiet hours from 22:00 until 07:00, and a daily cap of six immediate alerts. The 15-minute sweep checks for held alerts at 08:00 local time. The daily scan can also deliver the summary after 08:00. Together they send at most one summary per local day. Safe & sound alerts honor their own preference and remain eligible at any hour. The Settings test sends only on request. Live delivery and device registration are blocked for the demo seed and its copies. Mock mode records messages in memory without contacting a provider.
 
 ## Owner setup
 

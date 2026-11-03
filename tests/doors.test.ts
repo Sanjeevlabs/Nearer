@@ -251,3 +251,13 @@ describe("door participants", () => {
     expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa joined you", `/call/${knock.id}`]]);
   });
 });
+
+it("a planned tea invitation alerts the invited person and opens the call", async () => {
+  const res = await sitPost(authedJson("http://t/api/sit", {
+    action: "sit", reason: "chai", title: "Private title", startsAt: NOW.toISOString(), invites: ["dadi"], note: "Private note",
+  }, "arjun"));
+  expect(res.status).toBe(201);
+  const { sitting } = await json<{ sitting: { id: string } }>(res);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["dadi", "Arjun invited you for tea", `/call/${sitting.id}`]]);
+});

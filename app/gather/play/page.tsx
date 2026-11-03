@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PushAsk } from "@/components/push-ask";
 import { OpenDoorSheet, type DoorPreset } from "@/components/open-door-sheet";
 import { Avatar, Icon, RoomHeader } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
@@ -103,6 +104,7 @@ export default function TimeTogetherPage() {
         </span>
         <p className="m-0 text-body leading-snug text-ink-soft">Opening your door starts nothing. Whoever joins chooses audio or video first.</p>
       </div>
+      <PushAsk className="mt-5" />
       <OpenDoorSheet open={sheet !== null} preset={sheet ?? undefined} onClose={() => setSheet(null)} />
     </div>
   );

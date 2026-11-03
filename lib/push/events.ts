@@ -4,17 +4,17 @@
 // Server only.
 import { dbGetMember, dbListMembers } from "../db";
 import { claimDoc, claimPushCooldown, getDoc, listDocs, putDoc } from "../family-docs";
+import { isDemoFamily } from "../family";
 import { addressees } from "../households";
 import type { Member } from "../schemas";
 import { callName } from "../people";
 import { stateOf } from "../safety";
-import type { Knock, SafetyCheckin } from "../kinds";
-import { eventWords } from "./copy";
+import type { Knock, SafetyCheckin, Sitting } from "../kinds";
 import { inBackground } from "./background";
-import { PUSH_TITLE, thingOf, wordsFor } from "./copy";
+import { PUSH_TITLE, eventWords, thingOf, wordsFor } from "./copy";
 import { decidePush, localClock } from "./policy";
 import { defaultSettings, getPushSettings, saveTally } from "./prefs";
-import { hasDevice, pushToMember, type SendDeps } from "./send";
+import { hasDevice, isMock, pushToMember, type SendDeps } from "./send";
 import type { PushCategory, PushMessage } from "./types";
 
 type Build = (w: ReturnType<typeof wordsFor>) => Omit<PushMessage, "title">;
@@ -50,19 +50,22 @@ export async function routePush(familyId: string, to: Member, category: PushCate
 // ----------------------------------------------------------------- the events
 
 /** A voice note (or photo, or video) was sent to particular people. */
-export function pushAddressed(familyId: string, card: { id: string; type: string; authorId: string | null; addressedTo: string | null }, excludeId?: string): void {
+type AddressedCard = { id: string; type: string; authorId: string | null; addressedTo: string | null };
+
+export function pushAddressed(familyId: string, card: AddressedCard): void {
+  inBackground(() => pushAddressedNow(familyId, card));
+}
+
+export async function pushAddressedNow(familyId: string, card: AddressedCard, excludeId?: string): Promise<void> {
   const to = addressees(card).filter((id) => id !== card.authorId && id !== excludeId);
   if (!card.authorId || to.length === 0) return;
-  const authorId = card.authorId;
-  inBackground(async () => {
-    const from = await activeMember(familyId, authorId);
-    if (!from) return;
-    for (const id of Array.from(new Set(to)).slice(0, 12)) {
-      const m = await activeMember(familyId, id);
-      if (!m) continue;
-      await routePush(familyId, m, "voice", (w) => ({ body: w.voice(callName(from), thingOf(card.type)), url: `/lane?card=${encodeURIComponent(card.id)}`, tag: `voice-${card.id}`, urgency: "high" }));
-    }
-  });
+  const from = await activeMember(familyId, card.authorId);
+  if (!from) return;
+  for (const id of Array.from(new Set(to)).slice(0, 12)) {
+    const m = await activeMember(familyId, id);
+    if (!m) continue;
+    await routePush(familyId, m, "voice", (w) => ({ body: w.voice(callName(from), thingOf(card.type)), url: `/lane?card=${encodeURIComponent(card.id)}`, tag: `voice-${card.id}`, urgency: "high" }));
+  }
 }
 
 /**
@@ -74,9 +77,9 @@ export async function pushDoorNow(familyId: string, knock: Knock, now: Date = ne
   const from = await activeMember(familyId, knock.memberId);
   if (!from) return "skipped";
   const current = await getDoc(familyId, "knock", knock.id);
-  if (current?.seenAt) return "skipped";
+  if (!current || current.seenAt) return "skipped";
   if (!(await claimDoc(familyId, "push_claim", { id: `push-door:${knock.id}`, until: now.toISOString() }))) return "skipped";
-  if (current) await putDoc(familyId, "knock", { ...current, seenAt: now.toISOString() });
+  await putDoc(familyId, "knock", { ...current, seenAt: now.toISOString() });
   let out: "sent" | "held" | "skipped" = "skipped";
   for (const id of new Set(knock.invites)) {
     if (id === from.id) continue;
@@ -99,7 +102,7 @@ export function pushBeat(familyId: string, fromId: string, toId: string): void {
   inBackground(async () => {
     const [from, to] = await Promise.all([activeMember(familyId, fromId), activeMember(familyId, toId)]);
     if (!from || !to) return;
-    await routePush(familyId, to, "lamp", (w) => ({ body: w.beat(callName(from)), url: "/", tag: `lamp-${from.id}`, urgency: "high" }));
+    await routePush(familyId, to, "lamp", (w) => ({ body: w.beat(callName(from)), url: "/?push=lamp", tag: `lamp-${from.id}`, urgency: "high" }));
   });
 }
 
@@ -116,7 +119,7 @@ export async function pushLight(familyId: string, fromId: string, toIds: string[
   for (const id of Array.from(new Set(toIds)).filter((x) => x !== fromId).slice(0, 12)) {
     const m = await activeMember(familyId, id);
     if (!m) continue;
-    out[id] = await routePush(familyId, m, "lamp", (w) => ({ body: w.beat(callName(from)), url: "/", tag: `lamp-${from.id}`, urgency: "high" }), now, deps);
+    out[id] = await routePush(familyId, m, "lamp", (w) => ({ body: w.beat(callName(from)), url: "/?push=lamp", tag: `lamp-${from.id}`, urgency: "high" }), now, deps);
   }
   return out;
 }
@@ -189,18 +192,22 @@ export async function sweepOverdue(familyId: string, now: Date = new Date(), dep
  * Members with only held-back items are included. Outside 8:00 to 22:00 where they are, nothing
  * is sent and today's items wait with the rest. Returns how many people were pushed.
  */
-export async function pushMorning(familyId: string, members: Member[], delivered: Map<string, string[]>, now: Date = new Date(), deps: SendDeps = {}): Promise<number> {
+export async function pushMorning(familyId: string, members: Member[], delivered: Map<string, string[]>, now: Date = new Date(), deps: SendDeps = {}, onlyMorningHour = false): Promise<number> {
   let n = 0;
-  // One read for the whole family; most people have nothing held back.
   const saved = new Map((await listDocs(familyId, "push_settings")).map((s) => [s.id, s]));
   for (const m of members) {
     if (m.status === "pending") continue;
     const lines = delivered.get(m.id) ?? [];
     const settings = saved.get(m.id) ?? defaultSettings(m.id);
+    if (!settings.digest || (lines.length === 0 && settings.overflow === 0)) continue;
     const clock = localClock(m.tz, now);
-    if (lines.length === 0 && settings.overflow === 0) continue;
-    if (clock.hour < 8 || clock.hour >= 22) {
-      if (lines.length > 0 && settings.digest && (await hasDevice(familyId, m.id, deps))) await saveTally(familyId, settings, { day: settings.day, sent: settings.sent, overflow: Math.min(1000, settings.overflow + lines.length) });
+    if (onlyMorningHour && clock.hour !== 8) continue;
+    if (!(await hasDevice(familyId, m.id, deps))) continue;
+    const ready = clock.hour >= 8 && clock.hour < 22;
+    // Claim against the local day so the sweep and daily scan cannot both send a digest.
+    const dayMark = `push-digest:${m.id}:${clock.day}`;
+    if (!ready || !(await claimDoc(familyId, "push_claim", { id: dayMark, until: now.toISOString() }))) {
+      if (lines.length > 0) await saveTally(familyId, settings, { day: settings.day, sent: settings.sent, overflow: Math.min(1000, settings.overflow + lines.length) });
       continue;
     }
     const count = lines.length + settings.overflow;
@@ -208,10 +215,22 @@ export async function pushMorning(familyId: string, members: Member[], delivered
     const result = await routePush(familyId, m, "digest", (w) => ({ body: only ?? (count === 1 ? w.digestOne : w.digest(count)), url: "/inbox", tag: `digest-${clock.day}`, urgency: "normal" }), now, deps);
     if (result === "sent") {
       n++;
-      if (settings.overflow > 0) await saveTally(familyId, await getPushSettings(familyId, m.id), { day: settings.day, sent: settings.sent, overflow: 0 });
+      if (settings.overflow > 0) {
+        const current = await getPushSettings(familyId, m.id);
+        await saveTally(familyId, current, { day: current.day, sent: current.sent, overflow: Math.max(0, current.overflow - settings.overflow) });
+      }
     }
   }
   return n;
+}
+
+/** The regular sweep catches 8 AM in each time zone even when the daily scan runs earlier. */
+export async function sweepHeldPush(familyId: string, now: Date = new Date(), deps: SendDeps = {}): Promise<number> {
+  if (!isMock(deps) && isDemoFamily(familyId)) return 0;
+  const held = (await listDocs(familyId, "push_settings")).filter((s) => s.digest && s.overflow > 0);
+  if (!held.length) return 0;
+  const members = (await Promise.all(held.map((s) => activeMember(familyId, s.id)))).filter((m): m is Member => m !== null);
+  return pushMorning(familyId, members, new Map(), now, deps, true);
 }
 
 
@@ -223,7 +242,22 @@ export async function pushHabitTick(familyId: string, habit: { id: string; membe
   for (const memberId of new Set(habit.members)) {
     if (memberId === fromId) continue;
     const to = await activeMember(familyId, memberId);
-    if (to) await routePush(familyId, to, "lamp", () => ({ body: eventWords.habit(callName(from)), url: "/together", tag: id, urgency: "normal" }), now);
+    if (to) await routePush(familyId, to, "lamp", () => ({ body: eventWords.habit(callName(from)), url: "/?push=habit#habit", tag: id, urgency: "normal" }), now);
+  }
+}
+
+export async function pushSittingInvite(familyId: string, sitting: Sitting, now: Date): Promise<void> {
+  const from = await activeMember(familyId, sitting.hostId);
+  if (!from) return;
+  for (const memberId of new Set(sitting.invites)) {
+    if (memberId === from.id) continue;
+    const to = await activeMember(familyId, memberId);
+    if (to) await routePush(familyId, to, "ask", () => ({
+      body: eventWords.sitting(callName(from), sitting.reason === "chai"),
+      url: `/call/${encodeURIComponent(sitting.id)}`,
+      tag: `sit-${sitting.id}`,
+      urgency: "normal",
+    }), now);
   }
 }
 

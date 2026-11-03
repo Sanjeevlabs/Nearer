@@ -218,7 +218,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!signedIn) return;
     void refreshSubscription();
-    return watchPush((route) => nativeRouter.push(route), setPushNote);
+    return watchPush((route) => window.location.assign(route), setPushNote);
   }, [signedIn, nativeRouter]);
   useEffect(() => {
     if (!pushNote) return;
@@ -277,7 +277,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
         <RoomsSheet open={roomsOpen} onClose={closeRooms} />
         {signedIn && pushNote && (
           <button type="button" aria-live="polite" className="press fixed left-1/2 top-4 z-50 min-h-11 w-max max-w-[90vw] -translate-x-1/2 rounded-card bg-card px-5 text-callout text-ink shadow-card" onClick={() => {
-            nativeRouter.push(pushNote.route);
+            window.location.assign(pushNote.route);
             setPushNote(null);
           }}>
             {pushNote.body}

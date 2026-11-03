@@ -84,7 +84,7 @@ export function purposeTitle(c: ReplyContribution | null): string | null {
 
 // Card upload carries the real bytes: `media` for the photo/video plus key
 // frames for video grounding. The server captions from these bytes only.
-async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: string, lang: string, frames: Blob[] = [], extra: { place?: string; note?: string; forMemberId?: string; captionFinal?: boolean } = {}): Promise<Outcome> {
+async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: string, lang: string, frames: Blob[] = [], extra: { place?: string; note?: string; forMemberId?: string; captionFinal?: boolean; addressedTo?: string | null } = {}): Promise<Outcome> {
   const fields: Record<string, string> = {
     type: upload.kind === "video" ? "video" : "photo",
     caption,
@@ -100,6 +100,7 @@ async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: s
   if (extra.place) fields.place = extra.place.slice(0, CARD_PLACE_MAX);
   if (extra.note) fields.note = extra.note.slice(0, CARD_NOTE_MAX);
   if (extra.forMemberId) fields.forMemberId = extra.forMemberId;
+  if (extra.addressedTo) fields.addressedTo = extra.addressedTo;
   if (extra.captionFinal) fields.captionFinal = "1";
   const files = [{ field: "media", name: "media", blob: file as Blob }, ...frames.slice(0, 3).map((blob) => ({ field: "frames", name: "frame.jpg", blob }))];
   // Saved on the device first; the queue sends it and keeps retrying if the network drops.
@@ -624,11 +625,12 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
 }
 
 /* ----------------------------------------------------------------- moment */
-function MomentComposer({ onDone, contribution = null }: { onDone: () => void; contribution?: ReplyContribution | null }) {
+function MomentComposer({ onDone, contribution = null, addressee }: { onDone: () => void; contribution?: ReplyContribution | null; addressee: string[] | null }) {
   const { viewer, members } = useViewer();
   // "Add to the fridge": whose is it? Only the family's kids; one tap, no default when there are several.
   const fridge = contribution?.kind === "fridge";
   const kids = useMemo(() => (fridge ? members.filter((m) => isKid(m) && m.status !== "pending") : []), [fridge, members]);
+  const [photoRecipients, setPhotoRecipients] = useState<string[]>(addressee ?? []);
   const [whose, setWhose] = useState<string>(contribution?.kind === "fridge" ? (contribution.forMemberId ?? "") : "");
   const [files, setFiles] = useState<File[]>([]);
   const [note, setNote] = useState("");
@@ -689,7 +691,7 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
         const stored = getSessionMedia(upload.mediaRef)?.blob ?? file;
         const frames = video ? await extractVideoFrames(file).catch(() => []) : [];
         setSending("Saved, sending…");
-        const out = await postMoment(upload, stored, note.trim(), viewer.lang, frames, fridge ? { forMemberId: whose } : { place: where.trim(), note: printNote.trim(), captionFinal: files.length === 1 && !video });
+        const out = await postMoment(upload, stored, note.trim(), viewer.lang, frames, fridge ? { forMemberId: whose } : { place: where.trim(), note: printNote.trim(), captionFinal: files.length === 1 && !video, addressedTo: addressTo(photoRecipients) });
         if (out === "dropped") failed += 1;
         else if (out === "queued") queued += 1;
       } catch {
@@ -822,8 +824,14 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
           {sending}
         </p>
       )}
+      {!fridge && files.length > 0 && (
+        <div className="mt-4">
+          <p className="m-0 mb-2 text-footnote font-medium text-ink-soft">To</p>
+          <Recipients value={photoRecipients} onChange={setPhotoRecipients} />
+        </div>
+      )}
       <Button className="mt-4 w-full" disabled={files.length === 0 || busy || sending !== null || (fridge && !whose)} onClick={() => void share()}>
-        {busy ? "Sharing…" : fridge ? (whose ? PURPOSE.fridge.cta : "Choose whose it is") : files.length > 1 ? `Share ${files.length} with the family` : "Share with the family"}
+        {busy ? "Sharing…" : fridge ? (whose ? PURPOSE.fridge.cta : "Choose whose it is") : photoRecipients.length ? "Send privately" : files.length > 1 ? `Share ${files.length} with the family` : "Share with the family"}
       </Button>
     </div>
   );
@@ -847,7 +855,7 @@ export function AddSheet() {
       dataUi="add-sheet"
       z={50}
     >
-      {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} />}
+      {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} addressee={addressee} />}
     </BottomSheet>
   );
 }

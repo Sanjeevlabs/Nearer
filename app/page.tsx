@@ -58,12 +58,15 @@ export default function Page() {
   const [fade, setFade] = useState(0);
 
   useEffect(() => {
+    const push = new URLSearchParams(window.location.search).get("push");
     let isOpen = false;
     try {
       isOpen = isInside(sessionStorage.getItem(HOUSE_KEY));
     } catch {
       /* private mode */
     }
+    if (push === "habit") isOpen = true;
+    if (push === "lamp") isOpen = false;
     setOpen(isOpen);
     // Start the next screen's code now, in step with the session check.
     if (!isOpen) void import("@/components/window");
@@ -86,7 +89,8 @@ export default function Page() {
   useEffect(() => {
     const demo = new URLSearchParams(window.location.search).get("demo") === "1";
     if (demo) markEntered();
-    const skip = demo || isInstalledApp();
+    const push = new URLSearchParams(window.location.search).get("push");
+    const skip = demo || push === "lamp" || push === "habit" || isInstalledApp();
     setDirect(skip);
     setEntered(skip || hasEntered());
   }, []);

@@ -29,6 +29,7 @@ import { VenuePicker } from "./venue-scene";
 import { GiftsShelf } from "./gifts-shelf";
 import { EventPrompts } from "./event-prompts";
 import { TodayCard } from "./today";
+import { PushAsk } from "./push-ask";
 import { TogetherHabit } from "./together-habit";
 import { CourtyardLetter } from "./courtyard-letter";
 import { KidsCourtyard } from "./kids-courtyard";
@@ -353,6 +354,7 @@ export function Courtyard({ onBack }: { onBack: () => void }) {
           <EventPrompts className="mt-4" kinds={["soon", "live"]} />
           <TodayCard />
           <TogetherHabit />
+          <PushAsk className="mt-5" />
           <CourtyardLetter />
           <KidsCourtyard />
 

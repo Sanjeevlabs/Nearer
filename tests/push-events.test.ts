@@ -8,19 +8,19 @@ import { POST as keeperPost } from "@/app/api/keeper/route";
 import { POST as lampPost } from "@/app/api/lamp/route";
 import { GET as sweepGet } from "@/app/api/push/sweep/route";
 import { POST as safetyPost } from "@/app/api/safety/route";
-import { dbGetMember, dbListMembers, dbUpdateMemberProfile } from "@/lib/db";
+import { dbAddMember, dbCreateFamily, dbGetMember, dbListMembers, dbUpdateMemberProfile } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs } from "@/lib/family-docs";
 import { deliverDueNudges } from "@/lib/nudge-run";
 import { enqueueNudge } from "@/lib/nudges";
 import { pushIdle } from "@/lib/push/background";
-import { pushCardActivity, pushFamilyJoined, pushHabitTick, pushMorning, routePush, sweepOverdue } from "@/lib/push/events";
+import { pushCardActivity, pushFamilyJoined, pushHabitTick, pushMorning, routePush, sweepHeldPush, sweepOverdue } from "@/lib/push/events";
 import { MAX_IMMEDIATE_PER_DAY } from "@/lib/push/policy";
 import { getPushSettings, savePushPrefs } from "@/lib/push/prefs";
 import { clearOutbox, outbox, pushToMember, resetPushWarnings } from "@/lib/push/send";
 import { MAX_FAILURES, listSubs, resetPushStore, upsertSub } from "@/lib/push/store";
 import { generateVapidKeys } from "@/lib/push/webpush";
 import { resetDemo } from "@/lib/store";
-import { authedJson } from "./auth-helper";
+import { authedJson, sessionCookie } from "./auth-helper";
 
 const FAM = "demo-family";
 // Wed 28 Oct 2026. 16:00 UTC is noon in New York (arjun) and 21:30 in India (dadi).
@@ -83,14 +83,14 @@ describe("the lamp", () => {
     await lampPost(post("/api/lamp", { action: "beat", toMemberId: "arjun" }, "dadi")); // throttled
     await pushIdle();
     expect(outbox).toHaveLength(1);
-    expect(outbox[0]).toMatchObject({ memberId: "arjun", msg: { body: "Maa lit the lamp for you", url: "/", tag: "lamp-dadi" } });
+    expect(outbox[0]).toMatchObject({ memberId: "arjun", msg: { body: "Maa lit the lamp for you", url: "/?push=lamp", tag: "lamp-dadi" } });
   });
 
   it("lighting the lamp tells the other homes, never your own", async () => {
     await lampPost(post("/api/lamp", { action: "light" }, "dadi"));
     await pushIdle();
     expect(bodies("arjun")).toEqual(["Maa lit the lamp for you"]);
-    expect(to("arjun")[0].msg).toMatchObject({ url: "/", tag: "lamp-dadi" });
+    expect(to("arjun")[0].msg).toMatchObject({ url: "/?push=lamp", tag: "lamp-dadi" });
     expect(to("dadi")).toEqual([]);
   });
 });
@@ -318,7 +318,7 @@ describe("family activity", () => {
   it("delivers one habit tick per actor, habit and local day to the other participants", async () => {
     const habit = { id: "walk", members: ["dadi", "arjun", "arjun", "removed"] };
     await Promise.all([pushHabitTick(FAM, habit, "dadi", "2026-10-28"), pushHabitTick(FAM, habit, "dadi", "2026-10-28")]);
-    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa checked in for your shared habit", "/together"]]);
+    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa checked in for your shared habit", "/?push=habit#habit"]]);
   });
 
   it("shares a rolling one-hour limit between reactions and replies", async () => {
@@ -349,4 +349,62 @@ describe("family activity", () => {
     }
     expect(fetchFn).not.toHaveBeenCalled();
   });
+});
+
+it("an addressed photo upload pushes neutral copy and links to the private card", async () => {
+  const form = new FormData();
+  form.set("type", "photo");
+  form.set("takenAt", NOON_NY.toISOString());
+  form.set("addressedTo", "arjun,dadi");
+  form.set("caption", "Private words");
+  form.set("media", new Blob(["fixture"], { type: "image/jpeg" }), "photo.jpg");
+  const cookie = post("/api/cards", {}, "dadi").headers.get("cookie") ?? "";
+  const res = await cardPost(new Request("http://t/api/cards", { method: "POST", headers: { cookie }, body: form }));
+  expect(res.status).toBe(201);
+  const { card } = await json<{ card: { id: string } }>(res);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa sent you a photo", `/lane?card=${card.id}`]]);
+});
+
+it("an actual voice reply shares the reaction cooldown and opens the reply card", async () => {
+  const { card: original } = await json<{ card: { id: string } }>(await voiceCard("arjun", "dadi"));
+  await pushIdle();
+  clearOutbox();
+  const payload = { type: "audio", caption: "Private reply", lang: "en", takenAt: NOON_NY.toISOString(), addressedTo: "arjun", replyToCardId: original.id };
+  const result = await cardPost(post("/api/cards", payload, "dadi"));
+  expect(result.status).toBe(201);
+  const { card: reply } = await json<{ card: { id: string } }>(result);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa replied to your memory", `/lane?card=${reply.id}`]]);
+  await cardPost(post("/api/cards", payload, "dadi"));
+  await pushIdle();
+  expect(outbox).toHaveLength(1);
+});
+
+it("lights the window for an active person in another household of a non-demo family", async () => {
+  const familyId = await dbCreateFamily("Lamp fixture");
+  const make = (firstName: string) => dbAddMember({
+    familyId, firstName, displayName: firstName, role: "adult", access: "member", status: "active",
+    lang: "en", displayLang: "en", tz: "UTC", city: "", birthday: "",
+  });
+  const [sender, receiver] = await Promise.all([make("Alex"), make("Jo")]);
+  const req = new Request("http://t/api/lamp", {
+    method: "POST",
+    headers: { cookie: sessionCookie(sender.id, familyId), "content-type": "application/json" },
+    body: JSON.stringify({ action: "light" }),
+  });
+  expect((await lampPost(req)).status).toBe(200);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([[receiver.id, "Alex lit the lamp for you", "/?push=lamp"]]);
+});
+
+
+it("the sweep delivers held alerts at the recipient’s 8 AM even if the daily scan ran earlier", async () => {
+  const arjun = (await dbGetMember("arjun"))!;
+  await routePush(FAM, arjun, "voice", () => ({ body: "Private event", url: "/inbox", tag: "quiet", urgency: "normal" }), NIGHT_NY);
+  expect(await sweepHeldPush(FAM, new Date("2026-10-28T11:45:00.000Z"))).toBe(0);
+  expect(await sweepHeldPush(FAM, MORNING_NY)).toBe(1);
+  expect(await pushMorning(FAM, [arjun], new Map([[arjun.id, ["A new nudge"]]]), new Date("2026-10-28T15:00:00.000Z"))).toBe(0);
+  expect(bodies("arjun")).toEqual(["Something from your family"]);
+  expect((await getPushSettings(FAM, arjun.id)).overflow).toBe(1);
 });

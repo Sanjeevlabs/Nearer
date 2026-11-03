@@ -87,7 +87,7 @@ export function NotificationsSection({ onMessage }: { onMessage: (m: string) => 
   };
 
   const pill = "press h-11 rounded-full px-5 text-callout font-semibold disabled:opacity-50";
-  const canAsk = configured && (support === "native" || support === "ready" || support === "needs-install" || support === "blocked");
+  const canAsk = configured && (support === "native" || (support === "ready" && Boolean(vapid)) || support === "needs-install" || support === "blocked");
   return (
     <Group title="Notifications" id="notifications">
       <div className="rounded-[22px] bg-surface px-4 py-4">

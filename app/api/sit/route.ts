@@ -7,7 +7,7 @@ import { SITTING_REASONS, VENUE_IDS } from "@/lib/kinds";
 import { guardWrites } from "@/lib/api-guard";
 import { ACTIVITIES, DEFAULT_DOOR_MINUTES, visibleKnocks } from "@/lib/doors";
 import { inBackground } from "@/lib/push/background";
-import { pushDoor, pushDoorJoined } from "@/lib/push/events";
+import { pushDoor, pushDoorJoined, pushSittingInvite } from "@/lib/push/events";
 
 // Sit together: planned sittings with a reason, and "come sit" knocks.
 const Body = z.discriminatedUnion("action", [
@@ -74,6 +74,7 @@ async function postHandler(req: Request): Promise<Response> {
     const family = new Set((await dbListMembers(auth.familyId)).map((m) => m.id));
     const invites = Array.from(new Set(body.invites.filter((id) => family.has(id) && id !== auth.memberId)));
     const sitting = await putDoc(auth.familyId, "sitting", { id: newId("sit"), reason: body.reason, title: body.title, hostId: auth.memberId, startsAt: new Date(body.startsAt).toISOString(), invites, recipeId: body.recipeId ?? null, note: body.note, venue: body.venue, keptCardId: null, createdAt: now.toISOString() });
+    if (sitting.invites.length) inBackground(() => pushSittingInvite(auth.familyId, sitting, now));
     return Response.json({ sitting }, { status: 201 });
   }
   if (body.action === "rsvp" || body.action === "reschedule") {

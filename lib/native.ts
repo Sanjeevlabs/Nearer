@@ -213,7 +213,7 @@ async function ensureChannel(): Promise<void> {
 /** A tap on a notification carries `data.url`: only a path inside the app is ever followed. */
 export function pushRoute(data: unknown): string | null {
   const url = (data as { url?: unknown } | null | undefined)?.url;
-  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\") ? url : null;
+  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !/[\\\u0000-\u001f\u007f]/.test(url) ? url : null;
 }
 
 /**
@@ -279,17 +279,17 @@ export function watchPush(onOpen: (route: string) => void, onReceive?: (note: { 
       keep(
         await PushNotifications.addListener("pushNotificationActionPerformed", (a: { notification?: { data?: unknown } }) => {
           const route = pushRoute(a.notification?.data);
-          if (route) onOpen(route);
+          if (!cancelled && route) onOpen(route);
         }),
       );
-      if (onReceive && platform() === "android") {
+      if (onReceive) {
         keep(await PushNotifications.addListener("pushNotificationReceived", (notification) => {
           const route = pushRoute(notification.data);
           if (!cancelled && !pushDisabled() && route && notification.body) onReceive({ body: notification.body, route });
         }));
       }
       const perm = await PushNotifications.checkPermissions();
-      if (!cancelled && !pushDisabled() && perm.receive === "granted") {
+      if (!cancelled && !pushDisabled() && rememberedToken() && perm.receive === "granted") {
         await ensureChannel();
         await PushNotifications.register();
       }
