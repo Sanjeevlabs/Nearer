@@ -116,9 +116,46 @@ export async function lastUsedMember(memberIds: string[]): Promise<string | null
   if (memberIds.length < 2) return memberIds[0] ?? null;
   const sb = dbFor(null);
   if (!sb) {
-    const rows = Array.from(mem.values()).filter((r) => memberIds.includes(r.memberId)).sort((a, b) => b.createdAt - a.createdAt);
+    // Newest first; rows made in the same millisecond keep their insertion order, latest first.
+    const rows = Array.from(mem.values()).filter((r) => memberIds.includes(r.memberId)).reverse().sort((a, b) => b.createdAt - a.createdAt);
     return rows[0]?.memberId ?? null;
   }
   const { data } = await sb.from("sessions").select("member_id").in("member_id", memberIds).order("created_at", { ascending: false }).limit(1);
   return (data as { member_id?: string }[] | null)?.[0]?.member_id ?? null;
+}
+
+/** Rows this long past expiry or revocation are only clutter (demo visitors make one each). */
+export const SESSION_KEEP_DAYS = 7;
+
+/**
+ * Daily cron: delete sessions that expired, or were revoked, more than a week ago. Batched
+ * (`batch` ids per round, at most `rounds` rounds) so one run never holds the database.
+ * Returns how many rows went.
+ */
+export async function purgeSessions(now = Date.now(), batch = 500, rounds = 10): Promise<number> {
+  const cutoff = now - SESSION_KEEP_DAYS * 86_400_000;
+  const sb = dbFor(null);
+  if (!sb) {
+    let n = 0;
+    for (const [id, r] of Array.from(mem)) {
+      if (r.expiresAt < cutoff || (r.revokedAt !== null && r.revokedAt < cutoff)) {
+        mem.delete(id);
+        trusted.delete(id);
+        n++;
+      }
+    }
+    return n;
+  }
+  const at = iso(cutoff);
+  let total = 0;
+  for (let i = 0; i < rounds; i++) {
+    const { data, error } = await sb.from("sessions").select("id").or(`expires_at.lt.${at},revoked_at.lt.${at}`).limit(batch);
+    if (error || !data?.length) break;
+    const ids = (data as { id: string }[]).map((r) => r.id);
+    const { error: delErr } = await sb.from("sessions").delete().in("id", ids);
+    if (delErr) break;
+    total += ids.length;
+    if (ids.length < batch) break;
+  }
+  return total;
 }

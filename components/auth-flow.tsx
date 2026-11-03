@@ -12,7 +12,7 @@ import { en, htmlLang, type UiKey } from "@/lib/ui-strings/lazy";
 import { cn } from "@/lib/utils";
 import { AUTH_INTENT_KEY, browserAuth, signInOptions } from "@/lib/supabase-browser";
 import { signOutNow } from "@/lib/sign-out";
-import { afterAuth, afterSignin, currentSession, gateDecision, nextHref, parseNext, signinHref, verifyAccessToken, type Next } from "@/lib/auth-session";
+import { afterAuth, afterSignin, currentSession, gateDecision, nextHref, parseNext, signinHref, signinShortcut, verifyAccessToken, type Next } from "@/lib/auth-session";
 import { authRedirectUrl, isNative, openExternal } from "@/lib/native";
 import { useShell } from "./shell";
 import { Button, Icon } from "./ui/kit";
@@ -104,8 +104,18 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     if (mode === "signin") {
-      setTarget(parseNext(window.location.search));
+      const wanted = parseNext(window.location.search);
+      setTarget(wanted);
       if (q.get("expired")) setError(errorText(t, "session-expired"));
+      // Already signed in to Nearer and nothing else to do: no reason to sign in again.
+      if (browserAuth() && !wanted.next) {
+        void fetch("/api/session", { cache: "no-store" })
+          .then(async (res) => (res.ok ? ((await res.json()) as { status?: string }) : null))
+          .then((me) => {
+            if (signinShortcut({ next: null, sessionOk: Boolean(me), status: me?.status }) === "home") router.replace("/");
+          })
+          .catch(() => undefined);
+      }
       return;
     }
     const sb = browserAuth();

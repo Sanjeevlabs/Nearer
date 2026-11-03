@@ -1,7 +1,7 @@
 import { clearSessionCookieHeader, sessionCookieHeader } from "@/lib/auth";
 import { createFetchGate } from "@/lib/net-gate";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { afterAuth, afterSignin, currentSession, entryHref, gateDecision, nextHref, parseNext, signinHref, signOutEverywhere, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
+import { afterAuth, afterSignin, callbackFailure, currentSession, signinShortcut, entryHref, gateDecision, nextHref, parseNext, signinHref, signOutEverywhere, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
 
 function fakeClient(session: { access_token: string; user?: { email?: string } } | null) {
   const signOut = vi.fn(async () => ({}));
@@ -175,5 +175,21 @@ describe("sign out", () => {
     expect(seen).not.toContain("GET /api/courtyard");
     // A GET to /api/session is a poll, not the sign-out.
     await expect(gate.fetch("/api/session?family=1")).rejects.toMatchObject({ name: "AbortError" });
+  });
+});
+
+describe("callback failures and the signed-in shortcut", () => {
+  it("a magic link opened where it wasn't asked for says so; other failures stay generic", () => {
+    expect(callbackFailure({ hasCode: true, hasVerifier: false })).toBe("other-device");
+    expect(callbackFailure({ hasCode: true, hasVerifier: true, errorMessage: "invalid request: both auth code and code verifier should be non-empty" })).toBe("other-device");
+    expect(callbackFailure({ hasCode: true, hasVerifier: true, errorMessage: "expired" })).toBe("failed");
+    expect(callbackFailure({ hasCode: false, hasVerifier: false })).toBe("failed");
+  });
+
+  it("/signin goes home for a signed-in person with nothing to do next, and stays otherwise", () => {
+    expect(signinShortcut({ next: null, sessionOk: true, status: "active" })).toBe("home");
+    expect(signinShortcut({ next: null, sessionOk: true, status: "pending" })).toBe("stay");
+    expect(signinShortcut({ next: "join", sessionOk: true, status: "active" })).toBe("stay");
+    expect(signinShortcut({ next: null, sessionOk: false })).toBe("stay");
   });
 });

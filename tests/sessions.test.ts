@@ -9,7 +9,7 @@ import { POST as exchange } from "@/app/api/session/route";
 import { SESSION_COOKIE, clearSessionCookieHeader, sessionCookieHeader, verifySession } from "@/lib/auth";
 import { dbAddMember, dbRemoveMember } from "@/lib/db";
 import { clearAuthAttempts, MOCK_OTP } from "@/lib/otp";
-import { renewSessionRow, resetSessionStore, revokeSid, sessionActive } from "@/lib/sessions";
+import { memoryInsert, newSid, purgeSessions, renewSessionRow, resetSessionStore, revokeSid, sessionActive } from "@/lib/sessions";
 import { resetDemo } from "@/lib/store";
 import { signedSession } from "./auth-helper";
 
@@ -194,5 +194,55 @@ describe("identity to person", () => {
     expect(res.status).toBe(404);
     expect(((await res.json()) as { error: string }).error).toBe("no-family");
     expect(res.headers.get("set-cookie")).toBeNull();
+  });
+});
+
+describe("in-app join another family (existing account)", () => {
+  it("an account with a family joins a second with a code: same person on both sides, then 'last used' is the new one", async () => {
+    const addr = email();
+    const mine = await create(addr);
+    const first = (await mine.json()) as { familyId: string; memberId: string };
+    const owner = await create(email());
+    const inviteRes = await (await import("@/app/api/invites/route")).POST(post("http://test/api/invites", {}, cookieOf(owner)));
+    const code = ((await inviteRes.json()) as { invite: { code: string } }).invite.code;
+    const joined = await verify(addr, { type: "join", inviteCode: code, firstName: "Asha" }, cookieOf(mine));
+    expect(joined.status).toBe(200);
+    const j = (await joined.json()) as { familyId: string; memberId: string };
+    expect(j.familyId).not.toBe(first.familyId);
+    expect(j.memberId).not.toBe(first.memberId);
+    // the old cookie was on the request, so it is revoked; the new one is live
+    expect((await members(cookieOf(mine))).status).toBe(401);
+    expect((await members(cookieOf(joined))).status).toBe(200);
+  });
+
+  it("a code for a family that doesn't exist is refused and changes nothing", async () => {
+    const addr = email();
+    const mine = await create(addr);
+    const res = await verify(addr, { type: "join", inviteCode: "NOPE-9999", firstName: "Asha" }, cookieOf(mine));
+    expect(res.status).toBe(403);
+    expect((await members(cookieOf(mine))).status).toBe(200);
+  });
+});
+
+describe("session clean-up", () => {
+  const DAY = 86_400_000;
+  const row = (over: Partial<{ expiresAt: number; revokedAt: number | null }>) => {
+    const id = newSid();
+    const now = Date.now();
+    memoryInsert({ id, memberId: "m", familyId: "f", createdAt: now - 30 * DAY, expiresAt: now + DAY, revokedAt: null, kind: "demo", ...over });
+    return id;
+  };
+  it("drops sessions a week past expiry or revocation, keeps live and recent ones", async () => {
+    const now = Date.now();
+    const oldExpired = row({ expiresAt: now - 8 * DAY });
+    const oldRevoked = row({ revokedAt: now - 8 * DAY });
+    const recentRevoked = row({ revokedAt: now - 2 * DAY });
+    const live = row({});
+    expect(await purgeSessions(now)).toBe(2);
+    expect(await sessionActive(live)).toBe(true);
+    expect(await sessionActive(oldExpired)).toBe(false);
+    expect(await sessionActive(oldRevoked)).toBe(false);
+    await revokeSid(recentRevoked); // still there: a second purge finds nothing more
+    expect(await purgeSessions(now)).toBe(0);
   });
 });

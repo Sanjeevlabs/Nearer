@@ -570,3 +570,7 @@ create table if not exists sessions (
 create index if not exists sessions_member_active_idx on sessions (member_id) where revoked_at is null;
 create index if not exists sessions_member_created_idx on sessions (member_id, created_at desc);
 alter table sessions enable row level security;
+
+-- One place per person per family, whatever the case of their email. The sign-in route
+-- re-reads and uses the existing member when two requests race (lib/db.ts dbAddMember).
+create unique index if not exists members_family_email_uq on members (family_id, lower(email)) where email is not null;

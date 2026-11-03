@@ -144,3 +144,23 @@ export async function signOutEverywhere(steps: SignOutSteps, to = "/"): Promise<
   }
   steps.goTo(to);
 }
+
+// ---- Callback failures and the signed-in shortcut.
+
+/** Supabase keeps the PKCE verifier here (storageKey "aangan-auth" in lib/supabase-browser.ts). */
+export const PKCE_VERIFIER_KEY = "aangan-auth-code-verifier";
+
+/**
+ * A `?code=` we can't exchange. The code only works in the browser that asked for it (PKCE): a magic
+ * link opened on another phone or computer has no verifier there. Tell that apart from a plain failure.
+ */
+export function callbackFailure(o: { hasCode: boolean; hasVerifier: boolean; errorMessage?: string | null }): "other-device" | "failed" {
+  if (!o.hasCode) return "failed";
+  if (!o.hasVerifier) return "other-device";
+  return /verifier/i.test(o.errorMessage ?? "") ? "other-device" : "failed";
+}
+
+/** /signin with a live Nearer session and nothing to do next goes home; a waiting joiner stays. */
+export function signinShortcut(o: { next: NextKind | null; sessionOk: boolean; status?: string }): "home" | "stay" {
+  return !o.next && o.sessionOk && o.status !== "pending" ? "home" : "stay";
+}

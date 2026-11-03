@@ -56,7 +56,8 @@ export async function identityFromToken(accessToken: string): Promise<string | n
   if (error || !data.user) return null;
   const u = data.user;
   if (u.email && (u.email_confirmed_at || u.app_metadata?.provider === "google")) return u.email.trim().toLowerCase();
-  if (u.phone && u.phone_confirmed_at) return `tel:+${u.phone.replace(/\D/g, "")}`;
+  // Phone sign-in is off unless NEXT_PUBLIC_AUTH_PHONE=true (no SMS provider is set up): a phone token is no identity then.
+  if (u.phone && u.phone_confirmed_at && process.env.NEXT_PUBLIC_AUTH_PHONE === "true") return `tel:+${u.phone.replace(/\D/g, "")}`;
   return null;
 }
 
