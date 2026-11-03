@@ -8,7 +8,7 @@ import { POST as accept } from "@/app/api/invites/accept/route";
 import { GET as peekRoute } from "@/app/api/invites/peek/route";
 import { DELETE as revoke, POST as createInvite } from "@/app/api/invites/route";
 import { POST as addOtherSide } from "@/app/api/members/other-side/route";
-import { GET as sidesGet } from "@/app/api/sides/route";
+import { GET as sidesGet, POST as sidesPost } from "@/app/api/sides/route";
 import { dbAddMember, dbGetMember } from "@/lib/db";
 import { codeFromInput, joinLink, whatsappInvite } from "@/lib/invite-link";
 import { clearAuthAttempts, MOCK_OTP } from "@/lib/otp";
@@ -171,6 +171,13 @@ describe("6–7, 12. more families, up to four", () => {
     expect(src).toMatch(/the most Nearer allows/);
     expect(src).toMatch(/!demo && !atLimit && !kid &&/);
     expect(src).toMatch(/const kid = viewer\.role === "child"/);
+  });
+
+  it("12. a child can't start another family, whatever the screen shows", async () => {
+    const host = await family();
+    const kid = await dbAddMember({ familyId: host.familyId, firstName: "Ira", displayName: "Ira", role: "child", access: "child" });
+    const res = await sidesPost(post("/api/sides", { action: "create", familyName: "Mine", bring: [] }, sessionCookie(kid.id, host.familyId)));
+    expect(res.status).toBe(403);
   });
 });
 
