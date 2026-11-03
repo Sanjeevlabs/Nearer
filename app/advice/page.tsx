@@ -10,6 +10,8 @@ import { ADVICE_CATEGORIES, ADVICE_FALLBACK, adviceCategory, categoryLabel } fro
 import type { Card } from "@/lib/schemas";
 import type { Question } from "@/lib/kinds";
 import { callName, memberPhoto } from "@/lib/people";
+import { LoadFailed } from "@/components/load-failed";
+import { loadView } from "@/lib/load-state";
 import { useFamilyCards } from "@/lib/use-family";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
@@ -31,7 +33,7 @@ interface Item {
 export default function AdvicePage() {
   const { viewer } = useViewer();
   const { refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
   const { data, failed, reload } = useJson<{ questions: Q[] }>("/api/keeper");
   const parent = viewer.role === "elder";
   const [shelf, setShelf] = useState<string | null>(null);
@@ -48,19 +50,15 @@ export default function AdvicePage() {
   );
   const waiting = (data?.questions ?? []).filter((q) => !q.answeredCardId && q.askedBy === viewer.id && (q.topic === "wisdom" || q.topic === "blessing")).length;
   const shelves = ADVICE_CATEGORIES.map((c) => ({ ...c, items: items.filter((x) => x.cat === c.id) })).filter((c) => c.items.length > 0);
+  const view = loadView({ loading: data === null || cards === null, failed: (failed && !data) || (cardsFailed && (cards?.length ?? 0) === 0), hasData: items.length > 0 });
   const current = shelves.find((s) => s.id === shelf);
 
   return (
     <div>
       <RoomHeader title="Advice" subtitle={parent ? "What you told the family when they asked" : "What they told you when you asked, kept for good"} />
-      {failed && !data ? (
-        <div className="rounded-card bg-surface px-4 py-8 text-center">
-          <p className="m-0 text-body text-ink-soft">Couldn&rsquo;t load advice right now.</p>
-          <Button variant="secondary" className="mx-auto mt-3 !h-11 !bg-surface" onClick={() => void reload()}>
-            Try again
-          </Button>
-        </div>
-      ) : data === null || cards === null ? (
+      {view === "failed" ? (
+        <LoadFailed what="Advice" ui="advice-retry" onRetry={() => { void reload(); retryCards(); }} />
+      ) : view === "loading" ? (
         <div className="skeleton h-[240px] rounded-card" aria-busy="true" aria-label="Loading" />
       ) : (
         <>
