@@ -399,6 +399,16 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
               />
             ) : (
               <div className="space-y-2">
+                <div data-ui="own-day-add" className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { close(); openAdd("photos"); }} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black">
+                    <Icon name="camera" size={18} />
+                    Add a photo
+                  </button>
+                  <button type="button" onClick={() => { close(); openAdd("voice"); }} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black">
+                    <Icon name="mic" size={18} />
+                    Voice memory
+                  </button>
+                </div>
                 <button type="button" onClick={() => setEditingLine(true)} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/35 bg-white/10 text-body font-semibold backdrop-blur">
                   <Icon name="edit" size={18} />
                   {line ? "Change today's line" : "A line about today"}
