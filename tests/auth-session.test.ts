@@ -1,4 +1,5 @@
-import { clearSessionCookieHeader, sessionCookieHeader } from "@/lib/auth";
+import { clearSessionCookieHeader, sessionCookieHeader, sessionFromRequest } from "@/lib/auth";
+import { sessionCookie } from "./auth-helper";
 import { createFetchGate } from "@/lib/net-gate";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { afterSignin, callbackFailure, currentSession, legacySigninRedirect, signinShortcut, signOutEverywhere, suggestedNames, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
@@ -197,4 +198,14 @@ describe("callback failures and the signed-in shortcut", () => {
     expect(signinShortcut({ sessionOk: true, status: "pending" })).toBe("stay");
     expect(signinShortcut({ sessionOk: false })).toBe("stay");
   });
+});
+
+it("rechecks a memoized request when its session cookie changes", () => {
+  const req = new Request("http://nearer.test/api/session", { headers: { cookie: sessionCookie("arjun") } });
+  expect(sessionFromRequest(req)?.memberId).toBe("arjun");
+  expect(sessionFromRequest(req)?.memberId).toBe("arjun");
+  req.headers.set("cookie", sessionCookie("dadi"));
+  expect(sessionFromRequest(req)?.memberId).toBe("dadi");
+  req.headers.delete("cookie");
+  expect(sessionFromRequest(req)).toBeNull();
 });

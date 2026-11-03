@@ -1,5 +1,6 @@
 // Server side of the window (the first screen): who's on the other side, their
 // real place and sky, and what they shared today. Server only.
+import { dateInZone, clockInZone } from "./time-format";
 import { can } from "./permissions";
 import { DEFAULT_IMAGE } from "./hero";
 import { z } from "zod";
@@ -171,7 +172,7 @@ function names(ms: Member[]): string {
 
 function localDay(iso: string, tz: string): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+    return dateInZone(tz).format(new Date(iso));
   } catch {
     return iso.slice(0, 10);
   }
@@ -396,7 +397,7 @@ export function skyOver(far: { lat: number; lon: number } | null, here: { lat: n
 
 function clockIn(tz: string, d: Date): string {
   try {
-    return new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(d);
+    return clockInZone(tz).format(d);
   } catch {
     return "";
   }

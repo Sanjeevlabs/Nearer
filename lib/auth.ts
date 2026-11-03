@@ -102,15 +102,25 @@ export function verifySession(cookieValue: string | null | undefined, key?: stri
   }
 }
 
+// Several guards can read the same signed cookie within one request. Session
+// row and membership checks still run through their existing request paths.
+const verifiedCookies = new WeakMap<Request, { header: string; key: string; session: Session }>();
+
 export function sessionFromRequest(req: Request, key?: string): Session | null {
   const header = req.headers.get("cookie") ?? "";
-  const match = header.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${SESSION_COOKIE}=`));
-  if (!match) return null;
-  const session = verifySession(decodeURIComponent(match.slice(SESSION_COOKIE.length + 1)), key);
-  // With the database live, the seed is read-only: memory isn't shared
-  // between server instances, so a write there would vanish. A cookie from
-  // before demo copies existed sends the visitor back to the door, where the
-  // demo makes them their own copy (lib/demo-sandbox.ts).
+  const signingKey = key ?? secret();
+  if (!signingKey || !header) return null;
+  const cached = verifiedCookies.get(req);
+  let session: Session | null;
+  if (cached?.header === header && cached.key === signingKey && cached.session.exp >= Date.now()) {
+    session = cached.session;
+  } else {
+    const match = header.split(";").map((c) => c.trim()).find((c) => c.startsWith(`${SESSION_COOKIE}=`));
+    if (!match) return null;
+    session = verifySession(decodeURIComponent(match.slice(SESSION_COOKIE.length + 1)), signingKey);
+    if (session) verifiedCookies.set(req, { header, key: signingKey, session });
+  }
+  // Live visitors need their own demo copy; the seed is read-only.
   if (session && isSeedFamily(session.familyId) && dbLive()) return null;
   return session;
 }

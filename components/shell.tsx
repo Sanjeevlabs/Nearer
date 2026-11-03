@@ -109,7 +109,8 @@ function Dock() {
   const pathname = usePathname();
   // The dock only needs the family's cards (who to talk to first) once it is on screen:
   // the window, its first screen, never pays for the full card list.
-  const show = ((pathname === "/" && dockOn) || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
+  const hasDock = (pathname === "/" && dockOn) || pathname.startsWith("/people/");
+  const show = hasDock && !chromeHidden && !playerOpen;
   const { cards } = useFamilyCards(refreshKey, show);
   const [picking, setPicking] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -119,7 +120,7 @@ function Dock() {
   const pagePerson = pathname.startsWith("/people/") ? members.find((mm) => mm.id === pathname.split("/")[2]) : undefined;
   // What waits for you: the same list as the window's "Waiting for you" tile (GET /api/waiting),
   // so the dot goes when the thing is played, answered or opened. Who is waiting shows in the picker.
-  const { data: wait, reload: reloadWaiting } = useJson<{ items: WaitingItem[] }>("/api/waiting", { every: 60_000 });
+  const { data: wait, reload: reloadWaiting } = useJson<{ items: WaitingItem[] }>(hasDock ? "/api/waiting" : null, { every: 120_000 });
   useEffect(() => {
     if (refreshKey) void reloadWaiting();
     // eslint-disable-next-line react-hooks/exhaustive-deps

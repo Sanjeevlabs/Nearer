@@ -1,3 +1,4 @@
+import { dateInZone } from "./time-format";
 // A birthday is stored as text in one of two shapes: "YYYY-MM-DD" when the year is
 // known, "MM-DD" when it is not (and "" when nobody has added it). No schema change:
 // the members.birthday column is plain text. Everything that reads a birthday goes
@@ -43,7 +44,7 @@ export function birthYearOf(s: string | null | undefined): number | null {
 /** The calendar day (YYYY-MM-DD) it is in a zone. */
 export function todayIn(tz: string | undefined, now: Date): string {
   try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: tz || "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+    return dateInZone(tz || "UTC").format(now);
   } catch {
     return now.toISOString().slice(0, 10);
   }
