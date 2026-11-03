@@ -7,6 +7,7 @@
 import { isMockMode } from "./config";
 import { activeProvider, providerKey, PROVIDERS } from "./config";
 import type { SpendLedger, LlmStore } from "./llm";
+import { MODEL_TIMEOUT_MS, deadline } from "./timeouts";
 
 export interface AgentTool {
   name: string;
@@ -102,6 +103,7 @@ async function liveLoop(
     if (!(await ledger.check(0.01))) break;
     const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
       method: "POST",
+      signal: deadline(MODEL_TIMEOUT_MS),
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model: cfg.captionModel,

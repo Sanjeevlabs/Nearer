@@ -1,6 +1,7 @@
 // Provider-agnostic outbound mail. With RESEND_API_KEY set (and not MOCK) it
 // sends through Resend over fetch; otherwise it only logs and says so, and the
 // caller keeps the message in-app. Server only; no dependency.
+import { SERVICE_TIMEOUT_MS, deadline } from "./timeouts";
 export interface MailInput {
   to: string;
   subject: string;
@@ -25,6 +26,7 @@ export async function sendMail(m: MailInput): Promise<MailResult> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
+      signal: deadline(SERVICE_TIMEOUT_MS),
       headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
       body: JSON.stringify({ from: process.env.MAIL_FROM || "Nearer <onboarding@resend.dev>", to: [m.to], subject: m.subject, html: m.html, text: m.text }),
     });

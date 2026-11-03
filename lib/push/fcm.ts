@@ -4,6 +4,7 @@
 // exchanged at the token endpoint for an access token that lives an hour; we keep it
 // ~55 minutes. No Google SDK (they need Node), so this runs on Cloudflare Workers.
 // Server only.
+import { SERVICE_TIMEOUT_MS, fetchWithTimeout } from "../timeouts";
 import { b64uEncode } from "./webpush";
 import type { PushMessage, PushSub, SendOutcome } from "./types";
 
@@ -80,7 +81,7 @@ export async function accessToken(sa: ServiceAccount, deps: FcmDeps = {}): Promi
   const now = (deps.now ?? Date.now)();
   const key = `${sa.clientEmail}|${sa.projectId}`;
   if (cached && cached.key === key && cached.until > now) return cached.token;
-  const doFetch = deps.fetch ?? fetch;
+  const doFetch = fetchWithTimeout(SERVICE_TIMEOUT_MS, deps.fetch ?? fetch);
   try {
     const assertion = await signServiceJwt(sa, Math.floor(now / 1000));
     const res = await doFetch(sa.tokenUri, {
@@ -133,7 +134,7 @@ function isUnregistered(body: unknown): boolean {
 export async function sendFcm(sub: Pick<PushSub, "token">, msg: PushMessage, deps: FcmDeps = {}): Promise<SendOutcome> {
   const sa = serviceAccountFromEnv(deps.env ?? process.env);
   if (!sa) return "skipped";
-  const doFetch = deps.fetch ?? fetch;
+  const doFetch = fetchWithTimeout(SERVICE_TIMEOUT_MS, deps.fetch ?? fetch);
   const access = await accessToken(sa, deps);
   if (!access) return "skipped";
   try {

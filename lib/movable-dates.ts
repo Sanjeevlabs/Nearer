@@ -6,6 +6,7 @@
 import { isMockMode } from "./config";
 import { PROVIDERS, activeProvider } from "./config";
 import { cacheKey, memoryStore, SpendLedger, type LlmStore } from "./llm";
+import { MODEL_TIMEOUT_MS, deadline } from "./timeouts";
 
 export type MovableSource = "live" | "cache" | "fixture";
 
@@ -53,6 +54,7 @@ async function liveGround(prompt: string): Promise<{ text: string; citations: st
   if (!key) throw new Error("missing-key");
   const res = await fetch("https://api.meta.ai/v1/responses", {
     method: "POST",
+    signal: deadline(MODEL_TIMEOUT_MS),
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({ model: cfg.captionModel, input: prompt, tools: [{ type: "web_search" }] }),
   });
