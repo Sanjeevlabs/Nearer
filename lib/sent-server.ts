@@ -11,7 +11,7 @@ export async function sentFor(familyId: string, viewerId: string, now: Date): Pr
   const [members, stored, plays, letters] = await Promise.all([
     dbListMembers(familyId),
     dbListCards(familyId, { since, limit: 400 }),
-    safe(dbListPlays(undefined, familyId), []),
+    safe(dbListPlays(undefined, familyId, since), []),
     safe(listDocs(familyId, "chitthi"), []),
   ]);
   return buildSent({
