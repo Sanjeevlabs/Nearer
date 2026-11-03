@@ -250,6 +250,21 @@ def timeline() -> list[dict]:
     return pieces
 
 
+def check_vo() -> None:
+    """Synthesize each voice-over line only (no video) and check it fits its piece of the cut, with the margin."""
+    lines = voice_files()
+    bad = 0
+    for p in timeline():
+        if p["id"] not in lines:
+            continue
+        lead = 0.9 if p["id"] == 12 else VO_LEAD
+        dur = lines[p["id"]][1]
+        margin = p["dur"] - 0.1 - (lead + dur)
+        print(f"line {p['id']:2d}: {dur:4.1f}s of {p['dur']}s, margin {margin:+.1f}s {'ok' if margin >= 0 else 'DOES NOT FIT'}")
+        bad += margin < 0
+    sys.exit(1 if bad else 0)
+
+
 def build_audio(tl: list[dict], lines: dict, total: float) -> pathlib.Path:
     ins, fg, mix = [], [], []
     n = 0
@@ -347,7 +362,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", choices=["vertical", "16x9"])
     ap.add_argument("--fresh", action="store_true", help="re-render every clip (default reuses clips already in out/v2)")
+    ap.add_argument("--check-vo", action="store_true", help="synthesize the voice-over lines only and check each fits its shot (no video, no recorded clips needed)")
     a = ap.parse_args()
+    if a.check_vo:
+        WORK.mkdir(parents=True, exist_ok=True)
+        check_vo()
     global FRESH
     FRESH = a.fresh
     if not (OUT / "demo-reel" / "manifest.json").exists():
