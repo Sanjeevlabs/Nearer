@@ -4,25 +4,24 @@ import { POST as exchangePOST } from "@/app/api/session/route";
 import { GET as membersGET } from "@/app/api/members/route";
 import { POST as translatePOST } from "@/app/api/translate/route";
 import { GET as cronGET, POST as cronPOST } from "@/app/api/ritual-scan/route";
-import { authedJson } from "./auth-helper";
+import { authedJson, signedSession } from "./auth-helper";
 import { resetDemo } from "@/lib/store";
 
 const KEY = "test-session-secret";
 
 function cookieFor(memberId = "dadi"): string {
-  const signed = signSession({ familyId: "demo-family", memberId }, undefined, KEY);
-  if (!signed) throw new Error("no test session");
-  return `${SESSION_COOKIE}=${encodeURIComponent(signed)}`;
+  return `${SESSION_COOKIE}=${encodeURIComponent(signedSession(memberId).signed)}`;
 }
+const SID = "test-sid-0123456789abcdef";
 
 describe("session cookies (HMAC)", () => {
   it("signs and verifies; rejects tampering and expiry", () => {
-    const signed = signSession({ familyId: "demo-family", memberId: "leo" }, undefined, KEY);
+    const signed = signSession({ familyId: "demo-family", memberId: "leo", sid: SID }, undefined, KEY);
     expect(signed).toBeTruthy();
     expect(verifySession(signed, KEY)).toMatchObject({ familyId: "demo-family", memberId: "leo" });
     expect(verifySession(`${signed}x`, KEY)).toBeNull();
     expect(verifySession(signed, "wrong-key")).toBeNull();
-    const expired = signSession({ familyId: "demo-family", memberId: "leo" }, -1000, KEY);
+    const expired = signSession({ familyId: "demo-family", memberId: "leo", sid: SID }, -1000, KEY);
     expect(verifySession(expired, KEY)).toBeNull();
   });
 

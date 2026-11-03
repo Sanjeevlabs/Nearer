@@ -11,6 +11,7 @@ import { useDocumentLang, useT, type T } from "@/lib/use-t";
 import { en, htmlLang, type UiKey } from "@/lib/ui-strings/lazy";
 import { cn } from "@/lib/utils";
 import { AUTH_INTENT_KEY, browserAuth, signInOptions } from "@/lib/supabase-browser";
+import { signOutNow } from "@/lib/sign-out";
 import { afterAuth, afterSignin, currentSession, gateDecision, nextHref, parseNext, signinHref, verifyAccessToken, type Next } from "@/lib/auth-session";
 import { authRedirectUrl, isNative, openExternal } from "@/lib/native";
 import { useShell } from "./shell";
@@ -234,7 +235,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     // Google blocks sign-in inside app webviews: in the native app it opens in the system browser
     // and comes back through the site.nearer.app:// deep link.
     const native = isNative();
-    const { data, error: err } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: authRedirectUrl("oauth"), skipBrowserRedirect: native } });
+    const { data, error: err } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: authRedirectUrl("oauth"), skipBrowserRedirect: native, queryParams: { prompt: "select_account" } } });
     if (!err && native && data?.url) await openExternal(data.url);
     if (err) {
       setError(errorText(t, "code-not-sent"));
@@ -296,10 +297,9 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   };
 
   const notYou = () => {
-    const sb = browserAuth();
-    if (sb) void sb.auth.signOut({ scope: "local" });
     setSignedInAs(null);
-    if (gated) router.replace(signinHref(mode === "join" ? "join" : "create", inviteCode.trim() || undefined));
+    // Everything about the last person goes, then back to the one door.
+    void signOutNow(gated ? signinHref(mode === "join" ? "join" : "create", inviteCode.trim() || undefined) : "/");
   };
 
   const verify = async (value = code) => {

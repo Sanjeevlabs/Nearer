@@ -101,3 +101,46 @@ export function gateDecision(o: { live: boolean; hasSession: boolean; kind: Next
   if (!o.live || o.hasSession || o.resume) return { stay: true };
   return { stay: false, to: signinHref(o.kind, o.code) };
 }
+
+// ---- Sign out: one ordered routine for Settings, the waiting screen and "Not you?".
+
+export interface SignOutSteps {
+  /** Abort what's in flight and refuse new /api calls: a late response must not renew the cookie we're about to clear. */
+  stopPollers(): void;
+  /** This device stops being pushed to (needs the session, so before it is cleared). */
+  forgetPush(): Promise<void>;
+  /** DELETE /api/session. */
+  deleteSession(): Promise<void>;
+  /** Drop the Supabase session in this browser. */
+  supabaseSignOut(): Promise<void>;
+  /** The saved sign-in intent, sessionStorage, any Supabase leftovers in localStorage. */
+  clearStorage(): void;
+  /** In-memory caches: family cards, early requests, JSON cache. */
+  clearCaches(): void;
+  /** Cached pages and API copies in the service worker. */
+  clearServiceWorker(): void;
+  /** A full page load, so no in-memory state survives. */
+  goTo(path: string): void;
+}
+
+export async function signOutEverywhere(steps: SignOutSteps, to = "/"): Promise<void> {
+  const quiet = async (f: () => Promise<void>) => {
+    try {
+      await f();
+    } catch {
+      /* every step runs, whatever the one before did */
+    }
+  };
+  steps.stopPollers();
+  await quiet(steps.forgetPush);
+  await quiet(steps.deleteSession);
+  await quiet(steps.supabaseSignOut);
+  for (const f of [steps.clearStorage, steps.clearCaches, steps.clearServiceWorker]) {
+    try {
+      f();
+    } catch {
+      /* ignore */
+    }
+  }
+  steps.goTo(to);
+}

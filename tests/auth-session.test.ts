@@ -1,5 +1,7 @@
+import { clearSessionCookieHeader, sessionCookieHeader } from "@/lib/auth";
+import { createFetchGate } from "@/lib/net-gate";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { afterAuth, afterSignin, currentSession, entryHref, gateDecision, nextHref, parseNext, signinHref, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
+import { afterAuth, afterSignin, currentSession, entryHref, gateDecision, nextHref, parseNext, signinHref, signOutEverywhere, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
 
 function fakeClient(session: { access_token: string; user?: { email?: string } } | null) {
   const signOut = vi.fn(async () => ({}));
@@ -110,5 +112,68 @@ describe("identity first, then family", () => {
     expect(entryHref(false, "create")).toBe("/create");
     expect(entryHref(false, "join")).toBe("/join");
     expect(signinHref("create", undefined, true)).toBe("/signin?next=create&expired=1");
+  });
+});
+
+describe("sign out", () => {
+  it("runs every step in order and ends with a full load, even when a step fails", async () => {
+    const log: string[] = [];
+    const step = (n: string, fail = false) => async () => {
+      log.push(n);
+      if (fail) throw new Error(n);
+    };
+    await signOutEverywhere(
+      {
+        stopPollers: () => void log.push("stop"),
+        forgetPush: step("push", true),
+        deleteSession: step("delete"),
+        supabaseSignOut: step("supabase"),
+        clearStorage: () => void log.push("storage"),
+        clearCaches: () => void log.push("caches"),
+        clearServiceWorker: () => void log.push("sw"),
+        goTo: (p) => void log.push(`go:${p}`),
+      },
+      "/signin?next=create",
+    );
+    expect(log).toEqual(["stop", "push", "delete", "supabase", "storage", "caches", "sw", "go:/signin?next=create"]);
+  });
+
+  it("the clearing cookie has the attributes of the session cookie, so it replaces it (production adds Secure)", async () => {
+    const prev = process.env.NODE_ENV;
+    for (const env of ["production", "development"]) {
+      vi.stubEnv("NODE_ENV", env);
+      const set = sessionCookieHeader("x");
+      const clear = clearSessionCookieHeader();
+      const attrs = (h: string) => h.split("; ").slice(1).filter((a) => !a.startsWith("Max-Age")).sort();
+      expect(attrs(clear)).toEqual(attrs(set));
+      expect(clear).toContain("Max-Age=0");
+      expect(clear.includes("Secure")).toBe(env === "production");
+    }
+    vi.unstubAllEnvs();
+    expect(process.env.NODE_ENV).toBe(prev);
+  });
+
+  it("after the gate closes, a poll in flight is aborted (its response never reaches the browser) and new ones are refused", async () => {
+    const seen: string[] = [];
+    const base = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      seen.push(`${init?.method ?? "GET"} ${url}`);
+      if (url === "/api/window") {
+        return new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+      }
+      return Promise.resolve(new Response("{}"));
+    }) as unknown as typeof fetch;
+    const gate = createFetchGate(base);
+    const poll = gate.fetch("/api/window");
+    gate.close();
+    await expect(poll).rejects.toMatchObject({ name: "AbortError" });
+    await expect(gate.fetch("/api/courtyard")).rejects.toMatchObject({ name: "AbortError" });
+    // Sign-out's own calls, and non-API requests, still go.
+    expect((await gate.fetch("/api/session", { method: "DELETE" })).ok).toBe(true);
+    expect((await gate.fetch("/api/push/register", { method: "DELETE" })).ok).toBe(true);
+    expect((await gate.fetch("/sw.js")).ok).toBe(true);
+    expect(seen).not.toContain("GET /api/courtyard");
+    // A GET to /api/session is a poll, not the sign-out.
+    await expect(gate.fetch("/api/session?family=1")).rejects.toMatchObject({ name: "AbortError" });
   });
 });

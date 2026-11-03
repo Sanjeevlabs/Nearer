@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { sessionCookieHeader, signSession } from "@/lib/auth";
+import { issueSessionCookie } from "@/lib/auth";
+import { lastUsedMember } from "@/lib/sessions";
 import { dbAddMember, dbCreateFamily, dbFindMemberByEmail, dbFindInvite, dbGetMember, dbListMembers, dbListSides, dbUpdateMemberProfile } from "@/lib/db";
 import type { Member } from "@/lib/schemas";
 import { isAdmin, isClaimable } from "@/lib/permissions";
@@ -95,8 +96,12 @@ export async function POST(req: Request): Promise<Response> {
 
   if (intent.type === "signin") {
     if (!existing) return Response.json({ error: "no-family" }, { status: 404 });
-    // Still waiting in one family but already in another? Open the one you're in.
-    const here = existing.status === "pending" ? ((await dbListSides(existing)).find((m) => m.status !== "pending") ?? existing) : existing;
+    // In several families? Open the one used last (never one still waiting for an admin, if another is open).
+    const sides = await dbListSides(existing);
+    const open = sides.filter((m) => m.status !== "pending");
+    const pool = open.length ? open : [existing];
+    const lastId = await lastUsedMember(pool.map((m) => m.id));
+    const here = pool.find((m) => m.id === lastId) ?? pool[0];
     familyId = here.familyId;
     memberId = here.id;
   } else if (intent.type === "join" && existing) {
@@ -140,6 +145,30 @@ export async function POST(req: Request): Promise<Response> {
       memberId = member.id;
       if (member.status !== "pending") welcome = await welcomeLine(familyId, member);
     }
+  } else if (intent.type === "create" && existing) {
+    // Already in one Nearer, starting another (their side of a marriage, say): a new family with this same
+    // person in it, linked by personId. At most four sides.
+    const sides = await dbListSides(existing);
+    if (sides.length >= 4) return Response.json({ error: "too-many-sides" }, { status: 409 });
+    const personId = existing.personId ?? `p-${crypto.randomUUID().slice(0, 16)}`;
+    if (!existing.personId) await dbUpdateMemberProfile(existing.id, { personId });
+    familyId = await dbCreateFamily(intent.familyName);
+    const member = await dbAddMember({
+      familyId,
+      firstName: intent.firstName,
+      displayName: intent.callName || intent.firstName,
+      role: existing.role === "child" ? "child" : "adult",
+      lang: existing.lang,
+      displayLang: existing.displayLang,
+      tz: existing.tz,
+      birthday: existing.birthday,
+      city: existing.city,
+      email,
+      access: "owner",
+      status: "active",
+      personId,
+    });
+    memberId = member.id;
   } else {
     if (existing) return Response.json({ error: "already-member" }, { status: 409 });
     let invite: Invite | undefined;
@@ -176,8 +205,9 @@ export async function POST(req: Request): Promise<Response> {
     if (intent.type === "join" && member.status !== "pending") welcome = await welcomeLine(familyId, member);
   }
 
-  const signed = signSession({ familyId, memberId });
-  if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
+  // A device holds one session: whatever this request carried (another person, the demo) is revoked first.
+  const cookie = await issueSessionCookie(req, { familyId, memberId }).catch(() => null);
+  if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
   const nowStatus = (await dbGetMember(memberId))?.status ?? "active";
-  return Response.json({ familyId, memberId, status: nowStatus, ...(welcome ? { welcome } : {}) }, { headers: { "set-cookie": sessionCookieHeader(signed) } });
+  return Response.json({ familyId, memberId, status: nowStatus, ...(welcome ? { welcome } : {}) }, { headers: { "set-cookie": cookie } });
 }

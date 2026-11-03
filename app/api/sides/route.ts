@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isDemoFamily, requireSession, sessionCookieHeader, sessionFromRequest, signSession } from "@/lib/auth";
+import { isDemoFamily, issueSessionCookie, requireSession, sessionFromRequest } from "@/lib/auth";
 import { dbLive } from "@/lib/family-db";
 import { isSeedFamily } from "@/lib/family";
 import { dbAddMember, dbCreateFamily, dbCreateInvite, dbGetFamilyName, dbListCards, dbLinkMembers, dbListMembers, dbListRelationships, dbListSides, dbListSidesNamed, dbUpdateMemberProfile } from "@/lib/db";
@@ -89,9 +89,9 @@ async function postHandler(req: Request): Promise<Response> {
     // Only to a home where this same person already has a place: their own row there (same person id).
     const target = body.familyId === me.familyId ? me : me.personId && targetPeople ? (await targetPeople).find((m) => m.personId === me.personId) : undefined;
     if (!target) return Response.json({ error: "not-your-family" }, { status: 403 });
-    const signed = signSession({ familyId: target.familyId, memberId: target.id });
-    if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
-    return Response.json({ familyId: target.familyId, memberId: target.id }, { headers: { "set-cookie": sessionCookieHeader(signed) } });
+    const cookie = await issueSessionCookie(req, { familyId: target.familyId, memberId: target.id }).catch(() => null);
+    if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
+    return Response.json({ familyId: target.familyId, memberId: target.id }, { headers: { "set-cookie": cookie } });
   }
 
   // "Add my family": a new Nearer for my parents' side, with my home inside it.
@@ -157,9 +157,9 @@ async function postHandler(req: Request): Promise<Response> {
     await dbLinkMembers({ familyId, memberId: asMine ? self.id : row.id, relationMemberId: asMine ? row.id : self.id, relation: r.relation });
   }
   const invite = await dbCreateInvite(familyId, self.id);
-  const signed = signSession({ familyId, memberId: self.id });
-  if (!signed) return Response.json({ error: "session-unavailable" }, { status: 500 });
-  return Response.json({ familyId, memberId: self.id, invite }, { headers: { "set-cookie": sessionCookieHeader(signed) } });
+  const cookie = await issueSessionCookie(req, { familyId, memberId: self.id }).catch(() => null);
+  if (!cookie) return Response.json({ error: "session-unavailable" }, { status: 500 });
+  return Response.json({ familyId, memberId: self.id, invite }, { headers: { "set-cookie": cookie } });
 }
 
 export const GET = guardWrites(getHandler);

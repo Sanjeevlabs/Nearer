@@ -143,12 +143,14 @@ const BUDGET = {
   sessionFamily: { calls: 3, depth: 1 },
   members: { calls: 2, depth: 1 },
   relationships: { calls: 2, depth: 1 },
-  sideSwitch: { calls: 2, depth: 1 },
+  // (a switch also ends the old session and starts the new one: two writes, one more wave after the reads)
+  sideSwitch: { calls: 4, depth: 2 },
   // The rest of the first screen's wave: everything with the session check.
   cards: { calls: 3, depth: 1 },
   waiting: { calls: 6, depth: 1 },
   // The demo sign-in: brakes + family rows, members, what the first screens read. The rest copies after the answer.
-  signIn: { depth: 3 },
+  // (the session row is one more write after the copy is made)
+  signIn: { depth: 4 },
   festivalWeek: { calls: 6, depth: 2 },
   // The Kids page: members, relationships, cards and the document kinds, all in the wave after the session lookup.
   kids: { calls: 6, depth: 2 },

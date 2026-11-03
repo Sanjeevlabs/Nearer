@@ -1,5 +1,6 @@
 "use client";
 
+import { installFetchGate } from "@/lib/net-gate";
 import { MotionConfig } from "framer-motion";
 import { useEffect } from "react";
 import { isNative } from "@/lib/native";
@@ -13,6 +14,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => startUploadQueue(), []);
   // Any write (a card posted, a reaction, an approval) drops the cached lists and refetches the ones on screen.
   useEffect(() => watchWrites(), []);
+  // Lets sign-out stop requests in flight, so a late response can't renew the cookie it just cleared.
+  useEffect(() => installFetchGate(), []);
   // Offline shell (public/sw.js). The native shell loads the live site and has its own offline.html, so it skips this.
   useEffect(() => {
     if (process.env.NODE_ENV !== "production" || isNative() || !("serviceWorker" in navigator)) return;

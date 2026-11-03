@@ -1,4 +1,5 @@
 import { parseBirthday } from "./birthday";
+import { revokeMembers } from "./sessions";
 import { ritualRunId } from "./rituals";
 // Data-access seam: mock memory store vs Supabase.
 // Every route handler goes through these async functions; the shapes match
@@ -1035,6 +1036,8 @@ export async function dbDeleteMemberTraces(memberId: string): Promise<Record<str
 
 export async function dbRemoveMember(memberId: string): Promise<boolean> {
   const fam = memberFamily(memberId);
+  // Their sessions end at once, on every device.
+  await revokeMembers([memberId]).catch(() => undefined);
   // Their phones stop receiving at once (the database cascades too, memory does not).
   if (fam) await removeAllForMember(fam, memberId).catch(() => undefined);
   const sb = dbFor(fam);
