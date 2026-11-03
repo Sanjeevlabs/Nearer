@@ -64,8 +64,8 @@ describe("onboarding: whose window is this?", () => {
     await addOtherSide(post("http://test/api/members/other-side", { they: "parents", people: [{ callName: "Maa", city: "Kanpur" }] }, me.cookie));
     const { invite } = (await (await createInvite(post("http://test/api/invites", {}, me.cookie))).json()) as { invite: { code: string } };
     expect(((await (await listInvites(get("http://test/api/invites", me.cookie))).json()) as { invites: { code: string }[] }).invites.map((i) => i.code)).toContain(invite.code);
-    expect(joinLink("https://a.test", invite.code)).toBe(`https://a.test/join?code=${invite.code}`);
-    expect(decodeURIComponent(whatsappInvite("https://a.test", invite.code, "Arjun"))).toContain(`Arjun has opened a window between our homes on Nearer. Join here: https://a.test/join?code=${invite.code}`);
+    expect(joinLink("https://a.test", invite.code)).toBe(`https://a.test/join/${invite.code}`);
+    expect(decodeURIComponent(whatsappInvite("https://a.test", invite.code, "Arjun"))).toContain(`Arjun has opened a window between our homes on Nearer. Join here: https://a.test/join/${invite.code}`);
 
     const peek = (await (await peekInvite(get(`http://test/api/invites/peek?code=${invite.code.toLowerCase()}`))).json()) as { family: string; host: string; places: { id: string; callName: string }[] };
     expect(peek).toMatchObject({ family: "Sharma", host: "Arjun" });
