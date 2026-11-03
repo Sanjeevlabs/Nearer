@@ -4,6 +4,7 @@
 // everything else is "Earlier". Only things that need MY action wait: an unplayed voice
 // note to me, a question or kid ask to me, a Today answer waiting for mine. Receipts
 // (heard, blessed, shared), lamps, reminders and occasions are Earlier, as plain lines.
+import { clockInZone } from "./time-format";
 import { z } from "zod";
 import { addressees } from "./households";
 import { askLine, openAsksFor } from "./kids";
@@ -71,7 +72,7 @@ export interface InboxInput {
 function clockIn(iso: string, tz: string | undefined): string {
   if (!tz) return "";
   try {
-    return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz }).format(new Date(iso));
+    return clockInZone(tz).format(new Date(iso));
   } catch {
     return "";
   }

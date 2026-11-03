@@ -8,6 +8,7 @@ import type { Member } from "@/lib/schemas";
 import { isAdmin, isGrownUp } from "@/lib/permissions";
 import { recordTeenConsent } from "@/lib/roles";
 import { guardWrites } from "@/lib/api-guard";
+import { MAX_SIDES } from "@/lib/join";
 import { memberFor } from "@/lib/request-memo";
 import { cardsFor, familyNameFor, membersFor } from "@/lib/request-data";
 
@@ -24,7 +25,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("create"), familyName: z.string().trim().min(1).max(40), bring: z.array(id).max(8).default([]) }),
 ]);
 
-const MAX_SIDES = 4;
+// At most 4 families per person (lib/join.ts).
 
 const WEEK_MS = 7 * 86_400_000;
 

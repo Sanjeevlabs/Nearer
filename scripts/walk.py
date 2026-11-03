@@ -16,6 +16,8 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
+from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 
@@ -164,11 +166,18 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
     ctx.close()
 
 
-def walk(base: str, person: str, kind: str, browser, size=(390, 844)) -> list[str]:
+def walk(base: str, person: str, kind: str, browser, size=(390, 844), counts=None) -> list[str]:
     problems: list[str] = []
     ctx = browser.new_context(viewport={"width": size[0], "height": size[1]}, base_url=base)
     # Behind the door: open straight into the house (app/page.tsx DOOR_KEY).
     ctx.add_init_script("try { sessionStorage.setItem('aangan:door', 'open'); sessionStorage.setItem('aangan:entered', '1') } catch (e) {}")
+    if counts is not None:
+        def count_api(request):
+            path = urlsplit(request.url).path
+            if path.startswith("/api/"):
+                counts[path] += 1
+
+        ctx.on("request", count_api)
     page = ctx.new_page()
     where = {"url": "/"}
     page.on("pageerror", lambda e: problems.append(f"{person} {where['url']}: page error: {e}"))
@@ -530,17 +539,169 @@ def doors(base: str, browser, problems: list[str]) -> None:
             ctx.close()
 
 
+def one_door(base: str, browser, problems: list[str]) -> None:
+    """Sign in once, set up in one step, join with one link (mock: the email code is 000000).
+
+    New person: the landing has Sign in and the demo only; /signin, email, code, one setup screen, skip the
+    other side, in. Invited person: /join/<CODE>, email, code, their name, in (active, no waiting). The host
+    opening their own link goes straight in; a member of another family gets one confirm; a dead link says so.
+    """
+    import time
+
+    # Signed out, the app shell's session reads answer 401; a sign-in with no family answers 404
+    # (no-family), a dead link's peek 404. Expected, not errors.
+    expected = re.compile(r"status of 40[14]", re.I)
+
+    def api(page, method: str, url: str, body=None):
+        # Through the page, so the session cookie goes with it (the request context drops it on http).
+        return page.evaluate(
+            """async ([m, u, b]) => { const r = await fetch(u, { method: m, headers: { 'content-type': 'application/json' }, body: b === null ? undefined : JSON.stringify(b) }); let j = null; try { j = await r.json(); } catch {} return { status: r.status, body: j }; }""",
+            [method, url, body],
+        )
+    stamp = int(time.time() * 1000)
+
+    def context(who: str):
+        ctx = browser.new_context(viewport={"width": 390, "height": 844}, base_url=base)
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: problems.append(f"door {who}: page error: {e}"))
+        page.on("console", lambda m: m.type == "error" and not IGNORE.search(m.text) and not expected.search(m.text) and problems.append(f"door {who}: console: {m.text[:200]}"))
+        return ctx, page
+
+    def code_in(page, who: str, addr: str) -> bool:
+        page.locator("[data-ui=signin-form] input[type=email]").fill(addr)
+        page.get_by_role("button", name="Send code").click()
+        try:
+            page.locator("input[autocomplete=one-time-code]").wait_for(timeout=10_000)
+        except Exception:
+            problems.append(f"door {who}: no code step after Send code")
+            return False
+        page.locator("input[autocomplete=one-time-code]").fill("000000")
+        return True
+
+    def landed(page, who: str) -> bool:
+        try:
+            page.wait_for_url(re.compile(r"/$"), timeout=15_000)
+            return True
+        except Exception:
+            problems.append(f"door {who}: did not land in the family (at {page.url})")
+            return False
+
+    # 1. New, no link.
+    ctx, page = context("new")
+    page.goto("/", wait_until="load")
+    page.get_by_role("button", name="Try the demo family").first.wait_for(timeout=15_000)
+    text = page.locator("body").inner_text()
+    for gone in ("Start your family", "Join with a code", "Join with code"):
+        if gone in text:
+            problems.append(f"door new /: the landing still offers {gone!r}")
+    page.locator("[data-ui=home-signin], [data-ui=landing-signin]").first.click()
+    page.wait_for_url(re.compile(r"/signin"), timeout=10_000)
+    page.get_by_role("heading", name="Welcome to Nearer").wait_for(timeout=10_000)
+    if page.get_by_text("Already have a family?").count() or page.get_by_text("New to Nearer?").count():
+        problems.append("door new /signin: separate sign-up links are back")
+    if not code_in(page, "new", f"asha.walk{stamp}@example.com"):
+        ctx.close()
+        return
+    try:
+        page.locator("[data-ui=setup-form]").wait_for(timeout=10_000)
+    except Exception:
+        problems.append("door new: no setup screen after the code")
+        ctx.close()
+        return
+    fit_check(page, "/signin (setup)", problems, "door")
+    if page.get_by_label("Your first name").input_value() != "Asha":
+        problems.append("door new: the first name is not prefilled from the email")
+    page.get_by_role("button", name="Have an invite link? Paste it").click()
+    page.locator("[data-ui=paste-link] input").wait_for(timeout=5_000)
+    page.get_by_label("Family name").fill("The Walk family")
+    page.get_by_role("button", name="Create family").click()
+    try:
+        page.get_by_role("heading", name="Whose window is this?").wait_for(timeout=10_000)
+        page.get_by_role("button", name="Later").click()
+    except Exception:
+        problems.append("door new: no skippable other-side step after Create family")
+    if not landed(page, "new"):
+        ctx.close()
+        return
+    made = api(page, "POST", "/api/invites", {})
+    code = (made.get("body") or {}).get("invite", {}).get("code")
+    if not code:
+        problems.append(f"door new: could not make a link ({made.get('status')})")
+        ctx.close()
+        return
+
+    # 2. New, with the link.
+    ctx2, p2 = context("invited")
+    p2.goto(f"/join/{code}", wait_until="load")
+    try:
+        p2.get_by_role("heading", name="Join the Walk family").wait_for(timeout=10_000)
+    except Exception:
+        problems.append("door invited: /join/<CODE> does not name the family")
+    if code_in(p2, "invited", f"ravi.walk{stamp}@example.com"):
+        try:
+            p2.locator("[data-ui=join-pick]").wait_for(timeout=10_000)
+            if p2.get_by_label("Your first name").input_value() != "Ravi":
+                problems.append("door invited: the name is not prefilled")
+            p2.get_by_role("button", name="Join").click()
+            if landed(p2, "invited"):
+                me = api(p2, "GET", "/api/session").get("body") or {}
+                if me.get("status") != "active":
+                    problems.append(f"door invited: joined as {me.get('status')!r}, expected active")
+        except Exception:
+            problems.append("door invited: no name step after the code")
+    ctx2.close()
+
+    # 4. The host opens their own link: straight back in.
+    page.goto(f"/join/{code}", wait_until="load")
+    landed(page, "host-own-link")
+    ctx.close()
+
+    # 5. A member of another family: one confirm, then in, two families.
+    ctx3, p3 = context("member")
+    p3.goto("/privacy", wait_until="load")
+    res = api(p3, "POST", "/api/auth/verify", {"email": f"meera.walk{stamp}@example.com", "code": "000000", "tz": "UTC", "intent": {"type": "create", "familyName": "The Other family", "firstName": "Meera"}})
+    if res.get("status") != 200:
+        problems.append(f"door member: could not make a second family ({res.get('status')})")
+    else:
+        p3.goto(f"/join/{code}", wait_until="load")
+        try:
+            p3.locator("[data-ui=join-confirm]").wait_for(timeout=10_000)
+            p3.get_by_text("Signed in as").first.wait_for(timeout=2_000)
+            p3.get_by_role("button", name="Join", exact=True).click()
+            if landed(p3, "member"):
+                n = len((api(p3, "GET", "/api/sides").get("body") or {}).get("sides", []))
+                if n != 2:
+                    problems.append(f"door member: {n} families after joining, expected 2")
+        except Exception:
+            problems.append("door member: no 'Join the Walk family too?' confirm")
+    ctx3.close()
+
+    # 9. A dead link: says so, with Sign in.
+    ctx4, p4 = context("dead")
+    p4.goto("/join/ZZZZ9999", wait_until="load")
+    try:
+        p4.locator("[data-ui=join-dead]").wait_for(timeout=10_000)
+        p4.get_by_role("link", name="Sign in").wait_for(timeout=2_000)
+    except Exception:
+        problems.append("door dead: an unknown link has no 'expired' page with Sign in")
+    ctx4.close()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:3100")
     ap.add_argument("--engine", default="chromium", choices=["chromium", "webkit"], help="webkit is Safari's engine (iPhone)")
+    ap.add_argument("--count-requests", action="store_true", help="report API requests made by each room walk")
     args = ap.parse_args()
     problems: list[str] = []
     with sync_playwright() as p:
         browser = getattr(p, args.engine).launch()
         for person, kind in PEOPLE:
             for size in FIT_SIZES:
-                found = walk(args.base, person, kind, browser, size)
+                counts = Counter() if args.count_requests else None
+                found = walk(args.base, person, kind, browser, size, counts)
+                if counts is not None:
+                    print(f"{person} {size[0]}x{size[1]} API requests: {json.dumps(dict(sorted(counts.items())))}")
                 if person == "arjun":
                     first_screen(args.base, person, browser, found, size)
                 print(f"{person:6} {size[0]}x{size[1]} {'ok' if not found else f'{len(found)} problem(s)'}")
@@ -548,6 +709,10 @@ def main() -> int:
         found: list[str] = []
         skipped = sheets(args.base, "arjun", browser, found)
         print(f"sheets 360x640 {'ok' if not found else f'{len(found)} problem(s)'}" + (f" (no opener for: {', '.join(skipped)})" if skipped else ""))
+        problems += found
+        found = []
+        one_door(args.base, browser, found)
+        print(f"one door (sign in, set up, join by link) {'ok' if not found else f'{len(found)} problem(s)'}")
         problems += found
         found = []
         doors(args.base, browser, found)

@@ -47,7 +47,7 @@ Every family keeps its own space. A married couple and their children belong to 
 
 Solo Indie-track entry, Meta Global AI Developer Hackathon. Deadline 4 Nov 2026, 9:00 PM ET.
 
-Everything in this repo was built during the event window (27 Oct – 4 Nov 2026); see [BUILD_LOG.md](BUILD_LOG.md) for the day-by-day record. Stack: Next.js 16 PWA on Cloudflare Workers (OpenNext; see [docs/DEPLOY.md](docs/DEPLOY.md)), Supabase (Postgres + private Storage + RLS by `family_id`), one Next.js app, no queues or workers. Sign-in is an email code; invite codes let someone take a place the family made for them. Two synthetic demo families (`demo-family` = Sharma, `demo-iyer` = Iyer) open with the public demo code.
+Everything in this repo was built during the event window (27 Oct – 4 Nov 2026); see [BUILD_LOG.md](BUILD_LOG.md) for the day-by-day record. Stack: Next.js 16 PWA on Cloudflare Workers (OpenNext; see [docs/DEPLOY.md](docs/DEPLOY.md)), Supabase (Postgres + private Storage + RLS by `family_id`), one Next.js app, no queues or workers. Sign-in is Google or an email code, the same for new and returning people; a family shares one link (`/join/<CODE>`, 7 days) that lets whoever opens it straight in, or into the place the family made for them. Two synthetic demo families (`demo-family` = Sharma, `demo-iyer` = Iyer) open with the public demo code.
 
 ### Run the demo locally
 
@@ -115,7 +115,7 @@ How it is kept safe and cheap:
 ## Security model
 
 - **Tenancy:** every read and write is scoped to the session's `familyId`; Postgres RLS by `family_id`; server routes use the service-role key, which never reaches the browser.
-- **Sessions:** httpOnly, SameSite=Lax, HMAC-signed cookies. Email OTP is rate-limited. Invite codes expire in 7 days and can never open an admin or someone with their own account. The persona switcher only works in the synthetic demo families.
+- **Sessions:** httpOnly, SameSite=Lax, HMAC-signed cookies. Email OTP is rate-limited. Family links expire in 7 days, can be revoked, stop working when whoever made them leaves, and can never open an admin or someone with their own account. Joining by link needs no approval: a leaked link lets someone in until it expires or is revoked; owners and admins can remove anyone. The persona switcher only works in the synthetic demo families.
 - **Two sides:** switching is only to a home where the *same person* (server-set `personId`) already has a place. Other members' emails and the `personId` never leave the server.
 - **Games** are server-authoritative: dice and shuffles use `crypto.randomInt`, every move is checked for turn and move count, and hidden memory cards are masked before they reach the browser.
 - **Sharing** is opt-in, a frozen copy behind a 144-bit token, `noindex`, revocable. Export strips emails, Muse logs and safety locations.

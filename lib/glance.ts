@@ -1,6 +1,7 @@
 // The glance strip on the window: four 3-second answers about the whole
 // family. Pure and client-safe (no fs, no db): the server loads, this decides.
 // Words, never counts: no "3 unread", only names, times and dates.
+import { clockInZone, zonedFormatter } from "./time-format";
 import { addressees } from "./households";
 import { askLine, openAsksFor, type KidsTile } from "./kids";
 import type { KidAsk, Need, Question, TodayTask, WeeklyCall } from "./kinds";
@@ -8,6 +9,9 @@ import { cleanTitle, type CalOccasion } from "./occasion-calendar";
 import type { Card, Member, Play } from "./schemas";
 import { isAwake, placeFromTz } from "./zones";
 import { dateIn } from "./today";
+
+const shortWeekdayInZone = zonedFormatter("en-US", { weekday: "short" });
+const partsInZone = zonedFormatter("en-US", { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" });
 
 export type WaitingKind = "voice" | "question" | "today" | "care" | "nudge" | "kid";
 
@@ -111,14 +115,23 @@ export function waitingItems(i: WaitingInput): (WaitingItem & { at: string })[] 
   const found: (WaitingItem & { at: string })[] = [];
 
   const played = new Set(i.plays.filter((p) => p.memberId === i.viewerId).map((p) => p.cardId));
-  const mine = i.cards.filter((c) => c.authorId === i.viewerId);
+  const lastReplyTo = new Map<string, string>();
+  let lastReplyToEveryone = "";
+  for (const card of i.cards) {
+    if (card.authorId !== i.viewerId || !past(card.takenAt)) continue;
+    const recipients = addressees(card);
+    if (recipients.length === 0 && card.takenAt > lastReplyToEveryone) lastReplyToEveryone = card.takenAt;
+    for (const id of recipients) {
+      if (card.takenAt > (lastReplyTo.get(id) ?? "")) lastReplyTo.set(id, card.takenAt);
+    }
+  }
   // A child's spoken question waits as "<name> asked you something", not also as a voice note.
   const askVoices = new Set((i.kidAsks ?? []).map((a) => a.cardId).filter(Boolean));
   for (const c of i.cards) {
     if (!c.authorId || c.authorId === i.viewerId || played.has(c.id) || !past(c.takenAt) || askVoices.has(c.id)) continue;
     if (!addressees(c).includes(i.viewerId) || nowMs - Date.parse(c.takenAt) > CARD_DAYS * 86_400_000) continue;
     // Answering the sender is acting on it: something of yours to them (or to everyone) since.
-    const replied = mine.some((r) => r.takenAt > c.takenAt && past(r.takenAt) && (addressees(r).length === 0 || addressees(r).includes(c.authorId as string)));
+    const replied = lastReplyToEveryone > c.takenAt || (lastReplyTo.get(c.authorId) ?? "") > c.takenAt;
     if (replied) continue;
     found.push({ at: c.takenAt, kind: "voice", text: `${name(c.authorId)}'s ${THING[c.type] ?? "card"}`, href: `/lane?card=${encodeURIComponent(c.id)}`, fromId: c.authorId });
   }
@@ -184,7 +197,7 @@ export function dayWords(iso: string): string {
 /** "7 PM", "8:30 AM": whole hours drop the minutes. */
 export function clockWords(tz: string, at: Date): string {
   try {
-    return new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(at).replace(":00", "").replace(/\s/g, " ");
+    return clockInZone(tz).format(at).replace(":00", "").replace(/\s/g, " ");
   } catch {
     return "";
   }
@@ -192,7 +205,7 @@ export function clockWords(tz: string, at: Date): string {
 
 function weekdayIn(tz: string, at: Date): string {
   try {
-    return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(at);
+    return shortWeekdayInZone(tz).format(at);
   } catch {
     return "";
   }
@@ -248,7 +261,7 @@ export function nextUp(i: NextInput): Glance["next"] {
 
 /* ------------------------------------------------------------- our call */
 function wallMs(tz: string, at: Date): number {
-  const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" }).formatToParts(at);
+  const p = partsInZone(tz).formatToParts(at);
   const g = (t: string): number => Number(p.find((x) => x.type === t)?.value ?? 0);
   return Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute"), g("second"));
 }
