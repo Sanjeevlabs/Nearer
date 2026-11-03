@@ -175,7 +175,9 @@ export function AuthFlow({ mode }: { mode: Mode }) {
           : t("auth.titleInviteThem")
         : step === "email"
           ? mode === "signin"
-            ? t("auth.titleSignInUp")
+            ? target.next === "create"
+              ? t("auth.titleSignUp")
+              : t("auth.titleSignIn")
             : t("auth.titleEmail")
           : step === "nofamily"
             ? t("auth.noFamilyTitle")
@@ -268,7 +270,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
   };
 
   /** Nearer's session is set: remember the welcome, then wait for an admin, open the other side, or go in. */
-  const afterVerify = (data: { welcome?: string; status?: string }) => {
+  const afterVerify = (data: { welcome?: string; status?: string; existing?: boolean }) => {
     if (data.welcome) {
       try {
         sessionStorage.setItem("aangan:welcome", data.welcome);
@@ -278,7 +280,8 @@ export function AuthFlow({ mode }: { mode: Mode }) {
     }
     // A joiner waiting for an admin: the waiting screen takes over.
     if (data.status === "pending") return enter();
-    if (mode === "create") {
+    // Already had a family: the server opened it instead of making a second one.
+    if (mode === "create" && !data.existing) {
       // Signed in: now the other side of the window.
       setBusy(false);
       setStep("other-side");
@@ -335,12 +338,14 @@ export function AuthFlow({ mode }: { mode: Mode }) {
         const res = await verifyAccessToken(sb, { accessToken: token, ...base }, (e) => e === "no-family");
         const after = afterSignin(res);
         if (after.kind === "chooser") {
+          // Came to start a family and has none: on to the form.
+          if (go.noFamilyTo) return router.replace(go.noFamilyTo);
           setBusy(false);
           setStep("nofamily");
           return;
         }
         if (after.kind === "failed") throw new Error(after.error);
-        return afterVerify(res as { welcome?: string; status?: string });
+        return afterVerify(res as { welcome?: string; status?: string; existing?: boolean });
       }
       if (sb) {
         const out = byPhone ? await sb.auth.verifyOtp({ phone: phoneE164(), token: value, type: "sms" }) : await sb.auth.verifyOtp({ email, token: value, type: "email" });
@@ -491,7 +496,7 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             }}
           >
             <p className="m-0 mt-2 text-body text-ink-soft">
-              {mode === "signin" ? t("auth.emailSubSignin") : t("auth.emailSub")}
+              {mode === "signin" ? (target.next === "create" ? t("auth.emailSubSignup") : t("auth.emailSubSignin")) : t("auth.emailSub")}
               {mode === "join" ? ` ${t("auth.emailSubJoin")}` : ""}
             </p>
             {ways.google && (
@@ -526,6 +531,16 @@ export function AuthFlow({ mode }: { mode: Mode }) {
             {error && (
               <p className="m-0 mt-3 text-callout text-[#b42318]" role="alert">
                 {error}
+              </p>
+            )}
+            {mode === "signin" && target.next !== "join" && (
+              // Two doors, one page: returning people sign in, new people start a family. Google or an email code proves who
+              // you are either way; a family you already have always opens, so "Start your family" can never make a second one.
+              <p className="m-0 mt-6 text-callout text-ink-soft">
+                {target.next === "create" ? t("auth.haveFamily") : t("auth.newToNearer")}{" "}
+                <a href={target.next === "create" ? "/signin" : signinHref("create")} className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-2">
+                  {target.next === "create" ? t("auth.signInLink") : t("auth.titleSignUp")}
+                </a>
               </p>
             )}
             <div className="flex-1" />

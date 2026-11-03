@@ -190,8 +190,9 @@ function Recipients({ value, onChange }: { value: string[]; onChange: (ids: stri
   const label = value.length === 0 ? "Everyone" : home ? householdName(home, (mm) => callName(mm)) : chosen.length <= 2 ? chosen.map((mm) => callName(mm)).join(" & ") : `${chosen.slice(0, 2).map((mm) => callName(mm)).join(", ")} +${chosen.length - 2}`;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label={`Who is this for: ${label}. Change`} className="press flex min-h-[48px] w-full items-center gap-3 rounded-full bg-surface py-1 pl-1.5 pr-4 text-start">
-        <span className="flex -space-x-2">
+      <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" className="press flex min-h-[48px] w-full items-center gap-3 rounded-full bg-surface py-1 pl-1.5 pr-4 text-start">
+        <span className="sr-only">Who is this for?</span>
+        <span className="flex -space-x-2" aria-hidden="true">
           {chosen.slice(0, 3).map((mm) => (
             <span key={mm.id} className="rounded-full ring-2 ring-white">
               <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />

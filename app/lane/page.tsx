@@ -47,18 +47,21 @@ function Tile({ card, kind, onOpen, eager = false, starred = false }: { card: Ca
   const { current, isPlaying } = usePlayer();
   const author = members.find((m) => m.id === card.authorId);
   const voice = kind === "audio";
-  const label = (voice ? `${callName(author)}'s voice memory, ${monthChip(card.takenAt)}` : card.caption || `${kind === "video" ? "Video" : "Photo"}, ${monthChip(card.takenAt)}`) + (starred ? ", starred" : "");
+  const dateLabel = monthChip(card.takenAt);
+  const sourceLabel = museLabel(card.source);
+  const authorLabel = voice ? `${callName(author)} · ${formatDuration(cardDuration(card))}` : callName(author);
+  const description = voice ? "Voice memory" : card.caption || (kind === "video" ? "Video" : "Photo");
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={label}
       data-card={card.id}
       className={cn("press relative shrink-0 snap-start overflow-hidden rounded-[18px] bg-surface text-left", voice ? "h-[112px] w-[112px]" : "h-[150px] w-[120px]")}
     >
+      <span className="sr-only">{description}{starred ? ", starred" : ""}</span>
       <Photo src={cardCover(card, members)} alt="" sizes="240px" position="center 30%" priority={eager} />
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.28),transparent_38%,transparent_58%,rgba(0,0,0,.55))]" aria-hidden="true" />
-      <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-caption font-semibold">{monthChip(card.takenAt)}</span>
+      <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-caption font-semibold">{dateLabel}</span>
       {starred && (
         <span className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-[#1c1b1a]" aria-hidden="true">
           <Icon name="star" size={13} solid />
@@ -69,13 +72,13 @@ function Tile({ card, kind, onOpen, eager = false, starred = false }: { card: Ca
           <Icon name={voice && current?.id === card.id && isPlaying ? "pause" : "play"} size={11} />
         </span>
       )}
-      {museLabel(card.source) && (
+      {sourceLabel && (
         <span className="absolute bottom-7 left-1.5 flex items-center gap-0.5 rounded-full bg-white/90 px-1.5 py-0.5 text-caption font-semibold text-[#1c1b1a]">
           <Icon name="sparkle" size={10} />
-          {museLabel(card.source)}
+          {sourceLabel}
         </span>
       )}
-      <span className="absolute bottom-2 left-2 right-10 truncate text-caption font-medium text-white">{voice ? `${callName(author)} · ${formatDuration(cardDuration(card))}` : callName(author)}</span>
+      <span className="absolute bottom-2 left-2 right-10 truncate text-caption font-medium text-white">{authorLabel}</span>
     </button>
   );
 }

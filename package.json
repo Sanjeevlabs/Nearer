@@ -48,6 +48,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@capacitor/cli": "8.6.0",
     "@types/node": "^20.14.0",
     "@types/qrcode": "^1.5.6",

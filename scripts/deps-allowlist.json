@@ -26,6 +26,7 @@
     "zod": "validates every request and model response"
   },
   "devDependencies": {
+    "@axe-core/playwright": "accessibility checks against the mock app",
     "@capacitor/cli": "cap sync",
     "@types/node": "types",
     "@types/qrcode": "types",

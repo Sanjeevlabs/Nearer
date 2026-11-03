@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { AnimatePresence, m } from "framer-motion";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,8 +24,8 @@ export default function AlbumPage() {
   // Opened from Occasions (?from=rituals): leaving goes back there, not to Memory Lane.
   const home = useSearchParams().get("from") === "rituals" ? "/rituals" : "/lane";
   const { refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
-  const { data, reload } = useJson<{ albums: Album[] }>("/api/albums");
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
+  const { data, failed, reload } = useJson<{ albums: Album[] }>("/api/albums");
   const [renaming, setRenaming] = useState(false);
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<Album["event"]>("gathering");
@@ -35,6 +36,14 @@ export default function AlbumPage() {
   const others = (data?.albums ?? []).filter((a) => a.id !== id);
   const photos = album ? album.cardIds.map((cid) => (cards ?? []).find((c) => c.id === cid)).filter((c): c is Card => Boolean(c)) : [];
 
+  if ((failed && !data) || (cardsFailed && (cards?.length ?? 0) === 0 && photos.length === 0)) {
+    return (
+      <div>
+        <RoomHeader title="Album" />
+        <LoadFailed what="This album" ui="album-retry" onRetry={() => { void reload(); retryCards(); }} />
+      </div>
+    );
+  }
   if (!data || !cards) return <div className="skeleton mt-16 h-[420px] rounded-card" aria-busy="true" />;
   if (!album) {
     return (
