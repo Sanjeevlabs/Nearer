@@ -1,10 +1,11 @@
 import { createDownloadUrl } from "@/lib/storage";
 import { requireSession } from "@/lib/auth";
+import { guardApi } from "@/lib/api-guard";
 
 // Private-bucket reads: refs shaped `storage:<path>` resolve here and are
 // redirected (307) to a short-lived signed URL. Clients keep using
 // resolveMediaUrl synchronously; freshness is minted per request.
-export async function GET(_req: Request, props: { params: Promise<{ path: string[] }> }): Promise<Response> {
+async function getHandler(_req: Request, props: { params: Promise<{ path: string[] }> }): Promise<Response> {
   const params = await props.params;
   const auth = await requireSession(_req);
   if (auth instanceof Response) return auth;
@@ -17,3 +18,5 @@ export async function GET(_req: Request, props: { params: Promise<{ path: string
   // The mock store hands back a same-origin path; Response.redirect needs an absolute URL.
   return Response.redirect(new URL(target.url, _req.url), 307);
 }
+
+export const GET = guardApi(getHandler);

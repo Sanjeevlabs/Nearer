@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DEMO_INVITE_CODE, clearSessionCookieHeader, endSession, isDemoFamily, issueSessionCookie, liveSession, requireSession, sessionFromRequest } from "@/lib/auth";
 import { revokeMembers } from "@/lib/sessions";
-import { guardWrites } from "@/lib/api-guard";
+import { guardApi, guardWrites } from "@/lib/api-guard";
 import { membersPayload } from "@/lib/members-payload";
 import { memberFor } from "@/lib/request-memo";
 import { familyNameFor, preloadSessionMember, relationshipsFor } from "@/lib/request-data";
@@ -25,7 +25,7 @@ const LEGACY_DEMO_CODE = "AANGAN-DEMO";
 // unexpired family invite (Privacy page) for the member's family — or the
 // documented NEARER-DEMO bootstrap code for the synthetic demo families.
 // Members with their own account, and admins, must use the email code.
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   let body: unknown;
   try {
     body = await req.json();
@@ -146,7 +146,7 @@ export const GET = guardWrites(getHandler);
 // Log out: revoke this session on the server (a copied cookie dies too), then clear the cookie.
 // ?all=1 also revokes every other device of this person, across their families; grown-ups with their
 // own account only (a child's profile can't sign anyone out).
-export async function DELETE(req: Request): Promise<Response> {
+async function deleteHandler(req: Request): Promise<Response> {
   if (new URL(req.url).searchParams.get("all") === "1") {
     const auth = await requireSession(req);
     if (auth instanceof Response) return auth;
@@ -164,3 +164,6 @@ export async function DELETE(req: Request): Promise<Response> {
   }
   return Response.json({ ok: true }, { headers: { "set-cookie": clearSessionCookieHeader() } });
 }
+
+export const POST = guardApi(postHandler);
+export const DELETE = guardApi(deleteHandler);

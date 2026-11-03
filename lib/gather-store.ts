@@ -4,7 +4,7 @@
 // Server only.
 import { z } from "zod";
 import { EventSchema, type FamilyEvent } from "./events";
-import { DbWriteError, dbFor } from "./family-db";
+import { DbReadError, DbWriteError, dbFor } from "./family-db";
 
 const DismissSchema = z.object({ id: z.string().min(1), memberId: z.string().min(1), key: z.string().min(1).max(160), at: z.string().datetime() });
 type Dismiss = z.infer<typeof DismissSchema>;
@@ -21,7 +21,8 @@ async function listLive<T>(familyId: string, kind: string, schema: z.ZodType<T, 
   const sb = dbFor(familyId);
   if (!sb) return null;
   const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).limit(500);
-  if (error || !data) return null;
+  if (error) throw new DbReadError("family_docs", error.message);
+  if (!data) return null;
   return data.map((r) => schema.safeParse((r as { data: unknown }).data)).filter((p): p is z.SafeParseSuccess<T> => p.success).map((p) => p.data);
 }
 
@@ -49,7 +50,8 @@ export async function listEventsAndDismissed(familyId: string, memberId: string)
   const sb = dbFor(familyId);
   if (sb) {
     const { data, error } = await sb.from("family_docs").select("kind, data").eq("family_id", familyId).in("kind", ["event", "event_dismiss"]).limit(1000);
-    if (!error && data && data.length < 500) {
+    if (error) throw new DbReadError("family_docs", error.message);
+    if (data && data.length < 500) {
       const of = <T>(kind: string, schema: z.ZodType<T, z.ZodTypeDef, unknown>): T[] =>
         (data as { kind: string; data: unknown }[]).filter((r) => r.kind === kind).map((r) => schema.safeParse(r.data)).filter((p): p is z.SafeParseSuccess<T> => p.success).map((p) => p.data);
       return { events: eventsFrom(familyId, of("event", EventSchema)), dismissed: dismissedFrom(familyId, memberId, of("event_dismiss", DismissSchema)) };
@@ -149,7 +151,8 @@ export async function purgeDismissals(familyId: string, today: string, now: Date
   if (sb) {
     for (let from = 0; from < 5000; from += 500) {
       const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", "event_dismiss").range(from, from + 499);
-      if (error || !data) break;
+      if (error) throw new DbReadError("family_docs", error.message);
+      if (!data) break;
       for (const r of data) {
         const p = DismissSchema.safeParse((r as { data: unknown }).data);
         if (p.success) rows.push(p.data);

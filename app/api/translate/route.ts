@@ -3,6 +3,7 @@ import { TranslateRequestSchema } from "@/lib/schemas";
 import { serverLedger, serverStore } from "@/lib/llm-server";
 import { translateText } from "@/lib/llm";
 import { checkRateLimit, requireSession } from "@/lib/auth";
+import { guardApi } from "@/lib/api-guard";
 
 // One text ({text, targetLang}) or a screen's worth at once ({texts, targetLang}):
 // a page of prompts is one request, not twenty. Each text is cached on its own.
@@ -11,7 +12,7 @@ const BatchSchema = z.object({
   targetLang: z.string().min(2).max(8),
 });
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!checkRateLimit(auth, "/api/translate")) return Response.json({ error: "rate-limited" }, { status: 429 });
@@ -35,3 +36,5 @@ export async function POST(req: Request): Promise<Response> {
   const { translation, cached, cost } = await translateText(parsed.data.text, parsed.data.targetLang, opts);
   return Response.json({ translation, cached, cost });
 }
+
+export const POST = guardApi(postHandler);

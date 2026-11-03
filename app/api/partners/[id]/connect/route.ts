@@ -3,6 +3,7 @@ import { isSampleMode } from "@/lib/config";
 import { authorizeUrl, clientIdFor, flowCookie, metadata, newFlow, redirectUriFor } from "@/lib/partners/oauth";
 import { getAccount, isEnabled } from "@/lib/partners/registry";
 import { deleteToken, saveToken } from "@/lib/partners/tokens";
+import { guardApi } from "@/lib/api-guard";
 
 // GET    → start connecting the member's own partner account (OAuth + PKCE): 302 to the partner.
 // DELETE → disconnect: forget the member's token for that partner.
@@ -15,7 +16,7 @@ function account(id: string) {
   return a && isEnabled({ envFlag: a.envFlag, defaultOn: false }) ? a : undefined;
 }
 
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function getHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
@@ -38,7 +39,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
   }
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
+async function deleteHandler(req: Request, props: { params: Promise<{ id: string }> }): Promise<Response> {
   const params = await props.params;
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
@@ -47,3 +48,6 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
   await deleteToken(auth.familyId, auth.memberId, acct.id);
   return Response.json({ ok: true, connected: false });
 }
+
+export const GET = guardApi(getHandler);
+export const DELETE = guardApi(deleteHandler);

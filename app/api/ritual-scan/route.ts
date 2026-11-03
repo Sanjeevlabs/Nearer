@@ -4,7 +4,7 @@ import { dbAddAgentRun, dbAddSuggestion, dbAssignDailyRole, dbEnsureRitualRun, d
 import { familyHolidays, ritualConfigs } from "@/lib/occasions-server";
 import { cronAuthorized, requireSession } from "@/lib/auth";
 import { purgeSandboxes } from "@/lib/demo-sandbox";
-import { dbFor } from "@/lib/family-db";
+import { dbFor, orUnlessRead } from "@/lib/family-db";
 import { getCronState, pageFamilies, setCronState } from "@/lib/cron-state";
 import { guardWrites } from "@/lib/api-guard";
 import { letterLang } from "@/lib/weekly-letter";
@@ -32,7 +32,9 @@ async function getHandler(req: Request): Promise<Response> {
   for (const familyId of batch) {
     try {
       results.push({ familyId, ...(await (await runScan(familyId)).json()) });
-    } catch {
+    } catch (e) {
+      // The error's name only (DbReadError, ...), never its message or any family data.
+      console.error("[ritual-scan] family scan failed", familyId, e instanceof Error ? e.name : "error");
       results.push({ familyId, error: "scan-failed" });
     }
   }
@@ -53,7 +55,7 @@ async function runScan(familyId: string): Promise<Response> {
 
   // Festivals of the traditions this family celebrates (+ manual overrides);
   // national days are on the calendar but nobody is asked for a wish.
-  const fam = await familyHolidays(familyId, members).catch(() => null);
+  const fam = await familyHolidays(familyId, members).catch(orUnlessRead(null));
   const festivals = (fam?.visible ?? []).filter((h) => h.kind === "festival");
   const ritualSlugs = new Set(ritualConfigs().map((c) => c.slug));
   const configs = festivals.map((h) => ({ slug: h.key, title: h.title, ritual: h.ritual && ritualSlugs.has(h.ritual) ? h.ritual : null }));

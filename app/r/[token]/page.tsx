@@ -32,7 +32,8 @@ async function originOf(): Promise<URL | undefined> {
 
 export async function generateMetadata(props: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const params = await props.params;
-  const [share, metadataBase] = await Promise.all([getShare(params.token), originOf()]);
+  // A failed read here is shown as "couldn't load" by the page itself; the title just stays plain.
+  const [share, metadataBase] = await Promise.all([getShare(params.token).catch(() => null), originOf()]);
   if (!share) return { title: "Nearer", metadataBase, robots: { index: false } };
   const r = share.snapshot;
   const title = `${r.title}, from ${r.from}'s kitchen`;
@@ -49,7 +50,18 @@ export async function generateMetadata(props: { params: Promise<{ token: string 
 
 export default async function SharedRecipe(props: { params: Promise<{ token: string }> }) {
   const params = await props.params;
-  const share = await getShare(params.token);
+  // This page is for people outside the family: a failed read gets its own calm message, never the app's error screen.
+  let share: Awaited<ReturnType<typeof getShare>>;
+  try {
+    share = await getShare(params.token);
+  } catch {
+    return (
+      <div className="pt-20 text-center">
+        <p className="m-0 text-title font-semibold">This recipe couldn&rsquo;t load just now</p>
+        <p className="mx-auto mt-2 max-w-[300px] text-body text-ink-soft">Please try again in a moment.</p>
+      </div>
+    );
+  }
   if (!share) {
     return (
       <div className="pt-20 text-center">

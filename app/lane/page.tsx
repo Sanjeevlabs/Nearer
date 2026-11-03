@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadFailed } from "@/components/load-failed";
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AlbumCover } from "@/components/albums";
@@ -90,7 +91,7 @@ function Row({ children, label }: { children: React.ReactNode; label: string }) 
 export default function LanePage() {
   const { members, ready } = useViewer();
   const { refreshKey } = useShell();
-  const { cards } = useFamilyCards(refreshKey);
+  const { cards, failed: cardsFailed, retry: retryCards } = useFamilyCards(refreshKey);
   const [who, setWho] = useState<string | null>(null);
   // Starred: only my favourites. Search: words from captions, transcripts, places, names and dates.
   const [onlyStarred, setOnlyStarred] = useState(false);
@@ -207,7 +208,9 @@ export default function LanePage() {
         </label>
       )}
 
-      {loading || groups === null ? (
+      {cardsFailed && (cards?.length ?? 0) === 0 ? (
+        <LoadFailed what="Memories" ui="lane-retry" onRetry={retryCards} />
+      ) : loading || groups === null ? (
         <div key="loading" className="space-y-5" aria-busy="true" aria-label="Loading memories">
           {[0, 1, 2].map((i) => (
             <div key={i}>

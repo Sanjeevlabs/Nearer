@@ -4,7 +4,7 @@
 // Every row is parsed with its kind's schema on the way in and out; a bad
 // row is skipped and logged, never served. Demo families stay in memory
 // (dbFor returns null for them), for reads and writes.
-import { DbWriteError, dbFor } from "./family-db";
+import { DbReadError, DbWriteError, dbFor } from "./family-db";
 import { DOC_SCHEMAS, type DocKind, type DocOf } from "./kinds";
 
 type Row = { familyId: string; kind: DocKind; data: { id: string } & Record<string, unknown>; createdAt: string };
@@ -51,7 +51,8 @@ export async function listDocs<K extends DocKind>(familyId: string, kind: K, opt
   let q = sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind);
   if (opts.sinceMs) q = q.gte("created_at", new Date(Date.now() - opts.sinceMs).toISOString());
   const { data, error } = await q.order("created_at", { ascending: false }).limit(opts.sinceMs ? 3000 : 500);
-  if (error || !data) return newest(local);
+  if (error) throw new DbReadError("family_docs", error.message);
+  if (!data) return newest(local);
   const rows = data.map((r) => parse(kind, (r as { data: unknown }).data)).filter((d): d is DocOf<K> => d !== null);
   return newest(rows);
 }
@@ -90,7 +91,10 @@ export async function listDocsManyWith<const Ks extends readonly DocKind[]>(fami
   if (!sb) return separately();
   const limit = 500 * (unique.length + extras.length);
   const { data, error } = await sb.from("family_docs").select("id, kind, data").eq("family_id", familyId).in("kind", [...unique, ...extras]).order("created_at", { ascending: false }).limit(limit);
-  if (error || !data || data.length >= limit) return separately();
+  // One combined query is cheapest; if it fails (e.g. it hit the time limit), the smaller per-kind
+  // reads get one chance before the read is reported as failed (each of those throws on its own error).
+  if (error) return separately();
+  if (!data || data.length >= limit) return separately();
   const by = new Map<string, unknown[]>(unique.map((k) => [k, []]));
   const extra: RawDocRows = new Map(extras.map((k) => [k, []]));
   for (const r of data as { id: string; kind: string; data: unknown }[]) {
@@ -115,7 +119,8 @@ export async function listAllDocs<K extends DocKind>(familyId: string, kind: K, 
   const rows: DocOf<K>[] = [];
   for (let from = 0; from < cap; from += 500) {
     const { data, error } = await sb.from("family_docs").select("data").eq("family_id", familyId).eq("kind", kind).order("created_at", { ascending: true }).range(from, from + 499);
-    if (error || !data) break;
+    if (error) throw new DbReadError("family_docs", error.message);
+    if (!data) break;
     for (const r of data) {
       const d = parse(kind, (r as { data: unknown }).data);
       if (d) rows.push(d);
@@ -130,7 +135,7 @@ export async function getDoc<K extends DocKind>(familyId: string, kind: K, id: s
   if (!sb) return memList(familyId, kind).find((d) => (d as { id: string }).id === id);
   // One row by its key, not the newest 500 filtered in code (older docs would vanish).
   const { data, error } = await sb.from("family_docs").select("data").eq("id", `${familyId}:${id}`).eq("kind", kind).maybeSingle();
-  if (error) return memList(familyId, kind).find((d) => (d as { id: string }).id === id);
+  if (error) throw new DbReadError("family_docs", error.message);
   if (!data) return undefined;
   return parse(kind, (data as { data: unknown }).data) ?? undefined;
 }

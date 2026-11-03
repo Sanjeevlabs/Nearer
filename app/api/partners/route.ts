@@ -4,11 +4,12 @@ import { connectedGroups } from "@/lib/connected-apps";
 import { dbListMembers, dbListRelationships } from "@/lib/db";
 import { ACCOUNTS, isEnabled } from "@/lib/partners/registry";
 import { connections } from "@/lib/partners/tokens";
+import { guardApi } from "@/lib/api-guard";
 
 // GET → every app Send something offers this family, grouped by the countries
 // of their homes, with this member's connection status (lib/connected-apps.ts).
 // Status only: tokens never leave the server.
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const [mine, members, relationships] = await Promise.all([connections(auth.familyId, auth.memberId), dbListMembers(auth.familyId), dbListRelationships(auth.familyId)]);
@@ -24,3 +25,5 @@ export async function GET(req: Request): Promise<Response> {
   const accounts = ACCOUNTS.filter((a) => on.has(a.id)).map((a) => ({ id: a.id, name: a.name, connected: mine.some((c) => c.account === a.id) }));
   return Response.json({ sample: isSampleMode(), groups, accounts });
 }
+
+export const GET = guardApi(getHandler);

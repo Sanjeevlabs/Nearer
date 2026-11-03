@@ -2,6 +2,7 @@ import { z } from "zod";
 import { isDemoFamily, issueSessionCookie, liveSession, signSession, verifySession } from "@/lib/auth";
 import { newSid } from "@/lib/sessions";
 import { dbGetMember } from "@/lib/db";
+import { guardApi } from "@/lib/api-guard";
 
 // Demo only: open the same demo family as another person on a second device
 // ("see it from Dadi's side"). POST mints a short-lived pass for a member of
@@ -10,7 +11,7 @@ import { dbGetMember } from "@/lib/db";
 const PASS_TTL_MS = 30 * 60 * 1000;
 const PassSchema = z.object({ memberId: z.string().min(1).max(64) });
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const session = await liveSession(req).catch(() => null);
   if (!session) return Response.json({ error: "unauthorized" }, { status: 401 });
   if (!isDemoFamily(session.familyId)) return Response.json({ error: "demo-only" }, { status: 403 });
@@ -29,7 +30,7 @@ export async function POST(req: Request): Promise<Response> {
   return Response.json({ path: `/api/session/pass?t=${encodeURIComponent(pass)}`, name: member.firstName });
 }
 
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const pass = verifySession(url.searchParams.get("t"));
   const home = new URL("/", url);
@@ -40,3 +41,6 @@ export async function GET(req: Request): Promise<Response> {
   if (!cookie) return Response.redirect(home, 302);
   return new Response(null, { status: 302, headers: { location: "/", "set-cookie": cookie, "cache-control": "no-store" } });
 }
+
+export const POST = guardApi(postHandler);
+export const GET = guardApi(getHandler);

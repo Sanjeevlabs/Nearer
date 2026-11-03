@@ -16,6 +16,7 @@ import { familyHolidays } from "@/lib/occasions-server";
 import { callName } from "@/lib/people";
 import type { Member } from "@/lib/schemas";
 import { guardWrites } from "@/lib/api-guard";
+import { orUnlessRead } from "@/lib/family-db";
 
 // Family events: Muse plans the gathering (run of show, tasks, playlist),
 // proposes three times that work in every home, each person taps what works,
@@ -25,7 +26,7 @@ import { guardWrites } from "@/lib/api-guard";
 const today = () => new Date().toISOString().slice(0, 10);
 
 async function upcoming(familyId: string, members: Member[], within = 60, holidays?: ReturnType<typeof familyHolidays>): Promise<UpcomingOccasion[]> {
-  const fam = await (holidays ?? familyHolidays(familyId, members)).catch(() => null);
+  const fam = await (holidays ?? familyHolidays(familyId, members)).catch(orUnlessRead(null));
   const festivals = (fam?.visible ?? []).filter((h) => h.kind === "festival").map((h) => ({ ...h, title: cleanTitle(h.title) }));
   const t = today();
   const nameOf = (id: string) => callName(members.find((m) => m.id === id));

@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { ASK_MAX_CHARS, askFamily, askRateOk } from "@/lib/archive-ask";
+import { guardApi } from "@/lib/api-guard";
 
 // POST /api/ask { question } -> an answer written only from this family's own
 // voice notes, recipes and stories, each claim with its clip; or "no one has
 // said that yet" with someone to ask. Family-scoped by the session.
 const Body = z.object({ question: z.string().trim().min(3).max(ASK_MAX_CHARS) });
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!askRateOk(auth.memberId)) return Response.json({ error: "rate-limited" }, { status: 429 });
@@ -26,3 +27,5 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "ask-failed" }, { status: 500 });
   }
 }
+
+export const POST = guardApi(postHandler);

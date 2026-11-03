@@ -7,6 +7,7 @@ import { isAdmin, isClaimable } from "@/lib/permissions";
 import { familyFull, hostOf } from "@/lib/roles";
 import type { Invite } from "@/lib/db";
 import { allowAuthAttempt, callerKey, identityFromToken, verifyCode } from "@/lib/otp";
+import { guardApi } from "@/lib/api-guard";
 
 const Name = z.string().trim().min(1).max(40);
 const City = z.string().trim().max(60);
@@ -65,7 +66,7 @@ function validTz(tz: string): string {
 // Step 2: verify the code and, in the same request, sign in, create a family,
 // or join one. Verification and account changes never happen separately, so a
 // code can't be replayed into a different action.
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   let body: unknown;
   try {
     body = await req.json();
@@ -211,3 +212,5 @@ export async function POST(req: Request): Promise<Response> {
   const nowStatus = (await dbGetMember(memberId))?.status ?? "active";
   return Response.json({ familyId, memberId, status: nowStatus, ...(welcome ? { welcome } : {}) }, { headers: { "set-cookie": cookie } });
 }
+
+export const POST = guardApi(postHandler);

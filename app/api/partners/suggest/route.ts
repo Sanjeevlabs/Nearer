@@ -6,6 +6,7 @@ import { partnersForCountry, storesForCountry } from "@/lib/partners/registry";
 import { callName } from "@/lib/people";
 import { isBlockedText, refFor, searchCandidates } from "@/lib/partners/catalog";
 import { pickSuggestions } from "@/lib/partners/suggest";
+import { guardApi } from "@/lib/api-guard";
 
 // POST {forMemberId, occasion? | need?} → three things to send, chosen by Muse
 // only from what the partners' catalogues returned. Never medical, never ads.
@@ -18,7 +19,7 @@ const BodySchema = z
   .strict()
   .refine((b) => !(b.occasion && b.need), { message: "occasion-or-need" });
 
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   if (!checkRateLimit(auth, "/api/partners/suggest")) return Response.json({ error: "rate-limited" }, { status: 429 });
@@ -91,3 +92,5 @@ export async function POST(req: Request): Promise<Response> {
     }),
   });
 }
+
+export const POST = guardApi(postHandler);

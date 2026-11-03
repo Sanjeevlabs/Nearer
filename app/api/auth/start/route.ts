@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { allowAuthAttempt, sendCode } from "@/lib/otp";
+import { guardApi } from "@/lib/api-guard";
 
 const StartSchema = z.object({ email: z.string().trim().toLowerCase().email().max(254) });
 
 // Step 1 of sign-in: email a 6-digit code. Same response whether or not the
 // email belongs to a family, so the endpoint can't be used to probe accounts.
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   let body: unknown;
   try {
     body = await req.json();
@@ -19,3 +20,5 @@ export async function POST(req: Request): Promise<Response> {
   if (!sent.ok) return Response.json({ error: "code-not-sent" }, { status: 502 });
   return Response.json({ sent: true, mock: sent.mock });
 }
+
+export const POST = guardApi(postHandler);

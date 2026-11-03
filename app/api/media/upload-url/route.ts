@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createUploadUrl, storagePath } from "@/lib/storage";
 import { requireSession } from "@/lib/auth";
 import { isMediaMime } from "@/lib/media-types";
+import { guardApi } from "@/lib/api-guard";
 
 const BodySchema = z.object({
   filename: z.string().min(1).max(120),
@@ -10,7 +11,7 @@ const BodySchema = z.object({
 
 // Server-issued signed upload URL: the client PUTs bytes straight to the
 // private bucket (or to the mock endpoint when Supabase is unavailable).
-export async function POST(req: Request): Promise<Response> {
+async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   let body: unknown;
@@ -29,3 +30,5 @@ export async function POST(req: Request): Promise<Response> {
   const { uploadUrl, mock } = await createUploadUrl(path, parsed.data.mime);
   return Response.json({ path, uploadUrl, mock, ref: `storage:${path}` });
 }
+
+export const POST = guardApi(postHandler);

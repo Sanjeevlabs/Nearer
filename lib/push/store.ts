@@ -2,7 +2,7 @@
 // live, a Map in mock mode and for the demo seed (like lib/family-docs.ts). Every
 // read and delete is scoped by family (and member where a person asks for their own).
 // Server only.
-import { DbWriteError, dbFor } from "../family-db";
+import { DbReadError, DbWriteError, dbFor } from "../family-db";
 import type { PushKind, PushSub } from "./types";
 
 /** More than this many devices for one person: the oldest are dropped. */
@@ -92,7 +92,8 @@ export async function listSubs(familyId: string, memberId: string): Promise<Push
   const sb = dbFor(familyId);
   if (!sb) return Array.from(mem.values()).filter((s) => s.familyId === familyId && s.memberId === memberId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const { data, error } = await sb.from("push_subscriptions").select("*").eq("family_id", familyId).eq("member_id", memberId).order("created_at", { ascending: false });
-  if (error || !data) return [];
+  if (error) throw new DbReadError("push_subscriptions", error.message);
+  if (!data) return [];
   return (data as Record<string, unknown>[]).map(fromRow);
 }
 

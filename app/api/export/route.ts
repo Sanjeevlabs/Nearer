@@ -3,13 +3,14 @@ import { isGrownUp } from "@/lib/permissions";
 import { dbGetFamilyName, dbListCards, dbListMembers, dbListRelationships } from "@/lib/db";
 import { listDocs } from "@/lib/family-docs";
 import { DOC_SCHEMAS, type DocKind } from "@/lib/kinds";
+import { guardApi } from "@/lib/api-guard";
 
 // Everything the family has put into Nearer, as one JSON file they own.
 // Any member (not children) can download it. Media files are referenced by
 // their storage refs; the operational Muse log and safety locations are left out.
 const SKIP = new Set<DocKind>(["muse_call", "safety_checkin", "knock"]);
 
-export async function GET(req: Request): Promise<Response> {
+async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const members = await dbListMembers(auth.familyId);
@@ -37,3 +38,5 @@ export async function GET(req: Request): Promise<Response> {
     },
   });
 }
+
+export const GET = guardApi(getHandler);
