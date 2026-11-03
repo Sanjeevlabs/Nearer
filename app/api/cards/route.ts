@@ -10,10 +10,11 @@ import { listDocsMany, putDoc } from "@/lib/family-docs";
 import { checkRateLimit, requireSession, sessionFromRequest } from "@/lib/auth";
 import { withDemoShelf } from "@/lib/demo";
 import { guardWrites } from "@/lib/api-guard";
-import { pushAddressed } from "@/lib/push/events";
+import { inBackground } from "@/lib/push/background";
+import { pushAddressed, pushCardActivity } from "@/lib/push/events";
 import { addressees } from "@/lib/households";
 import { withListen } from "@/lib/listen";
-import { seenBy } from "@/lib/card-privacy";
+import { canSeeCard, seenBy } from "@/lib/card-privacy";
 
 /** The shelf and the two document kinds it is filtered by (one query for both kinds). */
 function readShelf(familyId: string) {
@@ -239,7 +240,7 @@ async function postHandler(req: Request): Promise<Response> {
   // JSON path: client-supplied caption only — NEVER a model call. An empty
   // caption stays empty (the UI renders its untitled state); video cards that
   // need grounding must use the multipart upload with real bytes.
-  const { id: clientId, forMemberId, listen, ...data } = parsed.data;
+  const { id: clientId, forMemberId, listen, replyToCardId, ...data } = parsed.data;
   const fridge = await fridgeTarget(auth.familyId, auth.memberId, forMemberId);
   if (fridge instanceof Response) return fridge;
   const already = await existingOwnCard(auth.familyId, auth.memberId, clientId);
@@ -261,7 +262,17 @@ async function postHandler(req: Request): Promise<Response> {
     await putDoc(auth.familyId, "card_listen", { id: card.id, cardId: card.id, authorId: auth.memberId, listen, to, at: new Date().toISOString() }).catch((e: unknown) => console.error("[cards] listen label not kept", String(e)));
   }
   // A note sent to particular people: a gentle push to them (background; never fails the upload).
-  pushAddressed(auth.familyId, card);
+  inBackground(async () => {
+    if (replyToCardId && card.type === "audio") {
+      const original = (await dbListCards(auth.familyId)).find((candidate) => candidate.id === replyToCardId);
+      if (original?.authorId && original.authorId !== auth.memberId && canSeeCard(original, auth.memberId) && to.includes(original.authorId)) {
+        await pushCardActivity(auth.familyId, original, auth.memberId, "reply", new Date(), card.id);
+        pushAddressed(auth.familyId, card, original.authorId);
+        return;
+      }
+    }
+    pushAddressed(auth.familyId, card);
+  });
   return Response.json({ card, album }, { status: 201 });
 }
 

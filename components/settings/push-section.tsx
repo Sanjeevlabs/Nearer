@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useJson } from "@/lib/use-json";
-import { disableNotifications, enableNotifications, pushIsOn, pushSupport, type EnableResult, type PushSupport } from "@/lib/web-push";
+import { disableNotifications, enableNotifications, pushIsOn, pushSupport, serverVapidKey, type EnableResult, type PushSupport } from "@/lib/web-push";
 import { Group } from "./section";
 
 // Settings, You: notifications on this device and which kinds you want. These are
@@ -34,13 +34,16 @@ const NOT_ON: Record<Exclude<EnableResult, "on">, string> = {
 export function NotificationsSection({ onMessage }: { onMessage: (m: string) => void }) {
   const { data, failed, reload } = useJson<PushSettingsView>("/api/push/settings");
   const [support, setSupport] = useState<PushSupport>("unsupported");
+  const [vapid, setVapid] = useState<string | null>(null);
   const [on, setOn] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   useEffect(() => {
-    setSupport(pushSupport());
+    const kind = pushSupport();
+    setSupport(kind);
+    if (kind === "ready" && data?.configured.web) void serverVapidKey().then(setVapid);
     void pushIsOn().then(setOn);
-  }, [data?.devices]);
+  }, [data?.devices, data?.configured.web]);
 
   if (failed && !data) return null;
   if (!data) return <Group title="Notifications" id="notifications"><div className="h-[72px] animate-pulse rounded-[22px] bg-surface" aria-busy="true" aria-label="Loading notifications" /></Group>;
@@ -50,7 +53,7 @@ export function NotificationsSection({ onMessage }: { onMessage: (m: string) => 
   const turnOn = async () => {
     setBusy("device");
     setNote(null);
-    const r = await enableNotifications();
+    const r = await enableNotifications(vapid);
     setBusy(null);
     if (r === "on") {
       setOn(true);

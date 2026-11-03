@@ -176,6 +176,25 @@ export async function claimDoc<K extends DocKind>(familyId: string, kind: K, inp
   throw new DbWriteError("family_docs", error.message);
 }
 
+/** Atomically claim a rolling push cooldown; concurrent requests cannot both win. */
+export async function claimPushCooldown(familyId: string, id: string, now: Date, duration: number): Promise<boolean> {
+  const data = { id, until: new Date(now.getTime() + duration).toISOString() };
+  if (await claimDoc(familyId, "push_claim", data)) return true;
+  const sb = dbFor(familyId);
+  const key = memKey(familyId, id);
+  if (!sb) {
+    const row = mem.get(key);
+    if (!row || String(row.data.until) > now.toISOString()) return false;
+    mem.set(key, { ...row, data });
+    return true;
+  }
+  const { data: won, error } = await sb.from("family_docs").update({ data, updated_at: now.toISOString() })
+    .eq("id", `${familyId}:${id}`).eq("kind", "push_claim")
+    .lte("data->>until", now.toISOString()).select("id");
+  if (error) throw new DbWriteError("family_docs", error.message);
+  return Boolean(won?.length);
+}
+
 export async function deleteDoc(familyId: string, kind: DocKind, id: string): Promise<void> {
   mem.delete(memKey(familyId, id));
   const sb = dbFor(familyId);

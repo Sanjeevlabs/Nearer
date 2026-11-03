@@ -6,7 +6,8 @@ import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { SITTING_REASONS, VENUE_IDS } from "@/lib/kinds";
 import { guardWrites } from "@/lib/api-guard";
 import { ACTIVITIES, DEFAULT_DOOR_MINUTES, visibleKnocks } from "@/lib/doors";
-import { pushDoor } from "@/lib/push/events";
+import { inBackground } from "@/lib/push/background";
+import { pushDoor, pushDoorJoined } from "@/lib/push/events";
 
 // Sit together: planned sittings with a reason, and "come sit" knocks.
 const Body = z.discriminatedUnion("action", [
@@ -33,6 +34,7 @@ const Body = z.discriminatedUnion("action", [
     invites: z.array(z.string().min(1).max(80)).max(30).default([]),
   }),
   z.object({ action: z.literal("unknock") }),
+  z.object({ action: z.literal("joined"), id: z.string().min(1).max(100) }),
 ]);
 
 async function getHandler(req: Request): Promise<Response> {
@@ -56,6 +58,17 @@ async function postHandler(req: Request): Promise<Response> {
   const body = parsed.data;
   const now = new Date();
 
+  if (body.action === "joined") {
+    const [knock, sitting] = await Promise.all([getDoc(auth.familyId, "knock", body.id), getDoc(auth.familyId, "sitting", body.id)]);
+    const hostId = knock && visibleKnocks([knock], auth.memberId, now.getTime()).length
+      ? knock.memberId
+      : sitting && Date.parse(sitting.startsAt) > now.getTime() - 3 * 3_600_000 &&
+        (!sitting.invites.length || sitting.invites.includes(auth.memberId) || sitting.hostId === auth.memberId)
+        ? sitting.hostId : null;
+    if (!hostId) return Response.json({ error: "unknown-sitting" }, { status: 404 });
+    inBackground(() => pushDoorJoined(auth.familyId, { id: body.id, hostId }, auth.memberId, now));
+    return Response.json({ ok: true });
+  }
   if (body.action === "sit") {
     if (Date.parse(body.startsAt) < now.getTime() - 5 * 60_000) return Response.json({ error: "in-the-past" }, { status: 400 });
     const family = new Set((await dbListMembers(auth.familyId)).map((m) => m.id));
@@ -105,8 +118,8 @@ async function postHandler(req: Request): Promise<Response> {
     ...(body.activity ? { activity: body.activity } : {}),
     ...(invites.length ? { invites } : {}),
   });
-  // A door for one person tells that person once ("Maa is having chai. Join?"). Family-wide doors send nothing.
-  if (invites.length === 1) pushDoor(auth.familyId, knock);
+  // Only explicitly invited people get an alert.
+  if (invites.length > 0) pushDoor(auth.familyId, knock);
   return Response.json({ knock }, { status: 201 });
 }
 

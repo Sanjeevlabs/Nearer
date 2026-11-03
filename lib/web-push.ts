@@ -17,6 +17,19 @@ export type PushSupport =
   | "blocked"
   | "unsupported";
 
+const ACTION_KEY = "aangan:push-first-action";
+export const PUSH_FIRST_ACTION = "nearer:push-first-action";
+
+export function hasPushFirstAction(): boolean {
+  try { return localStorage.getItem(ACTION_KEY) === "1"; } catch { return false; }
+}
+
+export function markPushFirstAction(): void {
+  if (hasPushFirstAction()) return;
+  try { localStorage.setItem(ACTION_KEY, "1"); } catch { /* storage unavailable */ }
+  window.dispatchEvent(new Event(PUSH_FIRST_ACTION));
+}
+
 const ASK_KEY = "aangan:push-ask-until";
 /** After "Not now" the card stays away this long. */
 export const ASK_PAUSE_MS = 30 * 86_400_000;
@@ -138,13 +151,13 @@ async function sendSubscription(sub: PushSubscription): Promise<boolean> {
  * Turn notifications on for this device. Call from a tap: the browser only shows its
  * permission prompt for a user gesture, and iOS refuses otherwise.
  */
-export async function enableNotifications(): Promise<EnableResult> {
+export async function enableNotifications(preloadedKey?: string | null): Promise<EnableResult> {
   try {
     if (isNative()) return (await registerPush()) ? "on" : "denied";
     const support = pushSupport();
     if (support === "needs-install" || support === "unsupported") return support;
     if (support === "blocked") return "denied";
-    const key = await serverVapidKey();
+    const key = preloadedKey === undefined ? await serverVapidKey() : preloadedKey;
     if (!key) return "not-configured";
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return "denied";

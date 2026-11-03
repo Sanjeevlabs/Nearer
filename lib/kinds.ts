@@ -696,6 +696,7 @@ export const DOC_SCHEMAS = {
   nudge: NudgeSchema,
   nudge_settings: NudgeSettingsSchema,
   push_settings: PushSettingsSchema,
+  push_claim: z.object({ id: z.string(), until: z.string() }),
   habit: HabitSchema,
   habit_tick: HabitTickSchema,
   bedtime_story: BedtimeStorySchema,

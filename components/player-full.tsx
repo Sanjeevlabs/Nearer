@@ -280,7 +280,7 @@ export default function FullPlayer({
               tone="glass"
               onReply={() => {
                 collapse();
-                openAdd("voice", null, current.authorId);
+                openAdd("voice", { kind: "card_reply", cardId: current.id }, current.authorId);
               }}
             />
           </div>

@@ -39,6 +39,7 @@ export type ReplyContribution =
   | { kind: "answer"; questionId: string; prompt: string }
   | { kind: "need"; forMemberId?: string }
   | { kind: "story"; questionId?: string; prompt?: string }
+  | { kind: "card_reply"; cardId: string }
   | { kind: "today"; taskId: string; prompt: string }
   /** A child asks by voice (an ask for a grandparent or parent; lib/kids.ts). */
   | { kind: "kid_ask"; topic?: "question" | "story"; toMemberId?: string }
@@ -50,6 +51,7 @@ export type ReplyContribution =
   | { kind: "fridge"; forMemberId?: string };
 
 const PURPOSE: Record<Exclude<ReplyContribution["kind"], "wish" | "blessing">, { title: string; hint: string; cta: string }> = {
+  card_reply: { title: "Reply by voice", hint: "Send a voice memory back.", cta: "Send my reply" },
   fridge: { title: "Add to the fridge", hint: "A drawing, a school photo, a first attempt. It goes up with their name and yours.", cta: "Put it on the fridge" },
   kid_ask: { title: "Ask a question", hint: "Say it out loud. They will hear it and answer in their own voice.", cta: "Send my question" },
   kid_answer: { title: "Your answer", hint: "Answer the way you would at the table. It is kept in Stories too.", cta: "Send my answer" },
@@ -116,6 +118,7 @@ async function postVoice(input: {
   transcriptLang: string;
   segments: TranscriptSegment[];
   addressedTo: string | null;
+  replyToCardId?: string;
   /** "How to listen": only with addressees, never required. */
   listen?: ListenWay | null;
   /** Posted after a retried send lands; a first-try success leaves these to the caller. */
@@ -138,6 +141,7 @@ async function postVoice(input: {
       transcriptLang: input.transcriptLang,
       segments: input.segments.slice(0, 64),
       addressedTo: input.addressedTo,
+      replyToCardId: input.replyToCardId,
       ...(input.listen && input.addressedTo ? { listen: input.listen } : {}),
     },
     upload: voiceBlob ? { blob: voiceBlob, filename: "voice.webm", mime: voiceBlob.type || "audio/webm" } : undefined,
@@ -379,7 +383,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       else if (contribution?.kind === "bedtime") steps.push({ url: "/api/bedtime", body: { action: "create", forMemberId: contribution.forMemberId, cardId } });
       return steps;
     };
-    const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), listen, after });
+    const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), replyToCardId: contribution?.kind === "card_reply" ? contribution.cardId : undefined, listen, after });
     if (!posted.ok) {
       setNotice(null);
       setError("Couldn't send that recording. Try again.");

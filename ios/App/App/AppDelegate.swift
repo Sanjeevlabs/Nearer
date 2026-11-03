@@ -52,6 +52,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // exchanged for one; without it the plugin gets the raw APNs token (which the server cannot use).
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         #if canImport(FirebaseMessaging)
+        guard FirebaseApp.app() != nil else {
+            let error = NSError(domain: "NearerPush", code: 1, userInfo: [NSLocalizedDescriptionKey: "Firebase push is not configured"])
+            NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+            return
+        }
         Messaging.messaging().apnsToken = deviceToken
         Messaging.messaging().token(completion: { (token, error) in
             if let error = error {
@@ -61,7 +66,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         })
         #else
-        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+        let error = NSError(domain: "NearerPush", code: 1, userInfo: [NSLocalizedDescriptionKey: "Firebase push is not configured"])
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
         #endif
     }
 

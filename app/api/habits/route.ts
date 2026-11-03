@@ -1,3 +1,5 @@
+import { pushHabitTick } from "@/lib/push/events";
+import { inBackground } from "@/lib/push/background";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
@@ -84,6 +86,7 @@ async function postHandler(req: Request): Promise<Response> {
   if (!habit.members.includes(me.id)) return Response.json({ error: "not-joined" }, { status: 409 });
   const created = await claimDoc(auth.familyId, "habit_tick", { id, habitId: habit.id, memberId: me.id, day, at: now.toISOString() });
   if (created) {
+    inBackground(() => pushHabitTick(auth.familyId, habit, me.id, day, now));
     // The family's glow: this was the last one in. (Reads fresh: the ticks of the others are already written.)
     const ticks = await listDocs(auth.familyId, "habit_tick");
     const inIds = habit.members.filter((m) => members.some((x) => x.id === m && x.status !== "pending"));

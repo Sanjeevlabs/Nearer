@@ -1,3 +1,5 @@
+import { pushCardActivity } from "@/lib/push/events";
+import { inBackground } from "@/lib/push/background";
 import { withDemoShelf } from "@/lib/demo";
 import { z } from "zod";
 import { CreateReactionRequestSchema } from "@/lib/schemas";
@@ -42,6 +44,7 @@ async function postHandler(req: Request): Promise<Response> {
   }
   // One per member per card: setReaction replaces the member's prior kind.
   const reaction = await dbSetReaction({ ...parsed.data, familyId: auth.familyId });
+  inBackground(() => pushCardActivity(auth.familyId, card, auth.memberId, "reaction"));
   await nudgeReacted(auth.familyId, card, parsed.data.memberId, parsed.data.kind); // never throws
   return Response.json({ reaction }, { status: 201 });
 }

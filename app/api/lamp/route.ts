@@ -54,7 +54,7 @@ async function postHandler(req: Request): Promise<Response> {
       const glow = glowFrom(lamp.litAt, nowMs);
       return Response.json({ lamp: { homeKey: mine.id, litAt: lamp.litAt, litBy: lamp.litBy, glow }, throttled: true, retryInSeconds: Math.ceil(wait / 1000) });
     }
-    // "Arjun is thinking of you" goes to the other homes, one push per pair per 2 hours.
+    // Tell the other homes, one push per pair per 2 hours.
     const others = homes.filter((h) => h.id !== mine.id).flatMap((h) => h.members).filter((m) => m.role !== "child");
     const due = others.filter((m) => !lampPushedRecently(lamp.pushed, auth.memberId, m.id, nowMs));
     const pushed = { ...trimStamps(lamp.pushed, LAMP_PUSH_GAP_MS, nowMs), ...Object.fromEntries(due.map((m) => [`${auth.memberId}>${m.id}`, nowIso])) };
