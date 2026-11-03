@@ -9,6 +9,14 @@ import { useEffect, useState } from "react";
 // the demo, create and sign-in when not). On a laptop or a projector it also shows a QR
 // code that opens the demo family on a phone. The installed app skips it (components/welcome.tsx).
 
+// What a family chat can't do, in the words people use. Facts about the app, no claims about outcomes.
+const NOT_CHAT: { chat: string; nearer: string }[] = [
+  { chat: "A group chat waits for someone to type.", nearer: "Their window shows Maa's evening (her sky, her time, what she shared) without anyone asking." },
+  { chat: "\"Are you okay?\" needs a reply.", nearer: "A lamp says \"thinking of you\" to one person. Nothing to answer." },
+  { chat: "A call is all or nothing.", nearer: "Maa opens her door for chai when she's free. Join by voice, only if you tap." },
+  { chat: "Her voice notes scroll away.", nearer: "Her recipes, stories and blessings are kept: searchable, starred, in the family's Book." },
+];
+
 const FEATURES: { img: string; title: string; line: string }[] = [
   { img: "/home/window.webp", title: "A window into their day", line: "Their sky and the time there, the lamp you keep lit for each other, and what they chose to share today." },
   { img: "/home/together.webp", title: "A little time together", line: "Open your door for chai, dinner or a story. They join when they can, by voice or video, and only when they tap." },
@@ -116,6 +124,20 @@ export function HomeSite({ onDemo, signedIn = false, onEnter }: { onDemo: () => 
             <img src="/home/window.webp" alt="The first screen: a drawing of Maa and Papa's window under their real sky, the lamp, and how they are" className="block w-full" />
           </div>
         </div>
+      </section>
+
+      {/* The first question everyone asks: "isn't this a WhatsApp group?" Answered before anything else. */}
+      <section className="mx-auto max-w-[760px] px-4 pb-12 sm:px-8 sm:pb-16" data-ui="home-not-chat">
+        <h2 className="m-0 text-title font-semibold">Not another group chat</h2>
+        <dl className="m-0 mt-4 divide-y divide-[var(--line)] overflow-hidden rounded-[22px] bg-white ring-1 ring-black/[.05]">
+          {NOT_CHAT.map((row) => (
+            <div key={row.chat} className="grid gap-1 px-4 py-4 sm:grid-cols-2 sm:gap-6 sm:px-6">
+              <dt className="text-callout text-ink-soft">{row.chat}</dt>
+              <dd className="m-0 text-body font-medium">{row.nearer}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="m-0 mt-3 text-footnote text-ink-soft">Keep your family group. Nearer is the window and the keepsake box beside it.</p>
       </section>
 
       {/* The film: one minute, played only when asked (no autoplay, nothing loaded until then). */}
