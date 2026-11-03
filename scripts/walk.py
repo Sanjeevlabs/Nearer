@@ -334,14 +334,18 @@ def voice_sheet_photo(page, person: str, problems: list[str]) -> None:
     """Photos are one tap inside the voice sheet: 'Add a photo instead' swaps it for the photo composer."""
     page.goto("/", wait_until="load")
     page.wait_for_timeout(1200)
-    voice = page.get_by_role("button", name=re.compile(r"^Voice memory"))
+    voice = page.locator("[data-ui=dock] button[aria-label^='Voice memory']")
     if voice.count() == 0:
         return  # nobody to talk to yet: the dock shows Invite family
     voice.first.click()
+    page.wait_for_timeout(1200)
+    if page.locator("[data-ui=voice-add-photo]").count() == 0:
+        # A who-is-it-for sheet came first: take its first row.
+        page.locator("[role=dialog] button:not([aria-label=Close])").first.click()
+    understand = page.get_by_role("button", name="I understand")
     try:
-        picker = page.get_by_role("button", name=re.compile(r"^(Done|Send|Choose)")).first
-        picker.wait_for(timeout=2_000)  # a who-is-it-for sheet came first: take the first person
-        picker.click()
+        understand.wait_for(timeout=2_000)
+        understand.click()  # the first-recording note
     except Exception:
         pass
     link = page.locator("[data-ui=voice-add-photo]")
