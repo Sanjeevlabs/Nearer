@@ -406,7 +406,7 @@ export function PersonDay({ member, cards, onClose }: { member: Member; cards: C
                   </button>
                   <button type="button" onClick={() => { close(); openAdd("voice"); }} className="press flex h-12 items-center justify-center gap-2 rounded-full bg-white text-body font-semibold text-black">
                     <Icon name="mic" size={18} />
-                    Voice memory
+                    Record a voice
                   </button>
                 </div>
                 <button type="button" onClick={() => setEditingLine(true)} className="press flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/35 bg-white/10 text-body font-semibold backdrop-blur">
