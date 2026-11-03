@@ -22,6 +22,8 @@ import { isOccasionAlbum } from "@/lib/occasion-album";
 import { Boundary } from "@/components/ui/boundary";
 import { matchesSearch, starredFirst } from "@/lib/stars";
 import { useStars } from "@/lib/use-stars";
+import { privateLabel } from "@/lib/card-privacy";
+import { VoiceCard } from "@/components/voice-card";
 
 // Memory Lane: the family's everyday photos and voices, by the years. Same
 // kind together: albums, photos, videos and voices each get one swipe row
@@ -43,11 +45,13 @@ function RowHead({ title, count, range, extra }: { title: string; count: number;
 }
 
 function Tile({ card, kind, onOpen, eager = false, starred = false }: { card: Card; kind: LaneKind; onOpen: () => void; eager?: boolean; starred?: boolean }) {
-  const { members } = useViewer();
+  const { members, viewer } = useViewer();
+  const just = privateLabel(card, viewer.id, members);
   const { current, isPlaying } = usePlayer();
   const author = members.find((m) => m.id === card.authorId);
   const voice = kind === "audio";
-  const label = (voice ? `${callName(author)}'s voice memory, ${monthChip(card.takenAt)}` : card.caption || `${kind === "video" ? "Video" : "Photo"}, ${monthChip(card.takenAt)}`) + (starred ? ", starred" : "");
+  const caption = (card.note || card.caption).trim();
+  const label = (voice ? `${callName(author)}'s voice memory, ${monthChip(card.takenAt)}` : `${caption || (kind === "video" ? "Video" : "Photo")}, ${callName(author)}, ${monthChip(card.takenAt)}`) + (just ? `, ${just.toLowerCase()}` : "") + (starred ? ", starred" : "");
   return (
     <button
       type="button"
@@ -75,7 +79,16 @@ function Tile({ card, kind, onOpen, eager = false, starred = false }: { card: Ca
           {museLabel(card.source)}
         </span>
       )}
-      <span className="absolute bottom-2 left-2 right-10 truncate text-caption font-medium text-white">{voice ? `${callName(author)} · ${formatDuration(cardDuration(card))}` : callName(author)}</span>
+      {just && <span data-ui="private-label" className="absolute left-1.5 top-8 max-w-[calc(100%-12px)] truncate rounded-full bg-white/90 px-2 py-0.5 text-caption font-semibold text-[#1c1b1a]">{just}</span>}
+      {voice ? (
+        <span className="absolute bottom-2 left-2 right-10 truncate text-caption font-medium text-white">{`${callName(author)} · ${formatDuration(cardDuration(card))}`}</span>
+      ) : (
+        // Photos keep their details: the caption (or note) they were shared with, and who shared it.
+        <span className={cn("absolute bottom-2 left-2", kind === "video" ? "right-10" : "right-2")}>
+          {caption && <span className="line-clamp-2 block text-caption font-semibold leading-tight text-white">{caption}</span>}
+          <span className="block truncate text-caption text-white/80">{callName(author)}</span>
+        </span>
+      )}
     </button>
   );
 }
@@ -275,9 +288,20 @@ export default function LanePage() {
               <Boundary key={r.kind} label={r.title}><section aria-label={r.title}>
                 <RowHead title={r.title} count={list.length} range={rangeLabel(list)} />
                 <Row label={r.title}>
-                  {list.map((c, i) => (
-                    <Tile key={c.id} card={c} kind={r.kind} eager={first && i < 3} starred={stars.isStarred(c.id)} onOpen={() => setOpen({ kind: r.kind, index: i })} />
-                  ))}
+                  {list.map((c, i) =>
+                    r.kind === "audio" ? (
+                      // Voices sit on an album shelf: play right here, open for the full player.
+                      <VoiceCard key={c.id} card={c} queue={list} onOpen={() => setOpen({ kind: r.kind, index: i })}>
+                        {stars.isStarred(c.id) && (
+                          <span className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/90 text-[#1c1b1a]" aria-label="Starred">
+                            <Icon name="star" size={13} solid />
+                          </span>
+                        )}
+                      </VoiceCard>
+                    ) : (
+                      <Tile key={c.id} card={c} kind={r.kind} eager={first && i < 3} starred={stars.isStarred(c.id)} onOpen={() => setOpen({ kind: r.kind, index: i })} />
+                    ),
+                  )}
                 </Row>
               </section></Boundary>
             );

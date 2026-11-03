@@ -7,12 +7,12 @@ import { resolveMediaUrl } from "@/lib/media-session";
 import { callName, cardCover, relativeDay } from "@/lib/people";
 import { printWhen, printWhere } from "@/lib/print";
 import type { Card, Member } from "@/lib/schemas";
-import { useDisplayText } from "@/lib/use-display-text";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
 import { placeFromTz } from "@/lib/zones";
-import { usePlayer, VoiceControls } from "./player";
+import { usePlayer } from "./player";
 import { PrintFrame } from "./print-frame";
+import { VoiceCard } from "./voice-card";
 import { ReactButtons, ReactorsLine, useCardReactions } from "./reactions";
 import { useShell } from "./shell";
 import { Icon, Photo } from "./ui/kit";
@@ -82,14 +82,6 @@ function useDayLine(memberId: string) {
   const { data, reload } = useJson<{ lines: DayLineView[] }>("/api/day-line");
   const line = data?.lines.find((l) => l.memberId === memberId && Date.parse(l.until) > Date.now()) ?? null;
   return { line, reload };
-}
-
-function VoiceWords({ card }: { card: Card }) {
-  const { displayLang } = useViewer();
-  const words = card.transcript || card.caption;
-  const { text } = useDisplayText(words, card.transcript ? card.transcriptLang : card.lang, displayLang);
-  if (!words) return null;
-  return <p className="voice m-0 line-clamp-4 text-title leading-snug">&ldquo;{text ?? words}&rdquo;</p>;
 }
 
 function DayLineEditor({ initial, onSaved, onCancel }: { initial: string; onSaved: () => void; onCancel: () => void }) {
@@ -353,14 +345,15 @@ export function PersonDay({ member, cards, onClose, startEditing = false }: { me
             </div>
           ) : card.type === "audio" ? (
             <div className="flex w-full max-w-[400px] flex-col items-center">
-              <div className="relative h-[156px] w-[156px] overflow-hidden rounded-[24px]" style={{ boxShadow: "0 24px 48px rgba(0,0,0,.45)" }}>
-                <Photo src={cover} alt="" sizes="312px" position="center 30%" />
+              <VoiceCard key={card.id} card={card} queue={items} variant="hero" subtitle={[callName(author), printWhen(card.takenAt, author.tz), printWhere(card, author)].filter(Boolean).join(" · ")} />
+              <div className="mt-1 flex w-full justify-between" role="group" aria-label="Moments">
+                <button type="button" onClick={stepPrev} disabled={at === 0} aria-label="Previous moment" className="press grid h-11 w-11 place-items-center rounded-full bg-white/15 disabled:opacity-30">
+                  <Icon name="back" size={18} />
+                </button>
+                <button type="button" onClick={stepNext} disabled={at + 1 >= items.length} aria-label="Next moment" className="press grid h-11 w-11 place-items-center rounded-full bg-white/15 disabled:opacity-30">
+                  <Icon name="chevron" size={18} />
+                </button>
               </div>
-              <div className="mt-5 w-full">
-                <VoiceWords card={card} />
-                <p className="m-0 mt-2 text-callout text-white/70">{[printWhen(card.takenAt, author.tz), printWhere(card, author)].filter(Boolean).join(" · ")}</p>
-              </div>
-              <VoiceControls card={card} queue={items} onPrev={at > 0 ? stepPrev : null} onNext={at + 1 < items.length ? stepNext : null} className="mt-3 w-full" />
             </div>
           ) : (
             <PrintFrame key={card.id} card={card} author={author} src={cover} width={printWidth(400 + (line ? 44 : 0) + (own ? 64 : 0))} priority sizes="400px" share={own && !videoSrc} onShareOpen={(o) => o && setPaused(true)}>
