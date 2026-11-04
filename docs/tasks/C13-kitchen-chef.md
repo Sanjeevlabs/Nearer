@@ -14,7 +14,12 @@ Follow-ups from the #91 and #95 reviews, decided by the owner.
    - **a picture**: one Muse Image call for the dish (existing `lib/muse-image.ts`, behind the spend cap, cached by recipe), falling back to the default recipe art if it fails or the cap is hit. Generate it only on Keep it (not on every Another) to save spend.
    - The preview shows ingredient icons, per-ingredient kcal, per-serving kcal and the estimates note ("Calories are estimates, not medical advice").
 4. **Invite cap.** Chai / open-door invites (`pushSittingInvite`, `pushDoorNow`, and the sitting/door schemas + UI picker) allow at most **10** people. Enforce in the schema (Zod max 10), the API (400 above 10), and the picker (disable after 10 with "Up to 10 people").
-5. Tests: label logic; kcal sum/serving math; diet checker cases; Surprise me fallback paths (bad JSON, cap hit, image failure); invite cap (schema, API, push recipients ≤10). `npx vitest run`, typecheck, lint, mock build, walk.
+5. **Gaps found in the #91 audit:**
+   - Kitchen list tiles: add servings and "Taught by {name}" (or "Idea from Muse") under the title; keep the time and "cooked N×".
+   - Mock mode: text and voice drafts (`mockRecipe`) must include time, servings and per-ingredient kcal so previews show calories offline, like the photo-scan mock.
+   - Ingredient icons: replace the 5 generic glyphs (`components/ingredient-icon.tsx`) with ~40 distinct, original, simple line icons for common ingredients (onion, garlic, ginger, tomato, potato, rice, lentils, flour, milk, yogurt, butter/ghee, oil, egg, chicken, fish, paneer, spinach, chilli, coriander, cumin, turmeric, salt, sugar, lemon, carrot, peas, cauliflower, cabbage, beans, mushroom, bread, pasta, cheese, honey, nuts, apple, banana, coconut, tea, coffee) with a generic fallback; no brand or copyrighted art.
+   - Add flow: after the preview, one "Save" (the preview is editable in place; no separate step).
+6. Tests: label logic; kcal sum/serving math; diet checker cases; Surprise me fallback paths (bad JSON, cap hit, image failure); invite cap (schema, API, push recipients ≤10). `npx vitest run`, typecheck, lint, mock build, walk.
 
 ---
 ## How to work on this PR (Codex)
