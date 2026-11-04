@@ -85,6 +85,7 @@ async function lock(familyId: string, e: FamilyEvent, slotId: string, venue: Ven
   const going = (e.votes[slot.id] ?? []).filter((id) => id !== e.hostId);
   const sitting = await putDoc(familyId, "sitting", {
     id: e.sittingId ?? newId("sit"),
+    gatherEventId: e.id,
     reason,
     title: e.title,
     hostId: e.hostId,

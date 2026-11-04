@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SIT_INVITES } from "./kind-values";
 import { COURSES, EVENT_KINDS, GAME_KINDS, LISTEN_WAYS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS } from "./kind-values";
 
 export { COURSES, EVENT_KINDS, HELPER_ROLES, PLACE_KINDS, PROJECT_KINDS, STORY_AGES, STORY_THEMES, NEED_KINDS, NEED_STATUSES, PET_SPECIES, PRESENCE_MOMENTS, PRIORITIES, RECURRENCE, SAFETY_KINDS, SITTING_REASONS, VENUE_IDS };
@@ -18,12 +19,14 @@ export const IngredientSchema = z.object({
   said: z.string().max(80).default(""),
   /** A cautious everyday equivalent for someone abroad: "≈ ½ cup". Never invented precision. */
   approx: z.string().max(40).default(""),
+  kcal: z.number().int().min(0).max(100000).optional(),
 });
 
 export const StepSchema = z.object({
   text: z.string().min(1).max(400),
   /** The cook's own warning or secret, kept in their voice. */
   tip: z.string().max(200).default(""),
+  minutes: z.number().int().min(0).max(1440).optional(),
 });
 
 export const KitchenPreferencesSchema = z.object({
@@ -47,7 +50,7 @@ export const RecipeSchema = z.object({
   /** Minutes, when known. Never invented by Muse. */
   prepMins: z.number().int().min(0).max(1440).nullable().default(null),
   cookMins: z.number().int().min(0).max(1440).nullable().default(null),
-  caloriesPerServing: z.number().int().min(1).max(10000).nullable().optional(),
+  caloriesPerServing: z.number().int().min(0).max(10000).nullable().optional(),
   museIdea: z.boolean().optional(),
   /** Before you start: soak, chop, grind ("soak the dal 30 min"). */
   prepWork: z.array(z.string().min(1).max(160)).max(12).default([]),
@@ -335,7 +338,7 @@ export const SittingSchema = z.object({
   title: z.string().min(1).max(80),
   hostId: id,
   startsAt: iso,
-  invites: z.array(id).default([]),
+  invites: z.array(id).max(MAX_SIT_INVITES).default([]),
   recipeId: z.string().nullable().default(null),
   note: z.string().max(200).default(""),
   /** Where the family sits (lib/venues.ts). */
@@ -347,6 +350,10 @@ export const SittingSchema = z.object({
   cantMake: z.array(id).default([]),
   createdAt: iso,
 });
+
+// The separate Gather planner creates a room for its existing guest list.
+// It does not use the direct sitting invite API or send sitting-invite pushes.
+const GatherSittingSchema = SittingSchema.extend({ gatherEventId: id, invites: z.array(id).max(40) });
 
 /** "Come sit with me" — a knock on the courtyard door, not a meeting. */
 export const KnockSchema = z.object({
@@ -360,7 +367,7 @@ export const KnockSchema = z.object({
   /** What the door is open for (a preset key, lib/doors.ts); `note` stays the human line. */
   activity: z.enum(["chai", "dinner", "catchup", "cook", "story", "song", "quiz"]).optional(),
   /** Who may see and join it. Empty or absent: the whole family. */
-  invites: z.array(id).max(30).optional(),
+  invites: z.array(id).max(MAX_SIT_INVITES).optional(),
   /** When the one person it was for was told (a push is sent once, never again). */
   seenAt: iso.optional(),
 });
@@ -706,7 +713,7 @@ export const DOC_SCHEMAS = {
   game: GameSchema,
   safety_settings: SafetySettingsSchema,
   safety_checkin: SafetyCheckinSchema,
-  sitting: SittingSchema,
+  sitting: z.union([GatherSittingSchema, SittingSchema]),
   knock: KnockSchema,
   question: QuestionSchema,
   muse_call: MuseCallSchema,

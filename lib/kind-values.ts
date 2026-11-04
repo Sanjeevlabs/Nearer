@@ -26,3 +26,4 @@ export type VenueId = (typeof VENUE_IDS)[number];
 
 /** "How to listen" (an optional wish on a voice note sent to someone): only its addressees ever see it. */
 export const LISTEN_WAYS = ["just-listen", "help-me-think", "keep-me-company"] as const;
+export const MAX_SIT_INVITES = 10;

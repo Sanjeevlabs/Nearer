@@ -10,6 +10,7 @@ import type { Member } from "../schemas";
 import { callName } from "../people";
 import { stateOf } from "../safety";
 import type { Knock, SafetyCheckin, Sitting } from "../kinds";
+import { MAX_SIT_INVITES } from "../kind-values";
 import { inBackground } from "./background";
 import { PUSH_TITLE, eventWords, thingOf, wordsFor } from "./copy";
 import { decidePush, localClock } from "./policy";
@@ -81,8 +82,7 @@ export async function pushDoorNow(familyId: string, knock: Knock, now: Date = ne
   if (!(await claimDoc(familyId, "push_claim", { id: `push-door:${knock.id}`, until: now.toISOString() }))) return "skipped";
   await putDoc(familyId, "knock", { ...current, seenAt: now.toISOString() });
   let out: "sent" | "held" | "skipped" = "skipped";
-  for (const id of new Set(knock.invites)) {
-    if (id === from.id) continue;
+  for (const id of [...new Set(knock.invites)].filter((id) => id !== from.id).slice(0, MAX_SIT_INVITES)) {
     const recipient = await activeMember(familyId, id);
     if (!recipient) continue;
     const result = await routePush(familyId, recipient, "ask", () => ({ body: eventWords.door(callName(from), knock.activity === "chai"), url: `/call/${encodeURIComponent(knock.id)}`, tag: `door-${knock.id}`, urgency: "high" }), now, deps);
@@ -249,8 +249,7 @@ export async function pushHabitTick(familyId: string, habit: { id: string; membe
 export async function pushSittingInvite(familyId: string, sitting: Sitting, now: Date): Promise<void> {
   const from = await activeMember(familyId, sitting.hostId);
   if (!from) return;
-  for (const memberId of new Set(sitting.invites)) {
-    if (memberId === from.id) continue;
+  for (const memberId of [...new Set(sitting.invites)].filter((id) => id !== from.id).slice(0, MAX_SIT_INVITES)) {
     const to = await activeMember(familyId, memberId);
     if (to) await routePush(familyId, to, "ask", () => ({
       body: eventWords.sitting(callName(from), sitting.reason === "chai"),

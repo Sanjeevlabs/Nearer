@@ -8,14 +8,14 @@ import { GET as roomGet } from "@/app/api/sit/room/route";
 import { GET as windowGet } from "@/app/api/window/route";
 import { deniedReason, jitsiConfig, jitsiHash, mediaAllowed, stillOpen } from "@/lib/call-gate";
 import { canSeeKnock, doorPush, doorsFor, togetherView, type Door } from "@/lib/doors";
-import { getDoc } from "@/lib/family-docs";
-import type { Knock } from "@/lib/kinds";
+import { getDoc, putDoc } from "@/lib/family-docs";
+import { KnockSchema, SittingSchema, type Knock } from "@/lib/kinds";
 import { pushIdle } from "@/lib/push/background";
 import { getPushSettings } from "@/lib/push/prefs";
-import { pushDoorNow } from "@/lib/push/events";
+import { pushDoorNow, pushSittingInvite } from "@/lib/push/events";
 import { clearOutbox, outbox } from "@/lib/push/send";
 import { resetPushStore, upsertSub } from "@/lib/push/store";
-import { resetDemo } from "@/lib/store";
+import { mockAddMember, resetDemo } from "@/lib/store";
 import { windowState } from "@/lib/window-server";
 import { authedGet, authedJson } from "./auth-helper";
 
@@ -42,6 +42,33 @@ describe("the demo starts with no open door", () => {
 });
 
 describe("knock invites are enforced", () => {
+  it("rejects eleven invitees at both the schema and API boundaries", async () => {
+    const invites = Array.from({ length: 11 }, (_, i) => `guest-${i}`);
+    const at = NOW.toISOString();
+    const sitting = { id: "sit-test", title: "Tea together", reason: "chai", hostId: "arjun", startsAt: at, createdAt: at, invites };
+    const knock = { id: "knock-test", memberId: "arjun", at, until: at, invites };
+    expect(SittingSchema.safeParse(sitting).success).toBe(false);
+    expect(KnockSchema.safeParse(knock).success).toBe(false);
+    expect((await sitPost(authedJson("http://t/api/sit", { ...sitting, action: "sit" }, "arjun"))).status).toBe(400);
+    expect((await sitPost(authedJson("http://t/api/sit", { action: "knock", invites }, "arjun"))).status).toBe(400);
+  });
+
+  it("pushes at most ten distinct recipients even if a caller supplies too many", async () => {
+    const invites = Array.from({ length: 11 }, (_, i) => `guest-${i}`);
+    for (const id of invites) {
+      mockAddMember({ id, familyId: FAM, firstName: id, displayName: id, role: "adult", tz: "Asia/Kolkata" });
+      await upsertSub({ familyId: FAM, memberId: id, kind: "fcm", token: `fcm-token-${id}-aaaaaaaaaaaaaaaa`, platform: "android" });
+    }
+    const at = NOW.toISOString();
+    const knock = await putDoc(FAM, "knock", { id: "knock-cap", memberId: "arjun", at, until: new Date(+NOW + 30 * 60_000).toISOString(), invites: invites.slice(0, 10) });
+    await pushDoorNow(FAM, { ...knock, invites: ["arjun", ...invites, invites[0]] }, NOW);
+    expect(outbox.map((entry) => entry.memberId)).toEqual(invites.slice(0, 10));
+    clearOutbox();
+    const sitting = SittingSchema.parse({ id: "sit-cap", title: "Tea together", reason: "chai", hostId: "arjun", startsAt: at, createdAt: at });
+    await pushSittingInvite(FAM, { ...sitting, invites: ["arjun", ...invites, invites[0]] }, NOW);
+    expect(outbox.map((entry) => entry.memberId)).toEqual(invites.slice(0, 10));
+  });
+
   it("a door for Dadi only: Dadi sees and may join it, Leo and Priya do not, Arjun sees his own", async () => {
     const { knock } = await open("arjun", { activity: "chai", invites: ["dadi"] });
     expect(knock).toMatchObject({ memberId: "arjun", activity: "chai", invites: ["dadi"] });

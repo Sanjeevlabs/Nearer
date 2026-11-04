@@ -118,7 +118,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
         <input className={cn(field, "text-headline font-semibold")} value={d.title} onChange={(e) => set("title", e.target.value)} maxLength={80} placeholder="Recipe name" aria-label="Recipe name" />
         <label className="block text-callout">
           Estimated calories per serving
-          <input className={field} type="number" min={1} max={10000} value={d.caloriesPerServing ?? ""} onChange={(e) => set("caloriesPerServing", e.target.value === "" ? null : Math.max(1, Math.min(10000, Math.round(Number(e.target.value)))))} />
+          <input className={field} type="number" min={0} max={10000} value={d.caloriesPerServing ?? ""} onChange={(e) => set("caloriesPerServing", e.target.value === "" ? null : Math.max(0, Math.min(10000, Math.round(Number(e.target.value)))))} />
         </label>
         <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1" role="radiogroup" aria-label="Course">
           {COURSES.map((c) => (
@@ -157,6 +157,12 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
             <button type="button" aria-label="Remove ingredient" onClick={() => set("ingredients", d.ingredients.filter((_, k) => k !== i))} className="press grid h-[48px] place-items-center text-ink-faint">
               <Icon name="close" size={16} />
             </button>
+            {ing.kcal !== undefined && <label className="col-span-4 flex items-center gap-2 text-callout text-ink-soft">
+              <input className={cn(field, "w-28")} type="number" min={0} max={100000} aria-label={`Estimated calories for ingredient ${i + 1}`} value={ing.kcal} onChange={(e) => {
+                const kcal = Math.min(100000, Math.max(0, Math.round(e.target.valueAsNumber || 0)));
+                set("ingredients", d.ingredients.map((x, k) => k === i ? { ...x, kcal } : x));
+              }} /> estimated kcal
+            </label>}
           </li>
         ))}
       </ul>
@@ -213,7 +219,7 @@ export function RecipeEditor({ recipe, onDone, prefill, scan }: { recipe?: Recip
       {error && <p className="m-0 mt-4 text-callout text-[#b42318]" role="alert">{error}</p>}
       <div className="mt-6 flex gap-2">
         <Button className="flex-[1.4]" disabled={busy} onClick={() => void save()}>
-          {busy ? "Saving…" : "Save recipe"}
+          {busy ? "Saving…" : recipe ? "Save recipe" : "Save"}
         </Button>
         <Button variant="secondary" className="flex-1" onClick={() => onDone()}>
           Cancel

@@ -157,7 +157,7 @@ export default function KitchenPage() {
           </div>
           <ul className="no-scrollbar -mx-4 my-0 flex list-none snap-x scroll-px-4 gap-3 overflow-x-auto py-0 pb-1 pl-4 pr-4">
             {list.map((r) => (
-              <RecipeTile key={r.id} recipe={r} attempts={attemptsFor(r.id)} canManage={canChange(viewer, r.cookId) || Boolean(r.addedBy && canChange(viewer, r.addedBy))} onDeleted={() => void reload()} />
+              <RecipeTile key={r.id} recipe={r} teacher={r.cookId === viewer.id ? "you" : callName(byId(r.cookId))} attempts={attemptsFor(r.id)} canManage={canChange(viewer, r.cookId) || Boolean(r.addedBy && canChange(viewer, r.addedBy))} onDeleted={() => void reload()} />
             ))}
           </ul>
         </section></Boundary>
@@ -207,7 +207,7 @@ export default function KitchenPage() {
 }
 
 /** One recipe on a shelf: cover, name, time, who has cooked it. */
-function RecipeTile({ recipe, attempts, canManage, onDeleted }: { recipe: Recipe; attempts: Attempt[]; canManage: boolean; onDeleted: () => void }) {
+function RecipeTile({ recipe, teacher, attempts, canManage, onDeleted }: { recipe: Recipe; teacher: string; attempts: Attempt[]; canManage: boolean; onDeleted: () => void }) {
   const photo = recipe.coverRef ?? attempts.find((a) => a.photoRef)?.photoRef ?? null;
   const look = COURSE_LOOK[recipe.course] ?? COURSE_LOOK.other;
   const time = totalTime(recipe);
@@ -216,6 +216,8 @@ function RecipeTile({ recipe, attempts, canManage, onDeleted }: { recipe: Recipe
       <Link href={`/kitchen/${recipe.id}`} className="press block text-ink no-underline">
         <RecipeCover recipe={recipe} photo={photo ? (resolveMediaUrl(photo) ?? photo) : null} className="h-[136px] rounded-[22px]" />
         <p className="m-0 mt-2 line-clamp-2 text-body font-semibold leading-tight">{recipe.title}</p>
+        <p className="m-0 text-caption text-ink-soft">{recipe.museIdea ? "Idea from Muse" : `Taught by ${teacher}`}</p>
+        {recipe.serves && <p className="m-0 text-caption text-ink-soft">Serves {recipe.serves}</p>}
         <p className="m-0 mt-0.5 flex items-center gap-1 text-caption text-ink-soft">
           <span style={{ color: look.ink }}>{look.label}</span>
           {time && <span>· {time}</span>}

@@ -79,8 +79,9 @@ export async function museImage(opts: {
   /** Human sentence for What Muse did. */
   purpose: string;
   prompt: string;
-  /** Reference images as data URLs (1-10). */
+  /** Reference images as data URLs (0-10). */
   images: string[];
+  attempts?: 1 | 2;
   size?: ImageSize;
   /** Try again: a new variant is a new render, never the cached one. */
   variant?: number;
@@ -98,7 +99,7 @@ export async function museImage(opts: {
   // Muse Image lives on Meta's Model API only (the fallback hosts serve text).
   const key = providerKey("meta");
   if (isMockMode() || !key) return { status: "sample" };
-  if (opts.images.length < 1 || opts.images.length > 10) return { status: "failed" };
+  if (opts.images.length > 10) return { status: "failed" };
 
   const ck = `museimg:${cacheKey(model, `${opts.prompt}|${opts.size ?? "1024x1024"}|${opts.variant ?? 0}`, opts.images.map((i) => sha256Hex(new TextEncoder().encode(i))).join(","))}`;
   const hit = store.get(ck);
@@ -111,7 +112,7 @@ export async function museImage(opts: {
     return { status: "refused" };
   }
   const doFetch: Fetcher = opts.fetcher ?? ((u, i) => fetch(u, i));
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < (opts.attempts ?? 2); attempt++) {
     try {
       const res = await doFetch(`${PROVIDERS.meta.baseUrl}/responses`, {
         method: "POST",

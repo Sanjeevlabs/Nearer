@@ -101,3 +101,7 @@ export function totalTime(r: Pick<Recipe, "prepMins" | "cookMins">): string {
   if (r.prepMins == null && r.cookMins == null) return "";
   return minutes((r.prepMins ?? 0) + (r.cookMins ?? 0));
 }
+
+export function recipeAttribution(museIdea: boolean | undefined, name: string): string {
+  return museIdea ? `Idea from Muse · kept by ${name}` : `Taught by ${name}`;
+}

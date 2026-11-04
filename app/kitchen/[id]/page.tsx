@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { usePlayer } from "@/components/player";
-import { RecipeCover, COURSE_LOOK, minutes, totalTime } from "@/components/recipe-art";
+import { RecipeCover, COURSE_LOOK, minutes, recipeAttribution, totalTime } from "@/components/recipe-art";
 import { RecipeEditor } from "@/components/recipe-editor";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { ShareRecipe } from "@/components/share-recipe";
@@ -101,7 +101,7 @@ export default function RecipePage() {
     ["Prep", minutes(r.prepMins)],
     ["Cook", minutes(r.cookMins)],
     ["Serves", r.serves],
-    ["Per serving", r.caloriesPerServing ? `about ${r.caloriesPerServing} kcal` : ""],
+    ["Per serving", r.caloriesPerServing != null ? `about ${r.caloriesPerServing} kcal` : ""],
   ].filter(([, v]) => v);
 
   return (
@@ -123,15 +123,14 @@ export default function RecipePage() {
         {totalTime(r) ? ` · ${totalTime(r)}` : ""}
       </p>
       <h1 data-display className="m-0 mt-1 text-display leading-[1.08]">{r.title}</h1>
-      {r.museIdea && <p className="text-callout text-ink-soft">Idea from Muse</p>}
       <Link href={cook ? `/people/${cook.id}` : "#"} className="mt-3 flex items-center gap-2.5 text-ink no-underline">
         <Avatar src={memberPhoto(cook)} name={callName(cook)} size={36} />
         <span className="text-body">
-          <span className="font-semibold">Taught by {cook?.id === viewer.id ? "you" : callName(cook)}</span>
-          {writer && writer.id !== cook?.id ? <span className="text-ink-soft"> · written down by {writer.id === viewer.id ? "you" : callName(writer)}</span> : null}
+          <span className="font-semibold">{recipeAttribution(r.museIdea, r.cookId === viewer.id ? "you" : callName(cook))}</span>
+          {!r.museIdea && writer && writer.id !== cook?.id ? <span className="text-ink-soft"> · written down by {writer.id === viewer.id ? "you" : callName(writer)}</span> : null}
         </span>
       </Link>
-      {r.memory && <p className="voice m-0 mt-4 text-title leading-snug">&ldquo;{r.memory}&rdquo;</p>}
+      {r.memory && <p className="voice m-0 mt-4 text-title leading-snug">{r.museIdea ? r.memory : `“${r.memory}”`}</p>}
 
       {stats.length > 0 && (
         <dl className="m-0 mt-5 grid divide-x divide-[var(--line)] rounded-card bg-surface py-3" style={{ gridTemplateColumns: `repeat(${stats.length}, 1fr)` }}>
@@ -202,13 +201,14 @@ export default function RecipePage() {
                   <span className="shrink-0 text-right">
                     {i.said && <span className="voice block text-body">{i.said}</span>}
                     {i.approx && <span className="tnum block text-footnote text-ink-soft">{i.said ? "≈ " : ""}{i.approx.replace(/^(about|≈)\s*/i, "")}</span>}
+                    {i.kcal !== undefined && <span className="tnum block text-footnote text-ink-soft">about {i.kcal} kcal</span>}
                   </span>
                 </button>
               </li>
             );
           })}
         </ul>
-        <p className="m-0 mt-2 px-1 text-caption text-ink-soft">Tap to tick what you have. Amounts are as {callName(cook)} says them; ≈ is a rough guide.</p>
+        <p className="m-0 mt-2 px-1 text-caption text-ink-soft">Tap to tick what you have. {r.museIdea ? "Calories are estimates, not medical advice." : `Amounts are as ${callName(cook)} says them; ≈ is a rough guide.`}</p>
       </section>
 
       <section aria-label="Method">
@@ -219,9 +219,10 @@ export default function RecipePage() {
               <span className="tnum grid h-8 w-8 shrink-0 place-items-center rounded-full text-callout font-bold text-white" style={{ background: look.ink }}>{n + 1}</span>
               <div className="pt-1">
                 <p className="m-0 text-headline leading-snug">{st.text}</p>
+                {Boolean(st.minutes) && <p className="m-0 text-footnote text-ink-soft">{st.minutes} min</p>}
                 {st.tip && (
                   <p className="voice m-0 mt-1.5 text-headline text-ink-soft">
-                    &ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-soft">— {callName(cook)}</span>
+                    {r.museIdea ? st.tip : <>&ldquo;{st.tip}&rdquo; <span className="not-italic text-footnote text-ink-soft">— {callName(cook)}</span></>}
                   </p>
                 )}
               </div>
