@@ -71,7 +71,7 @@ export default function AuthCallback() {
       if (after.kind === "failed" || !out.ok) return setState("failed");
       try {
         if (out.welcome) sessionStorage.setItem("aangan:welcome", out.welcome);
-        sessionStorage.removeItem("aangan:entered");
+        sessionStorage.setItem("aangan:entered", "1"); // just signed in: straight into the app, never the home page
       } catch {
         /* private mode */
       }

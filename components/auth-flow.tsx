@@ -141,7 +141,7 @@ export function AuthFlow({ join = false, code: codeProp = null }: { join?: boole
   const enter = () => {
     resetFamilyCards();
     try {
-      sessionStorage.removeItem("aangan:entered");
+      sessionStorage.setItem("aangan:entered", "1"); // just signed in: straight into the app, never the home page
     } catch {
       /* ignore */
     }

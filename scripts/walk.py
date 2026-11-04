@@ -108,7 +108,7 @@ def dock_overlaps(page, where: str, problems: list[str], person: str) -> None:
 
 
 def first_screen(base: str, person: str, browser, problems: list[str], size=(390, 844)) -> None:
-    """The first screen at 390pt: the home page first, then exactly one bottom bar on the window, the dock only after the key is slid."""
+    """The first screen at 390pt: signed in goes straight to the window (no home page), exactly one bottom bar, the dock only after the key is slid."""
     ctx = browser.new_context(viewport={"width": size[0], "height": size[1]}, base_url=base)
     res = ctx.request.post("/api/session", data=json.dumps({"inviteCode": "NEARER-DEMO", "memberId": person}), headers={"content-type": "application/json"})
     if not res.ok:
@@ -117,17 +117,14 @@ def first_screen(base: str, person: str, browser, problems: list[str], size=(390
         return
     page = ctx.new_page()
     page.goto("/", wait_until="load")
+    if page.get_by_role("button", name="Open Nearer").count():
+        problems.append(f"{person} /: signed in, but the public home page showed instead of the app")
     try:
-        page.get_by_role("button", name="Open Nearer").first.wait_for(timeout=15_000)
+        page.locator("[data-ui=window-lamp]").wait_for(timeout=15_000)
     except Exception:
-        problems.append(f"{person} /: signed in on a phone, the home page has no 'Open Nearer' button")
+        problems.append(f"{person} /: signed in, the window did not open")
         ctx.close()
         return
-    fit_check(page, "/ (home)", problems, person)
-    if page.locator("[data-ui=dock]").count():
-        problems.append(f"{person} /: the dock shows on the home page")
-    page.get_by_role("button", name="Open Nearer").first.click()
-    page.locator("[data-ui=window-lamp]").wait_for(timeout=15_000)
     page.wait_for_timeout(1200)
     fit_check(page, "/ (window)", problems, person)
     if page.locator("[data-ui=dock]").count():

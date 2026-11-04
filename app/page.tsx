@@ -81,9 +81,7 @@ export default function Page() {
       window.dispatchEvent(new Event("aangan:auth"));
     }
   }, []);
-  // Everyone (phone or laptop) sees the home page first, even with a session from an earlier
-  // day; one tap on Open Nearer (or any app route) steps inside for the rest of the session.
-  // Straight in: the installed app, ?demo=1, and anyone who already stepped inside.
+  // Signed out: the home page first (straight in for the installed app, ?demo=1, and anyone who already stepped inside).
   const [entered, setEntered] = useState<boolean | null>(null);
   const [direct, setDirect] = useState(false);
   useEffect(() => {
@@ -108,7 +106,9 @@ export default function Page() {
   }, [gate, startDemo]);
 
   // What is on screen. The dock is off on "/" unless this says it is the courtyard or kid-home.
-  const view = gate === "checking" || entered === null ? "checking" : !signedIn ? (direct ? "landing" : "site") : !entered ? "site" : gate;
+  // Signed in: always straight into the app (the window, the family page or kid-home). The public home page
+  // is only for people who aren't signed in (and stays at /home for anyone who wants it).
+  const view = gate === "checking" || entered === null ? "checking" : !signedIn ? (direct ? "landing" : "site") : gate;
   const dock = view === "family" || view === "kid";
   useEffect(() => {
     setDockOn(dock);
