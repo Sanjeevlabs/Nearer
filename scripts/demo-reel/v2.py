@@ -14,6 +14,7 @@ ffmpeg only for video; Pillow for the still layers (background, phone, captions,
 import argparse
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 import wave
@@ -131,7 +132,10 @@ def svg_png(svg: pathlib.Path, out: pathlib.Path, width: int, color=None) -> Non
         data = data.replace("currentColor", color)
     tmp = out.with_suffix(".svg")
     tmp.write_text(data)
-    run(["rsvg-convert", "-w", width, "-o", out, tmp])
+    if shutil.which("rsvg-convert"):
+        run(["rsvg-convert", "-w", width, "-o", out, tmp])
+    else:
+        run(["inkscape", tmp, "--export-width", width, "--export-filename", out])
     tmp.unlink()
 
 
@@ -354,7 +358,7 @@ def final(L: dict, tag: str, tl: list[dict], clips: list[pathlib.Path], audio: p
 def contact(video: pathlib.Path, tl: list[dict]) -> None:
     frames = []
     for p in (part for part in tl if part["id"] in (1, 3, 5, 7, 9, 12)):
-        t = p["start"] + 1.6 if p["id"] in (0, 12) else (p["cap_in"] + p["cap_out"]) / 2 + (1.2 if p["id"] in (7, 8) else 0)
+        t = p["start"] + 3.5 if p["id"] == 12 else (p["cap_in"] + p["cap_out"]) / 2 + (1.2 if p["id"] in (7, 8) else 0)
         f = WORK / f"f{p['id']:02d}.png"
         run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-ss", round(t, 2), "-i", video, "-frames:v", 1, "-vf", "scale=360:640", f])
         frames.append(Image.open(f))
