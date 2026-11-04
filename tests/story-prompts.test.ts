@@ -55,6 +55,17 @@ describe("family story prompts", () => {
     expect(skipped).toHaveLength(5);
   });
 
+  it("rotates all four new family history prompts and lets families skip them", () => {
+    const ids = ["fs-grandparents-work", "fs-parents-met", "fs-grandmother-recipe", "fs-family-saying"];
+    const seen = new Set<string>();
+    for (let day = 1; day <= FAMILY_STORY_IDEAS.length; day++) {
+      const date = `2026-11-${String(day).padStart(2, "0")}`;
+      for (const idea of familyStoriesFor(date, 5)) seen.add(idea.id);
+      expect(familyStoriesFor(date, 5, (idea) => ids.includes(idea.id)).some((idea) => ids.includes(idea.id))).toBe(false);
+    }
+    for (const id of ids) expect(seen.has(id)).toBe(true);
+  });
+
   it("never hard-codes a demo family name in lib/", () => {
     process.env.MOCK = "true";
     const demo = new Set(["Arjun", "Priya", "Dadi", "Dada", "Leo", "Aria", "Kavya", "Rohan", "Vihaan", "Rahul", "Anaya", "Kabir", "Maa", "Papa"]);

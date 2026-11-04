@@ -7,7 +7,8 @@ import { GET as weatherGet } from "@/app/api/weather/route";
 import { dbListMembers, dbListRelationships } from "@/lib/db";
 import type { Card } from "@/lib/schemas";
 import { resetDemo } from "@/lib/store";
-import { type TodayPrompt } from "@/lib/today";
+import { fallbackPrompt, TODAY_PROMPTS } from "@/lib/today";
+import { ensureToday } from "@/lib/today-server";
 import { treeLayout } from "@/lib/tree";
 import { groundedLayers } from "@/lib/window";
 import { phaseFor, skyFromWmo } from "@/lib/weather";
@@ -56,6 +57,16 @@ describe("the window (LITE)", () => {
 });
 
 describe("today, for both homes", () => {
+  it("selects the new family history prompts through the mock Muse path", async () => {
+    const dates = TODAY_PROMPTS.map((_, i) => `2027-02-${String(i + 1).padStart(2, "0")}`);
+    for (const id of ["old-street", "family-song", "family-object"]) {
+      const date = dates.find((date) => fallbackPrompt(date, []).id === id)!;
+      const task = await ensureToday("demo-family", new Date(`${date}T12:00:00Z`), { tasks: [], holidays: Promise.resolve({ visible: [] }) });
+      const prompt = TODAY_PROMPTS.find((p) => p.id === id)!;
+      expect(task).toMatchObject({ promptId: id, forParents: prompt.parents, forChildren: prompt.children });
+    }
+  });
+
   it("shows Maa's answer to Arjun before he answers (nothing sealed, no streak), then completes", async () => {
     const before = await json<{ task: { id: string; side: string; mine: boolean; theirs: boolean; answers: { cardId: string }[] }; streak?: number }>(todayGet(req("/api/today", "arjun")));
     expect(before.task).toMatchObject({ side: "children", mine: false, theirs: true });
@@ -81,7 +92,6 @@ describe("today, for both homes", () => {
     const src = readFileSync("components/today.tsx", "utf8");
     expect(src).toContain("Add yours");
     expect(src).not.toMatch(/to hear it|sealed|streak/);
-    void ({} as TodayPrompt);
   });
 });
 
