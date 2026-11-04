@@ -6,7 +6,7 @@ import { Avatar, Icon } from "@/components/ui/kit";
 import { useShell } from "@/components/shell";
 import { VenueScene, type Sitter } from "@/components/venue-scene";
 import { useViewer } from "@/components/viewer";
-import { CALL_TOOLBAR, deniedReason, jitsiConfig, jitsiHash, mediaAllowed, stillOpen, type CallPhase, type JoinMedia } from "@/lib/call-gate";
+import { CALL_TOOLBAR, deniedReason, jitsiConfig, mediaAllowed, stillOpen, type CallPhase, type JoinMedia } from "@/lib/call-gate";
 import { doorLine } from "@/lib/doors";
 import type { Knock, Sitting } from "@/lib/kinds";
 import type { Member } from "@/lib/schemas";
@@ -67,7 +67,10 @@ export default function CallPage() {
   const [blockedVideo, setBlockedVideo] = useState(false);
   const [info, setInfo] = useState<RoomInfo | null>(null);
   const [now, setNow] = useState<Date | null>(null);
-  const [mode, setMode] = useState<"loading" | "api" | "iframe">("loading");
+  const [joined, setJoined] = useState(false);
+  const [requestedMedia, setRequestedMedia] = useState<JoinMedia>("audio");
+  const joinAttempt = useRef<AbortController | null>(null);
+  useEffect(() => () => joinAttempt.current?.abort(), []);
   const [live, setLive] = useState<{ pid: string; mid: string }[]>([]);
   const holder = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiApi | null>(null);
@@ -100,8 +103,11 @@ export default function CallPage() {
   useEffect(() => {
     if (!data) return;
     if (phase === "checking") setPhase(open ? "prejoin" : "closed");
-    else if (phase === "prejoin" && !open) setPhase("closed");
-    else if ((phase === "in" || phase === "connecting") && !open) setPhase("ended");
+    else if (!open && (phase === "prejoin" || phase === "failed" || phase === "denied")) setPhase("closed");
+    else if (!open && (phase === "in" || phase === "connecting")) {
+      joinAttempt.current?.abort();
+      setPhase("ended");
+    }
   }, [data, open, phase]);
   useEffect(() => {
     if (phase === "checking" && sit.failed && !data) setPhase("closed");
@@ -125,39 +131,58 @@ export default function CallPage() {
   }, [phase, dispose, router]);
 
   const join = async (want: JoinMedia) => {
+    if (!open || joinAttempt.current) return;
+    const attempt = new AbortController();
+    joinAttempt.current = attempt;
+    setRequestedMedia(want);
+    setJoined(false);
+    setLive([]);
+    setInfo(null);
     setPhase("connecting");
     setBlockedVideo(false);
     let chosen = want;
-    let asked = await askBrowser(chosen);
-    // No camera on this device: audio only, said plainly on screen.
-    if (asked === "missing" && chosen === "video") {
-      chosen = "audio";
-      asked = await askBrowser(chosen);
-    }
-    if (asked !== "ok") {
-      setBlockedVideo(want === "video");
-      setPhase("denied");
-      return;
-    }
-    setMedia(chosen);
+    let timer: number | undefined;
     try {
-      const res = await fetch(`/api/sit/token?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+      let asked = await askBrowser(chosen);
+      if (attempt.signal.aborted) return;
+      if (asked === "missing" && chosen === "video") {
+        chosen = "audio";
+        asked = await askBrowser(chosen);
+      }
+      if (attempt.signal.aborted) return;
+      if (asked !== "ok") {
+        setBlockedVideo(chosen === "video");
+        setPhase("denied");
+        return;
+      }
+      setMedia(chosen);
+      timer = window.setTimeout(() => {
+        attempt.abort();
+        setPhase("failed");
+      }, 10000);
+      const res = await fetch(`/api/sit/token?id=${encodeURIComponent(id)}`, { cache: "no-store", signal: attempt.signal });
+      if (attempt.signal.aborted) return;
       if (res.status === 404) return setPhase("closed");
       if (!res.ok) throw new Error(String(res.status));
-      setInfo((await res.json()) as RoomInfo);
-      setMode("loading");
+      const room = (await res.json()) as RoomInfo;
+      if (attempt.signal.aborted) return;
+      setInfo(room);
       setPhase("in");
     } catch {
-      setPhase("denied");
+      if (!attempt.signal.aborted) setPhase("failed");
+    } finally {
+      window.clearTimeout(timer);
+      if (joinAttempt.current === attempt) joinAttempt.current = null;
     }
   };
 
-  // The video room, only after the tap: Jitsi's IFrame API (the venue photo is a CSS frame around the call, never inside the video);
-  // the plain iframe if the script is slow (6 s) or fails.
+  // Treat the conference-joined event, not loading the script or iframe, as success.
   useEffect(() => {
     if (!inRoom || !info || !media) return;
     let gone = false;
-    const fallback = window.setTimeout(() => !gone && !apiRef.current && setMode("iframe"), 6000);
+    let script: HTMLScriptElement | undefined;
+    const fail = () => { if (!gone) setPhase("failed"); };
+    const timeout = window.setTimeout(fail, 15000);
     const start = () => {
       if (gone || !holder.current || !window.JitsiMeetExternalAPI) return;
       try {
@@ -172,40 +197,47 @@ export default function CallPage() {
           interfaceConfigOverwrite: { TOOLBAR_BUTTONS: [...CALL_TOOLBAR], SHOW_JITSI_WATERMARK: false, SHOW_BRAND_WATERMARK: false, MOBILE_APP_PROMO: false },
         });
         apiRef.current = api;
-        window.clearTimeout(fallback);
-        setMode("api");
-        api.addListener("videoConferenceJoined", () => void postJson("/api/sit", { action: "joined", id }));
+        api.addListener("videoConferenceJoined", () => {
+          if (gone) return;
+          window.clearTimeout(timeout);
+          setJoined(true);
+          void postJson("/api/sit", { action: "joined", id });
+        });
         api.addListener("participantJoined", (e) => {
           const m = members.find((x) => x.id !== viewer.id && callName(x) === e.displayName);
-          if (m && e.id) setLive((l) => [...l.filter((p) => p.pid !== e.id), { pid: e.id!, mid: m.id }]);
+          if (!gone && m && e.id) setLive((l) => [...l.filter((p) => p.pid !== e.id), { pid: e.id!, mid: m.id }]);
         });
-        api.addListener("participantLeft", (e) => setLive((l) => l.filter((p) => p.pid !== e.id)));
-        // The browser blocked the microphone or camera inside the room: never a blank room.
+        api.addListener("participantLeft", (e) => {
+          if (!gone) setLive((l) => l.filter((p) => p.pid !== e.id));
+        });
         api.addListener("micError", () => {
+          if (gone) return;
           setBlockedVideo(false);
           setPhase("denied");
         });
         api.addListener("cameraError", () => {
+          if (gone) return;
           setBlockedVideo(true);
           setPhase("denied");
         });
-        api.addListener("readyToClose", () => void leave());
+        api.addListener("readyToClose", () => { if (!gone) void leave(); });
       } catch {
-        setMode("iframe");
+        fail();
       }
     };
     if (window.JitsiMeetExternalAPI) start();
     else {
-      const s = document.createElement("script");
-      s.src = scriptFor(info);
-      s.async = true;
-      s.onload = start;
-      s.onerror = () => !gone && setMode("iframe");
-      document.head.appendChild(s);
+      script = document.createElement("script");
+      script.src = scriptFor(info);
+      script.async = true;
+      script.onload = start;
+      script.onerror = fail;
+      document.head.appendChild(script);
     }
     return () => {
       gone = true;
-      window.clearTimeout(fallback);
+      window.clearTimeout(timeout);
+      script?.remove();
       dispose();
     };
     // The room is made once per join; the venue and members are read when it opens.
@@ -214,15 +246,16 @@ export default function CallPage() {
 
   // The host leaving closes the door; a guest leaving changes nothing for anyone else.
   async function leave() {
+    joinAttempt.current?.abort();
     dispose();
     if (knock?.memberId === viewer.id) await postJson("/api/sit", { action: "unknock" });
     router.replace("/");
   }
 
   // Seats fill in the order people arrived, you first. Before the room reports who is in
-  // it (or in the plain iframe), the host and those who said they're coming stand in.
+  // it, the host and those who said they're coming stand in.
   const expected = knock ? [knock.memberId] : sitting ? [sitting.hostId, ...sitting.going] : [];
-  const order = Array.from(new Set([viewer.id, ...(mode === "api" ? live.map((p) => p.mid) : expected)]));
+  const order = Array.from(new Set([viewer.id, ...(joined ? live.map((p) => p.mid) : expected)]));
   const sitters: Sitter[] = order.flatMap((mid) => {
     const m = members.find((x) => x.id === mid);
     return m ? [{ id: m.id, name: m.id === viewer.id ? "You" : callName(m), photo: memberPhoto(m), child: m.access === "child" || m.role === "child" }] : [];
@@ -294,29 +327,23 @@ export default function CallPage() {
             {phase === "connecting" && <div className="grid h-full place-items-center text-white/70">Joining…</div>}
 
             {phase === "in" && mediaAllowed(phase) && info && media && (
-              mode === "iframe" ? (
-                <iframe
-                  title="Family call"
-                  src={`https://${info.domain}/${roomName(info)}${info.jwt ? `?jwt=${info.jwt}` : ""}#${jitsiHash(media, callName(viewer))}`}
-                  allow={media === "audio" ? "microphone; autoplay" : "camera; microphone; fullscreen; autoplay"}
-                  className="h-full w-full border-0"
-                />
-              ) : (
+              <div className="relative h-full w-full">
                 <div ref={holder} className="h-full w-full" />
-              )
+                {!joined && <p role="status" className="pointer-events-none absolute inset-x-0 bottom-2 m-0 text-center text-footnote text-white">Connecting to the call…</p>}
+              </div>
             )}
 
-            {phase === "denied" && (
-              <div data-ui="call-denied" role="alert" className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-white">
-                <p className="m-0 text-body font-semibold">{blockedVideo ? "The browser blocked the camera or microphone" : "The browser blocked the microphone"}</p>
-                <p className="m-0 text-footnote text-white/70">You can allow it in your browser&rsquo;s settings for this site, then try again.</p>
+            {(phase === "denied" || phase === "failed") && (
+              <div data-ui={phase === "denied" ? "call-denied" : "call-failed"} role="alert" className="flex h-full flex-col items-center justify-center gap-3 overflow-y-auto px-6 py-4 text-center text-white">
+                <p className="m-0 text-body font-semibold">
+                  {phase === "failed" ? "The call couldn’t connect" : blockedVideo ? "The camera or microphone isn’t available" : "The microphone isn’t available"}
+                </p>
+                {phase === "denied" && <p className="m-0 text-footnote text-white/70">Check your browser permissions, then try again.</p>}
                 <div className="grid w-full max-w-[320px] gap-2">
-                  <button type="button" onClick={() => void join("audio")} className={`${BTN} bg-white text-black`}>
-                    Try audio only
-                  </button>
-                  <button type="button" onClick={() => void leave()} className={`${BTN} text-white/80`}>
-                    Leave
-                  </button>
+                  <button type="button" onClick={() => void join(requestedMedia)} className={`${BTN} bg-white text-black`}>Retry</button>
+                  <a href={`/api/sit/token?id=${encodeURIComponent(id)}&open=${requestedMedia}`} target="_blank" rel="noopener noreferrer" className={`${BTN} bg-white/15 text-white no-underline`}>Open call in browser</a>
+                  {requestedMedia === "video" && <button type="button" onClick={() => void join("audio")} className={`${BTN} text-white/80`}>Try audio only</button>}
+                  <button type="button" onClick={() => void leave()} className={`${BTN} text-white/80`}>Leave</button>
                 </div>
               </div>
             )}
