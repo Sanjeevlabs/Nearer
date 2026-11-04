@@ -429,6 +429,35 @@ alter table family_docs add constraint family_docs_kind_check check (kind in ('r
 create index if not exists family_docs_family_kind_idx on family_docs (family_id, kind, created_at desc);
 alter table family_docs enable row level security;
 
+-- Commit a check mark and its activity entry together. Compare the last event
+-- after taking the row lock so overlapping family actions cannot lose history.
+create or replace function save_habit_action(
+  p_family text, p_habit jsonb, p_previous text, p_mode text, p_tick jsonb
+) returns boolean language plpgsql set search_path = public as $$
+declare
+  habit_key text := p_family || ':' || (p_habit->>'id');
+  tick_key text := p_family || ':' || (p_tick->>'id');
+  current_habit jsonb;
+begin
+  select data into current_habit from family_docs
+    where id = habit_key and family_id = p_family and kind = 'habit' for update;
+  if not found or (current_habit->'history'->-1->>'id') is distinct from p_previous then
+    return false;
+  end if;
+  if p_mode = 'tick' then
+    insert into family_docs(id, family_id, kind, data)
+      values (tick_key, p_family, 'habit_tick', p_tick) on conflict (id) do nothing;
+    if not found then return true; end if;
+  elsif p_mode = 'untick' then
+    delete from family_docs where id = tick_key and family_id = p_family and kind = 'habit_tick';
+  end if;
+  update family_docs set data = p_habit, updated_at = now() where id = habit_key;
+  return true;
+end;
+$$;
+revoke execute on function save_habit_action(text, jsonb, text, text, jsonb) from public, anon, authenticated;
+grant execute on function save_habit_action(text, jsonb, text, text, jsonb) to service_role;
+
 -- ------------------------------------------------------------ client_errors
 -- What the app hit on someone's phone (the error beacon, /api/beacon). Thin and impersonal on
 -- purpose: the page path (ids blanked), the message, the top of the stack, the build, a device

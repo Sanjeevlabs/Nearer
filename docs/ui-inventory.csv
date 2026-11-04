@@ -44,51 +44,52 @@ Entry,courtyard,25,section,"Today, for both homes",,today-card,arjun dadi,,keep,
 Entry,courtyard,26,button,Add yours,,today-card,arjun,,keep,
 Entry,courtyard,27,section,Together habit,,,arjun dadi,,keep,
 Entry,courtyard,28,heading,Morning walk · <time>,,~Together habit,arjun dadi,,keep,
-Entry,courtyard,29,button,Habit options,,~Together habit,arjun dadi,icon-only,review,
-Entry,courtyard,30,image,Maa,,~Together habit,arjun dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,30,toggle,Walked today ✓,,~Together habit,dadi,,keep,
-Entry,courtyard,31,image,Arjun,,~Together habit,arjun dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,32,toggle,Done today,,~Together habit,arjun,,keep,
-Entry,courtyard,33,section,A letter from the courtyard,,courtyard-letter,arjun dadi,,keep,
-Entry,courtyard,34,button,Do it,,courtyard-letter,arjun dadi,,keep,
-Entry,courtyard,34,section,Tonight's story for Vihaan,,courtyard-bedtime,dadi,,keep,
-Entry,courtyard,35,button,Not now,,courtyard-letter,arjun dadi,dup,review,icon-only control: its name is only an aria-label
-Entry,courtyard,36,section,Tonight's story for Anika,,courtyard-bedtime,arjun,,keep,
-Entry,courtyard,37,button,Record a story,,courtyard-bedtime,arjun dadi,,keep,
-Entry,courtyard,38,button,Not now,,courtyard-bedtime,arjun dadi,dup,review,icon-only control: its name is only an aria-label
-Entry,courtyard,39,link,N question from the kids,/inbox,courtyard-kid-asks,arjun dadi,,keep,
-Entry,courtyard,40,section,Fridge,,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,41,button,Add to the fridge,,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,42,button,"Anika's voice memory, last night",,courtyard-fridge,dadi,,keep,
-Entry,courtyard,42,link,All →,/bond/kids,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,43,button,"Vihaan's picture, this morning",,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,44,button,"Vihaan's picture, yesterday morning",,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,45,button,"Anika's voice memory, <date>",,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,46,button,Reply to Vihaan by voice,,courtyard-fridge,arjun dadi,,keep,
-Entry,courtyard,47,section,Now in the family,,,arjun dadi,,keep,
-Entry,courtyard,48,image,Maa,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,49,image,Arjun,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,50,button,Start a video call,,~Now in the family,arjun dadi,icon-only,review,
-Entry,courtyard,50,link,N days until Arjun arrives Arjun comes home for Diwali week · N thing on your l…,/together/together-visit,~Now in the family,dadi,,keep,
-Entry,courtyard,51,link,N days to your visit to Amritsar Arjun comes home for Diwali week · staying wit…,/together/together-visit,~Now in the family,arjun,,keep,
-Entry,courtyard,52,link,Dancing in the baraat till the band gave up. <ago> Dancing in the baraat till t…,/lane,~Now in the family,arjun dadi,,keep,
-Entry,courtyard,53,image,Dancing in the baraat till the band gave up.,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,54,button,Show N of N,,~Now in the family,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
-Entry,courtyard,56,section,"This week, your gifts",,,dadi,,keep,
-Entry,courtyard,57,button,"Record a voice note, N waiting for your reply",,dock,arjun dadi,icon-only,review,
-Entry,courtyard,57,heading,"This week, your gifts",,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,58,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
-Entry,courtyard,58,link,Priya heard your voice memory · <day>,/lane,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,59,link,Arjun Arjun cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,60,image,Arjun,,"~This week, your gifts",dadi,,review,icon-only control: its name is only an aria-label
-Entry,courtyard,61,link,"Priya listened to your story, “The elephant and the tailor” · <day>",/stories,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,62,link,Priya cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
-Entry,courtyard,63,section,A question for you,,,dadi,,keep,
-Entry,courtyard,64,button,Teach it,,~A question for you,dadi,,keep,
-Entry,courtyard,65,section,Help,,,dadi,,keep,
-Entry,courtyard,66,link,हफ़्ते भर की सब्ज़ी और दूध Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
-Entry,courtyard,67,link,गैस सिलेंडर लगभग खत्म है अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार को सिलेंड…,/care,~Help,dadi,,keep,
-Entry,courtyard,68,button,Ask the family for help,,~Help,dadi,,keep,
+Entry,courtyard,29,button,Morning walk · <time>,,~Together habit,arjun dadi,,keep,
+Entry,courtyard,30,button,Habit options,,~Together habit,arjun dadi,icon-only,review,
+Entry,courtyard,31,image,Maa,,~Together habit,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,31,toggle,Walked today ✓,,~Together habit,dadi,,keep,
+Entry,courtyard,32,image,Arjun,,~Together habit,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,33,toggle,Done today,,~Together habit,arjun,,keep,
+Entry,courtyard,34,section,A letter from the courtyard,,courtyard-letter,arjun dadi,,keep,
+Entry,courtyard,35,button,Do it,,courtyard-letter,arjun dadi,,keep,
+Entry,courtyard,35,section,Tonight's story for Vihaan,,courtyard-bedtime,dadi,,keep,
+Entry,courtyard,36,button,Not now,,courtyard-letter,arjun dadi,dup,review,icon-only control: its name is only an aria-label
+Entry,courtyard,37,section,Tonight's story for Anika,,courtyard-bedtime,arjun,,keep,
+Entry,courtyard,38,button,Record a story,,courtyard-bedtime,arjun dadi,,keep,
+Entry,courtyard,39,button,Not now,,courtyard-bedtime,arjun dadi,dup,review,icon-only control: its name is only an aria-label
+Entry,courtyard,40,link,N question from the kids,/inbox,courtyard-kid-asks,arjun dadi,,keep,
+Entry,courtyard,41,section,Fridge,,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,42,button,Add to the fridge,,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,43,button,"Anika's voice memory, last night",,courtyard-fridge,dadi,,keep,
+Entry,courtyard,43,link,All →,/bond/kids,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,44,button,"Vihaan's picture, this morning",,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,45,button,"Vihaan's picture, yesterday morning",,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,46,button,"Anika's voice memory, <date>",,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,47,button,Reply to Vihaan by voice,,courtyard-fridge,arjun dadi,,keep,
+Entry,courtyard,48,section,Now in the family,,,arjun dadi,,keep,
+Entry,courtyard,49,image,Maa,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,50,image,Arjun,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,51,button,Start a video call,,~Now in the family,arjun dadi,icon-only,review,
+Entry,courtyard,51,link,N days until Arjun arrives Arjun comes home for Diwali week · N thing on your l…,/together/together-visit,~Now in the family,dadi,,keep,
+Entry,courtyard,52,link,N days to your visit to Amritsar Arjun comes home for Diwali week · staying wit…,/together/together-visit,~Now in the family,arjun,,keep,
+Entry,courtyard,53,link,Dancing in the baraat till the band gave up. <ago> Dancing in the baraat till t…,/lane,~Now in the family,arjun dadi,,keep,
+Entry,courtyard,54,image,Dancing in the baraat till the band gave up.,,~Now in the family,arjun dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,55,button,Show N of N,,~Now in the family,arjun dadi,icon-only,review,icon-only control: its name is only an aria-label
+Entry,courtyard,57,section,"This week, your gifts",,,dadi,,keep,
+Entry,courtyard,58,button,"Record a voice note, N waiting for your reply",,dock,arjun dadi,icon-only,review,
+Entry,courtyard,58,heading,"This week, your gifts",,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,59,button,Open the house,,dock,arjun dadi aria,icon-only,review,icon-only control: its name is only an aria-label
+Entry,courtyard,59,link,Priya heard your voice memory · <day>,/lane,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,60,link,Arjun Arjun cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,61,image,Arjun,,"~This week, your gifts",dadi,,review,icon-only control: its name is only an aria-label
+Entry,courtyard,62,link,"Priya listened to your story, “The elephant and the tailor” · <day>",/stories,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,63,link,Priya cooked your Dal tadka · <day>,/kitchen/recipe-dadi-dal,"~This week, your gifts",dadi,,keep,
+Entry,courtyard,64,section,A question for you,,,dadi,,keep,
+Entry,courtyard,65,button,Teach it,,~A question for you,dadi,,keep,
+Entry,courtyard,66,section,Help,,,dadi,,keep,
+Entry,courtyard,67,link,हफ़्ते भर की सब्ज़ी और दूध Waiting for someone to pick it up.,/care,~Help,dadi,,keep,
+Entry,courtyard,68,link,गैस सिलेंडर लगभग खत्म है अर्जुन ने बुक कर दिया है। गैस एजेंसी गुरुवार को सिलेंड…,/care,~Help,dadi,,keep,
+Entry,courtyard,69,button,Ask the family for help,,~Help,dadi,,keep,
 Entry,home-laptop,0,badge,Nearer,,,arjun,,keep,
 Entry,home-laptop,1,button,Open Nearer,,,arjun,,keep,
 Entry,home-laptop,3,h1,"Talk, don’t type.",,,arjun,,keep,

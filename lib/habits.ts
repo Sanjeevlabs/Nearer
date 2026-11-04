@@ -3,7 +3,7 @@
 // streak or a count of days, and never one person set against another. Pure
 // helpers (client + server); the route is app/api/habits/route.ts.
 import { dateInZone } from "./time-format";
-import type { Habit, HabitTick } from "./kinds";
+import type { Habit, HabitEvent, HabitTick } from "./kinds";
 import { isAdmin } from "./permissions";
 import type { Member } from "./schemas";
 
@@ -88,6 +88,25 @@ export function habitLine(i: HabitLineInput): string {
 /* ------------------------------------------------------------ permissions */
 
 export type HabitAction = "create" | "join" | "leave" | "rename" | "retime" | "archive" | "tick" | "untick";
+
+export function appendHabitEvent(habit: Pick<Habit, "history">, event: HabitEvent): HabitEvent[] {
+  return [...(habit.history ?? []), event].slice(-200);
+}
+
+export function habitDays(today: string, count: number): string[] {
+  const end = Date.parse(`${today}T00:00:00Z`);
+  return Array.from({ length: count }, (_, i) =>
+    new Date(end - (count - 1 - i) * 86_400_000).toISOString().slice(0, 10),
+  );
+}
+
+export function habitPersonalLine(name: string, today: string, last?: string): string | null {
+  if (!last) return null;
+  const verb = doneVerb(name);
+  if (last === today) return `You ${verb} today`;
+  const weekday = new Intl.DateTimeFormat("en", { timeZone: "UTC", weekday: "long" }).format(new Date(`${last}T00:00:00Z`));
+  return `You last ${verb} on ${weekday}`;
+}
 
 type Who = Pick<Member, "id" | "role" | "access" | "status">;
 
@@ -189,6 +208,9 @@ export interface HabitData {
   can: { create: boolean; edit: boolean; archive: boolean };
   /** Everyone who joined (two or more) has done it today: the family's lamp glows. */
   everyone: boolean;
+  lastDay?: string;
+  localDay?: string;
+  archived?: { id: string; name: string }[];
 }
 
 /** The answer for one viewer. Members who left or are still pending are not shown. */
@@ -200,11 +222,17 @@ export function habitData(habits: Habit[], ticks: HabitTick[], members: Member[]
   const inIds = habit.members.filter((id) => members.some((m) => m.id === id && m.status !== "pending"));
   const today = todaysTicks({ id: habit.id, members: inIds }, ticks, members, now);
   const tickedIds = today.map((t) => t.memberId);
+  const localDay = dayIn(viewer?.tz ?? "UTC", now);
+  const lastDay = ticks.reduce<string | undefined>((latest, tick) =>
+    tick.habitId === habit.id && tick.memberId === viewerId && tick.day <= localDay && (!latest || tick.day > latest)
+      ? tick.day : latest, undefined);
   return {
     habit: { id: habit.id, name: habit.name, hour: habit.hour, minute: habit.minute, createdBy: habit.createdBy, members: inIds },
     today,
     me: { joined: inIds.includes(viewerId), ticked: tickedIds.includes(viewerId) },
     can,
     everyone: everyoneDone(inIds, tickedIds),
+    lastDay,
+    localDay,
   };
 }

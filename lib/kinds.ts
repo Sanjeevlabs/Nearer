@@ -618,6 +618,18 @@ export const WeeklyCallSchema = z.object({
 });
 
 // ---------- Together habits: one shared habit, ticked daily, in words and never in scores ----------
+export const HabitEventSchema = z.object({
+  id,
+  action: z.enum(["create", "join", "leave", "rename", "retime", "archive", "tick", "untick"]),
+  memberId: id,
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  at: iso,
+  zone: z.string(),
+  before: z.string().optional(),
+  after: z.string().optional(),
+});
+export type HabitEvent = z.infer<typeof HabitEventSchema>;
+
 export const HabitSchema = z.object({
   id,
   /** "Morning walk". Free text, 40 characters. */
@@ -630,6 +642,7 @@ export const HabitSchema = z.object({
   /** Who joined (member ids). */
   members: z.array(id).max(60).default([]),
   archivedAt: iso.nullable().default(null),
+  history: z.array(HabitEventSchema).max(200).optional(),
 });
 
 /** One person's tick for one of their local days. id = "<habitId>:<memberId>:<YYYY-MM-DD>", so a double tap is one row. */

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { DEFAULT_HABIT, HABIT_NAME_MAX, doneLabel, habitLine, habitTitle, timeLabel, type HabitData } from "@/lib/habits";
+import { DEFAULT_HABIT, HABIT_NAME_MAX, doneLabel, doneVerb, habitLine, habitPersonalLine, habitTitle, timeLabel, type HabitData } from "@/lib/habits";
+import type { HabitEvent } from "@/lib/kinds";
 import { callName, memberPhoto } from "@/lib/people";
 import { postJson, useJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,7 @@ import { useViewer } from "./viewer";
 // faces glow like the lamp. Sits below the Today card in the courtyard; its data
 // rides in the courtyard payload (the "habits" slice).
 
-type Sheet = "rename" | "time" | null;
+type Sheet = "rename" | "time" | "history" | null;
 type Opt = { joined?: boolean; ticked?: boolean };
 
 const hhmm = (h: number, m: number) => `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
@@ -36,6 +37,7 @@ export function TogetherHabit() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [sheet, setSheet] = useState<Sheet>(null);
+  const [archived, setArchived] = useState<{ id: string; name: string } | null>(null);
 
   if (!data) {
     return failed ? (
@@ -55,16 +57,23 @@ export function TogetherHabit() {
     setError(false);
     if (optimistic) setOpt(optimistic);
     const out = await postJson("/api/habits", body);
-    if (out) await reload();
+    await reload();
     setOpt(null);
     setBusy(false);
     setError(!out);
     return Boolean(out);
   };
+  const past = data.archived?.length ? <>
+    <details className="mt-3">
+      <summary className="flex min-h-11 cursor-pointer items-center text-callout">Past habits</summary>
+      {data.archived.map((habit) => <Button key={habit.id} variant="quiet" onClick={() => setArchived(habit)}>{habit.name}</Button>)}
+    </details>
+    {archived && <HabitHistory habit={archived} onClose={() => setArchived(null)} />}
+  </> : null;
 
   // Nobody has started one yet: a grown-up can, with one tap. Children see nothing here.
   if (!data.habit) {
-    if (!data.can.create) return null;
+    if (!data.can.create) return past ? <Shell>{past}</Shell> : null;
     return (
       <Shell>
         <p className="m-0 flex items-center gap-2 text-headline font-semibold">
@@ -79,6 +88,7 @@ export function TogetherHabit() {
             Couldn&rsquo;t start it just now. Try again.
           </p>
         )}
+        {past}
       </Shell>
     );
   }
@@ -118,7 +128,9 @@ export function TogetherHabit() {
           <p className="m-0 flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.1em] text-ink-soft">
             <Icon name="walk" size={14} /> Together
           </p>
-          <h2 className="m-0 mt-1 text-title font-semibold leading-tight">{habitTitle(habit)}</h2>
+          <h2 className="m-0 mt-1 text-title font-semibold leading-tight">
+            <button type="button" className="min-h-11 text-left" onClick={() => setSheet("history")}>{habitTitle(habit)}</button>
+          </h2>
         </div>
         <ActionMenu actions={actions} label="Habit options" className="-mr-2 -mt-1.5" />
       </div>
@@ -149,14 +161,66 @@ export function TogetherHabit() {
       <p className="m-0 mt-3 text-center text-body text-ink-soft" aria-live="polite">
         {line}
       </p>
+      {data.localDay && <p className="m-0 mt-1 text-center text-callout text-ink-soft">{habitPersonalLine(habit.name, data.localDay, data.lastDay)}</p>}
       {error && (
         <p role="alert" className="m-0 mt-1 text-center text-footnote text-[#b42318]">
           Couldn&rsquo;t save just now. Tap to try again.
         </p>
       )}
 
-      {sheet && <EditSheet kind={sheet} habit={habit} onClose={() => setSheet(null)} onSave={(b) => run({ habitId: habit.id, ...b })} />}
+      {sheet === "history" && <HabitHistory habit={habit} onClose={() => setSheet(null)} />}
+      {(sheet === "rename" || sheet === "time") && <EditSheet kind={sheet} habit={habit} onClose={() => setSheet(null)} onSave={(b) => run({ habitId: habit.id, ...b })} />}
+      {past}
     </Shell>
+  );
+}
+
+interface HistoryData {
+  calendars: { memberId: string; days: { day: string; done: boolean }[] }[];
+  events: HabitEvent[];
+}
+
+function HabitHistory({ habit, onClose }: { habit: { id: string; name: string }; onClose: () => void }) {
+  const { members, viewer } = useViewer();
+  const { data, failed, reload } = useJson<HistoryData>(`/api/habits?history=${encodeURIComponent(habit.id)}`);
+  const name = (id: string) => id === viewer.id ? "You" : callName(members.find((member) => member.id === id));
+  const dateLabel = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  function eventLabel(event: HabitEvent) {
+    const actions = {
+      create: "started the habit", join: "joined", leave: "left", archive: "archived the habit",
+      tick: doneVerb(habit.name), untick: "unticked the day",
+      rename: `renamed it from ${event.before} to ${event.after}`,
+      retime: `changed the time from ${event.before} to ${event.after}`,
+    };
+    const at = new Date(event.at);
+    const options = { hour: "numeric", minute: "2-digit" } as const;
+    let time: string;
+    try { time = at.toLocaleTimeString("en", { ...options, timeZone: event.zone }); }
+    catch { time = at.toLocaleTimeString("en", { ...options, timeZone: "UTC" }); }
+    return `${dateLabel(event.day)} · ${name(event.memberId)} ${actions[event.action]} · ${time} local time`;
+  }
+  return (
+    <BottomSheet open onClose={onClose} title="History">
+      {!data && (failed ? <Button onClick={() => void reload()}>Try again</Button> : <p role="status">Loading history…</p>)}
+      {data?.calendars.map(({ memberId, days }) => (
+        <section className="mb-5" key={memberId}>
+          <h3 className="text-headline">{name(memberId)}</h3>
+          <p className="text-callout text-ink-soft">{name(memberId)} {doneVerb(habit.name)} {days.slice(-7).filter((day) => day.done).length} of the last 7 days</p>
+          {days.length > 0 && <p className="text-footnote text-ink-soft">{dateLabel(days[0].day)} – {dateLabel(days[days.length - 1].day)}</p>}
+          <ul className="grid list-none grid-cols-7 gap-2 p-0" aria-label={`${name(memberId)}, last seven weeks`}>
+            {days.map(({ day, done }) => (
+              <li key={day} className="flex justify-center" title={dateLabel(day)}>
+                <span className="sr-only">{dateLabel(day)} · {done ? "Done" : "No check mark"}</span>
+                <span aria-hidden="true" className={cn("size-3 rounded-full border border-current", done && "bg-current")} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      {data && <h3 className="text-headline">Recent activity</h3>}
+      {data?.events.length === 0 && <p className="text-callout">No recorded changes yet.</p>}
+      {data && <ul className="list-none space-y-2 p-0 text-callout">{data.events.map((event) => <li key={event.id}>{eventLabel(event)}</li>)}</ul>}
+    </BottomSheet>
   );
 }
 
