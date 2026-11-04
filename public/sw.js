@@ -173,11 +173,11 @@ self.addEventListener("notificationclick", (event) => {
       const open = list.find((c) => new URL(c.url).origin === self.location.origin);
       if (open) {
         try {
-          if ("navigate" in open) await open.navigate(target);
+          const atTarget = "navigate" in open ? await open.navigate(target) : null;
+          if (atTarget) return atTarget.focus();
         } catch {
-          /* an uncontrolled page cannot be navigated; focusing is still right */
+          /* A page that cannot navigate is handled by opening the target below. */
         }
-        return open.focus();
       }
       return self.clients.openWindow(target);
     }),

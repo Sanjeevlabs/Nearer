@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/kit";
-import { askIsPaused, enableNotifications, pauseAsk, pushIsOn, pushSupport, type PushSupport } from "@/lib/web-push";
+import { PUSH_FIRST_ACTION, hasPushFirstAction, askIsPaused, enableNotifications, pauseAsk, pushIsOn, pushSupport, serverVapidKey, type PushSupport } from "@/lib/web-push";
 
 // A soft ask, never on load by itself and never a browser prompt until the person taps
 // "Turn on". "Not now" keeps it away for 30 days on this device. Only shown when this
@@ -11,23 +11,32 @@ import { askIsPaused, enableNotifications, pauseAsk, pushIsOn, pushSupport, type
 type Phase = "hidden" | "ask" | "install" | "working" | "done" | "denied";
 
 export function PushAsk({ className = "" }: { className?: string }) {
+  const [vapid, setVapid] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("hidden");
   const [support, setSupport] = useState<PushSupport>("unsupported");
   useEffect(() => {
     let live = true;
-    void (async () => {
+    const show = async () => {
+      if (!hasPushFirstAction()) return;
       const s = pushSupport();
       if (s === "unsupported" || s === "blocked" || askIsPaused()) return;
       const cfg = await fetch("/api/push/settings", { cache: "no-store" })
         .then((r) => (r.ok ? (r.json() as Promise<{ configured?: { app?: boolean; web?: boolean } }>) : null))
         .catch(() => null);
       const configured = s === "native" ? cfg?.configured?.app : cfg?.configured?.web;
-      if (!live || !configured || (await pushIsOn())) return;
+      if (!configured || (await pushIsOn())) return;
+      const key = s === "ready" ? await serverVapidKey() : null;
+      if (!live || (s === "ready" && !key)) return;
+      setVapid(key);
       setSupport(s);
       setPhase(s === "needs-install" ? "install" : "ask");
-    })();
+    };
+    void show();
+    const onAction = () => void show();
+    window.addEventListener(PUSH_FIRST_ACTION, onAction);
     return () => {
       live = false;
+      window.removeEventListener(PUSH_FIRST_ACTION, onAction);
     };
   }, []);
 
@@ -39,7 +48,7 @@ export function PushAsk({ className = "" }: { className?: string }) {
   };
   const turnOn = async () => {
     setPhase("working");
-    const r = await enableNotifications();
+    const r = await enableNotifications(vapid);
     setPhase(r === "on" ? "done" : r === "needs-install" ? "install" : r === "denied" ? "denied" : "ask");
   };
 

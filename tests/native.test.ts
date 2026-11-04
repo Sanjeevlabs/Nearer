@@ -139,9 +139,13 @@ describe("in the native app", () => {
   });
   it("asks permission and returns the push token", async () => {
     fakeWindow(true);
-    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const post = vi.fn(async () => new Response(null, { status: 201 }));
+    vi.stubGlobal("fetch", post);
     expect(await native.registerPush()).toBe("tok-123");
     expect(calls).toContain("register");
-    info.mockRestore();
+    expect(post).toHaveBeenCalledWith("/api/push/register", expect.objectContaining({
+      method: "POST",
+      body: JSON.stringify({ kind: "fcm", token: "tok-123", platform: "android" }),
+    }));
   });
 });

@@ -72,3 +72,15 @@ export const PUSH_TITLE = "Nearer";
 export function thingOf(type: string): Thing {
   return type === "audio" ? "voice memory" : type === "video" ? "video" : "photo";
 }
+
+
+// New event copy falls back to English in all locales. No user-authored text.
+export const eventWords = {
+  habit: (name: string) => `${name} checked in for your shared habit`,
+  door: (name: string, tea: boolean) => tea ? `${name} is having tea. Join?` : `${name} opened the door for you. Join?`,
+  sitting: (name: string, tea: boolean) => tea ? `${name} invited you for tea` : `${name} invited you to sit together`,
+  doorJoined: (name: string) => `${name} joined you`,
+  reply: (name: string) => `${name} replied to your memory`,
+  reaction: (name: string) => `${name} reacted to your memory`,
+  familyJoined: (name: string) => `${name} joined your family`,
+};

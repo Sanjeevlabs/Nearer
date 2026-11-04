@@ -65,6 +65,7 @@ describe("in the app", () => {
 
   it("watching: a rotated token is saved again, and a tap opens the page it names", async () => {
     permission = "granted";
+    store.set("aangan:push-token", "fcm-token-from-device-0123456789");
     const opened: string[] = [];
     const stop = native.watchPush((r) => opened.push(r));
     await until(() => requests.length > 0);
@@ -84,6 +85,15 @@ describe("in the app", () => {
     await tick();
     await tick();
     expect(permission).toBe("prompt");
+    expect(requests).toEqual([]);
+    stop();
+  });
+
+  it("watching does not register a fresh install with permission already granted by Android", async () => {
+    permission = "granted";
+    const stop = native.watchPush(() => undefined);
+    await tick();
+    await tick();
     expect(requests).toEqual([]);
     stop();
   });

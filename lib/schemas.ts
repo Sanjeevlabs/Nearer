@@ -196,6 +196,7 @@ export const CreateCardRequestSchema = z.object({
   forMemberId: z.string().max(64).nullable().default(null),
   /** "How to listen": only with addressees; kept apart from the card (family_docs card_listen). */
   listen: z.enum(LISTEN_WAYS).optional(),
+  replyToCardId: z.string().min(1).max(100).optional(),
 });
 
 export const HomeImageRequestSchema = z.object({

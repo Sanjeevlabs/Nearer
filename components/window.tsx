@@ -1,5 +1,6 @@
 "use client";
 
+import { markPushFirstAction } from "@/lib/web-push";
 import { m } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -373,7 +374,7 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
     setLitNow(new Date().toISOString());
     void haptic("medium");
     // The write refetches only the lamp and the window (lib/use-json.ts scopeOfWrite).
-    await postJson("/api/lamp", { action: "light" });
+    if (await postJson("/api/lamp", { action: "light" })) markPushFirstAction();
   };
   // Two touches meet (an experiment): while the finger stays on the lamp (or for 30 s from the
   // info sheet), join the pair's Presence channel; both holding at once shows a shared glow.

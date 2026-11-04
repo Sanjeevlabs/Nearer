@@ -1,5 +1,6 @@
 "use client";
 
+import { markPushFirstAction } from "@/lib/web-push";
 import { useEffect, useState } from "react";
 import { ACTIVITIES, DEFAULT_DOOR_MINUTES, DOOR_MINUTES, PRESETS, type Activity } from "@/lib/doors";
 import type { Knock } from "@/lib/kinds";
@@ -49,6 +50,7 @@ export function OpenDoorSheet({ open, preset, onClose, onOpened }: { open: boole
     const out = await postJson<{ knock: Knock }>("/api/sit", { action: "knock", activity, minutes, note: PRESETS[activity].line, invites: who });
     setBusy(false);
     if (!out?.knock) return setFailed(true);
+    markPushFirstAction();
     onOpened?.(out.knock);
     onClose();
   };
