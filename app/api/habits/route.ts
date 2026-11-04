@@ -47,11 +47,17 @@ async function getHandler(req: Request): Promise<Response> {
     }
     if (!habit) return Response.json({ error: "unknown-habit" }, { status: 404 });
     const ticks = await listDocs(auth.familyId, "habit_tick", { sinceMs: 50 * 86_400_000 }); // one bounded query: the calendar shows 49 days
-    const habitTicks = ticks.filter((tick) => tick.habitId === habit.id);
-    const people = new Set([...habit.members, ...habitTicks.map((tick) => tick.memberId), ...(habit.history ?? []).map((event) => event.memberId)]);
+    // One pass over the ticks: each person's done days, not a filter per person.
+    const doneBy = new Map<string, Set<string>>();
+    for (const tick of ticks) {
+      if (tick.habitId !== habit.id) continue;
+      const set = doneBy.get(tick.memberId);
+      if (set) set.add(tick.day); else doneBy.set(tick.memberId, new Set([tick.day]));
+    }
+    const people = new Set([...habit.members, ...doneBy.keys(), ...(habit.history ?? []).map((event) => event.memberId)]);
     return Response.json({
       calendars: members.filter((member) => people.has(member.id) && member.status !== "pending").map((member) => {
-        const done = new Set(habitTicks.filter((tick) => tick.memberId === member.id).map((tick) => tick.day));
+        const done = doneBy.get(member.id) ?? new Set<string>();
         return { memberId: member.id, days: habitDays(dayIn(member.tz), 49).map((day) => ({ day, done: done.has(day) })) };
       }),
       events: [...(habit.history ?? [])].reverse(),

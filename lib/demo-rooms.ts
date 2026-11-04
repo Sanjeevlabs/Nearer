@@ -9,6 +9,7 @@ import { seedEvent } from "./gather-store";
 import { dateIn } from "./today";
 import { DEMO_MEMBERS } from "./family";
 import { dayIn, tickId } from "./habits";
+import { chefCalories } from "./chef-diet";
 
 const FAM = "demo-family";
 
@@ -39,6 +40,27 @@ function nextLocal(weekday: number, hour: number, tz: string, now: number): stri
 /** Midnight at the start of the local day in a zone (to the minute), as ms. Fixed-offset zones are exact; across a DST change it can be an hour out, which a demo seed does not mind. */
 export function localMidnight(tz: string, now: number): number {
   return now - Math.round(hourIn(tz, new Date(now)) * 60) * 60_000;
+}
+
+// Demo recipes carry realistic whole-quantity kcal per ingredient (same order as the ingredients) and the
+// number of portions they are shared across, so every recipe page shows "about N kcal" per serving.
+const DEMO_KCAL: Record<string, { servings: number; kcal: number[] }> = {
+  "recipe-dadi-dal": { servings: 4, kcal: [680, 0, 4, 0, 250, 8, 2, 45, 22, 15] },
+  "recipe-dadi-gobi": { servings: 4, kcal: [75, 500, 3, 6, 0, 250] },
+  "recipe-dadi-paratha": { servings: 4, kcal: [350, 850, 5, 5, 4, 120] },
+  "recipe-arjun-palak": { servings: 3, kcal: [92, 530, 45, 22, 15, 100, 3] },
+  "recipe-arjun-chai": { servings: 2, kcal: [0, 150, 4, 2, 3, 40] },
+  "recipe-priya-bread": { servings: 8, kcal: [320, 690, 540, 380, 70, 0, 390] },
+  "recipe-kavya-upma": { servings: 2, kcal: [590, 0, 25, 5, 3, 120] },
+  "recipe-amma-rasam": { servings: 4, kcal: [48, 44, 12, 40, 40, 3] },
+  "recipe-meera-poha": { servings: 3, kcal: [420, 45, 200, 45, 6, 6] },
+  "recipe-appa-coffee": { servings: 2, kcal: [15, 0, 150, 40] },
+};
+function withKcal<T extends { item: string }>(id: string, ingredients: T[]) {
+  const k = DEMO_KCAL[id];
+  if (!k) return { ingredients, caloriesPerServing: null as number | null };
+  const list = ingredients.map((ing, i) => ({ ...ing, kcal: k.kcal[i] ?? 0 }));
+  return { ingredients: list, caloriesPerServing: chefCalories(list.map((x) => ({ kcal: x.kcal })), k.servings) };
 }
 
 export function seedDemoRooms(now = Date.now()): void {
@@ -149,7 +171,7 @@ export function seedDemoRooms(now = Date.now()): void {
       coverRef: null,
       memory,
       serves,
-      ingredients: ingredients.map(([item, said, approx]) => ({ item, said, approx })),
+      ...withKcal(id, ingredients.map(([item, said, approx]) => ({ item, said, approx }))),
       steps: steps.map(([text, tip]) => ({ text, tip })),
       lang: "en",
       madeBy: "family",
@@ -176,7 +198,7 @@ export function seedDemoRooms(now = Date.now()): void {
     coverRef: null,
     memory: "Every Sunday after the market, before anyone was allowed lunch.",
     serves: "4, or 3 if Arjun is home",
-    ingredients: [
+    ...withKcal("recipe-dadi-dal", [
       { item: "toor dal", said: "one katori", approx: "about 1 cup" },
       { item: "water", said: "two katoris", approx: "about 2 cups" },
       { item: "turmeric", said: "a little", approx: "about ½ tsp" },
@@ -187,7 +209,7 @@ export function seedDemoRooms(now = Date.now()): void {
       { item: "onion", said: "", approx: "1 medium" },
       { item: "tomato", said: "", approx: "1 medium" },
       { item: "ginger, garlic", said: "", approx: "" },
-    ],
+    ]),
     steps: [
       { text: "Wash the dal three times.", tip: "" },
       { text: "Pressure-cook it with the water, turmeric and salt for three whistles.", tip: "" },
@@ -462,7 +484,7 @@ function seedIyerRooms(now: number): void {
   seedDoc(I, "story", { id: "story-iyer-crow", tellerId: "iyer-nani", cardId: "iyer-amma-story", title: "The crow and the sparrow", theme: "animals", ages: "under-5", summary: "A crow's mud house washes away; the sparrow he laughed at gives him a warm place by the fire.", lang: "en", questionId: null, madeBy: "muse", createdAt: ago(60 * 24 * 3, now) });
   seedDoc(I, "question", { id: "tellme-anika-appa", toMemberId: "iyer-nana", text: "Tell Anika a story about the sea", lang: "en", askedBy: "iyer-priya", topic: "story", answeredCardId: null, madeBy: "family", createdAt: ago(60 * 9, now) });
 
-  const recipe = (r: Record<string, unknown>) => seedDoc(I, "recipe", { addedBy: null, videoCardId: null, coverRef: null, voiceCardId: null, lang: "en", madeBy: "family", ...r });
+  const recipe = (r: Record<string, unknown>) => seedDoc(I, "recipe", { addedBy: null, videoCardId: null, coverRef: null, voiceCardId: null, lang: "en", madeBy: "family", ...r, ...withKcal(String(r.id), r.ingredients as { item: string }[]) });
   recipe({
     id: "recipe-amma-rasam",
     title: "Amma's tomato rasam",

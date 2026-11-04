@@ -58,6 +58,44 @@ function spokenLength(card: Card): number | null {
   return end > 0 ? end : null;
 }
 
+/** The "Words" button of a voice card (also used on the Window's voice row and in the full player). */
+export function WordsToggle({ open, onToggle, controls, dark = false, className }: { open: boolean; onToggle: () => void; controls: string; dark?: boolean; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls={controls}
+      data-ui="voice-words"
+      className={cn("press -ml-2 flex h-11 items-center gap-1.5 rounded-full px-2 text-footnote font-semibold", dark ? "text-white/85" : "text-ink-soft", className)}
+    >
+      <Icon name="info" size={15} />
+      {open ? "Hide words" : "Words"}
+    </button>
+  );
+}
+
+/** The words of a voice card: what was said, in the viewer's language when it differs, with the original under it. Mount it only while open. */
+export function WordsPanel({ card, id, dark = false, className }: { card: Pick<Card, "transcript" | "transcriptLang" | "lang">; id: string; dark?: boolean; className?: string }) {
+  const { displayLang } = useViewer();
+  const spoken = card.transcript.trim();
+  const { text: shown, translated } = useDisplayText(spoken, card.transcriptLang || card.lang, displayLang);
+  if (!spoken) return null;
+  return (
+    <div id={id} className={cn("mt-1 rounded-[14px] p-3", dark ? "bg-white/10" : "bg-surface", className)}>
+      <p className={cn("voice m-0 text-callout leading-snug", dark ? "text-white" : "text-ink")} lang={translated ? displayLang : card.transcriptLang || card.lang}>
+        {shown ?? spoken}
+      </p>
+      {translated && shown && shown !== spoken && (
+        <p className={cn("m-0 mt-2 text-footnote", dark ? "text-white/70" : "text-ink-soft")} lang={card.transcriptLang || card.lang}>
+          <span className="font-semibold">Said: </span>
+          {spoken}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function VoiceCard({
   card,
   queue,
@@ -85,7 +123,7 @@ export function VoiceCard({
   /** Drawn over the cover (a menu, a share button). */
   children?: ReactNode;
 }) {
-  const { members, viewer, displayLang } = useViewer();
+  const { members, viewer } = useViewer();
   const { current, isPlaying, currentTime, duration, play, toggle, seek, collapse } = usePlayer();
   const [words, setWords] = useState(false);
   const wordsId = useId();
@@ -98,7 +136,6 @@ export function VoiceCard({
   const now = ours ? Math.min(currentTime, total) : 0;
   const pct = total > 0 ? (now / total) * 100 : 0;
   const spoken = card.transcript.trim();
-  const { text: shown, translated } = useDisplayText(spoken, card.transcriptLang || card.lang, displayLang);
   const label = privateLabel(card, viewer.id, members);
   const heading = voiceTitle(card, title);
   const sub = subtitle ?? [name, lengthLabel(known ?? (ours ? duration : null)), shortDate(card.takenAt)].filter(Boolean).join(" · ");
@@ -166,33 +203,9 @@ export function VoiceCard({
     </div>
   );
 
-  const wordsToggle = spoken ? (
-    <button
-      type="button"
-      onClick={() => setWords((v) => !v)}
-      aria-expanded={words}
-      aria-controls={wordsId}
-      className={cn("press -ml-2 flex h-11 items-center gap-1.5 rounded-full px-2 text-footnote font-semibold", dark ? "text-white/85" : "text-ink-soft")}
-    >
-      <Icon name="info" size={15} />
-      {words ? "Hide words" : "Words"}
-    </button>
-  ) : null;
+  const wordsToggle = spoken ? <WordsToggle open={words} onToggle={() => setWords((v) => !v)} controls={wordsId} dark={dark} /> : null;
 
-  const wordsPanel =
-    words && spoken ? (
-      <div id={wordsId} className={cn("mt-1 rounded-[14px] p-3", dark ? "bg-white/10" : "bg-surface")}>
-        <p className={cn("voice m-0 text-callout leading-snug", dark ? "text-white" : "text-ink")} lang={translated ? displayLang : card.transcriptLang || card.lang}>
-          {shown ?? spoken}
-        </p>
-        {translated && shown && shown !== spoken && (
-          <p className={cn("m-0 mt-2 text-footnote", dark ? "text-white/70" : "text-ink-soft")} lang={card.transcriptLang || card.lang}>
-            <span className="font-semibold">Said: </span>
-            {spoken}
-          </p>
-        )}
-      </div>
-    ) : null;
+  const wordsPanel = words && spoken ? <WordsPanel card={card} id={wordsId} dark={dark} /> : null;
 
   const privateChip = label ? (
     <span data-ui="private-label" className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption font-semibold", dark ? "bg-white/15 text-white" : "bg-well text-ink")}>

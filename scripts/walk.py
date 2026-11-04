@@ -41,6 +41,15 @@ KID_ROOMS = {
 EXTRA = ["/inbox", "/portrait", "/together/holidays"]
 PEOPLE = [("arjun", "adult"), ("dadi", "parent"), ("leo", "child"), ("aria", "child")]
 # Console noise that isn't ours (dev tooling, a blocked third-party font).
+# A real Muse call (live) can take this long to estimate calories; the mock answers at once.
+CALORIES_WAIT_MS = 45_000
+
+
+def is_local(base: str) -> bool:
+    """localhost / 127.0.0.1 / ::1: a mock or dev server, where making families is fine. Anything else is live."""
+    return (urlsplit(base).hostname or "") in ("localhost", "127.0.0.1", "::1", "0.0.0.0")
+
+
 IGNORE = re.compile(r"Download the React DevTools|fonts\.g(static|oogleapis)|favicon", re.I)
 
 
@@ -432,14 +441,14 @@ def sheets(base: str, person: str, browser, problems: list[str]) -> list[str]:
             page.get_by_role("button", name="Add a recipe", exact=True).click()
             page.get_by_label("Or type it").fill("Simmer one cup of rice in water until tender.")
             page.get_by_role("button", name="Preview recipe").click()
-            page.get_by_label("Estimated calories for ingredient 1").wait_for()
+            page.get_by_label("Estimated calories for ingredient 1").wait_for(timeout=CALORIES_WAIT_MS)
             page.get_by_role("button", name="Save", exact=True).click()
             page.wait_for_url(re.compile(r"/kitchen/[^/]+$"))
             page.get_by_role("heading", name="Ingredients").wait_for()
             page.goto("/kitchen", wait_until="load")
             page.get_by_role("button", name="Surprise me", exact=True).click()
             page.get_by_role("button", name="Find a recipe").click()
-            page.get_by_text("Calories are estimates, not medical advice.", exact=True).wait_for()
+            page.get_by_text("Calories are estimates, not medical advice.", exact=True).wait_for(timeout=CALORIES_WAIT_MS)
             page.get_by_role("button", name="Keep it").click()
             page.wait_for_url(re.compile(r"/kitchen/[^/]+$"))
             page.get_by_text("Idea from Muse · kept by you", exact=True).wait_for()
@@ -729,8 +738,11 @@ def main() -> int:
         print(f"sheets 360x640 {'ok' if not found else f'{len(found)} problem(s)'}" + (f" (no opener for: {', '.join(skipped)})" if skipped else ""))
         problems += found
         found = []
-        one_door(args.base, browser, found)
-        print(f"one door (sign in, set up, join by link) {'ok' if not found else f'{len(found)} problem(s)'}")
+        if is_local(args.base):
+            one_door(args.base, browser, found)
+            print(f"one door (sign in, set up, join by link) {'ok' if not found else f'{len(found)} problem(s)'}")
+        else:
+            print("one door (sign in, set up, join by link) skipped: not a local server, live must not create families")
         problems += found
         found = []
         doors(args.base, browser, found)
