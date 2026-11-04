@@ -74,15 +74,12 @@ export function RecipeCover({ recipe, photo, className, label = false }: { recip
   const look = COURSE_LOOK[recipe.course] ?? COURSE_LOOK.other;
   return (
     <div className={cn("relative overflow-hidden", className)} style={{ background: look.bg, contain: "layout paint" }}>
-      {photo ? (
-        <Photo src={photo} alt={recipe.title} sizes="360px" />
-      ) : (
         <svg viewBox="0 0 120 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
           <circle cx="98" cy="14" r="26" fill={look.accent} opacity=".12" />
           <circle cx="14" cy="92" r="20" fill={look.accent} opacity=".1" />
           <Motif course={recipe.course} accent={look.accent} ink={look.ink} />
         </svg>
-      )}
+      {photo && <Photo src={photo} alt={recipe.title} sizes="360px" />}
       {label && (
         <span className="absolute left-2 top-2 rounded-full bg-white/85 px-2 py-0.5 text-caption font-semibold" style={{ color: look.ink }}>
           {look.label}

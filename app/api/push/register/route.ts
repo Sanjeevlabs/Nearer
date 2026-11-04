@@ -1,3 +1,5 @@
+import { isDemoFamily } from "@/lib/family";
+import { isMock } from "@/lib/push/send";
 import { z } from "zod";
 import { checkRateLimit, requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
@@ -35,6 +37,7 @@ const Forget = z.object({ token: z.string().trim().min(1).max(4096) });
 async function postHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
+  if (!isMock() && isDemoFamily(auth.familyId)) return Response.json({ error: "demo-push-unavailable" }, { status: 403 });
   if (!checkRateLimit(auth, "/api/push/register", Date.now(), 10)) return Response.json({ error: "rate-limited" }, { status: 429 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid-push" }, { status: 400 });

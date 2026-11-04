@@ -150,16 +150,21 @@ describe("identity to person", () => {
     expect(b.status).toBe(200);
     expect(((await b.json()) as { memberId: string }).memberId).toBe(memberId);
     const again = await create("MIXED.CASE@example.com");
-    // another side for the same person, not a second account
-    const body = (await again.json()) as { familyId: string; memberId: string };
-    expect(body.memberId).not.toBe(memberId);
+    // "Start a family" again opens the one they have: never a second account or a second family
+    const body = (await again.json()) as { familyId: string; memberId: string; existing?: boolean };
+    expect(body.memberId).toBe(memberId);
+    expect(body.existing).toBe(true);
   });
 
   it("with two sides, sign-in lands on the one used last, and a switch moves 'last' with it", async () => {
     const addr = email();
     const first = await create(addr);
     const f1 = (await first.json()) as { familyId: string; memberId: string };
-    const second = await create(addr);
+    // The second side: someone else's family, joined with its invite code.
+    const host = await create(email());
+    const inviteRes = await (await import("@/app/api/invites/route")).POST(post("http://test/api/invites", {}, cookieOf(host)));
+    const code = ((await inviteRes.json()) as { invite: { code: string } }).invite.code;
+    const second = await verify(addr, { type: "join", inviteCode: code, firstName: "Asha" });
     const f2 = (await second.json()) as { familyId: string; memberId: string };
     expect(f2.familyId).not.toBe(f1.familyId);
     expect(((await (await signin(addr)).json()) as { familyId: string }).familyId).toBe(f2.familyId);

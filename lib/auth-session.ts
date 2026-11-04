@@ -4,18 +4,20 @@
 
 export interface SessionClient {
   auth: {
-    getSession(): Promise<{ data: { session: { access_token: string; user?: { email?: string | null } } | null } }>;
+    getSession(): Promise<{ data: { session: { access_token: string; user?: { email?: string | null; user_metadata?: Record<string, unknown> | null } } | null } }>;
     signOut(opts: { scope: "local" }): Promise<unknown>;
   };
 }
 
-export type VerifyOutcome = { ok: true; welcome?: string; status?: string } | { ok: false; error: string };
+export type VerifyOutcome = { ok: true; welcome?: string; status?: string; existing?: boolean } | { ok: false; error: string };
 
-/** The signed-in Supabase session, if there is one (supabase-js refreshes an expired token here). */
-export async function currentSession(sb: SessionClient): Promise<{ token: string; email: string } | null> {
+/** The signed-in Supabase session, if there is one (supabase-js refreshes an expired token here). `name` is Google's full name, when it gave one. */
+export async function currentSession(sb: SessionClient): Promise<{ token: string; email: string; name: string } | null> {
   try {
     const session = (await sb.auth.getSession()).data.session;
-    return session?.access_token ? { token: session.access_token, email: session.user?.email ?? "" } : null;
+    const meta = session?.user?.user_metadata ?? {};
+    const name = [meta.full_name, meta.name].find((v): v is string => typeof v === "string" && v.trim().length > 0)?.trim() ?? "";
+    return session?.access_token ? { token: session.access_token, email: session.user?.email ?? "", name } : null;
   } catch {
     return null;
   }
@@ -31,7 +33,7 @@ export async function verifyAccessToken(
   keepSession: (error: string) => boolean = () => false,
 ): Promise<VerifyOutcome> {
   let ok = false;
-  let data: { error?: string; welcome?: string; status?: string } = {};
+  let data: { error?: string; welcome?: string; status?: string; existing?: boolean } = {};
   try {
     const res = await fetch("/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     ok = res.ok;
@@ -41,65 +43,45 @@ export async function verifyAccessToken(
   }
   const error = data.error ?? "failed";
   if (ok || !keepSession(error)) void sb.auth.signOut({ scope: "local" });
-  return ok ? { ok: true, welcome: data.welcome, status: data.status } : { ok: false, error };
+  return ok ? { ok: true, welcome: data.welcome, status: data.status, ...(data.existing ? { existing: true } : {}) } : { ok: false, error };
 }
 
-// ---- Identity first, then family: where each screen sends people. Pure, so tests can drive them.
+// ---- One door: sign in, then (only with no family yet) one setup screen. Pure, so tests can drive them.
 
-export type NextKind = "create" | "join";
-export interface Next {
-  next: NextKind | null;
-  code?: string;
-}
-
-/** ?next=create | ?next=join&code=XYZ from a query string. Anything else is no next. */
-export function parseNext(search: string): Next {
+/**
+ * Old links: /signin?next=join&code=XYZ goes to that family's join page; ?next=create is a plain
+ * sign-in now (no family yet means the setup screen anyway). Null: stay on /signin.
+ */
+export function legacySigninRedirect(search: string): string | null {
   const q = new URLSearchParams(search);
-  const next = q.get("next");
-  if (next !== "create" && next !== "join") return { next: null };
+  if (q.get("next") !== "join") return null;
   const code = q.get("code")?.trim().slice(0, 64);
-  return next === "join" && code ? { next, code } : { next };
+  return code ? `/join/${encodeURIComponent(code)}` : "/join";
 }
 
-/** The family screen a next points at (the details step; the session is kept). */
-export function nextHref({ next, code }: Next): string {
-  if (next === "create") return "/create";
-  if (next === "join") return code ? `/join?code=${encodeURIComponent(code)}` : "/join";
-  return "/";
-}
+/** /signin after the session ran out. */
+export const EXPIRED_SIGNIN = "/signin?expired=1";
 
-/** The one door: /signin, remembering what they came to do. */
-export function signinHref(next: NextKind, code?: string, expired = false): string {
-  const q = new URLSearchParams({ next });
-  if (next === "join" && code) q.set("code", code);
-  if (expired) q.set("expired", "1");
-  return `/signin?${q.toString()}`;
-}
+export type AfterSignin = { kind: "enter" } | { kind: "setup" } | { kind: "failed"; error: string };
 
-/** Links into the app: via /signin when Supabase sign-in is live, straight to the form in mock mode. */
-export function entryHref(live: boolean, next: NextKind, code?: string): string {
-  return live ? signinHref(next, code) : nextHref({ next, code });
-}
-
-export type AfterAuth = { to: string; verify: false } | { verify: true };
-
-/** After Supabase says who they are: go to the family form they came for, or check for a family. */
-export function afterAuth(n: Next): AfterAuth {
-  return n.next ? { to: nextHref(n), verify: false } : { verify: true };
-}
-
-export type AfterSignin = { kind: "enter" } | { kind: "chooser" } | { kind: "failed"; error: string };
-
-/** A signin verify result: a family means in; no-family means the chooser (session kept). */
+/** A sign-in verify result: a family means in; no-family means the one setup screen (session kept). */
 export function afterSignin(out: VerifyOutcome): AfterSignin {
   if (out.ok) return { kind: "enter" };
-  return out.error === "no-family" ? { kind: "chooser" } : { kind: "failed", error: out.error };
+  return out.error === "no-family" ? { kind: "setup" } : { kind: "failed", error: out.error };
 }
 
-/** /create and /join in live mode need a Supabase session; without one they go to /signin. */
-export function gateDecision(o: { live: boolean; hasSession: boolean; kind: NextKind; code?: string; resume?: boolean }): { stay: true } | { stay: false; to: string } {
-  if (!o.live || o.hasSession || o.resume) return { stay: true };
-  return { stay: false, to: signinHref(o.kind, o.code) };
+/**
+ * What the setup screen starts with: your first name and "The {last name} family", from Google's
+ * full name when it gave one, else your first name from the email ("asha.rao@…" → "Asha").
+ */
+export function suggestedNames(fullName: string, email: string): { firstName: string; familyName: string } {
+  const cap = (w: string) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : "");
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  if (words.length) return { firstName: words[0].slice(0, 40), familyName: words.length > 1 ? `The ${words[words.length - 1]} family`.slice(0, 40) : "" };
+  const local = email.split("@")[0] ?? "";
+  if (local.startsWith("tel:") || !/[a-z]/i.test(local)) return { firstName: "", familyName: "" };
+  const first = local.split(/[._+-]/)[0].replace(/[^\p{L}]/gu, "");
+  return { firstName: cap(first.toLowerCase()).slice(0, 40), familyName: "" };
 }
 
 // ---- Sign out: one ordered routine for Settings, the waiting screen and "Not you?".
@@ -118,7 +100,7 @@ export interface SignOutSteps {
   /** In-memory caches: family cards, early requests, JSON cache. */
   clearCaches(): void;
   /** Cached pages and API copies in the service worker. */
-  clearServiceWorker(): void;
+  clearServiceWorker(): void | Promise<void>;
   /** A full page load, so no in-memory state survives. */
   goTo(path: string): void;
 }
@@ -135,13 +117,17 @@ export async function signOutEverywhere(steps: SignOutSteps, to = "/"): Promise<
   await quiet(steps.forgetPush);
   await quiet(steps.deleteSession);
   await quiet(steps.supabaseSignOut);
-  for (const f of [steps.clearStorage, steps.clearCaches, steps.clearServiceWorker]) {
+  for (const f of [steps.clearStorage, steps.clearCaches]) {
     try {
       f();
     } catch {
       /* ignore */
     }
   }
+  // Awaited: the next page load must not find the last person's kept pages or API copies.
+  await quiet(async () => {
+    await steps.clearServiceWorker();
+  });
   steps.goTo(to);
 }
 
@@ -160,7 +146,7 @@ export function callbackFailure(o: { hasCode: boolean; hasVerifier: boolean; err
   return /verifier/i.test(o.errorMessage ?? "") ? "other-device" : "failed";
 }
 
-/** /signin with a live Nearer session and nothing to do next goes home; a waiting joiner stays. */
-export function signinShortcut(o: { next: NextKind | null; sessionOk: boolean; status?: string }): "home" | "stay" {
-  return !o.next && o.sessionOk && o.status !== "pending" ? "home" : "stay";
+/** /signin with a live Nearer session goes home; a waiting joiner (an older pending row) stays. */
+export function signinShortcut(o: { sessionOk: boolean; status?: string }): "home" | "stay" {
+  return o.sessionOk && o.status !== "pending" ? "home" : "stay";
 }

@@ -9,6 +9,7 @@ import { waitingItems, type WaitingItem } from "./glance";
 import { guardianMap } from "./kids";
 import { renderNudgeText, unseenFor } from "./nudges";
 import type { Member } from "./schemas";
+import { hiddenCardIds, seenBy } from "./card-privacy";
 
 type Cards = Awaited<ReturnType<typeof dbListCards>>;
 
@@ -27,13 +28,14 @@ export async function waitingNow(familyId: string, viewerId: string, now: Date, 
     safe(dbListRelationships(familyId), []),
   ]);
   const { question: questions, today_task: tasks, need: needs, kid_ask: kidAsks } = docs;
+  const unseen = hiddenCardIds(cards, viewerId);
   const names = Object.fromEntries(members.map((m) => [m.id, m.displayName || m.firstName]));
   return waitingItems({
     viewerId,
     now,
     names,
-    cards: withDemoShelf(cards, familyId),
-    plays,
+    cards: seenBy(withDemoShelf(cards, familyId), viewerId),
+    plays: plays.filter((p) => !unseen.has(p.cardId)),
     questions,
     today: tasks.slice(0, 4),
     needs,

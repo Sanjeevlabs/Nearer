@@ -23,6 +23,8 @@ import { BottomSheet } from "./ui/bottom-sheet";
 import { useViewer } from "./viewer";
 import { Teleprompter } from "./prompt-text";
 import { useJson } from "@/lib/use-json";
+import { useFamilyCards } from "@/lib/use-family";
+import { notJoined } from "@/lib/sent";
 
 export type AddTab = "photos" | "voice" | "video" | "ask";
 
@@ -37,6 +39,7 @@ export type ReplyContribution =
   | { kind: "answer"; questionId: string; prompt: string }
   | { kind: "need"; forMemberId?: string }
   | { kind: "story"; questionId?: string; prompt?: string }
+  | { kind: "card_reply"; cardId: string }
   | { kind: "today"; taskId: string; prompt: string }
   /** A child asks by voice (an ask for a grandparent or parent; lib/kids.ts). */
   | { kind: "kid_ask"; topic?: "question" | "story"; toMemberId?: string }
@@ -48,6 +51,7 @@ export type ReplyContribution =
   | { kind: "fridge"; forMemberId?: string };
 
 const PURPOSE: Record<Exclude<ReplyContribution["kind"], "wish" | "blessing">, { title: string; hint: string; cta: string }> = {
+  card_reply: { title: "Reply by voice", hint: "Send a voice memory back.", cta: "Send my reply" },
   fridge: { title: "Add to the fridge", hint: "A drawing, a school photo, a first attempt. It goes up with their name and yours.", cta: "Put it on the fridge" },
   kid_ask: { title: "Ask a question", hint: "Say it out loud. They will hear it and answer in their own voice.", cta: "Send my question" },
   kid_answer: { title: "Your answer", hint: "Answer the way you would at the table. It is kept in Stories too.", cta: "Send my answer" },
@@ -80,7 +84,7 @@ export function purposeTitle(c: ReplyContribution | null): string | null {
 
 // Card upload carries the real bytes: `media` for the photo/video plus key
 // frames for video grounding. The server captions from these bytes only.
-async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: string, lang: string, frames: Blob[] = [], extra: { place?: string; note?: string; forMemberId?: string } = {}): Promise<Outcome> {
+async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: string, lang: string, frames: Blob[] = [], extra: { place?: string; note?: string; forMemberId?: string; captionFinal?: boolean; addressedTo?: string | null } = {}): Promise<Outcome> {
   const fields: Record<string, string> = {
     type: upload.kind === "video" ? "video" : "photo",
     caption,
@@ -96,6 +100,8 @@ async function postMoment(upload: ProcessedUpload, file: File | Blob, caption: s
   if (extra.place) fields.place = extra.place.slice(0, CARD_PLACE_MAX);
   if (extra.note) fields.note = extra.note.slice(0, CARD_NOTE_MAX);
   if (extra.forMemberId) fields.forMemberId = extra.forMemberId;
+  if (extra.addressedTo) fields.addressedTo = extra.addressedTo;
+  if (extra.captionFinal) fields.captionFinal = "1";
   const files = [{ field: "media", name: "media", blob: file as Blob }, ...frames.slice(0, 3).map((blob) => ({ field: "frames", name: "frame.jpg", blob }))];
   // Saved on the device first; the queue sends it and keeps retrying if the network drops.
   return uploadQueue().enqueue({
@@ -113,6 +119,7 @@ async function postVoice(input: {
   transcriptLang: string;
   segments: TranscriptSegment[];
   addressedTo: string | null;
+  replyToCardId?: string;
   /** "How to listen": only with addressees, never required. */
   listen?: ListenWay | null;
   /** Posted after a retried send lands; a first-try success leaves these to the caller. */
@@ -135,6 +142,7 @@ async function postVoice(input: {
       transcriptLang: input.transcriptLang,
       segments: input.segments.slice(0, 64),
       addressedTo: input.addressedTo,
+      replyToCardId: input.replyToCardId,
       ...(input.listen && input.addressedTo ? { listen: input.listen } : {}),
     },
     upload: voiceBlob ? { blob: voiceBlob, filename: "voice.webm", mime: voiceBlob.type || "audio/webm" } : undefined,
@@ -190,8 +198,9 @@ function Recipients({ value, onChange }: { value: string[]; onChange: (ids: stri
   const label = value.length === 0 ? "Everyone" : home ? householdName(home, (mm) => callName(mm)) : chosen.length <= 2 ? chosen.map((mm) => callName(mm)).join(" & ") : `${chosen.slice(0, 2).map((mm) => callName(mm)).join(", ")} +${chosen.length - 2}`;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label={`Who is this for: ${label}. Change`} className="press flex min-h-[48px] w-full items-center gap-3 rounded-full bg-surface py-1 pl-1.5 pr-4 text-start">
-        <span className="flex -space-x-2">
+      <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" className="press flex min-h-[48px] w-full items-center gap-3 rounded-full bg-surface py-1 pl-1.5 pr-4 text-start">
+        <span className="sr-only">Who is this for?</span>
+        <span className="flex -space-x-2" aria-hidden="true">
           {chosen.slice(0, 3).map((mm) => (
             <span key={mm.id} className="rounded-full ring-2 ring-white">
               <Avatar src={memberPhoto(mm)} name={callName(mm)} size={34} />
@@ -225,8 +234,9 @@ interface VoiceReady {
 
 function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[] | null; contribution: ReplyContribution | null; onDone: () => void }) {
   const router = useRouter();
-  const { openAdd } = useShell();
+  const { refreshKey } = useShell();
   const { viewer, members, relationships, displayLang } = useViewer();
+  const { cards: familyCards } = useFamilyCards(refreshKey);
   const purpose = contribution && contribution.kind !== "wish" && contribution.kind !== "blessing" ? PURPOSE[contribution.kind] : null;
   const [to, setTo] = useState<string[]>(addressee ?? []);
   const [listen, setListen] = useState<ListenWay | null>(null);
@@ -258,6 +268,16 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
     const names = to.map((id) => callName(members.find((m) => m.id === id)));
     return names.length <= 2 ? names.join(" & ") : `${names.slice(0, 2).join(", ")} +${names.length - 2}`;
   })();
+
+  // Chosen people who have not joined yet: the note is kept for them, and the sender is told so.
+  const notYet = useMemo(() => {
+    const active = new Set((familyCards ?? []).flatMap((c) => (c.authorId ? [c.authorId] : [])));
+    return to.flatMap((id) => {
+      const m = members.find((x) => x.id === id);
+      return m && notJoined(m, active) ? [callName(m)] : [];
+    });
+  }, [to, members, familyCards]);
+  const notYetLine = notYet.length ? `${notYet.join(" and ")} ${notYet.length > 1 ? "haven't" : "hasn't"} joined yet. They'll get it when they do. You can find it under Sent.` : null;
 
   useEffect(() => {
     try {
@@ -365,7 +385,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
       else if (contribution?.kind === "bedtime") steps.push({ url: "/api/bedtime", body: { action: "create", forMemberId: contribution.forMemberId, cardId } });
       return steps;
     };
-    const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), listen, after });
+    const posted = await postVoice({ ...ready, caption: ready.transcript, addressedTo: addressTo(to), replyToCardId: contribution?.kind === "card_reply" ? contribution.cardId : undefined, listen, after });
     if (!posted.ok) {
       setNotice(null);
       setError("Couldn't send that recording. Try again.");
@@ -415,6 +435,12 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         return;
       }
     }
+    if (notYetLine) {
+      // Kept, not lost: say where it went before the sheet closes.
+      setNotice(`Saved for ${notYet.join(" and ")}. It waits under Sent until they join.`);
+      window.setTimeout(onDone, 2200);
+      return;
+    }
     onDone();
   };
 
@@ -452,6 +478,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
           {(contribution?.kind === "answer" || contribution?.kind === "today" || (contribution?.kind === "story" && contribution.prompt)) && contribution.prompt && <Teleprompter text={contribution.prompt} />}
           {contribution?.kind === "recipe" && contribution.title && <p className="m-0 mb-1 text-headline font-semibold">{contribution.title}</p>}
           <p className="m-0 text-callout text-ink-soft">{purpose.hint}</p>
+          {contribution?.kind === "need" && <p className="m-0 mt-2 text-footnote text-ink-soft">Everyone in the family will see this.</p>}
         </div>
       ) : (
         <>
@@ -547,11 +574,11 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         )}
       </div>
 
-      {phase === "idle" && !contribution && (
-        <button type="button" data-ui="voice-add-photo" onClick={() => openAdd("photos")} className="press mx-auto mb-1 flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-callout font-semibold text-ink-soft">
-          <Icon name="camera" size={16} />
-          Add a photo instead
-        </button>
+
+      {notYetLine && !purpose && (phase === "idle" || phase === "ready") && (
+        <p data-ui="not-joined-note" className="m-0 mb-3 rounded-[16px] bg-surface px-4 py-3 text-callout text-ink-soft" role="status">
+          {notYetLine}
+        </p>
       )}
 
       {phase === "ready" && nightThere && (
@@ -600,14 +627,17 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
 }
 
 /* ----------------------------------------------------------------- moment */
-function MomentComposer({ onDone, contribution = null }: { onDone: () => void; contribution?: ReplyContribution | null }) {
+function MomentComposer({ onDone, contribution = null, addressee }: { onDone: () => void; contribution?: ReplyContribution | null; addressee: string[] | null }) {
   const { viewer, members } = useViewer();
   // "Add to the fridge": whose is it? Only the family's kids; one tap, no default when there are several.
   const fridge = contribution?.kind === "fridge";
   const kids = useMemo(() => (fridge ? members.filter((m) => isKid(m) && m.status !== "pending") : []), [fridge, members]);
+  const [photoRecipients, setPhotoRecipients] = useState<string[]>(addressee ?? []);
   const [whose, setWhose] = useState<string>(contribution?.kind === "fridge" ? (contribution.forMemberId ?? "") : "");
   const [files, setFiles] = useState<File[]>([]);
   const [note, setNote] = useState("");
+  // Muse writes a caption for a single photo; the person edits or clears it before posting.
+  const [suggesting, setSuggesting] = useState(false);
   // Written on the print: where (their home city to start with) and a short note.
   const home = viewer.city || (placeFromTz(viewer.tz) === "Somewhere" ? "" : placeFromTz(viewer.tz));
   const [where, setWhere] = useState(home);
@@ -624,6 +654,25 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
   const inputRef = useRef<HTMLInputElement>(null);
   const previews = useMemo(() => files.map((f) => ({ url: URL.createObjectURL(f), video: f.type.startsWith("video/") })), [files]);
   useEffect(() => () => previews.forEach((p) => URL.revokeObjectURL(p.url)), [previews]);
+
+  useEffect(() => {
+    if (!single || fridge || single.size > 5 * 1024 * 1024) return;
+    let live = true;
+    setSuggesting(true);
+    const form = new FormData();
+    form.append("media", single, single.name || "photo");
+    fetch("/api/cards/caption", { method: "POST", body: form })
+      .then((r) => (r.ok ? (r.json() as Promise<{ caption?: string }>) : null))
+      .then((d) => {
+        if (live && d?.caption) setNote((cur) => (cur.trim() ? cur : (d.caption as string).slice(0, 280)));
+      })
+      .catch(() => undefined)
+      .finally(() => live && setSuggesting(false));
+    return () => {
+      live = false;
+      setSuggesting(false);
+    };
+  }, [single, fridge]);
 
   const share = async () => {
     setBusy(true);
@@ -644,7 +693,7 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
         const stored = getSessionMedia(upload.mediaRef)?.blob ?? file;
         const frames = video ? await extractVideoFrames(file).catch(() => []) : [];
         setSending("Saved, sending…");
-        const out = await postMoment(upload, stored, note.trim(), viewer.lang, frames, fridge ? { forMemberId: whose } : { place: where.trim(), note: printNote.trim() });
+        const out = await postMoment(upload, stored, note.trim(), viewer.lang, frames, fridge ? { forMemberId: whose } : { place: where.trim(), note: printNote.trim(), captionFinal: files.length === 1 && !video, addressedTo: addressTo(photoRecipients) });
         if (out === "dropped") failed += 1;
         else if (out === "queued") queued += 1;
       } catch {
@@ -731,8 +780,10 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
           type="text"
           value={note}
           maxLength={280}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder={fridge ? "What is it? (optional)" : "Caption (optional)"}
+          onChange={(e) => {
+            setNote(e.target.value);
+          }}
+          placeholder={fridge ? "What is it? (optional)" : suggesting ? "Writing a caption…" : "Caption (edit or clear it)"}
           className="h-12 w-full rounded-full bg-surface px-5 text-body outline-none placeholder:text-ink-faint focus:ring-2 focus:ring-marigold"
         />
       </label>
@@ -775,8 +826,14 @@ function MomentComposer({ onDone, contribution = null }: { onDone: () => void; c
           {sending}
         </p>
       )}
+      {!fridge && files.length > 0 && (
+        <div className="mt-4">
+          <p className="m-0 mb-2 text-footnote font-medium text-ink-soft">To</p>
+          <Recipients value={photoRecipients} onChange={setPhotoRecipients} />
+        </div>
+      )}
       <Button className="mt-4 w-full" disabled={files.length === 0 || busy || sending !== null || (fridge && !whose)} onClick={() => void share()}>
-        {busy ? "Sharing…" : fridge ? (whose ? PURPOSE.fridge.cta : "Choose whose it is") : files.length > 1 ? `Share ${files.length} with the family` : "Share with the family"}
+        {busy ? "Sharing…" : fridge ? (whose ? PURPOSE.fridge.cta : "Choose whose it is") : photoRecipients.length ? "Send privately" : files.length > 1 ? `Share ${files.length} with the family` : "Share with the family"}
       </Button>
     </div>
   );
@@ -800,7 +857,7 @@ export function AddSheet() {
       dataUi="add-sheet"
       z={50}
     >
-      {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} />}
+      {voice ? <VoiceComposer addressee={addressee} contribution={replyTo} onDone={done} /> : <MomentComposer onDone={done} contribution={replyTo} addressee={addressee} />}
     </BottomSheet>
   );
 }

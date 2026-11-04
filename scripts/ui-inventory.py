@@ -257,7 +257,7 @@ def capture(page, scr: dict, persona: str, other: str, log: list[str]):
         page.get_by_role("button", name=label, exact=True).click(timeout=8_000)
         page.wait_for_timeout(500)
     elif a in ("house", "add"):
-        name = "Open the house" if a == "house" else "Voice memory"
+        name = "Open the house" if a == "house" else "Record a voice note"
         # A click before hydration does nothing: click again until the sheet is there.
         for attempt in range(4):
             page.get_by_role("button", name=name).first.click(timeout=10_000)

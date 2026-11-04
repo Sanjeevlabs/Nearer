@@ -1,3 +1,5 @@
+import { isDemoFamily } from "@/lib/family";
+import { isMock } from "@/lib/push/send";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
@@ -15,7 +17,8 @@ async function getHandler(req: Request): Promise<Response> {
   const auth = await requireSession(req);
   if (auth instanceof Response) return auth;
   const [settings, subs] = await Promise.all([getPushSettings(auth.familyId, auth.memberId), listSubs(auth.familyId, auth.memberId)]);
-  return Response.json({ settings: view(settings), devices: subs.length, configured: { app: Boolean(serviceAccountFromEnv()), web: Boolean(vapidFromEnv()) } });
+  const allowed = isMock() || !isDemoFamily(auth.familyId);
+  return Response.json({ settings: view(settings), devices: subs.length, configured: { app: allowed && Boolean(serviceAccountFromEnv()), web: allowed && Boolean(vapidFromEnv()) } });
 }
 
 async function putHandler(req: Request): Promise<Response> {

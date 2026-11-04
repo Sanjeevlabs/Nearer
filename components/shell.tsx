@@ -109,7 +109,8 @@ function Dock() {
   const pathname = usePathname();
   // The dock only needs the family's cards (who to talk to first) once it is on screen:
   // the window, its first screen, never pays for the full card list.
-  const show = ((pathname === "/" && dockOn) || pathname.startsWith("/people/")) && !chromeHidden && !playerOpen;
+  const hasDock = (pathname === "/" && dockOn) || pathname.startsWith("/people/");
+  const show = hasDock && !chromeHidden && !playerOpen;
   const { cards } = useFamilyCards(refreshKey, show);
   const [picking, setPicking] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -119,7 +120,7 @@ function Dock() {
   const pagePerson = pathname.startsWith("/people/") ? members.find((mm) => mm.id === pathname.split("/")[2]) : undefined;
   // What waits for you: the same list as the window's "Waiting for you" tile (GET /api/waiting),
   // so the dot goes when the thing is played, answered or opened. Who is waiting shows in the picker.
-  const { data: wait, reload: reloadWaiting } = useJson<{ items: WaitingItem[] }>("/api/waiting", { every: 60_000 });
+  const { data: wait, reload: reloadWaiting } = useJson<{ items: WaitingItem[] }>(hasDock ? "/api/waiting" : null, { every: 120_000 });
   useEffect(() => {
     if (refreshKey) void reloadWaiting();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,9 +148,8 @@ function Dock() {
           >
             <div data-ui="dock" className="frost glass-pill flex items-center gap-2 p-1.5">
               {others.length ? (
-                <button type="button" onClick={voice} aria-label={`Voice memory${pagePerson && pagePerson.id !== viewer.id ? ` to ${callName(pagePerson)}` : ""}${waitingList.length ? `, ${waitingList.length} waiting for your reply` : ""}`} className="press relative flex h-14 items-center justify-center gap-2 rounded-full bg-accent px-7 text-accent-ink">
-                  <Icon name="mic" size={25} strokeWidth={1.9} />
-                  <span className="text-headline font-semibold">Voice</span>
+                <button type="button" onClick={voice} aria-label={`Record a voice note${pagePerson && pagePerson.id !== viewer.id ? ` to ${callName(pagePerson)}` : ""}${waitingList.length ? `, ${waitingList.length} waiting for your reply` : ""}`} className="press relative grid h-14 w-14 place-items-center rounded-full bg-accent text-accent-ink">
+                  <Icon name="mic" size={26} strokeWidth={1.9} />
                   {waitingList.length > 0 && <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-[var(--waiting)] ring-2 ring-white" aria-hidden="true" />}
                 </button>
               ) : (
@@ -208,6 +208,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   }, [herePath]);
   // Native app: status bar style, and deep links (auth callback, shared links) open in-app.
   const nativeRouter = useRouter();
+  const [pushNote, setPushNote] = useState<{ body: string; route: string } | null>(null);
   useEffect(() => {
     void setStatusBar();
     return onAppUrlOpen((route) => nativeRouter.push(route));
@@ -217,8 +218,13 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!signedIn) return;
     void refreshSubscription();
-    return watchPush((route) => nativeRouter.push(route));
+    return watchPush((route) => window.location.assign(route), setPushNote);
   }, [signedIn, nativeRouter]);
+  useEffect(() => {
+    if (!pushNote) return;
+    const timer = window.setTimeout(() => setPushNote(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [pushNote]);
   const [large] = useLargeText(viewer.role === "elder");
   const [addOpen, setAddOpen] = useState(false);
   // Mount the composer on first open, then keep it mounted so its exit animation runs.
@@ -269,6 +275,14 @@ function ShellInner({ children }: { children: React.ReactNode }) {
         {signedIn && <DocumentLangOnly />}
         <Dock />
         <RoomsSheet open={roomsOpen} onClose={closeRooms} />
+        {signedIn && pushNote && (
+          <button type="button" aria-live="polite" className="press fixed left-1/2 top-4 z-50 min-h-11 w-max max-w-[90vw] -translate-x-1/2 rounded-card bg-card px-5 text-callout text-ink shadow-card" onClick={() => {
+            window.location.assign(pushNote.route);
+            setPushNote(null);
+          }}>
+            {pushNote.body}
+          </button>
+        )}
         {sheetLoaded && <AddSheet />}
       </PlayerProvider>
     </ShellContext.Provider>

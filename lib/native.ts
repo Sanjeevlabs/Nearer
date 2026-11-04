@@ -161,6 +161,11 @@ export async function setStatusBar(opts: { dark?: boolean } = {}): Promise<void>
 }
 
 const PUSH_TOKEN_KEY = "aangan:push-token";
+const PUSH_DISABLED_KEY = "aangan:push-disabled";
+
+function pushDisabled(): boolean {
+  try { return localStorage.getItem(PUSH_DISABLED_KEY) === "1"; } catch { return false; }
+}
 
 function rememberToken(token: string | null): void {
   try {
@@ -208,7 +213,7 @@ async function ensureChannel(): Promise<void> {
 /** A tap on a notification carries `data.url`: only a path inside the app is ever followed. */
 export function pushRoute(data: unknown): string | null {
   const url = (data as { url?: unknown } | null | undefined)?.url;
-  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\") ? url : null;
+  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !/[\\\u0000-\u001f\u007f]/.test(url) ? url : null;
 }
 
 /**
@@ -226,17 +231,27 @@ export async function registerPush(timeoutMs = 10_000): Promise<string | null> {
     await ensureChannel();
     const token = await new Promise<string | null>((resolve) => {
       const handles: { remove: () => Promise<void> }[] = [];
+      let settled = false;
       const done = (v: string | null) => {
+        if (settled) return;
+        settled = true;
         clearTimeout(timer);
         for (const h of handles) void h.remove().catch(() => undefined);
         resolve(v);
       };
       const timer = setTimeout(() => done(null), timeoutMs);
-      void PushNotifications.addListener("registration", (t: { value: string }) => done(t.value)).then((h) => handles.push(h));
-      void PushNotifications.addListener("registrationError", () => done(null)).then((h) => handles.push(h));
-      void PushNotifications.register().catch(() => done(null));
+      const keep = (h: { remove: () => Promise<void> }) => {
+        if (settled) void h.remove().catch(() => undefined);
+        else handles.push(h);
+      };
+      void (async () => {
+        keep(await PushNotifications.addListener("registration", (t) => done(t.value)));
+        keep(await PushNotifications.addListener("registrationError", () => done(null)));
+        if (!settled) await PushNotifications.register();
+      })().catch(() => done(null));
     });
-    if (token) await sendPushToken(token);
+    if (!token || !(await sendPushToken(token))) return null;
+    try { localStorage.removeItem(PUSH_DISABLED_KEY); } catch { /* storage unavailable */ }
     return token;
   } catch {
     return null;
@@ -249,7 +264,7 @@ export async function registerPush(timeoutMs = 10_000): Promise<string | null> {
  * notification to the page it names. Never asks for permission; it only registers
  * quietly when the person already said yes. Returns an unsubscribe function.
  */
-export function watchPush(onOpen: (route: string) => void): () => void {
+export function watchPush(onOpen: (route: string) => void, onReceive?: (note: { body: string; route: string }) => void): () => void {
   if (!isNative()) return () => undefined;
   let cancelled = false;
   const handles: { remove: () => Promise<void> }[] = [];
@@ -260,15 +275,21 @@ export function watchPush(onOpen: (route: string) => void): () => void {
         if (cancelled) void h.remove().catch(() => undefined);
         else handles.push(h);
       };
-      keep(await PushNotifications.addListener("registration", (t: { value: string }) => void sendPushToken(t.value)));
+      keep(await PushNotifications.addListener("registration", (t: { value: string }) => { if (!cancelled && !pushDisabled()) void sendPushToken(t.value); }));
       keep(
         await PushNotifications.addListener("pushNotificationActionPerformed", (a: { notification?: { data?: unknown } }) => {
           const route = pushRoute(a.notification?.data);
-          if (route) onOpen(route);
+          if (!cancelled && route) onOpen(route);
         }),
       );
+      if (onReceive) {
+        keep(await PushNotifications.addListener("pushNotificationReceived", (notification) => {
+          const route = pushRoute(notification.data);
+          if (!cancelled && !pushDisabled() && route && notification.body) onReceive({ body: notification.body, route });
+        }));
+      }
       const perm = await PushNotifications.checkPermissions();
-      if (!cancelled && perm.receive === "granted") {
+      if (!cancelled && !pushDisabled() && rememberedToken() && perm.receive === "granted") {
         await ensureChannel();
         await PushNotifications.register();
       }
@@ -287,7 +308,7 @@ export async function nativePushGranted(): Promise<boolean> {
   if (!isNative()) return false;
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
-    return (await PushNotifications.checkPermissions()).receive === "granted";
+    return !pushDisabled() && Boolean(rememberedToken()) && (await PushNotifications.checkPermissions()).receive === "granted";
   } catch {
     return false;
   }
@@ -295,6 +316,7 @@ export async function nativePushGranted(): Promise<boolean> {
 
 /** Sign-out or turning notifications off: this device stops being pushed to. Never throws. */
 export async function unregisterPush(): Promise<void> {
+  try { localStorage.setItem(PUSH_DISABLED_KEY, "1"); } catch { /* storage unavailable */ }
   const token = rememberedToken();
   if (!token) return;
   try {

@@ -1,9 +1,10 @@
-import { clearSessionCookieHeader, sessionCookieHeader } from "@/lib/auth";
+import { clearSessionCookieHeader, sessionCookieHeader, sessionFromRequest } from "@/lib/auth";
+import { sessionCookie } from "./auth-helper";
 import { createFetchGate } from "@/lib/net-gate";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { afterAuth, afterSignin, callbackFailure, currentSession, signinShortcut, entryHref, gateDecision, nextHref, parseNext, signinHref, signOutEverywhere, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
+import { afterSignin, callbackFailure, currentSession, legacySigninRedirect, signinShortcut, signOutEverywhere, suggestedNames, verifyAccessToken, type SessionClient } from "@/lib/auth-session";
 
-function fakeClient(session: { access_token: string; user?: { email?: string } } | null) {
+function fakeClient(session: { access_token: string; user?: { email?: string; user_metadata?: Record<string, unknown> } } | null) {
   const signOut = vi.fn(async () => ({}));
   const sb: SessionClient = { auth: { getSession: async () => ({ data: { session } }), signOut } };
   return { sb, signOut };
@@ -38,7 +39,7 @@ describe("signed in, no family yet (Google)", () => {
     const fetchMock = mockVerify(200, { welcome: "hi" });
     const { sb, signOut } = fakeClient({ access_token: "fresh", user: { email: "a@b.co" } });
     const session = await currentSession(sb);
-    expect(session).toEqual({ token: "fresh", email: "a@b.co" });
+    expect(session).toEqual({ token: "fresh", email: "a@b.co", name: "" });
     const intent = { type: "create", familyName: "Iyers", firstName: "Asha" };
     const out = await verifyAccessToken(sb, { accessToken: session!.token, intent, tz: "UTC" }, (e) => e !== "wrong-code");
     expect(out).toEqual({ ok: true, welcome: "hi", status: undefined });
@@ -68,50 +69,37 @@ describe("signed in, no family yet (Google)", () => {
   });
 });
 
-describe("identity first, then family", () => {
-  it("reads ?next=create and ?next=join&code=, ignores anything else", () => {
-    expect(parseNext("?next=create")).toEqual({ next: "create" });
-    expect(parseNext("?next=join&code=AB12CD")).toEqual({ next: "join", code: "AB12CD" });
-    expect(parseNext("?next=create&code=AB12CD")).toEqual({ next: "create" });
-    expect(parseNext("?next=//evil.test")).toEqual({ next: null });
-    expect(parseNext("")).toEqual({ next: null });
+describe("one door: sign in, then set up", () => {
+  it("old ?next= links: join keeps its code and goes to the family's page; create is a plain sign-in", () => {
+    expect(legacySigninRedirect("?next=join&code=AB12CD")).toBe("/join/AB12CD");
+    expect(legacySigninRedirect("?next=join")).toBe("/join");
+    expect(legacySigninRedirect("?next=create")).toBeNull();
+    expect(legacySigninRedirect("?next=//evil.test")).toBeNull();
+    expect(legacySigninRedirect("")).toBeNull();
   });
 
-  it("after auth with a next, go to the form and do not verify; without one, verify as sign-in", () => {
-    expect(afterAuth({ next: "create" })).toEqual({ to: "/create", verify: false });
-    expect(afterAuth({ next: "join", code: "A B" })).toEqual({ to: "/join?code=A%20B", verify: false });
-    expect(afterAuth({ next: null })).toEqual({ verify: true });
-    expect(nextHref({ next: null })).toBe("/");
-  });
-
-  it("sign-in result: family enters, no-family shows the chooser, the rest fail", () => {
+  it("sign-in result: family enters, no-family goes to the one setup screen, the rest fail", () => {
     expect(afterSignin({ ok: true })).toEqual({ kind: "enter" });
-    expect(afterSignin({ ok: false, error: "no-family" })).toEqual({ kind: "chooser" });
+    expect(afterSignin({ ok: false, error: "no-family" })).toEqual({ kind: "setup" });
     expect(afterSignin({ ok: false, error: "too-many-attempts" })).toEqual({ kind: "failed", error: "too-many-attempts" });
   });
 
-  it("the OTP path keeps the session on no-family, like the callback", async () => {
+  it("plain sign-in with no family keeps the session for the setup screen", async () => {
     mockVerify(404, { error: "no-family" });
     const { sb, signOut } = fakeClient({ access_token: "tok" });
     const out = await verifyAccessToken(sb, { accessToken: "tok", intent: { type: "signin" } }, (e) => e === "no-family");
-    expect(afterSignin(out).kind).toBe("chooser");
+    expect(afterSignin(out).kind).toBe("setup");
     expect(signOut).not.toHaveBeenCalled();
   });
 
-  it("/create and /join need a session when sign-in is live, and do not in mock mode", () => {
-    expect(gateDecision({ live: true, hasSession: false, kind: "create" })).toEqual({ stay: false, to: "/signin?next=create" });
-    expect(gateDecision({ live: true, hasSession: false, kind: "join", code: "ab12cd" })).toEqual({ stay: false, to: "/signin?next=join&code=ab12cd" });
-    expect(gateDecision({ live: true, hasSession: true, kind: "create" })).toEqual({ stay: true });
-    expect(gateDecision({ live: false, hasSession: false, kind: "create" })).toEqual({ stay: true });
-    expect(gateDecision({ live: true, hasSession: false, kind: "create", resume: true })).toEqual({ stay: true });
-  });
-
-  it("entry links go through /signin when live and straight to the form in mock mode", () => {
-    expect(entryHref(true, "create")).toBe("/signin?next=create");
-    expect(entryHref(true, "join", "XY12")).toBe("/signin?next=join&code=XY12");
-    expect(entryHref(false, "create")).toBe("/create");
-    expect(entryHref(false, "join")).toBe("/join");
-    expect(signinHref("create", undefined, true)).toBe("/signin?next=create&expired=1");
+  it("the setup screen starts with Google's name, or the email's first word", async () => {
+    expect(suggestedNames("Asha Rao", "x@y.co")).toEqual({ firstName: "Asha", familyName: "The Rao family" });
+    expect(suggestedNames("Asha", "x@y.co")).toEqual({ firstName: "Asha", familyName: "" });
+    expect(suggestedNames("", "asha.rao@y.co")).toEqual({ firstName: "Asha", familyName: "" });
+    expect(suggestedNames("", "12345@y.co")).toEqual({ firstName: "", familyName: "" });
+    expect(suggestedNames("", "tel:+919876543210")).toEqual({ firstName: "", familyName: "" });
+    const { sb } = fakeClient({ access_token: "t", user: { email: "a@b.co", user_metadata: { full_name: "Asha Rao" } } });
+    expect((await currentSession(sb))?.name).toBe("Asha Rao");
   });
 });
 
@@ -136,6 +124,25 @@ describe("sign out", () => {
       "/signin?next=create",
     );
     expect(log).toEqual(["stop", "push", "delete", "supabase", "storage", "caches", "sw", "go:/signin?next=create"]);
+  });
+
+  it("sign-out waits for the service worker caches to clear before the next page loads", async () => {
+    const log: string[] = [];
+    const noop = async () => undefined;
+    await signOutEverywhere({
+      stopPollers: () => undefined,
+      forgetPush: noop,
+      deleteSession: noop,
+      supabaseSignOut: noop,
+      clearStorage: () => undefined,
+      clearCaches: () => undefined,
+      clearServiceWorker: async () => {
+        await new Promise((r) => setTimeout(r, 5));
+        log.push("sw-cleared");
+      },
+      goTo: () => void log.push("go"),
+    });
+    expect(log).toEqual(["sw-cleared", "go"]);
   });
 
   it("the clearing cookie has the attributes of the session cookie, so it replaces it (production adds Secure)", async () => {
@@ -186,10 +193,19 @@ describe("callback failures and the signed-in shortcut", () => {
     expect(callbackFailure({ hasCode: false, hasVerifier: false })).toBe("failed");
   });
 
-  it("/signin goes home for a signed-in person with nothing to do next, and stays otherwise", () => {
-    expect(signinShortcut({ next: null, sessionOk: true, status: "active" })).toBe("home");
-    expect(signinShortcut({ next: null, sessionOk: true, status: "pending" })).toBe("stay");
-    expect(signinShortcut({ next: "join", sessionOk: true, status: "active" })).toBe("stay");
-    expect(signinShortcut({ next: null, sessionOk: false })).toBe("stay");
+  it("/signin goes home for a signed-in person, and stays otherwise", () => {
+    expect(signinShortcut({ sessionOk: true, status: "active" })).toBe("home");
+    expect(signinShortcut({ sessionOk: true, status: "pending" })).toBe("stay");
+    expect(signinShortcut({ sessionOk: false })).toBe("stay");
   });
+});
+
+it("rechecks a memoized request when its session cookie changes", () => {
+  const req = new Request("http://nearer.test/api/session", { headers: { cookie: sessionCookie("arjun") } });
+  expect(sessionFromRequest(req)?.memberId).toBe("arjun");
+  expect(sessionFromRequest(req)?.memberId).toBe("arjun");
+  req.headers.set("cookie", sessionCookie("dadi"));
+  expect(sessionFromRequest(req)?.memberId).toBe("dadi");
+  req.headers.delete("cookie");
+  expect(sessionFromRequest(req)).toBeNull();
 });

@@ -174,7 +174,7 @@ export const DisplayLangRequestSchema = z.object({
 });
 
 export const CreateCardRequestSchema = z.object({
-  /** Client-made UUID: a retry after a lost response upserts the same card. */
+  /** Client-made UUID: a retry after a lost response returns the existing card. */
   id: z.string().uuid().optional(),
   type: z.enum(["photo", "audio", "video"]),
   caption: z.string().max(280).default(""),
@@ -196,6 +196,7 @@ export const CreateCardRequestSchema = z.object({
   forMemberId: z.string().max(64).nullable().default(null),
   /** "How to listen": only with addressees; kept apart from the card (family_docs card_listen). */
   listen: z.enum(LISTEN_WAYS).optional(),
+  replyToCardId: z.string().min(1).max(100).optional(),
 });
 
 export const HomeImageRequestSchema = z.object({

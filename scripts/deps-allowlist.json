@@ -32,6 +32,7 @@
     "@types/react": "types",
     "@types/react-dom": "types",
     "autoprefixer": "CSS",
+    "axe-core": "accessibility audit in scripts/a11y.py, injected into pages of the mock app",
     "postcss": "CSS",
     "tailwindcss": "CSS",
     "typescript": "typecheck",

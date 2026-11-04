@@ -31,6 +31,24 @@ import { GET as getTogether } from "../together/route";
 
 type Handler = (req: Request) => Promise<Response>;
 
+const COMMON_PARTS = [
+  ["sides", "/api/sides", getSides],
+  ["safety", "/api/safety", getSafety],
+  ["events", "/api/gather/events", getEvents],
+  ["today", "/api/today", getToday],
+  ["suggestions", "/api/suggestions?status=pending", getSuggestions],
+  ["letters", "/api/letters", getLetters],
+  ["presence", "/api/presence", getPresence],
+  ["together", "/api/together", getTogether],
+  ["sit", "/api/sit", getSit],
+  ["festivalWeek", "/api/festival-week", getFestivalWeek],
+  ["habits", "/api/habits", getHabits],
+  ["kidAsk", "/api/kid-ask", getKidAsk],
+  ["bedtime", "/api/bedtime", getBedtime],
+] as const satisfies readonly (readonly [string, string, Handler])[];
+const ELDER_PARTS = [...COMMON_PARTS, ["gifts", "/api/gifts", getGifts], ["keeper", "/api/keeper", getKeeper], ["care", "/api/care", getCare]] as const;
+const CHILD_PARTS = [...COMMON_PARTS, ["stories", "/api/stories", getStories]] as const;
+
 async function slice(req: Request, path: string, handler: Handler): Promise<unknown> {
   try {
     const sub = new Request(new URL(path, req.url), { headers: req.headers });
@@ -55,23 +73,7 @@ async function getHandler(req: Request): Promise<Response> {
   // The role's own kinds, in one query, before the slices that read them.
   if (me?.role === "elder") prefetchDocs(req, auth.familyId, ELDER_KINDS);
   if (me?.role === "child") prefetchDocs(req, auth.familyId, CHILD_KINDS);
-  const parts: [string, string, Handler][] = [
-    ["sides", "/api/sides", getSides],
-    ["safety", "/api/safety", getSafety],
-    ["events", "/api/gather/events", getEvents],
-    ["today", "/api/today", getToday],
-    ["suggestions", "/api/suggestions?status=pending", getSuggestions],
-    ["letters", "/api/letters", getLetters],
-    ["presence", "/api/presence", getPresence],
-    ["together", "/api/together", getTogether],
-    ["sit", "/api/sit", getSit],
-    ["festivalWeek", "/api/festival-week", getFestivalWeek],
-    ["habits", "/api/habits", getHabits],
-    ["kidAsk", "/api/kid-ask", getKidAsk],
-    ["bedtime", "/api/bedtime", getBedtime],
-  ];
-  if (me?.role === "elder") parts.push(["gifts", "/api/gifts", getGifts], ["keeper", "/api/keeper", getKeeper], ["care", "/api/care", getCare]);
-  if (me?.role === "child") parts.push(["stories", "/api/stories", getStories]);
+  const parts = me?.role === "elder" ? ELDER_PARTS : me?.role === "child" ? CHILD_PARTS : COMMON_PARTS;
   const done = await Promise.all(parts.map(async ([key, path, handler]) => [key, await slice(req, path, handler)] as const));
   const out: Record<string, unknown> = {};
   for (const [key, value] of done) if (value !== undefined) out[key] = value;

@@ -53,6 +53,7 @@ import {
   setSuggestionStatus as memSetSuggestionStatus,
   mockAddMember as memAddMember,
   revokeInvite as memRevokeInvite,
+  revokeInvitesBy as memRevokeInvitesBy,
   updateCard as memUpdateCard,
   deleteCard as memDeleteCard,
   removeReaction as memRemoveReaction,
@@ -189,6 +190,25 @@ export async function dbListCards(familyId: string, opts: ListCardsOptions = {})
   return cards;
 }
 
+/**
+ * Who the cards made of this stored file are for (only the columns the media gate needs):
+ * GET /api/media refuses a file when every card made of it is a note for other people.
+ */
+export async function dbCardsWithMedia(familyId: string, ref: string): Promise<{ media: Pick<Card, "id" | "authorId" | "addressedTo">[]; covers: Pick<Card, "id" | "authorId" | "addressedTo">[] }> {
+  const sb = dbFor(familyId);
+  const pick = (c: Card) => ({ id: c.id, authorId: c.authorId, addressedTo: c.addressedTo });
+  if (!sb) {
+    const cards = scoped(memListCards(), familyId);
+    return { media: cards.filter((c) => c.mediaRef === ref).map(pick), covers: cards.filter((c) => c.coverRef === ref).map(pick) };
+  }
+  const results = await Promise.all(["media_ref", "cover_ref"].map((column) =>
+    sb.from("cards").select("id, author_id, addressed_to").eq("family_id", familyId).eq(column, ref),
+  ));
+  for (const { error } of results) if (error) throw new DbReadError("cards", error.message);
+  const mapRows = (data: Record<string, unknown>[] | null) => (data ?? []).map((r) => ({ id: String(r.id), authorId: (r.author_id as string | null) ?? null, addressedTo: (r.addressed_to as string | null) ?? null }));
+  return { media: mapRows(results[0].data), covers: mapRows(results[1].data) };
+}
+
 /** The cards row for a card (dbAddCard and the demo copy write the same columns). */
 export function cardRow(card: Card): Record<string, unknown> {
   return {
@@ -217,11 +237,17 @@ export function cardRow(card: Card): Record<string, unknown> {
   };
 }
 
+export class CardIdConflict extends Error {}
+
 export async function dbAddCard(input: Omit<import("zod").input<typeof CardSchema>, "id"> & { id?: string }): Promise<Card> {
   const card = CardSchema.parse({ id: input.id ?? crypto.randomUUID(), ...input });
   const sb = dbFor(card.familyId);
-  if (!sb) return memAddCard(card);
-  const { error } = await sb.from("cards").upsert(cardRow(card));
+  if (!sb) {
+    if (memListCards().some((existing) => existing.id === card.id)) throw new CardIdConflict();
+    return memAddCard(card);
+  }
+  const { error } = await sb.from("cards").insert(cardRow(card));
+  if (error?.code === "23505") throw new CardIdConflict();
   if (error) throw new DbWriteError("cards", error.message);
   return card;
 }
@@ -351,7 +377,7 @@ export interface NamedSide {
   /** With `since`: everyone in that family (waiting joiners too), or null when not read. */
   people: Member[] | null;
   /** With `since`: who shared what in that family since then, or null when not read. */
-  recent: { authorId: string | null; takenAt: string }[] | null;
+  recent: { authorId: string | null; takenAt: string; addressedTo: string | null }[] | null;
 }
 
 /**
@@ -370,7 +396,7 @@ export async function dbListSidesNamed(member: Member, opts: { since?: string } 
   type Row = Record<string, unknown> & { families?: { name?: unknown; members?: unknown; cards?: unknown } | null };
   let rows: Row[] | null = null;
   if (opts.since) {
-    const { data, error } = await sb.from("members").select("*, families(name, members(*), cards(author_id, taken_at))").eq("person_id", member.personId).gte("families.cards.taken_at", opts.since).limit(8);
+    const { data, error } = await sb.from("members").select("*, families(name, members(*), cards(author_id, taken_at, addressed_to))").eq("person_id", member.personId).gte("families.cards.taken_at", opts.since).limit(8);
     if (!error && data) rows = data as Row[];
   }
   if (!rows) {
@@ -389,7 +415,7 @@ export async function dbListSidesNamed(member: Member, opts: { since?: string } 
     if (opts.since && fam && Array.isArray(fam.members) && Array.isArray(fam.cards)) {
       try {
         people = (fam.members as Record<string, unknown>[]).map(memberFromRow);
-        recent = (fam.cards as { author_id?: unknown; taken_at?: unknown }[]).map((c) => ({ authorId: typeof c.author_id === "string" ? c.author_id : null, takenAt: String(c.taken_at ?? "") }));
+        recent = (fam.cards as { author_id?: unknown; taken_at?: unknown; addressed_to?: unknown }[]).map((c) => ({ authorId: typeof c.author_id === "string" ? c.author_id : null, takenAt: String(c.taken_at ?? ""), addressedTo: typeof c.addressed_to === "string" ? c.addressed_to : null }));
       } catch {
         people = null;
         recent = null;
@@ -977,16 +1003,18 @@ export async function dbListInvites(): Promise<Invite[]> {
  * invites. Demo invites live in memory and are checked first, like
  * dbListInvites merges them.
  */
-export async function dbFindInvite(code: string): Promise<Invite | undefined> {
+/** A live invite by code. `{ expired: true }` also finds one past its 7 days (to say whom to ask for a new one); a revoked code is gone either way. */
+export async function dbFindInvite(code: string, opts: { expired?: boolean } = {}): Promise<Invite | undefined> {
   const want = code.trim().toUpperCase();
   if (!want) return undefined;
   const nowMs = Date.now();
-  const match = (i: Invite) => i.code.toUpperCase() === want && new Date(i.expiresAt).getTime() > nowMs;
+  const match = (i: Invite) => i.code.toUpperCase() === want && (opts.expired || new Date(i.expiresAt).getTime() > nowMs);
   const sb = dbFor(null);
   if (!sb) return memListInvites().find(match);
   const demo = memListInvites().find((i) => isDemoFamily(i.familyId) && match(i));
   if (demo) return demo;
-  const { data, error } = await sb.from("invites").select("*").eq("code", want).gt("expires_at", new Date(nowMs).toISOString()).limit(1);
+  const base = sb.from("invites").select("*").eq("code", want);
+  const { data, error } = await (opts.expired ? base : base.gt("expires_at", new Date(nowMs).toISOString())).limit(1);
   if (error) throw new DbReadError("invites", error.message);
   if (!data) return memListInvites().find(match);
   const r = data[0];
@@ -1067,8 +1095,13 @@ export async function dbRemoveMember(memberId: string): Promise<boolean> {
   await revokeMembers([memberId]).catch(() => undefined);
   // Their phones stop receiving at once (the database cascades too, memory does not).
   if (fam) await removeAllForMember(fam, memberId).catch(() => undefined);
+  // Links they shared die with their place: join needs no approval, so a removed person's link must not
+  // keep letting people in (the database would only null created_by, which reads as a maker-less link).
+  memRevokeInvitesBy(memberId);
   const sb = dbFor(fam);
   if (!sb) return memRemoveMember(memberId);
+  const gone = await sb.from("invites").delete().eq("created_by", memberId);
+  if (gone.error) return false;
   await sb.from("relationships").delete().or(`member_id.eq.${memberId},relation_member_id.eq.${memberId}`);
   const tables = ["wishes", "reactions", "plays", "daily_roles"];
   for (const t of tables) {

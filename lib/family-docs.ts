@@ -6,9 +6,36 @@
 // (dbFor returns null for them), for reads and writes.
 import { DbReadError, DbWriteError, dbFor } from "./family-db";
 import { DOC_SCHEMAS, type DocKind, type DocOf } from "./kinds";
+import type { Habit, HabitTick } from "./kinds";
 
 type Row = { familyId: string; kind: DocKind; data: { id: string } & Record<string, unknown>; createdAt: string };
 const mem = new Map<string, Row>();
+
+/** Save the history and its optional check mark together. A stale writer can retry. */
+export async function saveHabitAction(familyId: string, habit: Habit, previousEvent: string | null, tick?: { mode: "tick" | "untick"; value: HabitTick }): Promise<boolean> {
+  const data = DOC_SCHEMAS.habit.parse(habit);
+  const mark = tick ? DOC_SCHEMAS.habit_tick.parse(tick.value) : null;
+  const sb = dbFor(familyId);
+  if (sb) {
+    const { data: saved, error } = await sb.rpc("save_habit_action", {
+      p_family: familyId, p_habit: data, p_previous: previousEvent, p_mode: tick?.mode ?? null, p_tick: mark,
+    });
+    if (error) throw new DbWriteError("family_docs", error.message);
+    return saved === true;
+  }
+  const current = mem.get(memKey(familyId, habit.id));
+  const last = current ? parse("habit", current.data)?.history?.at(-1)?.id ?? null : null;
+  if (!current || current.kind !== "habit" || last !== previousEvent) return false;
+  const createdAt = new Date().toISOString();
+  if (mark) {
+    const key = memKey(familyId, mark.id);
+    if (tick?.mode === "tick" && mem.has(key)) return true;
+    if (tick?.mode === "untick") mem.delete(key);
+    else mem.set(key, { familyId, kind: "habit_tick", data: mark, createdAt });
+  }
+  mem.set(memKey(familyId, habit.id), { familyId, kind: "habit", data, createdAt: current.createdAt });
+  return true;
+}
 
 function memKey(familyId: string, id: string): string {
   return `${familyId}::${id}`;
@@ -174,6 +201,25 @@ export async function claimDoc<K extends DocKind>(familyId: string, kind: K, inp
   if (!error) return true;
   if ((error as { code?: string }).code === "23505") return false;
   throw new DbWriteError("family_docs", error.message);
+}
+
+/** Atomically claim a rolling push cooldown; concurrent requests cannot both win. */
+export async function claimPushCooldown(familyId: string, id: string, now: Date, duration: number): Promise<boolean> {
+  const data = { id, until: new Date(now.getTime() + duration).toISOString() };
+  if (await claimDoc(familyId, "push_claim", data)) return true;
+  const sb = dbFor(familyId);
+  const key = memKey(familyId, id);
+  if (!sb) {
+    const row = mem.get(key);
+    if (!row || String(row.data.until) > now.toISOString()) return false;
+    mem.set(key, { ...row, data });
+    return true;
+  }
+  const { data: won, error } = await sb.from("family_docs").update({ data, updated_at: now.toISOString() })
+    .eq("id", `${familyId}:${id}`).eq("kind", "push_claim")
+    .lte("data->>until", now.toISOString()).select("id");
+  if (error) throw new DbWriteError("family_docs", error.message);
+  return Boolean(won?.length);
 }
 
 export async function deleteDoc(familyId: string, kind: DocKind, id: string): Promise<void> {

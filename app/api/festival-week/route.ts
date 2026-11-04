@@ -8,6 +8,7 @@ import { ritualConfigs } from "@/lib/occasions-server";
 import { localDay } from "@/lib/ritual-agent";
 import { guardWrites } from "@/lib/api-guard";
 import { orUnlessRead } from "@/lib/family-db";
+import { seenBy } from "@/lib/card-privacy";
 
 // Festival Week for the viewer's family: the festival it keeps that falls in
 // the next seven days, with the ritual's steps, colour and greeting (all from
@@ -28,7 +29,7 @@ async function getHandler(req: Request): Promise<Response> {
     holidays: fam.all,
     choices: fam.settings,
     configs: ritualConfigs(),
-    cards: withDemoShelf(stored, auth.familyId),
+    cards: seenBy(withDemoShelf(stored, auth.familyId), auth.memberId),
     members,
     viewerId: auth.memberId,
   });

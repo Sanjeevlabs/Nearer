@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { COURSE_LOOK, RecipeCover, totalTime } from "@/components/recipe-art";
-import { RecipeEditor } from "@/components/recipe-editor";
-import { ScanRecipeButton, type ScanResult } from "@/components/recipe-scan";
+import { AddRecipeSheet, SurpriseSheet } from "@/components/kitchen-sheets";
 import { useShell } from "@/components/shell";
 import { ActionMenu, Avatar, Button, EmptyLine, Icon, RoomHeader, SectionTitle } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
@@ -32,7 +31,8 @@ export default function KitchenPage() {
   const [course, setCourse] = useState<Recipe["course"] | "all">("all");
   const router = useRouter();
   // A scanned recipe card opens straight in the editor, for a person to check.
-  const [scanned, setScanned] = useState<ScanResult | null>(null);
+  const [sheet, setSheet] = useState<"add" | "surprise" | null>(null);
+  const onSaved = (id: string) => { setSheet(null); router.push(`/kitchen/${id}`); };
 
   const byId = (id: string) => members.find((m) => m.id === id);
   const recipes = data?.recipes ?? [];
@@ -52,10 +52,6 @@ export default function KitchenPage() {
     .map((id) => ({ cook: byId(id), list: shown.filter((r) => r.cookId === id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) }))
     .filter((x): x is { cook: NonNullable<typeof x.cook>; list: Recipe[] } => Boolean(x.cook));
   const iHaveNone = data !== null && !recipes.some((r) => r.cookId === viewer.id);
-
-  if (scanned) {
-    return <RecipeEditor prefill={scanned.prefill} scan={scanned.scan} onDone={(id) => { setScanned(null); if (id) router.push(`/kitchen/${id}`); }} />;
-  }
 
   if (loading) {
     return (
@@ -112,20 +108,20 @@ export default function KitchenPage() {
       )}
 
       <div className="grid grid-cols-3 gap-2">
-        <Link href="/kitchen/new" className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-accent text-callout font-semibold text-accent-ink no-underline">
+        <button type="button" onClick={() => setSheet("add")} className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-accent text-callout font-semibold text-accent-ink">
           <Icon name="plus" size={18} />
-          Write one
-        </Link>
-        <button type="button" onClick={() => openAdd("voice", { kind: "recipe" })} className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-surface text-callout font-semibold">
-          <Icon name="mic" size={18} />
-          Teach by voice
+          Add a recipe
+        </button>
+        <button type="button" onClick={() => setSheet("surprise")} className="press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] bg-surface text-callout font-semibold">
+          Surprise me
         </button>
         <button type="button" onClick={() => setAsking((v) => !v)} aria-expanded={asking} className={cn("press flex h-12 flex-col items-center justify-center gap-0.5 rounded-[20px] text-callout font-semibold", asking ? "bg-black/80 text-white" : "bg-surface")}>
           <Icon name="reply" size={18} />
           Ask someone
         </button>
       </div>
-      <ScanRecipeButton onScanned={setScanned} />
+      {sheet === "add" && <AddRecipeSheet onClose={() => setSheet(null)} onSaved={onSaved} />}
+      {sheet === "surprise" && <SurpriseSheet onClose={() => setSheet(null)} onSaved={onSaved} />}
       {asking && <AskForRecipe onDone={() => { setAsking(false); void asks.reload(); }} />}
 
       {failed && !data && <LoadFailed what="The Kitchen" ui="kitchen-retry" onRetry={() => { void reload(); void asks.reload(); }} />}
@@ -227,7 +223,7 @@ function RecipeTile({ recipe, attempts, canManage, onDeleted }: { recipe: Recipe
           {recipe.videoCardId && <Icon name="camera" size={12} className="text-ink-soft" />}
         </p>
         {recipe.scanRef && <p className="m-0 font-hand text-body leading-tight text-ink-soft">from the handwritten card</p>}
-        {attempts.length > 0 && <p className="m-0 text-caption text-ink-faint">cooked {attempts.length}×</p>}
+        {attempts.length > 0 && <p className="m-0 text-caption text-ink-soft">cooked {attempts.length}×</p>}
       </Link>
       {canManage && (
         <div className="absolute right-1.5 top-1.5">

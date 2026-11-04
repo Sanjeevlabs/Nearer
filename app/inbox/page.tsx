@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePlayer } from "@/components/player";
+import { VoiceCard } from "@/components/voice-card";
 import { useShell } from "@/components/shell";
 import { PushAsk } from "@/components/push-ask";
 import { Avatar, EmptyLine, Icon, RoomHeader, type IconName } from "@/components/ui/kit";
 import { useViewer } from "@/components/viewer";
 import type { InboxItem } from "@/lib/inbox";
+import type { SentItem } from "@/lib/sent";
+import { cn } from "@/lib/utils";
 import { callName, memberPhoto } from "@/lib/people";
 import { LoadFailed } from "@/components/load-failed";
 import { useFamilyCards } from "@/lib/use-family";
@@ -75,7 +78,7 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
   // A kid's question waiting for you: the answer is by voice, right here (it also lands in Stories). The house screen only points here.
   const kidAsk = item.kind === "kid" && item.waiting && item.id.startsWith("kid-");
   const reply = item.replyTo && !kidAsk ? (
-    <button type="button" onClick={() => openAdd("voice", null, [item.replyTo as string])} className="press flex h-11 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink" aria-label={`Reply by voice to ${callName(from)}`}>
+    <button type="button" onClick={() => openAdd("voice", item.cardId ? { kind: "card_reply", cardId: item.cardId } : null, [item.replyTo as string])} className="press flex h-11 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink" aria-label={`Reply by voice to ${callName(from)}`}>
       <Icon name="mic" size={15} />
       Reply by voice
     </button>
@@ -99,7 +102,7 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
           </span>
         </Link>
         {item.replyTo && (
-          <button type="button" onClick={() => openAdd("voice", null, [item.replyTo as string])} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft" aria-label={`Reply by voice to ${callName(from)}`}>
+          <button type="button" onClick={() => openAdd("voice", item.cardId ? { kind: "card_reply", cardId: item.cardId } : null, [item.replyTo as string])} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft" aria-label={`Reply by voice to ${callName(from)}`}>
             <Icon name="mic" size={18} />
           </button>
         )}
@@ -108,6 +111,8 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
   }
 
   const pill = "press flex h-11 items-center gap-1.5 rounded-full px-4 text-callout font-semibold no-underline";
+  // A voice for you plays like a song, right in the row.
+  const voice = item.action === "play" && card?.type === "audio" ? card : null;
   return (
     <li data-inbox={item.kind} className="rounded-card bg-card p-3 shadow-card">
       <div className="flex items-center gap-3">
@@ -123,8 +128,9 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
           {meta}
         </div>
       </div>
+      {voice && <VoiceCard card={voice} variant="row" className="mt-3" />}
       <div className="mt-2.5 flex flex-wrap items-center gap-2 ps-[56px]">
-        {item.action === "play" && card ? (
+        {voice ? null : item.action === "play" && card ? (
           <button type="button" onClick={() => (on ? toggle() : play(card))} className={`${pill} ${item.waiting ? "bg-accent text-accent-ink" : "bg-well text-ink"}`} aria-label={`${on && isPlaying ? "Pause" : "Play"}: ${item.text}`}>
             <Icon name={on && isPlaying ? "pause" : "play"} size={15} />
             {on && isPlaying ? "Pause" : "Play"}
@@ -166,8 +172,55 @@ function Section({ title, items, tz }: { title: string; items: InboxItem[]; tz: 
   );
 }
 
+/** What you sent to particular people, each with where it stands. Nothing you send is out of sight. */
+function SentList({ tz }: { tz: string }) {
+  const { refreshKey } = useShell();
+  const { data, failed, reload } = useJson<{ items: SentItem[] }>(`/api/inbox/sent?k=${refreshKey}`);
+  const { members } = useViewer();
+  if (failed && !data) return <LoadFailed what="What you sent" ui="sent-retry" onRetry={() => void reload()} />;
+  if (!data) {
+    return (
+      <div key="loading" className="space-y-2.5" aria-busy="true" aria-label="Loading">
+        {[0, 1].map((i) => (
+          <div key={i} className="skeleton h-[88px] rounded-card" />
+        ))}
+      </div>
+    );
+  }
+  if (data.items.length === 0) return <EmptyLine>Nothing sent yet. A voice memory you send to someone shows here, with where it stands.</EmptyLine>;
+  return (
+    <ul data-ui="sent-list" className="m-0 list-none space-y-2.5 p-0">
+      {data.items.map((it) => {
+        const first = members.find((m) => m.id === it.toIds[0]);
+        return (
+          <li key={it.id} data-sent={it.status} className="rounded-card bg-card p-3 shadow-card">
+            <Link href={it.href} className="flex items-center gap-3 text-ink no-underline">
+              <span className="relative inline-block h-11 w-11 shrink-0">
+                {first ? <Avatar src={memberPhoto(first)} name={callName(first)} size={44} /> : <span className="grid h-11 w-11 place-items-center rounded-full bg-well text-ink-soft" aria-hidden="true"><Icon name="mic" size={18} /></span>}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-body font-semibold leading-snug">
+                  {it.type === "audio" ? "Voice memory" : it.type === "video" ? "Video" : "Photo"} to {it.to.join(" and ")}
+                </span>
+                {it.text && <span className="block truncate text-footnote text-ink-soft">{it.text}</span>}
+                <span data-ui="sent-status" className={cn("block text-footnote", it.status === "waiting" ? "font-semibold text-ink" : "text-ink-soft")}>
+                  {it.line}
+                </span>
+                <time dateTime={it.at} className="block text-footnote text-ink-soft">
+                  {when(it.at, tz)}
+                </time>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function InboxPage() {
   const { viewer } = useViewer();
+  const [box, setBox] = useState<"for-you" | "sent">("for-you");
   const { refreshKey } = useShell();
   const { current, isPlaying } = usePlayer();
   const { data, failed, reload } = useJson<{ items: InboxItem[] }>(`/api/inbox?k=${refreshKey}`);
@@ -181,7 +234,18 @@ export default function InboxPage() {
   const earlier = useMemo(() => (data?.items ?? []).filter((i) => !i.waiting), [data]);
   return (
     <div>
-      <RoomHeader title="For you" subtitle="What people sent you in the last 30 days" />
+      <RoomHeader title={box === "sent" ? "Sent" : "For you"} subtitle={box === "sent" ? "What you sent in the last 30 days" : "What people sent you in the last 30 days"} />
+      <div role="tablist" aria-label="For you or Sent" data-ui="inbox-tabs" className="mb-5 grid grid-cols-2 gap-1 rounded-full bg-well p-1">
+        {(["for-you", "sent"] as const).map((b) => (
+          <button key={b} type="button" role="tab" aria-selected={box === b} onClick={() => setBox(b)} className={cn("press h-11 rounded-full text-callout font-semibold", box === b ? "bg-card text-ink shadow-card" : "text-ink-soft")}>
+            {b === "sent" ? "Sent" : "For you"}
+          </button>
+        ))}
+      </div>
+      {box === "sent" ? (
+        <SentList tz={viewer.tz} />
+      ) : (
+        <>
       <PushAsk className="mb-6" />
       {failed && !data ? (
         <LoadFailed what="Things for you" ui="inbox-retry" onRetry={() => void reload()} />
@@ -198,6 +262,8 @@ export default function InboxPage() {
           <Section title="Waiting for you" items={waiting} tz={viewer.tz} />
           <Section title="Earlier" items={earlier} tz={viewer.tz} />
           {waiting.length === 0 && <p className="m-0 mb-6 text-body text-ink-soft">Nothing waiting. When someone sends you something, it lands here.</p>}
+        </>
+      )}
         </>
       )}
     </div>
