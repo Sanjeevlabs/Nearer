@@ -108,9 +108,9 @@ function SkyLayer({ sky, w, h, id, motion }: { sky: SkyState; w: number; h: numb
         </g>
       )}
       {(sky.weather === "cloud" || sky.weather === "rain" || sky.weather === "drizzle" || sky.weather === "thunder") && (
-        <g fill="#ffffff" opacity={sky.phase === "night" ? 0.12 : 0.55} className={motion ? "scene-drift" : undefined}>
-          <ellipse cx={w * 0.28} cy={h * 0.22} rx={w * 0.22} ry={h * 0.06} />
-          <ellipse cx={w * 0.38} cy={h * 0.17} rx={w * 0.14} ry={h * 0.06} />
+        <g fill="#ffffff" opacity={sky.phase === "night" ? 0.12 : 0.28} className={motion ? "scene-drift" : undefined}>
+          <ellipse cx={w * 0.28} cy={h * 0.29} rx={w * 0.22} ry={h * 0.06} />
+          <ellipse cx={w * 0.38} cy={h * 0.26} rx={w * 0.14} ry={h * 0.06} />
           <ellipse cx={w * 0.74} cy={h * 0.36} rx={w * 0.2} ry={h * 0.05} />
         </g>
       )}

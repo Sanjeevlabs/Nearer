@@ -268,7 +268,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       <PlayerProvider>
         <main
           className="relative mx-auto min-h-full w-full max-w-[480px] px-4"
-          style={{ paddingTop: "calc(16px + env(safe-area-inset-top))", paddingBottom: "calc(172px + env(safe-area-inset-bottom))", zoom: large ? 1.12 : undefined }}
+          style={{ paddingTop: "calc(16px + var(--status-bar-inset))", paddingBottom: "calc(172px + env(safe-area-inset-bottom))", zoom: large ? 1.12 : undefined }}
         >
           {children}
         </main>

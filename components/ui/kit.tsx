@@ -319,9 +319,11 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <header
       data-ui="room-header"
-      className="sticky top-0 z-30 -mx-4 mb-3 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] px-4 backdrop-blur"
-      style={{ marginTop: "calc(-16px - env(safe-area-inset-top))", paddingTop: "calc(4px + env(safe-area-inset-top))" }}
+      className="sticky top-0 z-30 -mx-4 mb-3 border-b border-[var(--line)]"
+      style={{ marginTop: "calc(-16px - var(--status-bar-inset))" }}
     >
+      <div aria-hidden="true" className="h-[var(--status-bar-inset)] bg-[var(--status-bar-fill)]" />
+      <div className="bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] px-4 pt-1 backdrop-blur">
       <div className="flex h-11 items-center gap-1">
         <button type="button" onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))} aria-label="Back" className="press -ml-2 grid h-11 w-11 shrink-0 place-items-center rounded-full">
           <Icon name="back" />
@@ -344,6 +346,7 @@ export function RoomHeader({ title, subtitle, action }: { title: string; subtitl
       )}
       {/* The page's own title, when the header shows the room's name instead: for screen readers. */}
       {(subtitle || (name && title && name !== title)) && <p className="sr-only">{[name !== title ? title : "", subtitle].filter(Boolean).join(". ")}</p>}
+      </div>
     </header>
   );
 }
