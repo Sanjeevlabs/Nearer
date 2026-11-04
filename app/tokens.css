@@ -6,6 +6,9 @@
 :root {
   /* Neutral light ground, white cards with a hairline and a soft neutral shadow. */
   --paper: #fafafa;
+  --status-bar-fill: var(--deep);
+  --status-bar-inset: env(safe-area-inset-top, 0px);
+  --window-pill: rgba(17, 17, 17, 0.78);
   --card: #ffffff;
   --surface: #ffffff; /* filled blocks on the paper: cards, chips, inputs (a hairline lifts them) */
   --surface-edge: 0 0 0 1px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);

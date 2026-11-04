@@ -93,7 +93,7 @@ function Badge({ time, weather, glyph }: { time: string; weather: Weather | null
   const b = badgeParts({ time, weather, glyph });
   const wIcon = b.weather ? WEATHER_ICON[b.weather.kind] : undefined;
   return (
-    <div className="absolute right-4 flex h-[32px] items-center gap-1.5 rounded-full bg-black/35 px-3 text-footnote font-medium text-white backdrop-blur-md" style={{ top: "calc(10px + env(safe-area-inset-top))" }} aria-label={[b.time, b.weather ? `${b.weather.label}, ${b.weather.tempC} degrees` : ""].filter(Boolean).join(", ")}>
+    <div className="absolute right-4 flex h-[32px] items-center gap-1.5 rounded-full bg-[var(--window-pill)] px-3 text-footnote font-medium text-white" style={{ top: "calc(10px + var(--status-bar-inset))" }} aria-label={[b.time, b.weather ? `${b.weather.label}, ${b.weather.tempC} degrees` : ""].filter(Boolean).join(", ")}>
       {b.glyph && <Icon name={b.glyph} size={15} strokeWidth={2} />}
       <span className="tnum">{b.time}</span>
       {b.weather && (
@@ -437,8 +437,10 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
   const clock = data?.far ? timeIn(data.far.tz, now) : "";
 
   return (
-    <div className="fixed inset-0 z-30 overflow-y-auto bg-paper text-ink" style={{ overscrollBehavior: "contain" }}>
-      <div className="mx-auto flex min-h-full w-full max-w-[480px] flex-col">
+    <div className="fixed inset-0 z-30 flex flex-col bg-paper text-ink">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[var(--status-bar-inset)] bg-[var(--status-bar-fill)]" />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="mx-auto w-full max-w-[480px]">
         {/* Their home under their real sky, with the lamp hanging in it (a real button). */}
         <WindowScene
           sky={sky}
@@ -451,8 +453,8 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
           pulseKey={pulse}
           lampLabel={`${lampNow.lit ? "The lamp is lit" : "The lamp is not lit"}. Tap to light it for ${first || "them"}; hold to send a heartbeat`}
         >
-          <ProfileMenu size={36} ring className="absolute left-3 grid h-[44px] w-[44px] place-items-center rounded-full" style={{ top: "calc(6px + env(safe-area-inset-top))" }} label="Your profile and settings" />
-          <Link href="/inbox" data-ui="window-bell" aria-label={hasWaiting ? t("window.waitingCount", { n: waitingCount }) : "For you"} className="press absolute left-[60px] grid h-[44px] w-[44px] place-items-center rounded-full bg-black/30 text-white no-underline backdrop-blur-md" style={{ top: "calc(6px + env(safe-area-inset-top))" }}>
+          <ProfileMenu size={36} ring className="absolute left-3 grid h-[44px] w-[44px] place-items-center rounded-full bg-[var(--window-pill)]" style={{ top: "calc(6px + var(--status-bar-inset))" }} label="Your profile and settings" />
+          <Link href="/inbox" data-ui="window-bell" aria-label={hasWaiting ? t("window.waitingCount", { n: waitingCount }) : "For you"} className="press absolute left-[60px] grid h-[44px] w-[44px] place-items-center rounded-full bg-[var(--window-pill)] text-white no-underline" style={{ top: "calc(6px + var(--status-bar-inset))" }}>
             <Icon name="bell" size={19} strokeWidth={1.9} />
             {hasWaiting && (
               <span className="tnum absolute right-0.5 top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--waiting)] px-1 text-[12px] font-semibold leading-none text-white ring-2 ring-white" aria-hidden="true">
@@ -616,14 +618,15 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
           )}
         </div>
 
-        {/* The key home stays within reach at the bottom of the screen */}
-        <div className="sticky bottom-0 z-10 mt-auto bg-gradient-to-t from-paper from-70% to-transparent px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+      </div>
+      </div>
+        {/* Keep the key outside the scroll area so it cannot cover any card text. */}
+        <div className="sticky bottom-0 mx-auto w-full max-w-[480px] shrink-0 bg-paper px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
           <p data-ui="window-key-why" className="m-0 mb-2 text-center text-footnote leading-snug text-ink-soft">
             {t("window.keyWhy")}
           </p>
           <SlideHome onOpen={onUnlock} />
         </div>
-      </div>
 
       <PeoplePicker
         open={picking}

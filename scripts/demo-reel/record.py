@@ -11,7 +11,7 @@ UI inventory's Date shim (scripts/ui-inventory.py CLOCK_JS), so both agree: 8 PM
 
 Human pacing: the pointer glides, taps wait 400-700 ms, every step waits on a data-ui / role selector.
 A tap ripple and a pointer dot are injected for the video only (an init script, not app code).
-Exits non-zero if a shot's selector is missing. Never opens a checkout: shot 10 stops at the preview.
+Exits non-zero if a required shot is missing. No commerce routes are recorded.
 
 Needs a running mock server (scripts/demo-reel/run.sh starts one on :4700 with a fresh in-memory state;
 the lamp, plays and so on are in memory, so re-record against a fresh server).
@@ -21,12 +21,14 @@ import importlib.util
 import json
 import os
 import pathlib
+import subprocess
 import sys
 import time
 from datetime import datetime
 
 from playwright.sync_api import TimeoutError as PWTimeout
 from playwright.sync_api import sync_playwright
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -100,6 +102,8 @@ class Clip:
             flags.append("sessionStorage.setItem('aangan:entered','1')")
         if door_open:
             flags.append("sessionStorage.setItem('aangan:door','open')")
+        if who:
+            flags.append("localStorage.setItem('nearer:window-intro-v1','1')")
         if flags:
             self.ctx.add_init_script("try { " + "; ".join(flags) + " } catch (e) {}")
         if who:
@@ -113,7 +117,7 @@ class Clip:
 
     def _guard(self, route):
         url = route.request.url
-        if url.startswith(self.base) or url.startswith(("data:", "blob:")):
+        if url == self.base or url.startswith((self.base + "/", "data:", "blob:")):
             return route.continue_()
         self.foreign.append(url)
         return route.abort()
@@ -232,164 +236,230 @@ class Clip:
 
 # --- the shots ------------------------------------------------------------------------------------
 def window_ready(c: Clip) -> None:
-    """The window with its data in: the sky, the header line, the lamp line (no skeleton)."""
     c.need("[data-ui=window-scene]")
     c.need("[data-ui=window-lamp]")
-    c.need("[data-ui=window-safe] button")
-    c.pause(900)  # the sky and the lamp settle
-    c.ready()
+    c.need("[data-ui=window-purpose]")
+    c.pause(350)
 
 
-def shot1(c: Clip) -> None:
+def mock_member(ctx, who: str) -> dict:
+    signed = ctx.request.post("/api/session", data={"inviteCode": "NEARER-DEMO", "memberId": who})
+    if not signed.ok or "set-cookie" not in signed.headers:
+        raise Missing(f"mock sign-in as {who} failed ({signed.status})")
+    return {"cookie": signed.headers["set-cookie"].split(";", 1)[0]}
+
+
+def landing(c: Clip) -> None:
     c.page.goto("/home")
-    c.need("text=Try the demo family")
-    c.pause(500)
+    entry = c.page.get_by_role("button", name="Try the demo family")
+    c.need(entry)
     c.ready()
-    c.pause(1300)
-    c.tap(c.page.get_by_text("Try the demo family").first, "the 'Try the demo family' button", after=700)
-    c.tap(c.page.get_by_role("button", name="Open Nearer").first, "the 'Open Nearer' button", after=900)
-    c.need("[data-ui=window-scene]")
-    c.need("[data-ui=window-lamp]")
+    c.pause(850)
+    c.tap(entry)
+    window_ready(c)
+    c.need("[data-ui=window-intro]")
+    c.tap("[data-ui=window-intro] button")
     c.hold_until(c.spec["dur"])
 
 
-def shot2(c: Clip) -> None:
+def lamp(c: Clip) -> None:
     c.page.goto("/")
     window_ready(c)
-    c.glide(300, 300, ms=700)
-    c.pause(2600)
-    c.scroll(110, ms=1300, at=(300, 560))  # the line under the name: city, their clock, the distance
-    c.hold_until(c.spec["dur"])
-
-
-def shot3(c: Clip) -> None:
-    c.page.goto("/")
-    window_ready(c)
-    c.scroll_to("[data-ui=window-safe]", top=300, ms=900)
-    c.pause(200)
-    c.tap(c.page.locator("[data-ui=window-safe] button").first, "Maa's row in Safe & sound", before=200, after=800)
-    c.need("[role=dialog] [data-ui=person-sheet]", "Maa's day sheet")
-    c.pause(1900)
-    c.scroll(150, ms=800, at=(195, 520))
-    c.pause(1000)
-    c.close_sheet()
-    c.hold_until(c.spec["dur"])
-
-
-def shot4(c: Clip) -> None:
-    c.page.goto("/")
-    window_ready(c)
-    c.pause(1200)
-    c.tap("[data-ui=window-lamp-button]", "the lamp in the scene", before=450, after=900)
+    c.ready()
+    c.tap("[data-ui=window-lamp-button]")
     c.page.wait_for_function("() => /glowing for/i.test(document.querySelector('[data-ui=window-lamp]')?.textContent || '')", timeout=SELECTOR_TIMEOUT)
     c.hold_until(c.spec["dur"])
 
 
-def shot5(c: Clip) -> None:
+def voice(c: Clip) -> None:
+    # Use a known synthetic Hindi fixture so the mock translation has a real
+    # source line to display alongside the English words.
+    maa = c.ctx.browser.new_context(base_url=c.base)
+    try:
+        headers = mock_member(maa, "dadi")
+        words = "पार्क में धूप थी। तुम कब आ रहे हो?"
+        note = maa.request.post("/api/cards", data={"type": "audio", "caption": words, "transcript": words, "transcriptLang": "hi", "lang": "hi", "takenAt": NOW, "addressedTo": "arjun"}, headers=headers)
+        if not note.ok:
+            raise Missing(f"mock Hindi note failed ({note.status})")
+    finally:
+        maa.close()
     c.page.goto("/")
     window_ready(c)
-    c.page.wait_for_function("() => /lit it for you/i.test(document.querySelector('[data-ui=window-lamp]')?.textContent || '')", timeout=SELECTOR_TIMEOUT)
-    c.glide(260, 180, ms=800)
-    c.hold_until(c.spec["dur"])
-
-
-def shot6(c: Clip) -> None:
-    c.page.goto("/")
-    window_ready(c)
-    c.scroll_to("[data-ui=window-voice]", top=420, ms=1100)
-    c.tap("[data-ui=window-voice] button", "Maa's latest voice memory play button", after=1400)
-    c.need("[role=dialog][aria-label^='Voice memory from']", "the full player with the words")
-    c.hold_until(c.spec["dur"])
-
-
-def shot7(c: Clip) -> None:
-    c.page.goto("/")
-    window_ready(c)
-    c.pause(500)
-    knob = c.need("[data-ui=window-key] button", "the key").bounding_box()
-    track = c.need("[data-ui=window-key]").bounding_box()
-    c.glide(knob["x"] + knob["width"] / 2, knob["y"] + knob["height"] / 2, ms=600)
-    c.pause(300)
-    c.page.mouse.down()
-    c.glide(track["x"] + track["width"] - 30, c.y, ms=800)
-    c.pause(150)
-    c.page.mouse.up()
-    c.need("[data-ui=dock]", "the family page dock after the key")
-    c.pause(500)
-    c.scroll(480, ms=1300, at=(195, 500))
-    c.hold_until(c.spec["dur"])
-
-
-def shot8(c: Clip) -> None:
-    c.page.goto("/")
-    c.need("[data-ui=dock]", "the courtyard dock")
-    c.need("text=Everyone", "the courtyard content")
-    c.pause(900)
+    target = c.need("[data-ui=window-voice] button[aria-label^='Play']")
+    target.scroll_into_view_if_needed()
+    c.pause(400)
     c.ready()
-    c.tap(c.page.get_by_role("button", name="Open the house"), "the house button on the dock", after=700)
-    c.tap("[data-ui=house-sheet] [data-room=kitchen]", "the Kitchen room", after=500)
-    c.need("a[href='/kitchen/recipe-dadi-dal']", "Maa's Dal tadka recipe")
-    c.pause(700)
-    c.tap("a[href='/kitchen/recipe-dadi-dal']", "Dal tadka", after=500)
-    c.need("[aria-label='Taught by']", "'Hear Maa teach it'")
-    c.pause(700)
-    c.scroll_to("[aria-label='Cooked by the family']", top=150, ms=1800)
+    c.tap(target)
+    c.need("[role=dialog][aria-label^='Voice memory from']")
+    c.tap("[role=dialog] [data-ui=voice-words]")
+    c.need("#player-words")
+    c.need("#player-words >> text=Said:")
     c.hold_until(c.spec["dur"])
 
 
-def shot9(c: Clip) -> None:
+def photo(c: Clip) -> None:
     c.page.goto("/")
     window_ready(c)
-    c.pause(600)
-    c.tap("[data-ui=window-bell]", "the bell (For you)", after=800)
-    c.need("li[data-inbox]", "For you items")
-    c.pause(1500)
-    reply = c.page.locator("button[aria-label^='Reply by voice']")
-    if reply.count():
-        c.tap(reply.first, "Reply by voice", after=1100)
-        c.need("[role=dialog]", "the voice sheet")
-        c.pause(1500)
-        c.close_sheet() if c.page.locator("[role=dialog] button[aria-label=Close]").count() else c.page.keyboard.press("Escape")
-    else:
-        c.notes.append("TODO: no 'Reply by voice' item in Arjun's inbox on this build (needs a seeded voice memory addressed to him); reply sheet not shown")
-        print("  TODO: no 'Reply by voice' in Arjun's inbox; recording the inbox only", flush=True)
+    c.ready()
+    c.tap("[data-ui=window-key] button", "the key")
+    c.tap("[data-ui=my-day]", "Arjun’s picture", before=100, after=350)
+    c.tap(c.page.get_by_role("button", name="Photo", exact=True), before=100, after=350)
+    c.page.locator("input[type=file]").last.set_input_files(str(HERE.parent.parent / "public/demo/venues/courtyard.jpg"))
+    c.page.wait_for_function("() => Boolean(document.querySelector('input[placeholder^=Caption]')?.value)", timeout=SELECTOR_TIMEOUT)
+    c.pause(1200)
+    c.tap(c.page.get_by_role("button", name="Share with the family", exact=True), before=100)
+    c.page.get_by_role("dialog").wait_for(state="hidden", timeout=SELECTOR_TIMEOUT)
+    c.need("[data-ui=dock]")
     c.hold_until(c.spec["dur"])
 
 
-def shot10(c: Clip) -> None:
-    c.page.goto("/")
-    window_ready(c)
-    c.scroll_to("[data-ui=window-actions]", top=420, ms=800)
-    c.tap(c.page.get_by_role("button", name="Send something"), "Send something", before=200, after=300)
-    ideas = c.need("section[aria-label=\"Muse's ideas for Maa\"] button", "Muse's ideas from the stores")
-    c.pause(300)
-    c.scroll_to("section[aria-label=\"Muse's ideas for Maa\"]", top=250, ms=900)
-    c.tap(ideas, "the first idea", before=200, after=700)
-    c.need("section[aria-label=\"Muse's ideas for Maa\"] >> text=You’ll add", "the order preview")
-    # Stop at the preview: never press 'Continue at <store>'.
+def recipe(c: Clip) -> None:
+    maa = c.ctx.browser.new_context(base_url=c.base)
+    try:
+        headers = mock_member(maa, "dadi")
+        saved = maa.request.get("/api/kitchen", headers=headers)
+        if not saved.ok:
+            raise Missing(f"mock Kitchen lookup failed ({saved.status})")
+        dal = next(r for r in saved.json()["recipes"] if r["id"] == "recipe-dadi-dal")
+        result = maa.request.post("/api/kitchen", headers=headers, data={**dal, "action": "edit", "recipeId": dal["id"], "caloriesPerServing": 240})
+        if not result.ok:
+            raise Missing(f"mock recipe estimate failed ({result.status})")
+    finally:
+        maa.close()
+    c.page.goto("/kitchen/recipe-dadi-dal")
+    c.need("[aria-label='Taught by']")
+    c.need(c.page.get_by_text("about 240 kcal", exact=True))
+    c.ready()
+    c.pause(1000)
+    c.scroll_to("[aria-label=Ingredients]", top=235)
     c.hold_until(c.spec["dur"])
 
 
-def shot11(c: Clip) -> None:
+def chef(c: Clip) -> None:
+    c.page.goto("/kitchen")
+    surprise = c.page.get_by_role("button", name="Surprise me", exact=True)
+    c.need(surprise)
+    c.ready()
+    c.tap(surprise)
+    c.page.get_by_role("textbox", name="What’s in your fridge?").fill("rice, lemon and red lentils")
+    c.tap(c.page.get_by_role("button", name="Find a recipe", exact=True))
+    c.need(c.page.get_by_text("kcal per serving", exact=False))
+    c.hold_until(c.spec["dur"])
+
+
+def call(c: Clip) -> None:
+    # The prerecorded banner is the outbound push; the real app opens its destination.
+    maa = c.ctx.browser.new_context(base_url=c.base)
+    try:
+        headers = mock_member(maa, "dadi")
+        res = maa.request.post("/api/sit", data={"action": "knock", "activity": "chai", "invites": ["arjun"]}, headers=headers)
+        if not res.ok:
+            raise Missing(f"mock tea invite failed ({res.status})")
+        knock = res.json()["knock"]
+    finally:
+        maa.close()
+    # Mock the external media transport, not the app's consent, token or joined
+    # requests. No camera, microphone, real call or third-party iframe is opened.
+    c.ctx.add_init_script("""(() => {
+      if (navigator.mediaDevices) navigator.mediaDevices.getUserMedia = async () => new MediaStream();
+      window.JitsiMeetExternalAPI = class {
+        constructor(_domain, {parentNode}) {
+          this.status = document.createElement('p');
+          Object.assign(this.status.style, {height:'100%', margin:'0', display:'grid', placeItems:'center', color:'white', background:'#242221'});
+          this.status.textContent = 'Audio call';
+          parentNode.append(this.status);
+        }
+        dispose() {}
+        addListener(event, cb) {
+          if (event === 'videoConferenceJoined') setTimeout(cb, 150);
+          if (event === 'participantJoined' && location.search.includes('demoMaa=1')) {
+            setTimeout(() => {
+              cb({id:'demo-arjun', displayName:'Arjun'});
+              this.status.textContent = 'Arjun joined';
+            }, 400);
+          }
+        }
+      };
+    })();""")
+    c.page.goto(f"/call/{knock['id']}")
+    c.need("[data-ui=call-prejoin]")
+    c.ready()
+    with c.page.expect_response(lambda r: r.url.endswith("/api/sit") and r.request.method == "POST") as arjun_joined:
+        c.tap("[data-ui=join-audio]", before=100, after=300)
+    if not arjun_joined.value.ok:
+        raise Missing("Arjun’s local call-join acknowledgement failed")
+    mock_member(c.ctx, "dadi")
+    c.page.goto(f"/call/{knock['id']}?demoMaa=1")
+    c.tap("[data-ui=join-audio]", before=100, after=250)
+    c.need(c.page.get_by_role("list", name="Seats in the", exact=False).get_by_text("Arjun", exact=True))
+    c.hold_until(c.spec["dur"])
+
+
+def habit(c: Clip) -> None:
     c.page.goto("/")
-    window_ready(c)
-    c.glide(300, 420, ms=900)
+    walk = c.page.get_by_role("button", name="Morning walk", exact=False)
+    c.need(walk).scroll_into_view_if_needed()
+    c.ready()
+    c.tap(walk)
+    c.need(c.page.get_by_role("list", name="last seven weeks", exact=False))
+    c.hold_until(c.spec["dur"])
+
+
+def story(c: Clip) -> None:
+    c.page.goto("/stories")
+    play = c.page.locator('[data-card="demo-story-elephant"] button[aria-label^="Play"]')
+    c.need(play).scroll_into_view_if_needed()
+    c.ready()
+    c.tap(play)
+    c.hold_until(c.spec["dur"])
+
+
+def private_note(c: Clip) -> None:
+    # A synthetic private voice-card fixture, never a real recording.
+    headers = mock_member(c.ctx, "arjun")
+    words = "Maa, I got home safely. I’ll call you after dinner."
+    note = c.ctx.request.post("/api/cards", data={"type": "audio", "caption": words, "transcript": words, "takenAt": NOW, "addressedTo": "dadi"}, headers=headers)
+    if not note.ok:
+        raise Missing(f"mock private note failed ({note.status})")
+    c.page.goto(f"/lane?card={note.json()['card']['id']}")
+    c.need(c.page.get_by_text("Just for Maa", exact=False))
+    c.ready()
     c.hold_until(c.spec["dur"])
 
 
 PLAN = {
-    1: dict(who=None, entered=False, door_open=False, fn=shot1),
-    2: dict(who="arjun", entered=True, door_open=False, fn=shot2),
-    3: dict(who="arjun", entered=True, door_open=False, fn=shot3),
-    4: dict(who="arjun", entered=True, door_open=False, fn=shot4),
-    5: dict(who="dadi", entered=True, door_open=False, fn=shot5),
-    6: dict(who="arjun", entered=True, door_open=False, fn=shot6),
-    7: dict(who="arjun", entered=True, door_open=False, fn=shot7),
-    8: dict(who="arjun", entered=True, door_open=True, fn=shot8),
-    9: dict(who="arjun", entered=True, door_open=False, fn=shot9),
-    10: dict(who="arjun", entered=True, door_open=False, fn=shot10),
-    11: dict(who="rohan", entered=True, door_open=False, fn=shot11),
+    1: dict(who=None, entered=False, door_open=False, fn=landing),
+    2: dict(who="arjun", entered=True, door_open=False, fn=lamp),
+    3: dict(who="arjun", entered=True, door_open=False, fn=voice),
+    4: dict(who="arjun", entered=True, door_open=False, fn=photo),
+    5: dict(who="arjun", entered=True, door_open=True, fn=recipe),
+    6: dict(who="arjun", entered=True, door_open=True, fn=chef),
+    8: dict(who="arjun", entered=True, door_open=False, fn=call),
+    9: dict(who="arjun", entered=True, door_open=True, fn=habit),
+    10: dict(who="arjun", entered=True, door_open=True, fn=story),
+    11: dict(who="arjun", entered=True, door_open=True, fn=private_note),
 }
+
+
+def notification(spec: dict, out: pathlib.Path, raw: pathlib.Path) -> dict:
+    still, copy = out / "notification-source.jpg", out / "notification-copy.txt"
+    if not still.is_file() or not copy.is_file():
+        raise Missing("notification still missing; run the Muse Image step in run.sh with META_API_KEY in the environment")
+    overlay = out / "notification-banner.png"
+    canvas = Image.new("RGBA", (390, 844))
+    draw = ImageDraw.Draw(canvas)
+    draw.rounded_rectangle((21, 385, 369, 471), radius=17, fill=(251, 250, 248, 246))
+    font = ImageFont.truetype("DejaVuSans.ttf", 19)
+    draw.text((39, 400), "Nearer", font=font, fill="#151515")
+    draw.text((39, 431), copy.read_text().strip(), font=font, fill="#151515")
+    canvas.save(overlay)
+    dest = raw / "shot-07.webm"
+    subprocess.run([
+        "ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-filter_complex_threads", "1", "-loop", "1", "-i", str(still), "-i", str(overlay),
+        "-filter_complex", "[0:v]scale=390:844:force_original_aspect_ratio=increase,crop=390:844[still];[still][1:v]overlay=format=auto,format=yuv420p",
+        "-t", str(spec["dur"]), "-r", "30", "-an", "-c:v", "libvpx-vp9", str(dest),
+    ], check=True)
+    return {"id": spec["id"], "key": spec["key"], "file": dest.name, "start": 0, "dur": spec["dur"], "notes": ["Synthesized adult and composited notification."]}
 
 
 def main() -> int:
@@ -411,8 +481,15 @@ def main() -> int:
             for spec in SHOTS:
                 if spec["id"] not in want:
                     continue
-                plan = PLAN[spec["id"]]
                 print(f"shot {spec['id']:>2} {spec['key']}", flush=True)
+                if spec["key"] == "notification":
+                    try:
+                        manifest[spec["id"]] = notification(spec, out, raw)
+                    except Missing as e:
+                        print(f"FAIL {e}", file=sys.stderr)
+                        return 1
+                    continue
+                plan = PLAN[spec["id"]]
                 clip = Clip(browser, a.base, spec, out, plan["who"], plan["entered"], plan["door_open"])
                 try:
                     plan["fn"](clip)
@@ -423,6 +500,7 @@ def main() -> int:
                     print(f"FAIL shot {spec['id']} ({spec['key']}): timed out: {str(e).splitlines()[0]}", file=sys.stderr)
                     return 1
                 manifest[spec["id"]] = clip.finish(raw)
+                manifest_path.write_text(json.dumps([manifest[k] for k in sorted(manifest)], indent=2))
         finally:
             browser.close()
     manifest_path.write_text(json.dumps([manifest[k] for k in sorted(manifest)], indent=2))

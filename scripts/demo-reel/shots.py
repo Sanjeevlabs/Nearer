@@ -9,17 +9,17 @@ CAPTION_IN = 0.35  # a caption appears this long after its clip starts ...
 CAPTION_OUT = 0.35  # ... and goes this long before it ends
 
 SHOTS = [
-    {"id": 1, "key": "landing", "dur": 8, "caption": "No sign-up. A family opens.", "vo": "This is Arjun. His parents live more than two thousand kilometres away. He opens one screen."},
-    {"id": 2, "key": "window", "dur": 8, "caption": "Their sky. Their time. Right now.", "vo": "Their sky, their weather, their time, right now."},
-    {"id": 3, "key": "safe", "dur": 10, "caption": "He knows they’re okay — without tracking them.", "vo": "He knows they’re okay. Nobody is tracked; it’s only their time in Nearer."},
-    {"id": 4, "key": "lamp", "dur": 10, "caption": "One tap: I’m thinking of you.", "vo": "One tap says “I’m thinking of you.”"},
-    {"id": 5, "key": "maa", "dur": 6, "caption": "It glows in her home for three days.", "vo": "It glows in their home for three days."},
-    {"id": 6, "key": "voice", "dur": 10, "caption": "She speaks her way. Muse writes and translates it.", "vo": "Maa talks the way she talks. Muse writes it down and translates it."},
-    {"id": 7, "key": "door", "dur": 8, "caption": "Inside: everything the family keeps.", "vo": "Inside is everything the family keeps."},
-    {"id": 8, "key": "kitchen", "dur": 10, "caption": "Parents don’t just receive care. They give.", "vo": "Parents don’t just receive care. They give, and see it land."},
-    {"id": 9, "key": "inbox", "dur": 8, "caption": "Everything sent to you, in one place.", "vo": "Everything sent to you, in one place."},
-    {"id": 10, "key": "send", "dur": 8, "caption": "Can’t be there? Send something real.", "vo": "And when you can’t be there, send something real."},
-    {"id": 11, "key": "rohan", "dur": 4, "caption": "Any family. Any country.", "vo": "Any family. Any country."},
+    {"id": 1, "key": "landing", "dur": 9, "caption": "Talk, don’t type.", "vo": "Arjun opens Nearer. There’s Maa and Papa’s window, with their sky and their time."},
+    {"id": 2, "key": "lamp", "dur": 6, "caption": "I’m thinking of you.", "vo": "He lights their lamp. Just a small hello."},
+    {"id": 3, "key": "voice", "dur": 9, "caption": "Maa’s voice, with words and translation.", "vo": "Maa leaves him a note. Muse writes down her words and translates them."},
+    {"id": 4, "key": "photo", "dur": 11, "caption": "A little piece of today.", "vo": "Inside, he adds a photo from his day. Muse drafts a caption for the family."},
+    {"id": 5, "key": "recipe", "dur": 7, "caption": "A recipe, in Maa’s own voice.", "vo": "In the kitchen, Maa teaches him her dal, just as she makes it."},
+    {"id": 6, "key": "chef", "dur": 8, "caption": "Something to cook with what you have.", "vo": "When he needs an idea, Muse suggests a whole recipe from what he has."},
+    {"id": 7, "key": "notification", "dur": 3.5, "caption": "Tea with Maa?", "vo": "Maa’s having tea."},
+    {"id": 8, "key": "call", "dur": 9, "caption": "Pull up a chair.", "vo": "He taps to join. She sees him arrive, just in time for tea."},
+    {"id": 9, "key": "habit", "dur": 7, "caption": "A morning walk, together.", "vo": "They take their morning walks apart, and keep the days together."},
+    {"id": 10, "key": "story", "dur": 7, "caption": "A story only she can tell.", "vo": "And at bedtime, the children can hear a story in her voice."},
+    {"id": 11, "key": "private", "dur": 10.1, "caption": "Just for Maa.", "vo": "Some words are only for Maa. He can send those just to her."},
 ]
 END_CARD = {"id": 12, "key": "end", "dur": 3, "caption": "Nearer — far from home, never far from them.", "vo": "Nearer. Far from home, never far from them."}
 

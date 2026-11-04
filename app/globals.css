@@ -203,8 +203,8 @@ button {
 .win-cloud {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  filter: blur(26px);
+  background: rgba(255, 255, 255, 0.28);
+  filter: blur(14px);
   animation: win-cloud linear infinite;
 }
 @keyframes win-cloud {
