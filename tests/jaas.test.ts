@@ -71,6 +71,33 @@ describe("GET /api/sit/token", () => {
     expect(await res.json()).toEqual({ provider: "jitsi", domain: "meet.jit.si", room: `Nearer-${knock.id}` });
   });
 
+  it("opens the same JaaS room in the browser with a fresh guest token and audio-only settings", async () => {
+    enable();
+    const { knock } = await (await sitPost(req("/api/sit", "leo", { action: "knock", minutes: 30, invites: ["dadi"] }))).json();
+    const path = `/api/sit/token?id=${knock.id}&open=audio`;
+    const response = await tokenGet(req(path, "dadi"));
+    expect(response.status).toBe(303);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    const url = new URL(response.headers.get("location")!);
+    expect(url.origin).toBe("https://8x8.vc");
+    expect(url.pathname).toBe(`/${APP}/Nearer-${knock.id}`);
+    expect(url.hash).toContain("config.startWithVideoMuted=true");
+    const claims = decode(url.searchParams.get("jwt")!.split(".")[1]);
+    expect(claims.context.user).toMatchObject({ id: "dadi", moderator: "false" });
+    expect(claims.room).toBe(`Nearer-${knock.id}`);
+    expect((await tokenGet(req(path, "arjun"))).status).toBe(404);
+    expect((await tokenGet(req(path.replace("open=audio", "open=other"), "dadi"))).status).toBe(400);
+  });
+
+  it("reports invalid provider credentials as a retryable failure", async () => {
+    enable("invalid PEM");
+    const { knock } = await (await sitPost(req("/api/sit", "leo", { action: "knock", minutes: 30 }))).json();
+    const response = await tokenGet(req(`/api/sit/token?id=${knock.id}`, "dadi"));
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "call-provider-unavailable" });
+  });
+
   it("returns a JaaS token, moderator only for the one who knocked", async () => {
     enable();
     const { knock } = (await (await sitPost(req("/api/sit", "leo", { action: "knock", minutes: 30 }))).json()) as { knock: { id: string } };

@@ -14,6 +14,8 @@ export type CallPhase =
   | "in"
   /** The browser (or the person) blocked the microphone or camera. */
   | "denied"
+  /** The room service or embedded connection failed. */
+  | "failed"
   /** Closed before joining: a token 404, an expired or unknown door. */
   | "closed"
   /** Closed while in it: the host left or its time ran out. */
@@ -42,7 +44,7 @@ export function jitsiConfig(media: JoinMedia): Record<string, unknown> {
   };
 }
 
-/** The same choice as a Jitsi URL fragment (the plain-iframe fallback). */
+/** The same media choice when opening the hosted room in a browser. */
 export function jitsiHash(media: JoinMedia, displayName: string): string {
   const audio = media === "audio";
   return [
@@ -50,6 +52,7 @@ export function jitsiHash(media: JoinMedia, displayName: string): string {
     `config.startWithVideoMuted=${audio}`,
     `config.startAudioOnly=${audio}`,
     "config.disableVirtualBackground=true",
+    "config.disableDeepLinking=true",
     `config.toolbarButtons=${encodeURIComponent(JSON.stringify(CALL_TOOLBAR))}`,
     `userInfo.displayName=%22${encodeURIComponent(displayName)}%22`,
   ].join("&");

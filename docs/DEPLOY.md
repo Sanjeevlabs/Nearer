@@ -130,4 +130,8 @@ Public meet.jit.si makes the first person sign in as moderator. 8x8 Jitsi as a S
 2. API keys, then Add API key: generate a key pair and download the private key (PKCS#8 PEM). The key id shown is `vpaas-magic-cookie-.../abc123` (`JAAS_KID`).
 3. `npx wrangler secret put JAAS_APP_ID`, then `JAAS_KID`, then `JAAS_PRIVATE_KEY` (paste the whole PEM; literal `\n` is accepted).
 
-Tokens are minted per person by `GET /api/sit/token`; the private key never reaches the browser.
+Only the Nearer operator needs an 8x8 account. Family members sign in to Nearer as usual. After checking the family and invitation, Nearer signs a token scoped to that person and room. The private key stays in the Worker secret store.
+
+If your private key begins with `BEGIN RSA PRIVATE KEY`, convert it locally to unencrypted PKCS#8 with `openssl pkcs8 -topk8 -nocrypt -in jaas.key -out jaas-pkcs8.pem` before adding the Worker secret.
+
+After configuring all three values, open a test door with two family accounts. Join with video on one device and audio on the other. If the embedded call fails, **Retry** requests a fresh token, and **Open call in browser** checks the invitation again and opens the same hosted room. Verify both routes on a phone before relying on them in a demo.
