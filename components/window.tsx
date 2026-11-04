@@ -35,6 +35,7 @@ import { PushAsk } from "./push-ask";
 import type { DoorPreset } from "./open-door-sheet";
 import { TogetherCard } from "./together-card";
 import { usePlayer } from "./player";
+import { WordsPanel, WordsToggle } from "./voice-card";
 import { BottomSheet } from "./share-panel";
 import { useShell } from "./shell";
 import { Avatar, Icon, type IconName } from "./ui/kit";
@@ -222,6 +223,7 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
   // undefined: never opened (the sheet's code is not even loaded); null: closed.
   const [doorSheet, setDoorSheet] = useState<DoorPreset | null | undefined>(undefined);
   const [picking, setPicking] = useState(false);
+  const [voiceWords, setVoiceWords] = useState(false);
   const [open, setOpen] = useState<Member | null>(null);
   const [dayOfId, setDayOfId] = useState<string | null>(null);
   const [info, setInfo] = useState(false);
@@ -574,14 +576,18 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
 
               {/* Their latest voice: one compact row */}
               {latestVoice && (
-                <section data-ui="window-voice" className={cn(CARD, "flex min-h-[56px] items-center gap-3 px-3 py-1.5")} style={EDGE} aria-label="Their latest voice">
-                  <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice memory`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
-                    <Icon name={playing ? "pause" : "play"} size={16} />
-                  </button>
-                  <p className="m-0 min-w-0 flex-1 truncate text-callout leading-snug" suppressHydrationWarning>
-                    <b className="font-semibold">{callName(voiceBy)}</b>
-                    <span className="text-ink-soft">{` · ${dayWord(latestVoice.takenAt, now, viewer.tz)}, ${clockWord(latestVoice.takenAt, viewer.tz)}`}</span>
-                  </p>
+                <section data-ui="window-voice" className={cn(CARD, "px-3 py-1.5")} style={EDGE} aria-label="Their latest voice">
+                  <div className="flex min-h-[56px] items-center gap-3">
+                    <button type="button" onClick={() => (current?.id === latestVoice.id ? toggle() : play(latestVoice))} aria-label={`${playing ? "Pause" : "Play"} ${callName(voiceBy)}'s voice memory`} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+                      <Icon name={playing ? "pause" : "play"} size={16} />
+                    </button>
+                    <p className="m-0 min-w-0 flex-1 truncate text-callout leading-snug" suppressHydrationWarning>
+                      <b className="font-semibold">{callName(voiceBy)}</b>
+                      <span className="text-ink-soft">{` · ${dayWord(latestVoice.takenAt, now, viewer.tz)}, ${clockWord(latestVoice.takenAt, viewer.tz)}`}</span>
+                    </p>
+                    {latestVoice.transcript.trim() && <WordsToggle open={voiceWords} onToggle={() => setVoiceWords((v) => !v)} controls="window-voice-words" className="!-ml-0 shrink-0" />}
+                  </div>
+                  {voiceWords && <WordsPanel card={latestVoice} id="window-voice-words" className="mb-1" />}
                 </section>
               )}
 

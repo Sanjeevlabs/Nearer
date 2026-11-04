@@ -192,13 +192,13 @@ export default function RecipePage() {
             const got = have.has(n);
             return (
               <li key={n}>
-                <button type="button" aria-pressed={got} onClick={() => setHave((s) => { const x = new Set(s); if (x.has(n)) x.delete(n); else x.add(n); return x; })} className="flex w-full items-center gap-3 px-2 py-3 text-left">
+                <button type="button" aria-pressed={got} onClick={() => setHave((s) => { const x = new Set(s); if (x.has(n)) x.delete(n); else x.add(n); return x; })} className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-2 py-3 text-left">
                   <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full border-2", got ? "border-black bg-accent text-accent-ink" : "border-black/20")} aria-hidden="true">
                     {got && <Icon name="check" size={14} strokeWidth={3} />}
                   </span>
                   <IngredientIcon item={i.item} />
-                  <span className={cn("min-w-0 flex-1 text-body font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
-                  <span className="shrink-0 text-right">
+                  <span className={cn("min-w-[8ch] flex-1 basis-[8ch] break-words text-body font-semibold", got && "text-ink-faint line-through decoration-black/20")}>{i.item}</span>
+                  <span className="ml-auto min-w-0 max-w-full shrink basis-[11rem] break-words text-right max-[420px]:basis-full max-[420px]:pl-[calc(24px+2.25rem)] max-[420px]:text-left">
                     {i.said && <span className="voice block text-body">{i.said}</span>}
                     {i.approx && <span className="tnum block text-footnote text-ink-soft">{i.said ? "≈ " : ""}{i.approx.replace(/^(about|≈)\s*/i, "")}</span>}
                     {i.kcal !== undefined && <span className="tnum block text-footnote text-ink-soft">about {i.kcal} kcal</span>}

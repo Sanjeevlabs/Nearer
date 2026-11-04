@@ -3,6 +3,7 @@ import { Kalam, Literata, Onest } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Shell } from "@/components/shell";
 import { EARLY_FETCH } from "@/lib/early";
+import { THEME_HINT } from "@/lib/theme-hint";
 import "./globals.css";
 
 const onest = Onest({ subsets: ["latin"], variable: "--font-body", display: "swap" });
@@ -38,7 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: VIEW_HINT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_HINT + VIEW_HINT }} />
       </head>
       <body className={`${onest.variable} ${literata.variable} ${kalam.variable}`}>
         <Providers>

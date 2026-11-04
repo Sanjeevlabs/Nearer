@@ -26,6 +26,6 @@ export function authedJson(url: string, body: unknown, memberId = "dadi"): Reque
   });
 }
 
-export function authedGet(url: string, memberId = "dadi"): Request {
-  return new Request(url, { headers: { cookie: sessionCookie(memberId) } });
+export function authedGet(url: string, memberId = "dadi", familyId = "demo-family"): Request {
+  return new Request(url, { headers: { cookie: sessionCookie(memberId, familyId) } });
 }

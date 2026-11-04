@@ -16,7 +16,27 @@ export const COURSE_LOOK: Record<Recipe["course"], { label: string; bg: string; 
   other: { label: "Other", bg: "#eeeae4", ink: "#5f5548", accent: "#a89580" },
 };
 
-function Motif({ course, accent, ink }: { course: Recipe["course"]; accent: string; ink: string }) {
+/** Dishes that get their own art instead of the course's: greens (palak paneer, saag) are a green bowl with pale cubes. */
+export type Dish = "greens" | null;
+export function dishOf(title: string): Dish {
+  return /\b(palak|saag|sarson|spinach|methi)\b/i.test(title) ? "greens" : null;
+}
+const GREENS_LOOK = { bg: "#e3efd8", ink: "#3d6a22", accent: "#6fa84a" };
+
+function Motif({ course, accent, ink, dish }: { course: Recipe["course"]; accent: string; ink: string; dish?: Dish }) {
+  if (dish === "greens") {
+    return (
+      <g>
+        <path d="M46 22c-4 5 4 7 0 12M60 18c-4 5 4 7 0 12M74 22c-4 5 4 7 0 12" stroke={ink} strokeOpacity=".35" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <path d="M26 54h68a34 30 0 0 1-68 0z" fill={accent} />
+        <ellipse cx="60" cy="54" rx="34" ry="7" fill={accent} opacity=".7" />
+        <rect x="44" y="49" width="9" height="8" rx="2" fill="#fbf6e4" />
+        <rect x="60" y="46" width="9" height="8" rx="2" fill="#fbf6e4" />
+        <rect x="74" y="51" width="8" height="7" rx="2" fill="#fbf6e4" />
+        <ellipse cx="60" cy="90" rx="26" ry="4" fill={ink} opacity=".12" />
+      </g>
+    );
+  }
   const steam = <path d="M46 22c-4 5 4 7 0 12M60 18c-4 5 4 7 0 12M74 22c-4 5 4 7 0 12" stroke={ink} strokeOpacity=".35" strokeWidth="3" strokeLinecap="round" fill="none" />;
   switch (course) {
     case "drink":
@@ -71,13 +91,14 @@ function Motif({ course, accent, ink }: { course: Recipe["course"]; accent: stri
 }
 
 export function RecipeCover({ recipe, photo, className, label = false }: { recipe: Pick<Recipe, "course" | "title">; photo?: string | null; className?: string; label?: boolean }) {
-  const look = COURSE_LOOK[recipe.course] ?? COURSE_LOOK.other;
+  const dish = dishOf(recipe.title);
+  const look = dish === "greens" ? { ...(COURSE_LOOK[recipe.course] ?? COURSE_LOOK.other), ...GREENS_LOOK } : (COURSE_LOOK[recipe.course] ?? COURSE_LOOK.other);
   return (
     <div className={cn("relative overflow-hidden", className)} style={{ background: look.bg, contain: "layout paint" }}>
         <svg viewBox="0 0 120 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
           <circle cx="98" cy="14" r="26" fill={look.accent} opacity=".12" />
           <circle cx="14" cy="92" r="20" fill={look.accent} opacity=".1" />
-          <Motif course={recipe.course} accent={look.accent} ink={look.ink} />
+          <Motif course={recipe.course} accent={look.accent} ink={look.ink} dish={dish} />
         </svg>
       {photo && <Photo src={photo} alt={recipe.title} sizes="360px" />}
       {label && (

@@ -16,6 +16,7 @@ import { ReactionBar } from "./reactions";
 import { useViewer } from "./viewer";
 import { VoiceControls, usePlayer } from "./player";
 import { RemindMe } from "./remind-sheet";
+import { WordsPanel, WordsToggle } from "./voice-card";
 import { LISTEN_WORDS } from "@/lib/listen";
 
 // The waveform IS the scrubber: played bars in warm amber, the rest dim.
@@ -196,6 +197,7 @@ export default function FullPlayer({
   const { displayLang, members, viewer } = useViewer();
   const { openAdd } = useShell();
   const { translated } = useDisplayText(current?.caption ?? "", current?.lang, displayLang);
+  const [words, setWords] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -271,7 +273,13 @@ export default function FullPlayer({
               <VoiceControls card={current} bar={false} onPrev={playPrev} onNext={playNext} className="mt-1" />
             </div>
 
-            <div className="no-scrollbar mt-4 min-h-0 flex-1 overflow-y-auto">
+            <div className="no-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto">
+              {current.transcript.trim() && (
+                <div className="mb-2">
+                  <WordsToggle open={words} onToggle={() => setWords((v) => !v)} controls="player-words" dark />
+                  {words && <WordsPanel card={current} id="player-words" dark />}
+                </div>
+              )}
               <SyncedLyrics card={current} duration={duration} currentTime={currentTime} />
             </div>
 

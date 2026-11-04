@@ -168,7 +168,7 @@ export function TogetherHabit() {
         </p>
       )}
 
-      {sheet === "history" && <HabitHistory habit={habit} onClose={() => setSheet(null)} />}
+      {sheet === "history" && <HabitHistory habit={habit} onClose={() => setSheet(null)} now={{ day: data.localDay, ids: joined.map((j) => j.id), ticked: tickedIds }} />}
       {(sheet === "rename" || sheet === "time") && <EditSheet kind={sheet} habit={habit} onClose={() => setSheet(null)} onSave={(b) => run({ habitId: habit.id, ...b })} />}
       {past}
     </Shell>
@@ -180,7 +180,10 @@ interface HistoryData {
   events: HabitEvent[];
 }
 
-function HabitHistory({ habit, onClose }: { habit: { id: string; name: string }; onClose: () => void }) {
+/** What the card already knows, so the sheet can show today at once while the weeks load. */
+interface NowKnown { day?: string; ids: string[]; ticked: string[] }
+
+function HabitHistory({ habit, onClose, now }: { habit: { id: string; name: string }; onClose: () => void; now?: NowKnown }) {
   const { members, viewer } = useViewer();
   const { data, failed, reload } = useJson<HistoryData>(`/api/habits?history=${encodeURIComponent(habit.id)}`);
   const name = (id: string) => id === viewer.id ? "You" : callName(members.find((member) => member.id === id));
@@ -201,7 +204,16 @@ function HabitHistory({ habit, onClose }: { habit: { id: string; name: string };
   }
   return (
     <BottomSheet open onClose={onClose} title="History">
-      {!data && (failed ? <Button onClick={() => void reload()}>Try again</Button> : <p role="status">Loading history…</p>)}
+      {!data && failed && <Button onClick={() => void reload()}>Try again</Button>}
+      {!data && !failed && !now && <p role="status">Loading history…</p>}
+      {!data && now?.ids.map((id) => (
+        <section className="mb-5" key={id} data-ui="habit-history-now">
+          <h3 className="text-headline">{name(id)}</h3>
+          <p className="text-callout text-ink-soft">{now.ticked.includes(id) ? `${name(id)} ${doneVerb(habit.name)} today` : `Not ticked yet today`}</p>
+          {!failed && <div className="skeleton mt-2 h-[88px] rounded-[12px]" aria-hidden="true" />}
+        </section>
+      ))}
+      {!data && !failed && now && <p role="status" className="text-footnote text-ink-soft">Filling in the last weeks…</p>}
       {data?.calendars.map(({ memberId, days }) => (
         <section className="mb-5" key={memberId}>
           <h3 className="text-headline">{name(memberId)}</h3>

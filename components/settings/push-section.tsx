@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { pushGuide } from "@/lib/push-guide";
 import { useJson } from "@/lib/use-json";
+import { BottomSheet } from "../ui/bottom-sheet";
 import { disableNotifications, enableNotifications, pushIsOn, pushSupport, serverVapidKey, type EnableResult, type PushSupport } from "@/lib/web-push";
 import { Group } from "./section";
 
@@ -38,9 +40,12 @@ export function NotificationsSection({ onMessage }: { onMessage: (m: string) => 
   const [on, setOn] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [install, setInstall] = useState(false);
+  const [ua, setUa] = useState({ ua: "", touch: 0 });
   useEffect(() => {
     const kind = pushSupport();
     setSupport(kind);
+    setUa({ ua: navigator.userAgent, touch: navigator.maxTouchPoints ?? 0 });
     if (kind === "ready" && data?.configured.web) void serverVapidKey().then(setVapid);
     void pushIsOn().then(setOn);
   }, [data?.devices, data?.configured.web]);
@@ -87,7 +92,8 @@ export function NotificationsSection({ onMessage }: { onMessage: (m: string) => 
   };
 
   const pill = "press h-11 rounded-full px-5 text-callout font-semibold disabled:opacity-50";
-  const canAsk = configured && (support === "native" || (support === "ready" && Boolean(vapid)) || support === "needs-install" || support === "blocked");
+  const guide = pushGuide(support, ua.ua, ua.touch);
+  const canAsk = configured && (support === "native" || (support === "ready" && Boolean(vapid)));
   return (
     <Group title="Notifications" id="notifications">
       <div className="rounded-[22px] bg-surface px-4 py-4">
@@ -97,32 +103,41 @@ export function NotificationsSection({ onMessage }: { onMessage: (m: string) => 
         </p>
         {!configured ? (
           <p className="m-0 mt-3 text-footnote text-ink-soft">Notifications aren&rsquo;t switched on for this server yet.</p>
-        ) : support === "unsupported" ? (
-          <p className="m-0 mt-3 text-footnote text-ink-soft">{NOT_ON.unsupported}</p>
         ) : (
           <div className="mt-3 flex flex-wrap gap-2">
             {on ? (
               <button type="button" disabled={busy !== null} onClick={() => void turnOff()} className={`${pill} bg-white text-ink`}>
                 Turn off here
               </button>
-            ) : (
+            ) : guide.label ? (
+              <button type="button" data-ui="push-install" onClick={() => setInstall(true)} className={`${pill} bg-accent text-accent-ink`}>
+                {guide.label}
+              </button>
+            ) : guide.turnOn ? (
               <button type="button" disabled={busy !== null || !canAsk} onClick={() => void turnOn()} className={`${pill} bg-accent text-accent-ink`}>
                 {busy === "device" ? "Turning on…" : "Turn on"}
               </button>
+            ) : null}
+            {(on || guide.turnOn) && (
+              <button type="button" disabled={busy !== null} onClick={() => void test()} className={`${pill} bg-white text-ink`}>
+                {busy === "test" ? "Sending…" : "Send me a test"}
+              </button>
             )}
-            <button type="button" disabled={busy !== null} onClick={() => void test()} className={`${pill} bg-white text-ink`}>
-              {busy === "test" ? "Sending…" : "Send me a test"}
-            </button>
           </div>
         )}
-        {support === "needs-install" && !on && <p className="m-0 mt-3 text-footnote text-ink-soft">{NOT_ON["needs-install"]}</p>}
-        {support === "blocked" && !on && <p className="m-0 mt-3 text-footnote text-ink-soft">{NOT_ON.denied}</p>}
+        {configured && !on && guide.note && <p data-ui="push-note" className="m-0 mt-3 text-footnote text-ink-soft">{guide.note}</p>}
         {note && (
           <p role="status" className="m-0 mt-3 text-footnote text-ink-soft">
             {note}
           </p>
         )}
       </div>
+      <BottomSheet open={install} onClose={() => setInstall(false)} title="Add Nearer to your Home Screen" dataUi="push-install-sheet">
+        <ol className="m-0 list-decimal space-y-3 pl-5 text-body">
+          {guide.steps.map((step) => <li key={step}>{step}</li>)}
+        </ol>
+        <button type="button" onClick={() => setInstall(false)} className={`${pill} mt-5 w-full bg-accent text-accent-ink`}>Got it</button>
+      </BottomSheet>
       <div className="mt-3 divide-y divide-[var(--line)] rounded-[22px] bg-surface px-4">
         {CATEGORIES.map((c) => (
           <label key={c.key} className="flex min-h-[44px] items-center justify-between gap-3 py-4">
