@@ -24,7 +24,7 @@ const hhmm = (h: number, m: number) => `${String(h).padStart(2, "0")}:${String(m
 
 function Shell({ children, glow = false, label = "Together habit" }: { children: React.ReactNode; glow?: boolean; label?: string }) {
   return (
-    <section id="habit" aria-label={label} className={cn("mt-5 rounded-[26px] bg-card p-4 shadow-card", glow && "ring-1 ring-[#e9b44c]/60")}>
+    <section ref={(node) => { if (node && window.location.hash === "#habit") node.scrollIntoView(); }} id="habit" aria-label={label} className={cn("mt-5 rounded-[26px] bg-card p-4 shadow-card", glow && "ring-1 ring-[#e9b44c]/60")}>
       {children}
     </section>
   );

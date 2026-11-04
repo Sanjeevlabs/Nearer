@@ -174,6 +174,7 @@ export default function CallPage() {
         apiRef.current = api;
         window.clearTimeout(fallback);
         setMode("api");
+        api.addListener("videoConferenceJoined", () => void postJson("/api/sit", { action: "joined", id }));
         api.addListener("participantJoined", (e) => {
           const m = members.find((x) => x.id !== viewer.id && callName(x) === e.displayName);
           if (m && e.id) setLive((l) => [...l.filter((p) => p.pid !== e.id), { pid: e.id!, mid: m.id }]);

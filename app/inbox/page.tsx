@@ -78,7 +78,7 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
   // A kid's question waiting for you: the answer is by voice, right here (it also lands in Stories). The house screen only points here.
   const kidAsk = item.kind === "kid" && item.waiting && item.id.startsWith("kid-");
   const reply = item.replyTo && !kidAsk ? (
-    <button type="button" onClick={() => openAdd("voice", null, [item.replyTo as string])} className="press flex h-11 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink" aria-label={`Reply by voice to ${callName(from)}`}>
+    <button type="button" onClick={() => openAdd("voice", item.cardId ? { kind: "card_reply", cardId: item.cardId } : null, [item.replyTo as string])} className="press flex h-11 items-center gap-1.5 rounded-full bg-well px-4 text-callout font-semibold text-ink" aria-label={`Reply by voice to ${callName(from)}`}>
       <Icon name="mic" size={15} />
       Reply by voice
     </button>
@@ -102,7 +102,7 @@ function Row({ item, tz }: { item: InboxItem; tz: string }) {
           </span>
         </Link>
         {item.replyTo && (
-          <button type="button" onClick={() => openAdd("voice", null, [item.replyTo as string])} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft" aria-label={`Reply by voice to ${callName(from)}`}>
+          <button type="button" onClick={() => openAdd("voice", item.cardId ? { kind: "card_reply", cardId: item.cardId } : null, [item.replyTo as string])} className="press grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft" aria-label={`Reply by voice to ${callName(from)}`}>
             <Icon name="mic" size={18} />
           </button>
         )}

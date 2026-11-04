@@ -6,6 +6,8 @@
 import { dbAddMember, dbFindInvite, dbGetMember, dbListMembers, dbListSides, dbUpdateMemberProfile, type Invite } from "./db";
 import { MAX_SIDES, isClaimable } from "./permissions";
 import { familyFull, hostOf } from "./roles";
+import { inBackground } from "./push/background";
+import { pushFamilyJoined } from "./push/events";
 import type { Member } from "./schemas";
 
 
@@ -73,6 +75,7 @@ export async function joinAsNew(ask: JoinAsk): Promise<JoinOutcome> {
         access: "member",
         status: "active",
       });
+  inBackground(() => pushFamilyJoined(familyId, member.id));
   return { ok: true, familyId, memberId: member.id, welcome: await welcomeLine(familyId, member) };
 }
 
@@ -108,5 +111,6 @@ export async function joinAsExisting(existing: Member, ask: Omit<JoinAsk, "tz" |
         status: "active",
         personId,
       });
+  inBackground(() => pushFamilyJoined(invite.familyId, member.id));
   return { ok: true, familyId: invite.familyId, memberId: member.id, welcome: await welcomeLine(invite.familyId, member) };
 }

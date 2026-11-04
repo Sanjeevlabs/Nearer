@@ -36,7 +36,7 @@ function RowHead({ title, count, range, extra }: { title: string; count: number;
   return (
     <div className="mb-2 flex items-baseline gap-2">
       <h2 className="m-0 text-headline">{title}</h2>
-      <span className="tnum text-footnote text-ink-faint">{count}</span>
+      <span className="tnum text-footnote text-ink-soft">{count}</span>
       <span className="flex-1" />
       {extra}
       {range && <span className="tnum text-caption text-ink-soft">{range}</span>}
@@ -51,15 +51,15 @@ function Tile({ card, kind, onOpen, eager = false, starred = false }: { card: Ca
   const author = members.find((m) => m.id === card.authorId);
   const voice = kind === "audio";
   const caption = (card.note || card.caption).trim();
-  const label = (voice ? `${callName(author)}'s voice memory, ${monthChip(card.takenAt)}` : `${caption || (kind === "video" ? "Video" : "Photo")}, ${callName(author)}, ${monthChip(card.takenAt)}`) + (just ? `, ${just.toLowerCase()}` : "") + (starred ? ", starred" : "");
+  const description = voice ? "Voice memory" : kind === "video" ? "Video" : "Photo";
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={label}
       data-card={card.id}
       className={cn("press relative shrink-0 snap-start overflow-hidden rounded-[18px] bg-surface text-left", voice ? "h-[112px] w-[112px]" : "h-[150px] w-[120px]")}
     >
+      <span className="sr-only">{description}{starred ? ", starred" : ""}</span>
       <Photo src={cardCover(card, members)} alt="" sizes="240px" position="center 30%" priority={eager} />
       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,.28),transparent_38%,transparent_58%,rgba(0,0,0,.55))]" aria-hidden="true" />
       <span className="glass absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-caption font-semibold">{monthChip(card.takenAt)}</span>

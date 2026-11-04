@@ -196,7 +196,8 @@ export function FestivalHeader() {
       </h2>
 
       {photos.length > 0 && (
-        <Link href="/rituals" className="mt-3 block no-underline" aria-label={`See your family's ${week.title} from other years`}>
+        <Link href="/rituals" className="relative mt-3 block no-underline">
+          <span className="sr-only">See your family’s {week.title} from other years</span>
           <ul className="no-scrollbar -mx-4 m-0 flex list-none gap-2.5 overflow-x-auto px-4 pb-1">
             {photos.map((c) => (
               <li key={c.id} className="shrink-0">

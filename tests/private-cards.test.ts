@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { GET as cardsGet } from "@/app/api/cards/route";
+import { GET as cardsGet, POST as cardsPost } from "@/app/api/cards/route";
 import { PATCH as cardPatch } from "@/app/api/cards/[id]/route";
 import { GET as mediaGet } from "@/app/api/media/[...path]/route";
 import { GET as mockBytesGet } from "@/app/api/media/mock-bytes/route";
@@ -144,5 +144,31 @@ describe("no card reader skips the gate", () => {
     const readers = [...walk("app"), ...walk("lib")].filter((f) => /\b(dbListCards|cardsFor)\(/.test(readFileSync(join(root, f), "utf8")));
     const ungated = readers.filter((f) => !ALLOWED.has(f) && !/card-privacy|media-gate/.test(readFileSync(join(root, f), "utf8")));
     expect(ungated).toEqual([]);
+  });
+});
+
+
+describe("card creation and covers", () => {
+  it("rejects another member's ID without changing the private card", async () => {
+    const id = crypto.randomUUID();
+    const original = addCard({ id, familyId: "demo-family", type: "audio", caption: "Original", lang: "en", takenAt: new Date().toISOString(), authorId: A, addressedTo: B });
+    const res = await cardsPost(send("/api/cards", C, { id, type: "audio", caption: "Changed", takenAt: new Date().toISOString() }));
+    expect(res.status).toBe(409);
+    const retry = await cardsPost(send("/api/cards", A, { id, type: "audio", caption: "Changed", takenAt: new Date().toISOString() }));
+    expect(retry.status).toBe(200);
+    expect((await retry.json()).card).toEqual(original);
+  });
+
+  it("protects a private cover unless another visible card uses it", async () => {
+    const path = "demo-family/uploads/private-cover.jpg";
+    mockPutBlob(path, new Uint8Array([1]), "image/jpeg");
+    addCard({ id: "cover-note", familyId: "demo-family", type: "audio", caption: "Private", lang: "en", takenAt: new Date().toISOString(), authorId: A, addressedTo: B, coverRef: `storage:${path}` });
+    const bytes = (who: string) => mockBytesGet(get(`/api/media/mock-bytes?path=${encodeURIComponent(path)}`, who));
+    expect((await bytes(C)).status).toBe(404);
+    expect((await bytes(B)).status).toBe(200);
+    addCard({ id: "other-cover", familyId: "demo-family", type: "audio", caption: "Shared", lang: "en", takenAt: new Date().toISOString(), authorId: A, coverRef: `storage:${path}` });
+    expect((await bytes(C)).status).toBe(404);
+    addCard({ id: "shared-photo", familyId: "demo-family", type: "photo", caption: "Shared", lang: "en", takenAt: new Date().toISOString(), authorId: A, mediaRef: `storage:${path}` });
+    expect((await bytes(C)).status).toBe(200);
   });
 });

@@ -1,3 +1,5 @@
+import { pushHabitTick } from "@/lib/push/events";
+import { inBackground } from "@/lib/push/background";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
 import { guardWrites } from "@/lib/api-guard";
@@ -114,6 +116,8 @@ async function postHandler(req: Request): Promise<Response> {
   });
   if (!saved) return conflict();
   if (body.action === "tick") {
+    // The others hear about it (once per person per day: pushHabitTick claims it).
+    inBackground(() => pushHabitTick(auth.familyId, habit, me.id, day, now));
     // The family's glow: this was the last one in. (Reads fresh: the ticks of the others are already written.)
     const ticks = await listDocs(auth.familyId, "habit_tick");
     const inIds = habit.members.filter((m) => members.some((x) => x.id === m && x.status !== "pending"));

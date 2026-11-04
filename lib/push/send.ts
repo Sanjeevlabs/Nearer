@@ -3,6 +3,7 @@
 // (the row goes after MAX_FAILURES). Missing keys: no-op, said once in the log.
 // In mock mode nothing leaves the process; messages are kept in `outbox` for tests.
 // Never throws. Server only.
+import { isDemoFamily } from "../family";
 import { sendFcm, serviceAccountFromEnv } from "./fcm";
 import { listSubs, noteFailure, noteOk, removeSub } from "./store";
 import type { PushMessage, PushSub } from "./types";
@@ -52,6 +53,7 @@ export const isMock = (deps: SendDeps = {}): boolean => deps.mock ?? process.env
 /** Does this person have anywhere to be pushed to? (Mock mode: always, so the outbox fills.) */
 export async function hasDevice(familyId: string, memberId: string, deps: SendDeps = {}): Promise<boolean> {
   if (isMock(deps)) return true;
+  if (isDemoFamily(familyId)) return false;
   return (await listSubs(familyId, memberId)).length > 0;
 }
 
@@ -78,6 +80,7 @@ export async function pushToMember(familyId: string, memberId: string, msg: Push
       outbox.push({ familyId, memberId, msg });
       return out;
     }
+    if (isDemoFamily(familyId)) return out;
     for (const sub of await listSubs(familyId, memberId)) {
       const outcome = await sendOne(sub, msg, deps);
       if (outcome === "ok") {

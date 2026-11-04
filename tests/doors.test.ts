@@ -11,6 +11,7 @@ import { canSeeKnock, doorPush, doorsFor, togetherView, type Door } from "@/lib/
 import { getDoc } from "@/lib/family-docs";
 import type { Knock } from "@/lib/kinds";
 import { pushIdle } from "@/lib/push/background";
+import { getPushSettings } from "@/lib/push/prefs";
 import { pushDoorNow } from "@/lib/push/events";
 import { clearOutbox, outbox } from "@/lib/push/send";
 import { resetPushStore, upsertSub } from "@/lib/push/store";
@@ -100,7 +101,7 @@ describe("the one push", () => {
     await upsertSub({ familyId: FAM, memberId: "leo", kind: "fcm", token: "fcm-token-leo-aaaaaaaaaaaaaaaaa", platform: "android" });
     const { knock } = await open("arjun", { activity: "chai", invites: ["dadi"] });
     await pushIdle();
-    expect(outbox.map((o) => [o.memberId, o.msg.body])).toEqual([["dadi", "Arjun is having chai. Join?"]]);
+    expect(outbox.map((o) => [o.memberId, o.msg.body])).toEqual([["dadi", "Arjun is having tea. Join?"]]);
     expect(outbox[0].msg.url).toBe(`/call/${knock.id}`);
     // Never resent: the knock is marked told.
     const stored = await getDoc(FAM, "knock", knock.id);
@@ -112,7 +113,7 @@ describe("the one push", () => {
     expect(outbox).toHaveLength(0);
   });
 
-  it("in Dadi's quiet hours the invitation is dropped, not saved for later", async () => {
+  it("in Dadi's quiet hours the invitation is held for the morning summary", async () => {
     await upsertSub({ familyId: FAM, memberId: "dadi", kind: "fcm", token: "fcm-token-dadi-aaaaaaaaaaaaaaaa", platform: "android" });
     const night = new Date("2026-10-28T18:30:00.000Z"); // 00:00 in India
     vi.setSystemTime(night);
@@ -120,6 +121,7 @@ describe("the one push", () => {
     await pushIdle();
     expect(outbox).toHaveLength(0);
     expect((await getDoc(FAM, "knock", knock.id))?.seenAt).toBeTruthy();
+    expect((await getPushSettings(FAM, "dadi")).overflow).toBe(1);
   });
 
   it("the words say only what the host chose", () => {
@@ -230,4 +232,32 @@ describe("the call page's consent gate", () => {
     expect(src).not.toMatch(/meet\.jit\.si/);
     expect(readFileSync("components/event-card.tsx", "utf8")).not.toMatch(/roomUrl\(/);
   });
+});
+
+describe("door participants", () => {
+  it("alerts each invitee with neutral copy and alerts the host when an invitee joins", async () => {
+    const { knock } = await open("arjun", { invites: ["dadi", "leo"], note: "Private message" });
+    await pushIdle();
+    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([
+      ["dadi", "Arjun opened the door for you. Join?", `/call/${knock.id}`],
+      ["leo", "Arjun opened the door for you. Join?", `/call/${knock.id}`],
+    ]);
+    clearOutbox();
+    const joined = (member: string) => sitPost(authedJson("http://t/api/sit", { action: "joined", id: knock.id }, member));
+    expect((await joined("priya")).status).toBe(404);
+    expect((await joined("dadi")).status).toBe(200);
+    expect((await joined("dadi")).status).toBe(200);
+    await pushIdle();
+    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa joined you", `/call/${knock.id}`]]);
+  });
+});
+
+it("a planned tea invitation alerts the invited person and opens the call", async () => {
+  const res = await sitPost(authedJson("http://t/api/sit", {
+    action: "sit", reason: "chai", title: "Private title", startsAt: NOW.toISOString(), invites: ["dadi"], note: "Private note",
+  }, "arjun"));
+  expect(res.status).toBe(201);
+  const { sitting } = await json<{ sitting: { id: string } }>(res);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["dadi", "Arjun invited you for tea", `/call/${sitting.id}`]]);
 });

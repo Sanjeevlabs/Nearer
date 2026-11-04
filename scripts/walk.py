@@ -343,11 +343,12 @@ def voice_sheet_photo(page, person: str, problems: list[str]) -> None:
     """Photos start from your own picture on the family page: 'Add to your day' offers Photo, Voice note, Status."""
     page.goto("/", wait_until="load")
     page.wait_for_timeout(1200)
-    chip = page.locator("[aria-label^='Your day']")
+    chip = page.locator("[data-ui=my-day]")  # the 'You / Add to your day' chip: its visible words are its name
     try:
         chip.first.wait_for(timeout=8_000)
     except Exception:
-        return  # the first screen has no family row (a child's home, or nobody to show yet)
+        problems.append(f"{person} own picture: no 'You / Add to your day' chip on the family page")
+        return
     chip.first.click()
     try:
         page.get_by_role("button", name="Photo", exact=True).wait_for(timeout=8_000)

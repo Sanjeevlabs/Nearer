@@ -208,6 +208,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   }, [herePath]);
   // Native app: status bar style, and deep links (auth callback, shared links) open in-app.
   const nativeRouter = useRouter();
+  const [pushNote, setPushNote] = useState<{ body: string; route: string } | null>(null);
   useEffect(() => {
     void setStatusBar();
     return onAppUrlOpen((route) => nativeRouter.push(route));
@@ -217,8 +218,13 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!signedIn) return;
     void refreshSubscription();
-    return watchPush((route) => nativeRouter.push(route));
+    return watchPush((route) => window.location.assign(route), setPushNote);
   }, [signedIn, nativeRouter]);
+  useEffect(() => {
+    if (!pushNote) return;
+    const timer = window.setTimeout(() => setPushNote(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [pushNote]);
   const [large] = useLargeText(viewer.role === "elder");
   const [addOpen, setAddOpen] = useState(false);
   // Mount the composer on first open, then keep it mounted so its exit animation runs.
@@ -269,6 +275,14 @@ function ShellInner({ children }: { children: React.ReactNode }) {
         {signedIn && <DocumentLangOnly />}
         <Dock />
         <RoomsSheet open={roomsOpen} onClose={closeRooms} />
+        {signedIn && pushNote && (
+          <button type="button" aria-live="polite" className="press fixed left-1/2 top-4 z-50 min-h-11 w-max max-w-[90vw] -translate-x-1/2 rounded-card bg-card px-5 text-callout text-ink shadow-card" onClick={() => {
+            window.location.assign(pushNote.route);
+            setPushNote(null);
+          }}>
+            {pushNote.body}
+          </button>
+        )}
         {sheetLoaded && <AddSheet />}
       </PlayerProvider>
     </ShellContext.Provider>

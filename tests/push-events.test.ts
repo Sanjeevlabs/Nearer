@@ -8,19 +8,19 @@ import { POST as keeperPost } from "@/app/api/keeper/route";
 import { POST as lampPost } from "@/app/api/lamp/route";
 import { GET as sweepGet } from "@/app/api/push/sweep/route";
 import { POST as safetyPost } from "@/app/api/safety/route";
-import { dbGetMember, dbListMembers, dbUpdateMemberProfile } from "@/lib/db";
+import { dbAddMember, dbCreateFamily, dbGetMember, dbListMembers, dbUpdateMemberProfile } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs } from "@/lib/family-docs";
 import { deliverDueNudges } from "@/lib/nudge-run";
 import { enqueueNudge } from "@/lib/nudges";
 import { pushIdle } from "@/lib/push/background";
-import { pushMorning, routePush, sweepOverdue } from "@/lib/push/events";
+import { pushCardActivity, pushFamilyJoined, pushHabitTick, pushMorning, routePush, sweepHeldPush, sweepOverdue } from "@/lib/push/events";
 import { MAX_IMMEDIATE_PER_DAY } from "@/lib/push/policy";
 import { getPushSettings, savePushPrefs } from "@/lib/push/prefs";
 import { clearOutbox, outbox, pushToMember, resetPushWarnings } from "@/lib/push/send";
 import { MAX_FAILURES, listSubs, resetPushStore, upsertSub } from "@/lib/push/store";
 import { generateVapidKeys } from "@/lib/push/webpush";
 import { resetDemo } from "@/lib/store";
-import { authedJson } from "./auth-helper";
+import { authedJson, sessionCookie } from "./auth-helper";
 
 const FAM = "demo-family";
 // Wed 28 Oct 2026. 16:00 UTC is noon in New York (arjun) and 21:30 in India (dadi).
@@ -33,10 +33,6 @@ const json = async <T = Record<string, unknown>>(r: Response | Promise<Response>
 const post = (path: string, body: unknown, as: string) => authedJson(`http://t${path}`, body, as);
 const to = (member: string) => outbox.filter((o) => o.memberId === member);
 const bodies = (member: string) => to(member).map((o) => o.msg.body);
-
-async function giveDevice(member: string, token = `fcm-token-${member}-aaaaaaaaaaaaaaaa`) {
-  return upsertSub({ familyId: FAM, memberId: member, kind: "fcm", token, platform: "android" });
-}
 
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -87,14 +83,14 @@ describe("the lamp", () => {
     await lampPost(post("/api/lamp", { action: "beat", toMemberId: "arjun" }, "dadi")); // throttled
     await pushIdle();
     expect(outbox).toHaveLength(1);
-    expect(outbox[0]).toMatchObject({ memberId: "arjun", msg: { body: "Maa lit the lamp for you", url: "/", tag: "lamp-dadi" } });
+    expect(outbox[0]).toMatchObject({ memberId: "arjun", msg: { body: "Maa lit the lamp for you", url: "/?push=lamp", tag: "lamp-dadi" } });
   });
 
   it("lighting the lamp tells the other homes, never your own", async () => {
     await lampPost(post("/api/lamp", { action: "light" }, "dadi"));
     await pushIdle();
-    expect(bodies("arjun")).toEqual(["Maa is thinking of you"]);
-    expect(to("arjun")[0].msg).toMatchObject({ url: "/", tag: "lamp-dadi" });
+    expect(bodies("arjun")).toEqual(["Maa lit the lamp for you"]);
+    expect(to("arjun")[0].msg).toMatchObject({ url: "/?push=lamp", tag: "lamp-dadi" });
     expect(to("dadi")).toEqual([]);
   });
 });
@@ -251,12 +247,13 @@ describe("Safe & sound reaches people at any hour", () => {
 });
 
 describe("after the push services answer", () => {
+  const LIVE_FAMILY = "family-push-transport-fixture";
   async function liveEnv() {
     const keys = await generateVapidKeys();
     return { VAPID_PUBLIC_KEY: keys.publicKey, VAPID_PRIVATE_KEY: keys.privateKey };
   }
   const msg = { title: "Nearer", body: "x", url: "/", tag: "t", urgency: "normal" as const };
-  const web = (endpoint: string) => upsertSub({ familyId: FAM, memberId: "arjun", kind: "webpush", token: endpoint, p256dh: B64_65, auth: B64_16, platform: "web" });
+  const web = (endpoint: string) => upsertSub({ familyId: LIVE_FAMILY, memberId: "arjun", kind: "webpush", token: endpoint, p256dh: B64_65, auth: B64_16, platform: "web" });
   const answer = (status: number) => (async () => new Response(null, { status })) as unknown as typeof fetch;
 
   it("410 deletes the subscription; the good one stays and is marked", async () => {
@@ -264,55 +261,150 @@ describe("after the push services answer", () => {
     await web("https://updates.push.services.mozilla.com/wpush/v2/gone");
     await web("https://fcm.googleapis.com/fcm/send/good");
     const fetchFn = (async (url: string) => new Response(null, { status: url.includes("/gone") ? 410 : 201 })) as unknown as typeof fetch;
-    const r = await pushToMember(FAM, "arjun", msg, { mock: false, env, fetch: fetchFn });
+    const r = await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env, fetch: fetchFn });
     expect(r).toEqual({ sent: 1, removed: 1 });
-    const left = await listSubs(FAM, "arjun");
+    const left = await listSubs(LIVE_FAMILY, "arjun");
     expect(left.map((s) => s.token)).toEqual(["https://fcm.googleapis.com/fcm/send/good"]);
     expect(left[0].lastOkAt).toBeTruthy();
   });
 
   it("404 deletes it too", async () => {
     await web("https://fcm.googleapis.com/fcm/send/old");
-    await pushToMember(FAM, "arjun", msg, { mock: false, env: await liveEnv(), fetch: answer(404) });
-    expect(await listSubs(FAM, "arjun")).toEqual([]);
+    await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env: await liveEnv(), fetch: answer(404) });
+    expect(await listSubs(LIVE_FAMILY, "arjun")).toEqual([]);
   });
 
   it("another refusal counts a failure; the fifth drops it; a success clears the count", async () => {
     const env = await liveEnv();
     await web("https://fcm.googleapis.com/fcm/send/flaky");
     for (let i = 1; i < MAX_FAILURES; i++) {
-      await pushToMember(FAM, "arjun", msg, { mock: false, env, fetch: answer(400) });
-      expect((await listSubs(FAM, "arjun"))[0].failures).toBe(i);
+      await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env, fetch: answer(400) });
+      expect((await listSubs(LIVE_FAMILY, "arjun"))[0].failures).toBe(i);
     }
-    await pushToMember(FAM, "arjun", msg, { mock: false, env, fetch: answer(201) });
-    expect((await listSubs(FAM, "arjun"))[0].failures).toBe(0);
-    for (let i = 0; i < MAX_FAILURES; i++) await pushToMember(FAM, "arjun", msg, { mock: false, env, fetch: answer(400) });
-    expect(await listSubs(FAM, "arjun")).toEqual([]);
+    await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env, fetch: answer(201) });
+    expect((await listSubs(LIVE_FAMILY, "arjun"))[0].failures).toBe(0);
+    for (let i = 0; i < MAX_FAILURES; i++) await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env, fetch: answer(400) });
+    expect(await listSubs(LIVE_FAMILY, "arjun")).toEqual([]);
   });
 
   it("outages and rate limits count against nobody", async () => {
     const env = await liveEnv();
     await web("https://fcm.googleapis.com/fcm/send/steady");
-    for (const status of [429, 500, 503]) await pushToMember(FAM, "arjun", msg, { mock: false, env, fetch: answer(status) });
-    expect((await listSubs(FAM, "arjun"))[0].failures).toBe(0);
+    for (const status of [429, 500, 503]) await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env, fetch: answer(status) });
+    expect((await listSubs(LIVE_FAMILY, "arjun"))[0].failures).toBe(0);
   });
 
   it("without keys the senders do nothing: no request, no deletion, one log line", async () => {
-    await giveDevice("arjun");
+    await upsertSub({ familyId: LIVE_FAMILY, memberId: "arjun", kind: "fcm", token: "fixture-token-arjun-aaaaaaaa", platform: "android" });
     await web("https://fcm.googleapis.com/fcm/send/nokeys");
     let called = 0;
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const fetchFn = (async () => (called++, new Response(null, { status: 201 }))) as unknown as typeof fetch;
-    for (let i = 0; i < 3; i++) expect(await pushToMember(FAM, "arjun", msg, { mock: false, env: {}, fetch: fetchFn })).toEqual({ sent: 0, removed: 0 });
+    for (let i = 0; i < 3; i++) expect(await pushToMember(LIVE_FAMILY, "arjun", msg, { mock: false, env: {}, fetch: fetchFn })).toEqual({ sent: 0, removed: 0 });
     expect(called).toBe(0);
-    expect(await listSubs(FAM, "arjun")).toHaveLength(2);
+    expect(await listSubs(LIVE_FAMILY, "arjun")).toHaveLength(2);
     expect(warn).toHaveBeenCalledTimes(2); // once for each missing config, however many pushes
     warn.mockRestore();
   });
 
   it("a person with no device is never counted, held or pushed (outside mock mode)", async () => {
-    const arjun = (await dbGetMember("arjun"))!;
-    expect(await routePush(FAM, arjun, "voice", () => ({ body: "x", url: "/", tag: "v", urgency: "high" }), NOON_NY, { mock: false, env: {} })).toBe("skipped");
-    expect((await getDoc(FAM, "push_settings", "arjun")) ?? null).toBeNull();
+    const arjun = { ...(await dbGetMember("arjun"))!, familyId: LIVE_FAMILY };
+    expect(await routePush(LIVE_FAMILY, arjun, "voice", () => ({ body: "x", url: "/", tag: "v", urgency: "high" }), NOON_NY, { mock: false, env: {} })).toBe("skipped");
+    expect((await getDoc(LIVE_FAMILY, "push_settings", "arjun")) ?? null).toBeNull();
   });
+});
+
+describe("family activity", () => {
+  it("delivers one habit tick per actor, habit and local day to the other participants", async () => {
+    const habit = { id: "walk", members: ["dadi", "arjun", "arjun", "removed"] };
+    await Promise.all([pushHabitTick(FAM, habit, "dadi", "2026-10-28"), pushHabitTick(FAM, habit, "dadi", "2026-10-28")]);
+    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa checked in for your shared habit", "/?push=habit#habit"]]);
+  });
+
+  it("shares a rolling one-hour limit between reactions and replies", async () => {
+    const card = { id: "memory", authorId: "arjun" };
+    await pushCardActivity(FAM, card, "dadi", "reaction");
+    await pushCardActivity(FAM, card, "dadi", "reply", new Date(NOON_NY.getTime() + 3_599_999), "reply");
+    await pushCardActivity(FAM, card, "dadi", "reply", new Date(NOON_NY.getTime() + 3_600_000), "reply");
+    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([
+      ["arjun", "Maa reacted to your memory", "/lane?card=memory"],
+      ["arjun", "Maa replied to your memory", "/lane?card=reply"],
+    ]);
+  });
+
+  it("notifies only owners and admins when someone joins by link", async () => {
+    await pushFamilyJoined(FAM, "dadi");
+    await pushFamilyJoined(FAM, "dadi");
+    const admins = (await dbListMembers(FAM)).filter((m) => m.id !== "dadi" && ["owner", "admin"].includes(m.access));
+    expect(admins.length).toBeGreaterThan(0);
+    expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual(admins.map((m) => [m.id, "Maa joined your family", "/people/dadi"]));
+  });
+
+  it("blocks real transport for the seed and its sandbox copies", async () => {
+    const fetchFn = vi.fn();
+    const msg = { title: "Nearer", body: "Test", url: "/", tag: "test", urgency: "normal" } as const;
+    for (const familyId of [FAM, "demo-v-0123456789ab"]) {
+      await upsertSub({ familyId, memberId: "arjun", kind: "fcm", token: `test-token-${familyId}`, platform: "android" });
+      expect(await pushToMember(familyId, "arjun", msg, { mock: false, fetch: fetchFn })).toEqual({ sent: 0, removed: 0 });
+    }
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+});
+
+it("an addressed photo upload pushes neutral copy and links to the private card", async () => {
+  const form = new FormData();
+  form.set("type", "photo");
+  form.set("takenAt", NOON_NY.toISOString());
+  form.set("addressedTo", "arjun,dadi");
+  form.set("caption", "Private words");
+  form.set("media", new Blob(["fixture"], { type: "image/jpeg" }), "photo.jpg");
+  const cookie = post("/api/cards", {}, "dadi").headers.get("cookie") ?? "";
+  const res = await cardPost(new Request("http://t/api/cards", { method: "POST", headers: { cookie }, body: form }));
+  expect(res.status).toBe(201);
+  const { card } = await json<{ card: { id: string } }>(res);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa sent you a photo", `/lane?card=${card.id}`]]);
+});
+
+it("an actual voice reply shares the reaction cooldown and opens the reply card", async () => {
+  const { card: original } = await json<{ card: { id: string } }>(await voiceCard("arjun", "dadi"));
+  await pushIdle();
+  clearOutbox();
+  const payload = { type: "audio", caption: "Private reply", lang: "en", takenAt: NOON_NY.toISOString(), addressedTo: "arjun", replyToCardId: original.id };
+  const result = await cardPost(post("/api/cards", payload, "dadi"));
+  expect(result.status).toBe(201);
+  const { card: reply } = await json<{ card: { id: string } }>(result);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([["arjun", "Maa replied to your memory", `/lane?card=${reply.id}`]]);
+  await cardPost(post("/api/cards", payload, "dadi"));
+  await pushIdle();
+  expect(outbox).toHaveLength(1);
+});
+
+it("lights the window for an active person in another household of a non-demo family", async () => {
+  const familyId = await dbCreateFamily("Lamp fixture");
+  const make = (firstName: string) => dbAddMember({
+    familyId, firstName, displayName: firstName, role: "adult", access: "member", status: "active",
+    lang: "en", displayLang: "en", tz: "UTC", city: "", birthday: "",
+  });
+  const [sender, receiver] = await Promise.all([make("Alex"), make("Jo")]);
+  const req = new Request("http://t/api/lamp", {
+    method: "POST",
+    headers: { cookie: sessionCookie(sender.id, familyId), "content-type": "application/json" },
+    body: JSON.stringify({ action: "light" }),
+  });
+  expect((await lampPost(req)).status).toBe(200);
+  await pushIdle();
+  expect(outbox.map(({ memberId, msg }) => [memberId, msg.body, msg.url])).toEqual([[receiver.id, "Alex lit the lamp for you", "/?push=lamp"]]);
+});
+
+
+it("the sweep delivers held alerts at the recipient’s 8 AM even if the daily scan ran earlier", async () => {
+  const arjun = (await dbGetMember("arjun"))!;
+  await routePush(FAM, arjun, "voice", () => ({ body: "Private event", url: "/inbox", tag: "quiet", urgency: "normal" }), NIGHT_NY);
+  expect(await sweepHeldPush(FAM, new Date("2026-10-28T11:45:00.000Z"))).toBe(0);
+  expect(await sweepHeldPush(FAM, MORNING_NY)).toBe(1);
+  expect(await pushMorning(FAM, [arjun], new Map([[arjun.id, ["A new nudge"]]]), new Date("2026-10-28T15:00:00.000Z"))).toBe(0);
+  expect(bodies("arjun")).toEqual(["Something from your family"]);
+  expect((await getPushSettings(FAM, arjun.id)).overflow).toBe(1);
 });

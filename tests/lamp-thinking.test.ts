@@ -66,14 +66,14 @@ describe("the throttles (pure)", () => {
 });
 
 describe("lighting the lamp reaches the other home", () => {
-  it("pushes 'Maa is thinking of you', and a second tap inside 10 minutes does nothing", async () => {
+  it("pushes 'Maa lit the lamp for you', and a second tap inside 10 minutes does nothing", async () => {
     expect((await light("dadi")).status).toBe(200);
     vi.setSystemTime(new Date(NOON_NY.getTime() + 3 * M));
     const again = await json<{ throttled?: boolean; retryInSeconds?: number }>(light("dadi"));
     await pushIdle();
     expect(again.throttled).toBe(true);
     expect(again.retryInSeconds).toBeGreaterThan(0);
-    expect(toArjun()).toEqual(["Maa is thinking of you"]);
+    expect(toArjun()).toEqual(["Maa lit the lamp for you"]);
   });
 
   it("pushes at most once per pair in 2 hours, then again after", async () => {
