@@ -155,6 +155,12 @@ def shot_clip(L: dict, tag: str, m: dict, bgphone: pathlib.Path, mask: pathlib.P
     out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists() and not FRESH:
         return out  # kept from the last run (--fresh re-renders)
+    if m["key"] == "notification":
+        # The real-world insert stays outside the app's phone frame.
+        run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", RAW / m["file"],
+             "-vf", f"fps=30,scale={L['W']}:{L['H']}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad={L['W']}:{L['H']}:(ow-iw)/2:(oh-ih)/2:color=0x1c1b1a,setsar=1,format=yuv420p",
+             "-t", D, "-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", 16, out])
+        return out
     fg = (
         f"[0:v]fps=30,tpad=stop_mode=clone:stop_duration=3,trim=duration={D},setpts=PTS-STARTPTS,"
         f"scale={w2}:{h2}:flags=lanczos,unsharp=5:5:0.8:5:5:0.0,format=yuv420p[a];"
@@ -191,7 +197,7 @@ def card_clip(L: dict, tag: str, kind: str, bgplain: pathlib.Path) -> pathlib.Pa
         D = END
         text_png("Far from home, never far from them.", int(46 * k), ink, d / "l1.png")
         text_png("nearer.site", int(52 * k), ink, d / "l2.png")
-        text_png("Built on Meta’s Muse models", int(34 * k), soft, d / "l3.png")
+        text_png("Built with Meta Muse models", int(34 * k), soft, d / "l3.png")
         layers = [(mark, 0.30, 0.0, True), (word, 0.45, 0.5, False), (d / "l1.png", 0.54, 1.0, False), (d / "l2.png", 0.62, 1.8, False), (d / "l3.png", 0.68, 2.4, False)]
     inputs = ["-loop", "1", "-framerate", 30, "-t", D, "-i", bgplain]
     fg, prev = [], "[0:v]"
@@ -340,17 +346,19 @@ def final(L: dict, tag: str, tl: list[dict], clips: list[pathlib.Path], audio: p
              "-c:a", "copy", "-movflags", "+faststart", out])
         if out.stat().st_size < 24_000_000:
             break
+    if out.stat().st_size > 25_000_000:
+        sys.exit(f"{out.name} exceeds the 25 MB cap")
     return out
 
 
 def contact(video: pathlib.Path, tl: list[dict]) -> None:
     frames = []
-    for p in tl:
+    for p in (part for part in tl if part["id"] in (1, 3, 5, 7, 9, 12)):
         t = p["start"] + 1.6 if p["id"] in (0, 12) else (p["cap_in"] + p["cap_out"]) / 2 + (1.2 if p["id"] in (7, 8) else 0)
         f = WORK / f"f{p['id']:02d}.png"
         run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-ss", round(t, 2), "-i", video, "-frames:v", 1, "-vf", "scale=360:640", f])
         frames.append(Image.open(f))
-    cols = 7
+    cols = 3
     rows = (len(frames) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * 360, rows * 640), (255, 255, 255))
     for i, im in enumerate(frames):
