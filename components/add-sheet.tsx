@@ -23,6 +23,7 @@ import { BottomSheet } from "./ui/bottom-sheet";
 import { useViewer } from "./viewer";
 import { Teleprompter } from "./prompt-text";
 import { useJson } from "@/lib/use-json";
+import { grantVoiceConsent, hasVoiceConsent } from "@/lib/voice-consent";
 import { useFamilyCards } from "@/lib/use-family";
 import { notJoined } from "@/lib/sent";
 
@@ -151,7 +152,6 @@ async function postVoice(input: {
   return { ok: outcome !== "dropped", id: outcome === "dropped" ? null : id, queued: outcome === "queued" };
 }
 
-const CONSENT_KEY = "aangan:voice-consent";
 
 /* --------------------------------------------------------- live mic level */
 function useMicLevels(stream: MediaStream | null, bars = 40): number[] {
@@ -280,12 +280,8 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
   const notYetLine = notYet.length ? `${notYet.join(" and ")} ${notYet.length > 1 ? "haven't" : "hasn't"} joined yet. They'll get it when they do. You can find it under Sent.` : null;
 
   useEffect(() => {
-    try {
-      setConsent(localStorage.getItem(CONSENT_KEY) === "1");
-    } catch {
-      setConsent(false);
-    }
-  }, []);
+    setConsent(hasVoiceConsent(viewer.id));
+  }, [viewer.id]);
 
   useEffect(() => {
     if (phase !== "recording") return;
@@ -457,11 +453,7 @@ function VoiceComposer({ addressee, contribution, onDone }: { addressee: string[
         <Button
           className="mt-6 w-full"
           onClick={() => {
-            try {
-              localStorage.setItem(CONSENT_KEY, "1");
-            } catch {
-              /* private mode: consent lasts this session */
-            }
+            grantVoiceConsent(viewer.id);
             setConsent(true);
           }}
         >

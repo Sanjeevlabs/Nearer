@@ -4,6 +4,7 @@ import { markPushFirstAction } from "@/lib/web-push";
 import { useEffect, useState } from "react";
 import { ACTIVITIES, DEFAULT_DOOR_MINUTES, DOOR_MINUTES, PRESETS, type Activity } from "@/lib/doors";
 import type { Knock } from "@/lib/kinds";
+import { MAX_SIT_INVITES } from "@/lib/kind-values";
 import { callName, memberPhoto } from "@/lib/people";
 import { postJson } from "@/lib/use-json";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function OpenDoorSheet({ open, preset, onClose, onOpened }: { open: boole
     setBusy(false);
   }, [open, preset?.activity, preset?.only]);
 
-  const toggle = (id: string) => setWho((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id]));
+  const toggle = (id: string) => setWho((w) => w.includes(id) ? w.filter((x) => x !== id) : w.length < MAX_SIT_INVITES ? [...w, id] : w);
   const only = preset?.only ? people.find((p) => p.id === preset.only) : undefined;
 
   const submit = async () => {
@@ -75,6 +76,7 @@ export function OpenDoorSheet({ open, preset, onClose, onOpened }: { open: boole
 
         <fieldset className="m-0 border-0 p-0">
           <legend className="mb-2 p-0 text-footnote font-medium text-ink-soft">Who</legend>
+          {who.length >= MAX_SIT_INVITES && <p role="status" className="mb-2 text-footnote text-ink-soft">Up to {MAX_SIT_INVITES} people</p>}
           <div className="flex flex-wrap gap-2">
             <button type="button" aria-pressed={who.length === 0} onClick={() => setWho([])} className={cn(CHIP, who.length === 0 ? "bg-accent text-accent-ink" : "bg-tint text-ink")}>
               Everyone
@@ -82,7 +84,7 @@ export function OpenDoorSheet({ open, preset, onClose, onOpened }: { open: boole
             {people.map((p) => {
               const on = who.includes(p.id);
               return (
-                <button key={p.id} type="button" aria-pressed={on} onClick={() => toggle(p.id)} className={cn(CHIP, "pl-1", on ? "bg-accent text-accent-ink" : "bg-tint text-ink")}>
+                <button key={p.id} type="button" aria-pressed={on} disabled={!on && who.length >= MAX_SIT_INVITES} onClick={() => toggle(p.id)} className={cn(CHIP, "pl-1 disabled:opacity-50", on ? "bg-accent text-accent-ink" : "bg-tint text-ink")}>
                   <Avatar src={memberPhoto(p)} name={callName(p)} size={32} /> {callName(p)}
                 </button>
               );

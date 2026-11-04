@@ -4,7 +4,9 @@ import { dbGetMember, dbListCards, dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { COURSES, IngredientSchema, KitchenPreferencesSchema, StepSchema } from "@/lib/kinds";
 import { canChange } from "@/lib/permissions";
-import { recipeFromVoice, surpriseRecipe } from "@/lib/kitchen";
+import { ChefRecipeSchema, recipeFromVoice, surpriseRecipe } from "@/lib/kitchen";
+import { chefCalories } from "@/lib/chef-diet";
+import { chefCover } from "@/lib/chef-image";
 import { guardWrites } from "@/lib/api-guard";
 import { pushAsk } from "@/lib/push/events";
 import { nudgeShared } from "@/lib/nudge-producers";
@@ -24,7 +26,7 @@ const Fields = {
   course: z.enum(COURSES).default("main"),
   prepMins: z.number().int().min(0).max(1440).nullable().default(null),
   cookMins: z.number().int().min(0).max(1440).nullable().default(null),
-  caloriesPerServing: z.number().int().min(1).max(10000).nullable().optional(),
+  caloriesPerServing: z.number().int().min(0).max(10000).nullable().optional(),
   prepWork: z.array(z.string().trim().min(1).max(160)).max(12).default([]),
   outcome: z.string().trim().max(240).default(""),
   ingredients: z.array(IngredientSchema).min(1).max(40),
@@ -36,6 +38,7 @@ const Fields = {
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("draft"), text: z.string().trim().min(1).max(4000) }),
   z.object({ action: z.literal("surprise"), prefs: KitchenPreferencesSchema, previous: z.string().max(80).optional() }),
+  z.object({ action: z.literal("keep-idea"), draft: ChefRecipeSchema }),
   // Typed by hand: "my palak paneer", or writing down Maa's for her (cookId).
   // scanRef: the photo of the recipe card Muse read it from (kept on the recipe).
   z.object({ action: z.literal("create"), cookId: z.string().min(1).optional(), scanRef: z.string().min(1).max(512).nullable().optional(), museIdea: z.boolean().optional(), ...Fields }),
@@ -85,7 +88,18 @@ async function postHandler(req: Request): Promise<Response> {
   if (body.action === "surprise") {
     await putDoc(auth.familyId, "kitchen-prefs", { id: `kitchen-prefs:${auth.memberId}`, memberId: auth.memberId, prefs: body.prefs });
     const draft = await surpriseRecipe(auth.familyId, body.prefs, body.previous);
-    return draft ? Response.json({ draft }) : Response.json({ error: "no-recipe-idea" }, { status: 503 });
+    return Response.json({ draft });
+  }
+  if (body.action === "keep-idea") {
+    const { servings, ...draft } = body.draft;
+    const id = newId("recipe");
+    const coverRef = await chefCover(auth.familyId, id, draft.title, draft.ingredients);
+    const recipe = await putDoc(auth.familyId, "recipe", {
+      ...draft, id, coverRef, cookId: auth.memberId, museIdea: true, madeBy: "muse", lang: "en",
+      serves: String(servings), caloriesPerServing: chefCalories(draft.ingredients, servings), createdAt: now,
+    });
+    await nudgeShared(auth.familyId, auth.memberId, "recipe", `/kitchen/${recipe.id}`);
+    return Response.json({ recipe }, { status: 201 });
   }
 
   if (body.action === "teach") {
@@ -116,7 +130,7 @@ async function postHandler(req: Request): Promise<Response> {
 
   if (body.action === "create") {
     const family = await dbListMembers(auth.familyId);
-    const cookId = body.cookId ?? auth.memberId;
+    const cookId = body.museIdea ? auth.memberId : body.cookId ?? auth.memberId;
     if (!family.some((m) => m.id === cookId)) return Response.json({ error: "unknown-member" }, { status: 404 });
     const cards = body.voiceCardId || body.videoCardId ? seenBy(await dbListCards(auth.familyId), auth.memberId) : [];
     const own = (cardId: string | null | undefined, type: "audio" | "video") => !cardId || cards.some((c) => c.id === cardId && c.type === type);

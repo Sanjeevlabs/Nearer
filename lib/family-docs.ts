@@ -7,6 +7,7 @@
 import { DbReadError, DbWriteError, dbFor } from "./family-db";
 import { DOC_SCHEMAS, type DocKind, type DocOf } from "./kinds";
 import type { Habit, HabitTick } from "./kinds";
+import { MAX_SIT_INVITES } from "./kind-values";
 
 type Row = { familyId: string; kind: DocKind; data: { id: string } & Record<string, unknown>; createdAt: string };
 const mem = new Map<string, Row>();
@@ -42,7 +43,12 @@ function memKey(familyId: string, id: string): string {
 }
 
 function parse<K extends DocKind>(kind: K, data: unknown): DocOf<K> | null {
-  const out = DOC_SCHEMAS[kind].safeParse(data);
+  // Keep older open doors and sittings readable after lowering the invite limit.
+  const legacy = data as { invites?: unknown; gatherEventId?: string } | null;
+  const input = (kind === "knock" || (kind === "sitting" && !legacy?.gatherEventId)) && Array.isArray(legacy?.invites) && legacy.invites.length > MAX_SIT_INVITES
+    ? { ...legacy, invites: [...new Set(legacy.invites)].slice(0, MAX_SIT_INVITES) }
+    : data;
+  const out = DOC_SCHEMAS[kind].safeParse(input);
   if (!out.success) {
     console.error(`[family-docs] skipped malformed ${kind}`, (data as { id?: unknown } | null)?.id, out.error.issues[0]?.message);
     return null;

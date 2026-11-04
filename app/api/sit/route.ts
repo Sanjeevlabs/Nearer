@@ -4,6 +4,7 @@ import { docsFor } from "@/lib/request-data";
 import { dbListMembers } from "@/lib/db";
 import { deleteDoc, getDoc, listDocs, newId, putDoc } from "@/lib/family-docs";
 import { SITTING_REASONS, VENUE_IDS } from "@/lib/kinds";
+import { MAX_SIT_INVITES } from "@/lib/kind-values";
 import { guardWrites } from "@/lib/api-guard";
 import { ACTIVITIES, DEFAULT_DOOR_MINUTES, visibleKnocks } from "@/lib/doors";
 import { inBackground } from "@/lib/push/background";
@@ -16,7 +17,7 @@ const Body = z.discriminatedUnion("action", [
     reason: z.enum(SITTING_REASONS),
     title: z.string().trim().min(2).max(80),
     startsAt: z.string().datetime(),
-    invites: z.array(z.string().min(1)).max(30).default([]),
+    invites: z.array(z.string().min(1).max(80)).max(MAX_SIT_INVITES).default([]),
     recipeId: z.string().nullable().optional(),
     note: z.string().trim().max(200).default(""),
     venue: z.enum(VENUE_IDS).default("courtyard"),
@@ -31,7 +32,7 @@ const Body = z.discriminatedUnion("action", [
     venue: z.enum(VENUE_IDS).default("courtyard"),
     activity: z.enum(ACTIVITIES).optional(),
     /** Empty or absent: the whole family. */
-    invites: z.array(z.string().min(1).max(80)).max(30).default([]),
+    invites: z.array(z.string().min(1).max(80)).max(MAX_SIT_INVITES).default([]),
   }),
   z.object({ action: z.literal("unknock") }),
   z.object({ action: z.literal("joined"), id: z.string().min(1).max(100) }),

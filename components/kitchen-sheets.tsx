@@ -2,24 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { KitchenPreferences } from "@/lib/kinds";
+import type { ChefPreview } from "@/lib/kitchen";
 import { blobToWav16k } from "@/lib/media-client";
 import { invalidateJson, postJson, useJson } from "@/lib/use-json";
 import { RecipeCover } from "./recipe-art";
+import { IngredientIcon } from "./ingredient-icon";
 import { RecipeEditor, type Draft } from "./recipe-editor";
 import { ScanRecipeButton, type ScanResult } from "./recipe-scan";
 import { BottomSheet } from "./ui/bottom-sheet";
 import { Button, Icon } from "./ui/kit";
 import { useViewer } from "./viewer";
+import { grantVoiceConsent, hasVoiceConsent } from "@/lib/voice-consent";
 
 const field = "min-h-11 w-full rounded-xl bg-surface px-3 text-body";
-const VOICE_CONSENT_KEY = "aangan:voice-consent";
 
 function RecipeMic({ onText, label = "Tell us the recipe" }: { onText: (text: string) => void; label?: string }) {
   const { viewer } = useViewer();
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const alive = useRef(true);
-  const consented = useRef(false);
   const limit = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [state, setState] = useState("idle");
   useEffect(() => {
@@ -69,15 +70,13 @@ function RecipeMic({ onText, label = "Tell us the recipe" }: { onText: (text: st
   }
   function press() {
     if (state === "recording") { recorder.current?.stop(); return; }
-    try { consented.current ||= localStorage.getItem(VOICE_CONSENT_KEY) === "1"; } catch { /* session only */ }
-    if (consented.current) void start();
+    if (hasVoiceConsent(viewer.id)) void start();
     else setState("consent");
   }
   if (state === "consent") return <div className="space-y-2">
     <p className="text-callout">Meta’s AI transcribes the recording. Nearer uses the words to draft your recipe.</p>
     <Button onClick={() => {
-      consented.current = true;
-      try { localStorage.setItem(VOICE_CONSENT_KEY, "1"); } catch { /* session only */ }
+      grantVoiceConsent(viewer.id);
       void start();
     }}>I understand, start recording</Button>
     <Button variant="quiet" onClick={() => setState("idle")}>Cancel</Button>
@@ -132,7 +131,7 @@ export function SurpriseSheet({ onClose, onSaved }: { onClose: () => void; onSav
 
 function SurpriseForm({ initial, onSaved }: { initial: KitchenPreferences; onSaved: (id: string) => void }) {
   const [prefs, setPrefs] = useState(initial);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const [draft, setDraft] = useState<ChefPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const update = <K extends keyof KitchenPreferences>(key: K, value: KitchenPreferences[K]) => setPrefs((previous) => ({ ...previous, [key]: value }));
@@ -145,7 +144,7 @@ function SurpriseForm({ initial, onSaved }: { initial: KitchenPreferences; onSav
   async function suggest() {
     setBusy(true);
     setError("");
-    const response = await postJson<{ draft: Draft }>("/api/kitchen", { action: "surprise", prefs, previous: draft?.title });
+    const response = await postJson<{ draft: ChefPreview }>("/api/kitchen", { action: "surprise", prefs, previous: draft?.title });
     invalidateJson(["/api/kitchen?prefs=1"]);
     setBusy(false);
     if (response?.draft) setDraft(response.draft);
@@ -155,18 +154,25 @@ function SurpriseForm({ initial, onSaved }: { initial: KitchenPreferences; onSav
     if (!draft) return;
     setBusy(true);
     setError("");
-    const response = await postJson<{ recipe: { id: string } }>("/api/kitchen", { ...draft, action: "create", museIdea: true });
+    const response = await postJson<{ recipe: { id: string } }>("/api/kitchen", { action: "keep-idea", draft });
     setBusy(false);
     if (response?.recipe) onSaved(response.recipe.id);
     else setError("Couldn’t save the recipe. Try again.");
   }
   return <div className="space-y-3">
     {draft ? <>
-      <RecipeCover recipe={{ title: draft.title, course: draft.course ?? "main" }} className="h-32 rounded-xl" />
+      <RecipeCover recipe={{ title: draft.title, course: "main" }} className="h-32 rounded-xl" />
       <h3 className="text-title">{draft.title}</h3>
-      <p className="text-body">Serves {draft.serves}{draft.caloriesPerServing ? ` · about ${draft.caloriesPerServing} kcal per serving` : ""}</p>
-      <ul>{draft.ingredients.map((ingredient, index) => <li key={index}>{ingredient.item} · {ingredient.said}</li>)}</ul>
-      <ol>{draft.steps.map((step, index) => <li key={index}>{step.text}</li>)}</ol>
+      <p className="text-body">{draft.memory}</p>
+      <p className="text-body">Serves {draft.servings} · {draft.prepMins + draft.cookMins} min · about {draft.caloriesPerServing} kcal per serving</p>
+      {draft.overCalories && <p role="status">This is above your calorie target.</p>}
+      {draft.prepMins + draft.cookMins > prefs.minutes && <p role="status">This takes longer than the time you have.</p>}
+      {draft.dietViolations.length > 0 && <p role="alert">This recipe may not fit your diet. Check these ingredients: {draft.dietViolations.join(", ")}.</p>}
+      {draft.fallback && <p className="text-callout text-ink-soft">Muse couldn’t make a fresh suggestion. Here’s a simple backup recipe.</p>}
+      <ul className="m-0 list-none space-y-2 p-0">{draft.ingredients.map((ingredient, index) => (
+        <li key={index} className="flex items-center gap-2"><IngredientIcon item={ingredient.item} /><span>{ingredient.item} · {ingredient.said} · about {ingredient.kcal} kcal</span></li>
+      ))}</ul>
+      <ol className="list-decimal space-y-2 pl-5">{draft.steps.map((step, index) => <li key={index}>{step.text}{step.minutes > 0 && ` · ${step.minutes} min`}{step.tip && <p className="text-callout text-ink-soft">{step.tip}</p>}</li>)}</ol>
       <div className="flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void keep()}>Keep it</Button>
         <Button variant="secondary" disabled={busy} onClick={() => void suggest()}>Another</Button>
@@ -186,7 +192,7 @@ function SurpriseForm({ initial, onSaved }: { initial: KitchenPreferences; onSav
       <label className="block">Servings <input className={field} type="number" min={1} max={60} value={prefs.servings || ""} onChange={(event) => update("servings", event.target.valueAsNumber || 0)} /></label>
       <Button disabled={busy || prefs.minutes < 1 || prefs.minutes > 1440 || prefs.servings < 1 || prefs.servings > 60} onClick={() => void suggest()}>{busy ? "Thinking…" : "Find a recipe"}</Button>
     </>}
-    <p className="text-callout text-ink-soft">Nutrition figures are estimates. For medical advice, ask a qualified professional.</p>
+    <p className="text-callout text-ink-soft">Calories are estimates, not medical advice.</p>
     {error && <p role="alert">{error}</p>}
   </div>;
 }
