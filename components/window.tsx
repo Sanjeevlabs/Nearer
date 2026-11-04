@@ -621,7 +621,7 @@ export function LiteWindow({ onUnlock }: { onUnlock: () => void }) {
       </div>
       </div>
         {/* Keep the key outside the scroll area so it cannot cover any card text. */}
-        <div className="mx-auto w-full max-w-[480px] shrink-0 bg-paper px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+        <div className="sticky bottom-0 mx-auto w-full max-w-[480px] shrink-0 bg-paper px-4 pt-3" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}>
           <p data-ui="window-key-why" className="m-0 mb-2 text-center text-footnote leading-snug text-ink-soft">
             {t("window.keyWhy")}
           </p>
