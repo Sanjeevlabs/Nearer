@@ -54,10 +54,7 @@ def main():
                     raise RuntimeError(f"{member}: demo sign-in failed with {response.status}")
                 page = ctx.new_page()
                 if kind != "child":
-                    visit(page, "/", "button:has-text('Open Nearer')")  # signed in: the home page first, then the window
-                    audit(page, f"{member}: Home (signed in)", problems)
-                    page.get_by_role("button", name="Open Nearer").first.click()
-                    page.locator("[data-ui=window-lamp]").first.wait_for(state="visible")
+                    visit(page, "/", "[data-ui=window-lamp]")  # signed in: straight to the window
                     audit(page, f"{member}: Window", problems)
                 ctx.add_init_script(HOUSE_STATE)
                 if kind == "child":

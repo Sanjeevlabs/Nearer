@@ -65,6 +65,10 @@ export const FAMILY_STORY_IDEAS: StoryIdea[] = [
   fam("fs-held", "The first time you held {grandchild}", ["Where it was and what you were wearing", "What you thought, looking at the tiny hands", "What you hoped for them"], "A new child makes the whole family start again", "the first time you held me"),
   fam("fs-letters", "How you kept in touch with family before phones", ["Letters, a neighbour's telephone, a message passed along", "How long the waiting felt", "The news you will never forget getting"], "Staying close takes effort, and it is worth it", "how you kept in touch before phones"),
   fam("fs-laughed", "A time the whole family laughed until they cried", ["Who was there and where", "What set it off", "Whether anyone can say it now without laughing"], "Laughing together is how a family holds on", "a time the whole family laughed until they cried"),
+  fam("fs-grandparents-work", "What your grandparents did each day", ["One thing you watched them do", "What they used to do it", "What you tried yourself"], "A little of what everyday life was like", "what your grandparents did each day"),
+  fam("fs-parents-met", "How your parents first met", ["Where they met, if you remember", "Who told you the story", "The detail that stayed with you"], "A story passed down through the family", "how your parents first met"),
+  fam("fs-grandmother-recipe", "A recipe your grandmother taught you", ["The first thing she showed you", "How she knew it was ready", "The part you still do her way"], "A recipe keeps a little of the person who taught it", "a recipe your grandmother taught you"),
+  fam("fs-family-saying", "A saying you heard often at home", ["Who used to say it", "When you would hear it", "Whether you still say it"], "Small phrases carry a family's voice", "a saying you heard often at home"),
 ];
 
 /** Fill {child} and {grandchild} from the family, rotating through the names so prompts differ. */

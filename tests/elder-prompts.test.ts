@@ -3,6 +3,7 @@ import { join } from "path";
 import { describe, expect, it } from "vitest";
 import { containsDevanagari, translateText } from "@/lib/llm";
 import { FAMILY_STORY_IDEAS, STORY_IDEAS, resolveIdea } from "@/lib/story-ideas";
+import { TODAY_PROMPTS } from "@/lib/today";
 import { DEMO_MEMBERS } from "@/lib/family";
 import { POST as translatePOST } from "@/app/api/translate/route";
 import { sessionCookie } from "./auth-helper";
@@ -35,6 +36,14 @@ describe("prompts for an elder, in Hindi", () => {
     const starters = JSON.parse(page.match(/const STARTERS = (\[[^\]]+\])/)![1]) as string[];
     expect(starters.length).toBeGreaterThan(3);
     for (const s of starters) expect(containsDevanagari(await toHindi(s)), s).toBe(true);
+  });
+
+  it("translates both sides of the new Today prompts in mock mode", async () => {
+    for (const id of ["old-street", "family-song", "family-object"]) {
+      const prompt = TODAY_PROMPTS.find((p) => p.id === id)!;
+      expect(containsDevanagari(await toHindi(prompt.parents)), id).toBe(true);
+      expect(containsDevanagari(await toHindi(prompt.children)), id).toBe(true);
+    }
   });
 
   it("an English reader keeps the English prompt", async () => {

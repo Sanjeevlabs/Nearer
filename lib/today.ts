@@ -24,6 +24,9 @@ export const TODAY_PROMPTS: TodayPrompt[] = [
   { id: "first-home", parents: "Describe your first home together", children: "Describe your room in the house you grew up in" },
   { id: "proud", parents: "A moment you were proud of {child}", children: "A moment you were proud of {parents}" },
   { id: "promise", parents: "One thing to do together on the next visit", children: "One thing to do together on the next visit" },
+  { id: "old-street", parents: "What was the street you grew up on called?", children: "What do you remember about the street where you grew up?" },
+  { id: "family-song", parents: "What song did someone at home teach you?", children: "What song reminds you of home?" },
+  { id: "family-object", parents: "What is the story behind something your family kept?", children: "What would you like to keep and pass on?" },
 ];
 
 export const PROMPT_IDS = TODAY_PROMPTS.map((p) => p.id) as [string, ...string[]];
