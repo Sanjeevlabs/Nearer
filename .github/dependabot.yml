@@ -1,0 +1,21 @@
+# Dependency updates. cooldown: a newly published version waits 7 days before a PR
+# opens, so a hijacked maintainer's poisoned release is usually yanked first
+# (2026-11-10 wfx campaign: ~50 compromised publishers). Security updates are not delayed.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
